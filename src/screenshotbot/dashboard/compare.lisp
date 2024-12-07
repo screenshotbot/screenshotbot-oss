@@ -840,7 +840,8 @@
   (declare (ignore re-run))
   (let* ((report (diff-report:make-diff-report run to))
          (all-comparisons (nibble (:name :all-comparison)
-                            (all-comparisons-page report))))
+                            (all-comparisons-page report)))
+         (script-name (hunchentoot:script-name*)))
     (declare (ignorable all-comparisons))
     (let* ((changes-groups (diff-report:changes-groups report))
            (added-groups (diff-report:added-groups report))
@@ -935,12 +936,14 @@
            data-update= (nibble (:name :u-r-res) (report-result run
            changes-groups
            added-groups
-           deleted-groups))
+           deleted-groups
+           :script-name script-name))
       data-args= (json:encode-json-to-string `((:type . ,default-type))) >
       ,(report-result run
                       changes-groups
                       added-groups
                       deleted-groups
+                      :script-name script-name
                       :type default-type)
       </div>
 
@@ -992,10 +995,10 @@
 
 (defun report-result (run changes-groups added-groups deleted-groups
                       &key
-                      (type (hunchentoot:parameter "type")))
+                        (type (hunchentoot:parameter "type"))
+                        (script-name (error "must provide :script-name")))
 
-  (let ((search (hunchentoot:parameter "search"))
-        (script-name (hunchentoot:script-name*)))
+  (let ((search (hunchentoot:parameter "search")))
     (cond
       ((string-equal "added" type)
        (render-single-group-list added-groups :search search :script-name script-name))
@@ -1013,7 +1016,7 @@
              :empty-view (no-screenshots))
        </div>))))
 
-(defun render-single-group-list (groups &key search (script-name (hunchentoot:script-name*)))
+(defun render-single-group-list (groups &key search (script-name (error "must provide script-name")))
   (let* ((filter (lambda (group)
                    (group-matches-p group search)))
          (screenshots-viewer (make-instance 'screenshots-viewer
