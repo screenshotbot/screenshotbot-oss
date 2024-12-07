@@ -1105,10 +1105,10 @@
           </div>
           ,(render-change-group
             (make-instance 'diff-report:group
-                           :title "foobar"
+                           :title (screenshot-name key)
                            :items (list
                                    (make-instance 'diff-report:group-item
-                                                  :subtitle "foobarcarbar"
+                                                  :subtitle nil
                                                   :actual-item change)))
             run
             report-link)
