@@ -231,7 +231,8 @@
     (hex:safe-redirect "/report/5fd16bcf4f4b3822fd000146"))
   (with-runs-for-comparison (run to :run-id id :to-id to)
     <app-template body-class= "dashboard bg-white" >
-      ,(async-diff-report :run run :to to)
+      ,(async-diff-report :run run :to to
+                          :script-name (format nil "/runs/~a/compare/~a" (oid run) (oid to)))
     </app-template>))
 
 (deftag picture-with-img (&key image dimensions alt class)
@@ -381,12 +382,11 @@
              (:width . ,(dimension-width dims))
              (:height . ,(dimension-height dims)))))))))
 
-
-(defun async-diff-report (&rest args &key &allow-other-keys)
+(def-easy-macro with-async-diff-report (&binding diff-report &key run to &fn fn)
+  "Returns a HTML tag that asynchronoously creates a diff-report using
+MAKE-DIFF-REPORT, and finally when that is complete, it renders the
+content of the HTML tag using the nested body."
   (let* ((data nil)
-         (session auth:*current-session*)
-         (request hunchentoot:*request*)
-         (acceptor hunchentoot:*acceptor*)
          (data-check-nibble (nibble (:name :data-check)
                               (setf (hunchentoot:content-type*) "application/json")
                               (json:encode-json-to-string
@@ -394,20 +394,24 @@
                                  ((eql :error data)
                                   `((:state . "error")))
                                  (data
-                                  `((:data . ,(markup:write-html data))
+                                  `((:data . ,(markup:write-html (fn data)))
                                     (:state . "done")))
                                  (t
                                   `((:state . "processing"))))))))
     (make-thread (lambda ()
-                   (ignore-and-log-errors ()
-                     (handler-bind ((error (lambda (e)
-                                             (declare (ignore e))
-                                             (setf data :error))))
-                       (let ((auth:*current-session* session)
-                             (hunchentoot:*request* request)
-                             (hunchentoot:*acceptor* acceptor))
-                         (setf data (apply 'render-diff-report args)))))))
+                   (handler-bind ((error (lambda (e)
+                                           (declare (ignore e))
+                                           (setf data :error))))
+                     (let ()
+                       (setf data (make-diff-report run to))))))
     <div class= "async-fetch spinner-border" role= "status" data-check-nibble=data-check-nibble />))
+
+
+(defun async-diff-report (&rest args &key run to &allow-other-keys)
+  (with-async-diff-report (diff-report :run run :to to)
+    (apply #'render-diff-report
+           :diff-report diff-report
+           args)))
 
 
 (defun warmup-comparison-images (run previous-run)
@@ -843,13 +847,16 @@
 
 (deftag render-diff-report (children &key run to
                             more
+                            diff-report #| optional |#
+                            script-name #| optional |#
                             acceptable
                             (re-run nil))
+  "Renders a diff-report. If DIFF-REPORT is provided we use the diff-report, otherwise we generate it from RUN and TO."
   (declare (ignore re-run))
-  (let* ((report (diff-report:make-diff-report run to))
+  (let* ((report (or diff-report (diff-report:make-diff-report run to)))
          (all-comparisons (nibble (:name :all-comparison)
                             (all-comparisons-page report)))
-         (script-name (hunchentoot:script-name*)))
+         (script-name (or script-name (hunchentoot:script-name*))))
     (declare (ignorable all-comparisons))
     (let* ((changes-groups (diff-report:changes-groups report))
            (added-groups (diff-report:added-groups report))
