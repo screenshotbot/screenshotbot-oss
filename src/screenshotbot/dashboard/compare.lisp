@@ -1103,7 +1103,11 @@
   (or
    (%find-single-change-row (diff-report:diff-report-changes diff-report) key-id report-link :run run)
    (%find-single-added-or-removed (diff-report:diff-report-added diff-report) key-id report-link
-                                  :diff-report diff-report)
+                                  :diff-report diff-report
+                                  :why "added")
+   (%find-single-added-or-removed (diff-report:diff-report-deleted diff-report) key-id report-link
+                                  :diff-report diff-report
+                                  :why "deleted")   
    (progn
      (setf (hunchentoot:return-code*) 404)
      (hunchentoot:abort-request-handler))))
@@ -1115,14 +1119,18 @@
   </div>)
 
 (defun %find-single-added-or-removed (list key-id report-link
-                                      &key diff-report)
+                                      &key diff-report
+                                        why )
+  "Finds the screenshot associated-with screenshot-key KEY-ID in a LIST of screenshots.
+
+WHY is either \"added\" or \"deleted\", and just describes why we're showing this "
   (loop for screenshot in list
         for key = (screenshot-key screenshot)
         if (eql key-id (store-object-id key))
            return
         <app-template body-class= "dashboard bg-white">
           <single-change-header report-link=report-link >
-            Newly added screenshot
+            Newly ,(progn why) screenshot
           </single-change-header>
           ,(render-single-group-list
             (list
