@@ -385,26 +385,33 @@
 (def-easy-macro with-async-diff-report (&binding diff-report &key run to &fn fn)
   "Returns a HTML tag that asynchronoously creates a diff-report using
 MAKE-DIFF-REPORT, and finally when that is complete, it renders the
-content of the HTML tag using the nested body."
-  (let* ((data nil)
-         (data-check-nibble (nibble (:name :data-check)
-                              (setf (hunchentoot:content-type*) "application/json")
-                              (json:encode-json-to-string
-                               (cond
-                                 ((eql :error data)
-                                  `((:state . "error")))
-                                 (data
-                                  `((:data . ,(markup:write-html (fn data)))
-                                    (:state . "done")))
-                                 (t
-                                  `((:state . "processing"))))))))
-    (make-thread (lambda ()
-                   (handler-bind ((error (lambda (e)
-                                           (declare (ignore e))
-                                           (setf data :error))))
-                     (let ()
-                       (setf data (make-diff-report run to))))))
-    <div class= "async-fetch spinner-border" role= "status" data-check-nibble=data-check-nibble />))
+content of the HTML tag using the nested body.
+
+If the diff-report is cached, then we process the body immediately instead."
+  (let ((cached (make-diff-report run to :only-cached-p t)))
+   (cond
+     (cached
+      (fn cached))
+     (t
+      (let* ((data nil)
+             (data-check-nibble (nibble (:name :data-check)
+                                  (setf (hunchentoot:content-type*) "application/json")
+                                  (json:encode-json-to-string
+                                   (cond
+                                     ((eql :error data)
+                                      `((:state . "error")))
+                                     (data
+                                      `((:data . ,(markup:write-html (fn data)))
+                                        (:state . "done")))
+                                     (t
+                                      `((:state . "processing"))))))))
+        (make-thread (lambda ()
+                       (handler-bind ((error (lambda (e)
+                                               (declare (ignore e))
+                                               (setf data :error))))
+                         (let ()
+                           (setf data (make-diff-report run to))))))
+        <div class= "async-fetch spinner-border" role= "status" data-check-nibble=data-check-nibble />)))))
 
 
 (defun async-diff-report (&rest args &key run to &allow-other-keys)

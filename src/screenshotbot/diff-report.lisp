@@ -268,10 +268,16 @@
     (retry-make-diff-report ()
       (make-diff-report run to))))
 
-(defun make-diff-report (run to)
+(defun make-diff-report (run to &key (only-cached-p nil))
+  "Make a diff report between RUN and another run TO. The diff-reports
+are typically cached in-memory.
+
+If ONLY-CACHED-P is true, then we'll only return the cached value and
+not try to create the diff report, which might be an expensive operation."
   (util:or-setf
    (gethash (list run to :v3) *cache*)
-   (%make-diff-report run to)))
+   (unless only-cached-p
+     (%make-diff-report run to))))
 
 (defmethod %find-changes (image-comparer names to-names)
   (let ((hash-table (make-hash-table :test #'equal)))
