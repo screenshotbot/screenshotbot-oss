@@ -1098,27 +1098,51 @@
 
 (defmethod render-single-change-permalink (diff-report key-id report-link &key run #| todo: only channel should be required |#)
   (or
-   (loop for change in (diff-report:diff-report-changes diff-report)
-         for key = (screenshot-key (diff-report:before change))
-         if (eql
-             key-id
-             (bknr.datastore:store-object-id key))
-           return
-         <app-template body-class= "dashboard bg-white" >
-         <div class= "page-title-box mb-3">
-         <div class= "mb-2" ><a href= report-link >Back to report</a></div>
-         <h4 class= "page-title" >Change for ,(screenshot-name key) in report</h4>
-         </div>
-         ,(render-change-group
-           (make-instance 'diff-report:group
-                          :title (screenshot-name key)
-                          :items (list
-                                  (make-instance 'diff-report:group-item
-                                                 :subtitle nil
-                                                 :actual-item change)))
-           run
-           report-link)
-         </app-template>)
+   (%find-single-change-row (diff-report:diff-report-changes diff-report) key-id report-link :run run)
+   (%find-single-added-or-removed (diff-report:diff-report-added diff-report) key-id report-link
+                                  :diff-report diff-report)
    (progn
      (setf (hunchentoot:return-code*) 404)
      (hunchentoot:abort-request-handler))))
+
+(defun %find-single-added-or-removed (list key-id report-link
+                                      &key diff-report)
+  (loop for screenshot in list
+        for key = (screenshot-key screenshot)
+        if (eql key-id (store-object-id key))
+           return
+        <app-template body-class= "dashboard bg-white">
+          ,(render-single-group-list
+            (list
+             (make-instance 'diff-report::added-group
+                            :diff-report diff-report
+                            :title (screenshot-name key)
+                            :items (list
+                                    (make-instance 'diff-report:group-item
+                                                   :subtitle nil
+                                                   :actual-item screenshot))))
+            :script-name report-link)
+        </app-template>))
+
+(defun %find-single-change-row (changes key-id report-link &key run)
+  (loop for change in changes
+        for key = (screenshot-key (diff-report:before change))
+        if (eql
+            key-id
+            (bknr.datastore:store-object-id key))
+          return
+        <app-template body-class= "dashboard bg-white" >
+        <div class= "page-title-box mb-3">
+        <div class= "mb-2" ><a href= report-link >Back to report</a></div>
+        <h4 class= "page-title" >Change for ,(screenshot-name key) in report</h4>
+        </div>
+        ,(render-change-group
+          (make-instance 'diff-report:group
+                         :title (screenshot-name key)
+                         :items (list
+                                 (make-instance 'diff-report:group-item
+                                                :subtitle nil
+                                                :actual-item change)))
+          run
+          report-link)
+        </app-template>))

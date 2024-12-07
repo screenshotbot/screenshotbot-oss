@@ -251,3 +251,27 @@
          (store-object-id (screenshot-key (make-screenshot im1)))
          "/report/dfdfd"
          :run one)))))
+
+(screenshot-test single-added--permalink
+  (with-fixture state ()
+    (with-test-user (:user user
+                     :company company
+                     :logged-in-p t)
+      (let* ((channel (make-instance 'channel
+                                     :company company
+                                     :name "bleh"
+                                     :github-repo "git@github.com:a/b.gitq"))
+             (one (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots nil))
+             (two (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots (list (make-screenshot im2)))))
+        (snap-all-images)
+        (render-single-change-permalink
+         (make-diff-report two one)
+         (store-object-id (screenshot-key (make-screenshot im2)))
+         "/report/dfdfd"
+         :run one)))))
