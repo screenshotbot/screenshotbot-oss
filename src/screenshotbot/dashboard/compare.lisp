@@ -994,17 +994,18 @@
                       &key
                       (type (hunchentoot:parameter "type")))
 
-  (let ((search (hunchentoot:parameter "search")))
+  (let ((search (hunchentoot:parameter "search"))
+        (script-name (hunchentoot:script-name*)))
     (cond
       ((string-equal "added" type)
-       (render-single-group-list added-groups :search search))
+       (render-single-group-list added-groups :search search :script-name script-name))
       ((string-equal "deleted" type)
-       (render-single-group-list deleted-groups :search search))
+       (render-single-group-list deleted-groups :search search :script-name script-name))
       (t
        <div class= "">
            ,(paginated
              (lambda (group)
-               (render-change-group group run (hunchentoot:script-name*)  :search search))
+               (render-change-group group run script-name  :search search))
              :num 10
              :filter (lambda (group)
                        (group-matches-p group search))
@@ -1012,7 +1013,7 @@
              :empty-view (no-screenshots))
        </div>))))
 
-(defun render-single-group-list (groups &key search)
+(defun render-single-group-list (groups &key search (script-name (hunchentoot:script-name*)))
   (let* ((filter (lambda (group)
                    (group-matches-p group search)))
          (screenshots-viewer (make-instance 'screenshots-viewer
@@ -1038,6 +1039,10 @@
                        <div>
                          <div class= "screenshot-header" >
                            <ul class= "screenshot-options-menu" >
+                             ,(when (gk:check :image-permalink (auth:current-company))
+                                <li>
+                                  <a href= (format nil "~a/image/~a" script-name (store-object-id (screenshot-key screenshot))) >Permalink</a>
+                                </li>)
                              <li>
                                <a href= (image-public-url (screenshot-image screenshot) :originalp t)
                                   >Download Original</a>
@@ -1092,24 +1097,28 @@
 
 
 (defmethod render-single-change-permalink (diff-report key-id report-link &key run #| todo: only channel should be required |#)
-  (loop for change in (diff-report:diff-report-changes diff-report)
-        for key = (screenshot-key (diff-report:before change))
-        if (eql
-            key-id
-            (bknr.datastore:store-object-id key))
-          return
-        <app-template body-class= "dashboard bg-white" >
-          <div class= "page-title-box mb-3">
-            <div class= "mb-2" ><a href= report-link >Back to report</a></div>
-            <h4 class= "page-title" >Change for ,(screenshot-name key) in report</h4>
-          </div>
-          ,(render-change-group
-            (make-instance 'diff-report:group
-                           :title (screenshot-name key)
-                           :items (list
-                                   (make-instance 'diff-report:group-item
-                                                  :subtitle nil
-                                                  :actual-item change)))
-            run
-            report-link)
-        </app-template>))
+  (or
+   (loop for change in (diff-report:diff-report-changes diff-report)
+         for key = (screenshot-key (diff-report:before change))
+         if (eql
+             key-id
+             (bknr.datastore:store-object-id key))
+           return
+         <app-template body-class= "dashboard bg-white" >
+         <div class= "page-title-box mb-3">
+         <div class= "mb-2" ><a href= report-link >Back to report</a></div>
+         <h4 class= "page-title" >Change for ,(screenshot-name key) in report</h4>
+         </div>
+         ,(render-change-group
+           (make-instance 'diff-report:group
+                          :title (screenshot-name key)
+                          :items (list
+                                  (make-instance 'diff-report:group-item
+                                                 :subtitle nil
+                                                 :actual-item change)))
+           run
+           report-link)
+         </app-template>)
+   (progn
+     (setf (hunchentoot:return-code*) 404)
+     (hunchentoot:abort-request-handler))))
