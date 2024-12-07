@@ -127,3 +127,4 @@
      (get-redirect ()
        (report-page :id (oid report)))
      (Contains-string "https://foo.example.com/"))))
+

@@ -1090,3 +1090,26 @@
     No changes match filters
   </div>)
 
+
+(defmethod render-single-change-permalink (diff-report key-id report-link &key run #| todo: only channel should be required |#)
+  (loop for change in (diff-report:diff-report-changes diff-report)
+        for key = (screenshot-key (diff-report:before change))
+        if (eql
+            key-id
+            (bknr.datastore:store-object-id key))
+          return
+        <app-template body-class= "dashboard bg-white" >
+          <div class= "page-title-box mb-3">
+            <div class= "mb-2" ><a href= report-link >Back to report</a></div>
+            <h4 class= "page-title" >Change for ,(screenshot-name key) in report</h4>
+          </div>
+          ,(render-change-group
+            (make-instance 'diff-report:group
+                           :title "foobar"
+                           :items (list
+                                   (make-instance 'diff-report:group-item
+                                                  :subtitle "foobarcarbar"
+                                                  :actual-item change)))
+            run
+            report-link)
+        </app-template>))

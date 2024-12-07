@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:render-single-change-permalink
                 #:metrics-page
                 #:warmup-comparison-images-sync
                 #:link-to-run
@@ -15,6 +16,7 @@
                 #:image
                 #:local-image)
   (:import-from #:bknr.datastore
+                #:store-object-id
                 #:blob-pathname)
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
@@ -28,6 +30,7 @@
   (:import-from #:screenshotbot/report-api
                 #:report)
   (:import-from #:screenshotbot/testing
+                #:screenshot-test
                 #:snap-all-images
                 #:snap-image-blob
                 #:with-test-user)
@@ -58,6 +61,10 @@
                 #:assoc-value)
   (:import-from #:fiveam-matchers/strings
                 #:contains-string)
+  (:import-from #:screenshotbot/diff-report
+                #:make-diff-report)
+  (:import-from #:screenshotbot/model/screenshot-key
+                #:screenshot-key)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-compare)
 
@@ -220,3 +227,27 @@
                :screenshots (list (make-screenshot im2)))))
       (finishes
        (warmup-comparison-images-sync run to)))))
+
+(screenshot-test single-change-permalink
+  (with-fixture state ()
+    (with-test-user (:user user
+                     :company company
+                     :logged-in-p t)
+      (let* ((channel (make-instance 'channel
+                                     :company company
+                                     :name "bleh"
+                                     :github-repo "git@github.com:a/b.gitq"))
+             (one (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots (list (make-screenshot im1))))
+             (two (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots (list (make-screenshot im2)))))
+        (snap-all-images)
+        (render-single-change-permalink
+         (make-diff-report one two)
+         (store-object-id (screenshot-key (make-screenshot im1)))
+         "/report/dfdfd"
+         :run one)))))

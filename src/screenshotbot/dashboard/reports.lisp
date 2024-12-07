@@ -68,6 +68,7 @@
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-key)
   (:import-from #:screenshotbot/dashboard/compare
+                #:render-single-change-permalink
                 #:render-change-group)
   (:export #:report-page #:report-link
            #:shared-report-page)
@@ -379,27 +380,10 @@
     (with-report-login (report)
       (let ((diff-report (diff-report:make-diff-report
                           (report-run report)
-                          (report-previous-run report)))
-            (report-link (format nil "/report/~a" oid)))
-        (loop for change in (diff-report:diff-report-changes diff-report)
-              for key = (screenshot-key (diff-report:before change))
-              if (eql
-                  key-id
-                  (bknr.datastore:store-object-id key))
-                return
-              <app-template body-class= "dashboard bg-white" >
-                <div class= "page-title-box mb-3">
-                  <div class= "mb-2" ><a href= report-link >Back to report</a></div>
-                  <h4 class= "page-title" >Change for ,(screenshot-name key) in report</h4>
-                </div>
-                ,(render-change-group
-                  (make-instance 'diff-report:group
-                                 :title "foobar"
-                                 :items (list
-                                         (make-instance 'diff-report:group-item
-                                                        :subtitle "foobarcarbar"
-                                                        :actual-item change)))
-                  (report-run report)
-                  report-link)
-              </app-template>)))))
+                          (report-previous-run report))))
+        (let ((report-link (format nil "/report/~a" oid)))
+         (render-single-change-permalink diff-report key-id report-link
+                               :run (report-run report)))))))
+
+
 
