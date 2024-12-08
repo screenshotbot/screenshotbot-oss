@@ -19,6 +19,8 @@
                 #:test
                 #:with-fixture)
   (:import-from #:screenshotbot/diff-report
+                #:diff-report-previous-run
+                #:diff-report-run
                 #:*cache*
                 #:added-groups
                 #:change
@@ -100,7 +102,9 @@
 (test make-diff-report
   (with-fixture state ()
     (let ((diff-report (make-diff-report run1 run2)))
-      (is (eql 1 (length (diff-report-changes diff-report)))))))
+      (is (eql 1 (length (diff-report-changes diff-report))))
+      (is (eql run1 (diff-report-run diff-report)))
+      (is (eql run2 (diff-report-previous-run diff-report))))))
 
 (test make-diff-report-to-nil-run
   (with-fixture state ()

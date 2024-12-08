@@ -89,7 +89,11 @@
    :initial-value (fset:empty-set)))
 
 (defclass diff-report ()
-  ((added :initarg :added
+  ((run :initarg :run
+        :reader diff-report-run)
+   (previous-run :initarg :previous-run
+           :reader diff-report-previous-run)
+   (added :initarg :added
           :reader diff-report-added
           :initform nil)
    (deleted :initarg :deleted
@@ -253,6 +257,8 @@
                         (recorder-run-screenshots to))))
         (make-instance
          'diff-report
+         :run run
+         :previous-run to
          :added (sort-screenshots
                  (hash-set-difference
                   names to-names
@@ -275,7 +281,7 @@ are typically cached in-memory.
 If ONLY-CACHED-P is true, then we'll only return the cached value and
 not try to create the diff report, which might be an expensive operation."
   (util:or-setf
-   (gethash (list run to :v3) *cache*)
+   (gethash (list run to :v4) *cache*)
    (unless only-cached-p
      (%make-diff-report run to))))
 
