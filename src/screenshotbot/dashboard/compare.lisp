@@ -145,6 +145,9 @@
 
 (defvar *summarizer* nil)
 
+(defmethod gk:compute-default-value ((name (eql :image-permalink)) company)
+  t)
+
 (defparameter *always-async-p* nil
   "Always use async for WITH-ASYNC-DIFF-REPORT. Only useful for testing the async flow.")
 
