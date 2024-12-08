@@ -857,10 +857,8 @@ If the diff-report is cached, then we process the body immediately instead."
                             more
                             diff-report
                             script-name #| optional |#
-                            acceptable
-                            (re-run nil))
+                            acceptable)
   "Renders a diff-report."
-  (declare (ignore re-run))
   (let* ((report diff-report)
          (run (diff-report:diff-report-run diff-report))
          (to (diff-report:diff-report-previous-run diff-report))

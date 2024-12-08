@@ -129,26 +129,22 @@
     </div>
   </app-template>)
 
-(defun render-report-page (report &rest args &key alert skip-access-checks)
-  (flet ((re-run (&rest new-args)
-           (apply 'render-report-page
-                  report
-                  (append new-args args))))
-    (check-type report report)
-    (unless skip-access-checks
-      (can-view! report))
+(defun render-report-page (report &key alert skip-access-checks)
+  (check-type report report)
+  (unless skip-access-checks
+    (can-view! report))
 
-    (cond
-      ((hunchentoot:parameter "v2")
-       (compare-v2-page :report report))
-      (t
-       <app-template body-class= "dashboard bg-white" title= (report-title report) >
+  (cond
+    ((hunchentoot:parameter "v2")
+     (compare-v2-page :report report))
+    (t
+     <app-template body-class= "dashboard bg-white" title= (report-title report) >
 
        ,(when (and nil (can-public-view report))
           <section class= "mt-3" >
-          <div class= "alert alert-danger">
-          This report can be viewed by public, because the underlying repository is public
-          </div>
+            <div class= "alert alert-danger">
+              This report can be viewed by public, because the underlying repository is public
+            </div>
           </section>)
 
        ,(when alert
@@ -158,14 +154,14 @@
          ,(render-notes :for report)
 
 
-       <render-diff-report diff-report= (make-diff-report (report-run report) (report-previous-run report))
-                           acceptable= (report-acceptable report)
-                           more= (remove-if #'null (more-links-for-report report))
-                           re-run=#'re-run >
-       ,@(render-warnings (report-run report))
-       </render-diff-report>
+         <render-diff-report diff-report= (make-diff-report (report-run report) (report-previous-run report))
+                             acceptable= (report-acceptable report)
+                             more= (remove-if #'null (more-links-for-report report))
+                             >
+           ,@(render-warnings (report-run report))
+         </render-diff-report>
        </section>
-       </app-template>))))
+     </app-template>)))
 
 (defun share-report (report)
   (let ((submit (nibble (expiry-date)
