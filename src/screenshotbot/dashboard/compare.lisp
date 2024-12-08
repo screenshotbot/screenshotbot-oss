@@ -145,6 +145,9 @@
 
 (defvar *summarizer* nil)
 
+(defparameter *always-async-p* nil
+  "Always use async for WITH-ASYNC-DIFF-REPORT. Only useful for testing the async flow.")
+
 (named-readtables:in-readtable markup:syntax)
 
 (defhandler (acceptable-review-url :uri "/acceptable/:id/review" :method :post)
@@ -391,7 +394,7 @@ content of the HTML tag using the nested body.
 If the diff-report is cached, then we process the body immediately instead."
   (let ((cached (make-diff-report run to :only-cached-p t)))
    (cond
-     (cached
+     ((and cached (not *always-async-p*))
       (fn cached))
      (t
       (let* ((data nil)
@@ -1135,6 +1138,7 @@ additional actions in the More dropdown menu.
 
 
 (defmethod render-single-change-permalink (diff-report key-id report-link &key run #| todo: only channel should be required |#)
+  "Renders a single change from the DIFF-REPORT. Does not render the app-template, so make sure to wrap it. "
   (or
    (%find-single-change-row (diff-report:diff-report-changes diff-report) key-id report-link :run run)
    (%find-single-added-or-removed (diff-report:diff-report-added diff-report) key-id report-link
@@ -1163,7 +1167,7 @@ WHY is either \"added\" or \"deleted\", and just describes why we're showing thi
         for key = (screenshot-key screenshot)
         if (eql key-id (store-object-id key))
            return
-        <app-template body-class= "dashboard bg-white">
+        <markup:merge-tag >
           <single-change-header report-link=report-link >
             Newly ,(progn why) screenshot
           </single-change-header>
@@ -1177,7 +1181,7 @@ WHY is either \"added\" or \"deleted\", and just describes why we're showing thi
                                                    :subtitle nil
                                                    :actual-item screenshot))))
             :script-name report-link)
-        </app-template>))
+        </markup:merge-tag>))
 
 (defun %find-single-change-row (changes key-id report-link &key run)
   (loop for change in changes
@@ -1186,7 +1190,7 @@ WHY is either \"added\" or \"deleted\", and just describes why we're showing thi
             key-id
             (bknr.datastore:store-object-id key))
           return
-        <app-template body-class= "dashboard bg-white" >
+        <markup:merge-tag>
           <single-change-header report-link=report-link >
             Change for ,(screenshot-name key) in report
           </single-change-header>
@@ -1199,13 +1203,16 @@ WHY is either \"added\" or \"deleted\", and just describes why we're showing thi
                                                 :actual-item change)))
           run
           report-link)
-        </app-template>))
+        </markup:merge-tag>))
 
 (defhandler (compare-single-image :uri "/runs/:run/compare/:to/image/:key-id")
     (run to key-id)
   (with-runs-for-comparison (run to :run-id run :to-id to)
-    (render-single-change-permalink
-     (make-diff-report  run to)
-     (parse-integer key-id)
-     (format nil "/runs/~a/compare/~a" (oid run) (oid to))
-     :run run)))
+    <app-template body-class= "dashboard bg-white">
+      ,(with-async-diff-report (diff-report :run run :to to)
+         (render-single-change-permalink
+          diff-report
+          (parse-integer key-id)
+          (format nil "/runs/~a/compare/~a" (oid run) (oid to))
+          :run run))
+    </app-template>))

@@ -65,6 +65,8 @@
                 #:make-diff-report)
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-key)
+  (:import-from #:screenshotbot/template
+                #:app-template)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-compare)
 
@@ -246,11 +248,13 @@
                    :company company
                    :screenshots (list (make-screenshot im2)))))
         (snap-all-images)
-        (render-single-change-permalink
-         (make-diff-report one two)
-         (store-object-id (screenshot-key (make-screenshot im1)))
-         "/report/dfdfd"
-         :run one)))))
+        (app-template
+         :body-class "dashboard bg-white"
+         (render-single-change-permalink
+          (make-diff-report one two)
+          (store-object-id (screenshot-key (make-screenshot im1)))
+          "/report/dfdfd"
+          :run one))))))
 
 (screenshot-test single-added--permalink
   (with-fixture state ()
@@ -270,8 +274,10 @@
                    :company company
                    :screenshots (list (make-screenshot im2)))))
         (snap-all-images)
-        (render-single-change-permalink
-         (make-diff-report two one)
-         (store-object-id (screenshot-key (make-screenshot im2)))
-         "/report/dfdfd"
-         :run one)))))
+        (app-template
+         :body-class "dashboard bg-white"
+         (render-single-change-permalink
+          (make-diff-report two one)
+          (store-object-id (screenshot-key (make-screenshot im2)))
+          "/report/dfdfd"
+          :run one))))))

@@ -374,8 +374,10 @@
                           (report-run report)
                           (report-previous-run report))))
         (let ((report-link (format nil "/report/~a" oid)))
-         (render-single-change-permalink diff-report key-id report-link
-                               :run (report-run report)))))))
+          <app-template body-class= "dashboard bg-white">
+            ,(render-single-change-permalink diff-report key-id report-link
+                                             :run (report-run report))
+          </app-template>)))))
 
 
 
