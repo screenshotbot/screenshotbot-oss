@@ -49,7 +49,9 @@
    #:added-hashes-set
    #:group-renamed-p
    #:group
-   #:group-item))
+   #:group-item
+   #:diff-report-run
+   #:diff-report-previous-run))
 
 
 (in-package :screenshotbot/diff-report)

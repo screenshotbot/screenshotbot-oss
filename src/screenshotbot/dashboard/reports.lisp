@@ -70,6 +70,8 @@
   (:import-from #:screenshotbot/dashboard/compare
                 #:render-single-change-permalink
                 #:render-change-group)
+  (:import-from #:screenshotbot/diff-report
+                #:make-diff-report)
   (:export #:report-page #:report-link
            #:shared-report-page)
   (:local-nicknames (#:diff-report #:screenshotbot/diff-report)))
@@ -156,8 +158,8 @@
          ,(render-notes :for report)
 
 
-       <render-diff-report run= (report-run report) to= (report-previous-run report)
-       acceptable= (report-acceptable report)
+       <render-diff-report diff-report= (make-diff-report (report-run report) (report-previous-run report))
+                           acceptable= (report-acceptable report)
                            more= (remove-if #'null (more-links-for-report report))
                            re-run=#'re-run >
        ,@(render-warnings (report-run report))

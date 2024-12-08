@@ -111,6 +111,7 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:abstract-screenshot)
   (:import-from #:alexandria
+                #:remove-from-plist
                 #:when-let)
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run-tags
@@ -418,7 +419,7 @@ If the diff-report is cached, then we process the body immediately instead."
   (with-async-diff-report (diff-report :run run :to to)
     (apply #'render-diff-report
            :diff-report diff-report
-           args)))
+           (remove-from-plist args :run :to))))
 
 
 (defun warmup-comparison-images (run previous-run)
@@ -852,15 +853,17 @@ If the diff-report is cached, then we process the body immediately instead."
     ,@body
   </a>)
 
-(deftag render-diff-report (children &key run to
+(deftag render-diff-report (children &key
                             more
-                            diff-report #| optional |#
+                            diff-report
                             script-name #| optional |#
                             acceptable
                             (re-run nil))
-  "Renders a diff-report. If DIFF-REPORT is provided we use the diff-report, otherwise we generate it from RUN and TO."
+  "Renders a diff-report."
   (declare (ignore re-run))
-  (let* ((report (or diff-report (diff-report:make-diff-report run to)))
+  (let* ((report diff-report)
+         (run (diff-report:diff-report-run diff-report))
+         (to (diff-report:diff-report-previous-run diff-report))
          (all-comparisons (nibble (:name :all-comparison)
                             (all-comparisons-page report)))
          (script-name (or script-name (hunchentoot:script-name*))))
