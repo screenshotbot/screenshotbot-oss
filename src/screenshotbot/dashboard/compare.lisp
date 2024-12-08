@@ -858,7 +858,20 @@ If the diff-report is cached, then we process the body immediately instead."
                             diff-report
                             script-name #| optional |#
                             acceptable)
-  "Renders a diff-report."
+  "Renders a diff-report.
+
+CHILDREN are rendered after the info bar, and before the images.
+
+SCRIPT-NAME is typically either \"/runs/:id/compare/:to\" or
+\"/report/:oid\", and is used to figure out links to sub-pages.
+
+If ACCEPTABLE is not NIL, then it is rendered as a way to review the
+diff.
+
+MORE is an alist of names mapped to URLs, which lists all the
+additional actions in the More dropdown menu.
+
+"/
   (let* ((report diff-report)
          (run (diff-report:diff-report-run diff-report))
          (to (diff-report:diff-report-previous-run diff-report))
