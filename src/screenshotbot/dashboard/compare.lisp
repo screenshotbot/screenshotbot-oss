@@ -891,99 +891,98 @@ additional actions in the More dropdown menu.
                   (deleted-groups "deleted")
                   (t "changes")))))
       <markup:merge-tag>
+        <div class= "mt-3 d-flex  flex-wrap justify-content-between compare-header" >
 
-      <div class= "mt-3 d-flex  flex-wrap justify-content-between compare-header" >
+          <div class= "report-search-wrapper"  >
+            <div class= "input-group">
+              <span class= "input-group-text report-search" >
+                <mdi name= "search" />
+              </span>
+              <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
+                     placeholder= "Search..."
+                     data-target= ".report-result" />
+              <render-run-tags tags= (recorder-run-tags run) />
+            </div>
+          </div>
 
-      <div class= "report-search-wrapper"  >
-      <div class= "input-group">
-      <span class= "input-group-text report-search" >
-      <mdi name= "search" />
-      </span>
-      <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
-      placeholder= "Search..."
-      data-target= ".report-result" />
-      <render-run-tags tags= (recorder-run-tags run) />
-      </div>
-      </div>
+          <div class= "options" >
+            <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
+              <li class= "nav-item">
+                <compare-tab-a type= "changes" default-type=default-type >
+                  ,(length changes-groups) changes
+                </compare-tab-a>
+              </li>
+              <li class= "nav-item">
+                <compare-tab-a type= "added" default-type=default-type >
+                  ,(length added-groups) added
+                </compare-tab-a>
+              </li>
+              <li class= "nav-item">
+                <compare-tab-a type= "deleted" default-type=default-type >
+                  ,(length deleted-groups) deleted
+                </compare-tab-a>
+              </li>
 
-      <div class= "options" >
-      <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
-      <li class= "nav-item">
-        <compare-tab-a type= "changes" default-type=default-type >
-          ,(length changes-groups) changes
-        </compare-tab-a>
-      </li>
-      <li class= "nav-item">
-        <compare-tab-a type= "added" default-type=default-type >
-          ,(length added-groups) added
-        </compare-tab-a>
-      </li>
-      <li class= "nav-item">
-        <compare-tab-a type= "deleted" default-type=default-type >
-          ,(length deleted-groups) deleted
-        </compare-tab-a>
-      </li>
+              <markup:merge-tag>
+                <li class= "nav-item" >
+                  <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    More
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    ,@ (loop for (name . url) in more
+                             collect
+                             <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
+                             <li><a role= "button" class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal"><mdi name= "info"/> Info</a></li>
+                             ,(when-let ((url (?. run-build-url run)))
+                                <li><a role= "button" class= "dropdown-item" href=url target= "_blank">
+                                    <mdi name= "build" /> View Build</a></li>)
+                             ,(when (and
+                                     (?. adminp (current-user))
+                                     *summarizer*)
+                                <li><a class= "dropdown-item" href= (nibble () (funcall *summarizer* report)) > [Admin] Summarize</a></li>)
+                             ,(progn
+                                #+screenshotbot-oss
+                                (progn
+                                  <li>
+                                    <a class= "dropdown-item" href=all-comparisons >All Pixel Comparisons (OSS only) </a>
+                                  </li>))
 
-      <markup:merge-tag>
-      <li class= "nav-item" >
-      <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-      More
-      </button>
-      <ul class="dropdown-menu dropdown-menu-end">
-      ,@ (loop for (name . url) in more
-               collect
-               <li><a class="dropdown-item" href=url >,(progn name)</a></li>)
-      <li><a role= "button" class= "dropdown-item" href= "#" data-bs-toggle="modal" data-bs-target= "#comparison-info-modal"><mdi name= "info"/> Info</a></li>
-      ,(when-let ((url (?. run-build-url run)))
-         <li><a role= "button" class= "dropdown-item" href=url target= "_blank">
-             <mdi name= "build" /> View Build</a></li>)
-      ,(when (and
-              (?. adminp (current-user))
-              *summarizer*)
-         <li><a class= "dropdown-item" href= (nibble () (funcall *summarizer* report)) > [Admin] Summarize</a></li>)
-      ,(progn
-         #+screenshotbot-oss
-         (progn
-           <li>
-           <a class= "dropdown-item" href=all-comparisons >All Pixel Comparisons (OSS only) </a>
-           </li>))
+                  </ul>
 
-      </ul>
+                </li>
 
-      </li>
-
-      ,(when (and acceptable (auth:can-viewer-edit (auth:viewer-context hunchentoot:*request*)
-                                                   acceptable))
-         <li class= "nav-item" >
-         <render-acceptable acceptable=acceptable />
-         </li>)
-      </markup:merge-tag>
-      </ul>
-
+                ,(when (and acceptable (auth:can-viewer-edit (auth:viewer-context hunchentoot:*request*)
+                                                             acceptable))
+                   <li class= "nav-item" >
+                     <render-acceptable acceptable=acceptable />
+                   </li>)
+              </markup:merge-tag>
+            </ul>
 
 
-      </div>
 
-      </div>
+          </div>
 
-      ,@children
+        </div>
 
-      <div class= "report-result mt-3"
-           data-update= (nibble (:name :u-r-res) (report-result run
-           changes-groups
-           added-groups
-           deleted-groups
-           :script-name script-name))
-      data-args= (json:encode-json-to-string `((:type . ,default-type))) >
-      ,(report-result run
-                      changes-groups
-                      added-groups
-                      deleted-groups
-                      :script-name script-name
-                      :type default-type)
-      </div>
+        ,@children
 
-      ,(info-modal run to)
+        <div class= "report-result mt-3"
+             data-update= (nibble (:name :u-r-res) (report-result run
+             changes-groups
+             added-groups
+             deleted-groups
+             :script-name script-name))
+             data-args= (json:encode-json-to-string `((:type . ,default-type))) >
+          ,(report-result run
+                          changes-groups
+                          added-groups
+                          deleted-groups
+                          :script-name script-name
+                          :type default-type)
+        </div>
+
+        ,(info-modal run to)
 
       </markup:merge-tag>)))
 
