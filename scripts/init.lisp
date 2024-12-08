@@ -76,4 +76,8 @@
   (register-tdrhq "bknr.cluster" "main"))
 
 
-(quick-patch:checkout-all "build/quick-patch/")
+(let ((output-dir (format nil "~abuild/quick-patch/"
+                          ;; *cwd* is from prepare-image.lisp. Can we clean this up better?
+                          (namestring cl-user::*cwd*))))
+  (format t "Checking out quick-patch repos in: ~a~%" output-dir)
+  (quick-patch:checkout-all output-dir))
