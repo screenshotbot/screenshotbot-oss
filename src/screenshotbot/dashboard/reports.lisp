@@ -22,8 +22,6 @@
                 #:oid)
   (:import-from #:bknr.datastore
                 #:store-object-with-id)
-  (:import-from #:screenshotbot/dashboard/new-compare
-                #:compare-v2-page)
   (:import-from #:screenshotbot/dashboard/notes
                 #:render-notes
                 #:create-note-page)
@@ -134,34 +132,30 @@
   (unless skip-access-checks
     (can-view! report))
 
-  (cond
-    ((hunchentoot:parameter "v2")
-     (compare-v2-page :report report))
-    (t
-     <app-template body-class= "dashboard bg-white" title= (report-title report) >
+  <app-template body-class= "dashboard bg-white" title= (report-title report) >
 
-       ,(when (and nil (can-public-view report))
-          <section class= "mt-3" >
-            <div class= "alert alert-danger">
-              This report can be viewed by public, because the underlying repository is public
-            </div>
-          </section>)
+    ,(when (and nil (can-public-view report))
+       <section class= "mt-3" >
+         <div class= "alert alert-danger">
+           This report can be viewed by public, because the underlying repository is public
+         </div>
+       </section>)
 
-       ,(when alert
-          alert)
+    ,(when alert
+       alert)
 
-       <section class= "full-height">
-         ,(render-notes :for report)
+    <section class= "full-height">
+      ,(render-notes :for report)
 
 
-         <render-diff-report diff-report= (make-diff-report (report-run report) (report-previous-run report))
-                             acceptable= (report-acceptable report)
-                             more= (remove-if #'null (more-links-for-report report))
-                             >
-           ,@(render-warnings (report-run report))
-         </render-diff-report>
-       </section>
-     </app-template>)))
+      <render-diff-report diff-report= (make-diff-report (report-run report) (report-previous-run report))
+                          acceptable= (report-acceptable report)
+                          more= (remove-if #'null (more-links-for-report report))
+                          >
+        ,@(render-warnings (report-run report))
+      </render-diff-report>
+    </section>
+  </app-template>)
 
 (defun share-report (report)
   (let ((submit (nibble (expiry-date)

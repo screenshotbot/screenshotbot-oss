@@ -177,7 +177,6 @@
                  (:file "notes")
                  (:file "recent-runs")
                  (:file "notices")
-                 (:file "new-compare")
                  (:file "flaky-screenshots")
                  (:file "api-key-impl")
                  (:file "channels")
