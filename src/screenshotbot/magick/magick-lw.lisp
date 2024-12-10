@@ -463,17 +463,15 @@
            (funcall fn wand))
       (destroy-magick-wand wand))))
 
-(fli:define-foreign-function screenshotbot-inplace-compare
-    ((dest (:pointer wand))
-     (src (:pointer wand)))
-  :result-type :int)
-
 
 (fli:define-foreign-function screenshotbot-inplace-compare-v2
     ((dest (:pointer wand))
      (src (:pointer wand))
      (dist :int))
   :result-type :int)
+
+(defun screenshotbot-inplace-compare (dest src)
+  (screenshotbot-inplace-compare-v2 dest src 0))
 
 (defun set-wand-alpha-channel (wand)
   (check-boolean (magick-set-image-alpha-channel wand 'SetAlphaChannel)

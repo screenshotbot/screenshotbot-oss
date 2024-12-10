@@ -284,6 +284,9 @@ static bool inplace_compare_rows_v2(PixelWand** drow, PixelWand** srow,
  * changes were detected. -1 on error, and 1 on success.
  *
  * dist: the distance between two pixels to be considered different.
+ *
+ * v1 of this function did not take a dist, but that is now in Lisp
+ * code.
  */
 extern int screenshotbot_inplace_compare_v2(MagickWand* dest,
                                             MagickWand* src,
@@ -352,11 +355,6 @@ cleanup:
         // process rest of the rows, so we should check that here.
         return changed;
         //return -processedRows;
-}
-
-extern int screenshotbot_inplace_compare(MagickWand* dest,
-                                         MagickWand* src) {
-        return screenshotbot_inplace_compare_v2(dest, src, 0);
 }
 
 extern MagickBooleanType
