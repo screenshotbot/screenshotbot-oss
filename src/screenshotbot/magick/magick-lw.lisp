@@ -171,6 +171,9 @@
     (dummy :int))
 
 (fli:define-c-struct drawing-wand
+    (dummy :int))
+
+(fli:define-c-struct pixel-iterator
   (dummy :int))
 
 (fli:define-foreign-function (magick-wand-genesis "MagickWandGenesis")
@@ -209,12 +212,22 @@
      (y :size-t))
   :result-type :boolean)
 
+(fli:define-foreign-function (new-pixel-iterator "NewPixelIterator")
+    ((wand (:pointer wand)))
+  :result-type (:pointer pixel-iterator))
+
+(fli:define-foreign-function (destroy-pixel-iterator "DestroyPixelIterator")
+    ((pix (:pointer pixel-iterator)))
+  ;; I think the return value should always be NULL
+  :result-type (:pointer pixel-iterator))
+
 (fli:define-foreign-function (magick-new-image "MagickNewImage")
     ((wand (:pointer wand))
      (columns :size-t)
      (rows :size-t)
      (pixel-wand (:pointer pixel-wand)))
   :result-type :boolean)
+
 
 (fli:define-foreign-function (new-pixel-wand "NewPixelWand")
     ()
@@ -726,6 +739,11 @@
      (height :size-t))
   :result-type :boolean)
 
+(fli:define-foreign-function screenshotbot-calculate-row-rmse-square
+    ((one (:pointer pixel-iterator))
+     (two (:pointer pixel-iterator)))
+  :result-type :double)
+
 (defun resize-image (input &key output size)
   (destructuring-bind (width height)
       (cond
@@ -791,3 +809,28 @@ to be encoded timestamps."
      wand x y
      px)
     (from-magick-string (pixel-get-color-as-string px))))
+
+(def-easy-macro with-pixel-iterator (&binding pixel-iterator wand &fn fn)
+  (let ((pix-it (new-pixel-iterator wand)))
+    (unwind-protect
+         (fn pix-it)
+      (destroy-pixel-iterator pix-it))))
+
+(defun calculate-difference-rmse (wand1 wand2)
+  "Compute the difference between the two wands in terms of RMSE"
+  (cond
+    ;; If heights or widths are different then return 1.0.
+    ((not (apply #'= (mapcar #'magick-get-image-width (list wand1 wand2))))
+     1.0d0)
+    ((not (apply #'= (mapcar #'magick-get-image-height (list wand1 wand2))))
+     1.0d0)    
+    (t
+     ;; At this point we know the dimensions are identical
+     (with-pixel-iterator (pix1 wand1)
+       (with-pixel-iterator (pix2 wand2)
+         (let ((result 0)
+               (rows (magick-get-image-height wand1)))
+           (dotimes (i rows)
+             (declare (ignore i))
+             (incf result (screenshotbot-calculate-row-rmse-square pix1 pix2)))
+           (sqrt (/ result rows))))))))

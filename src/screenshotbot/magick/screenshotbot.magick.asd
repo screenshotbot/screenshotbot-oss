@@ -33,6 +33,7 @@
   :serial t
   :defsystem-depends-on (:screenshotbot.magick.build)
   :depends-on (:util/fiveam
+               :tmpdir
                :fiveam-matchers
                :util/digests
                :screenshotbot.magick)

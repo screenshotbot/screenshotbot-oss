@@ -9,6 +9,8 @@
   (:use #:cl)
   (:import-from #:screenshotbot/magick/build
                 #:magick-wand-config)
+  (:import-from #:util/misc
+                #:or-setf)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:run-magick
@@ -31,7 +33,7 @@
 (defvar *prefix* nil)
 
 (defun prefix ()
-  (util:or-setf
+  (util/misc:or-setf
    *prefix*
    (format nil "~a/"
            (magick-wand-config "--prefix"))))
@@ -77,7 +79,7 @@
   just revert to calling convert directly."
 
    (cdr ;; remove :dummy
-    (util:or-setf
+    (or-setf
      cache
      (cons :dummy
            (magick-prefix-uncached))))))

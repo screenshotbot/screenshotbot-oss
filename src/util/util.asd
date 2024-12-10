@@ -428,6 +428,7 @@
   :defsystem-depends-on (:trivial-features)
   :depends-on (:clsql
                :util/clsql
+               :util/cron
                :core.installation
                :util/misc
                :util/atomics

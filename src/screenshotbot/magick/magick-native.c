@@ -233,6 +233,16 @@ static bool fill_row_with_red(int start, PixelWand** drow, size_t dwidth) {
         return start < dwidth;
 }
 
+#define DIST(name,i) (((long)name(drow)) - ((long)name(srow)))
+inline long get_square_dist(PixelWand* srow, PixelWand* drow) {
+        long a = DIST(PixelGetAlphaQuantum, x);
+        long r = DIST(PixelGetRedQuantum, x);
+        long g = DIST(PixelGetGreenQuantum, x);
+        long b = DIST(PixelGetBlueQuantum, x);
+        return (a*a + r*r + g*g + b*b);
+
+}
+
 static bool inplace_compare_rows_v2(PixelWand** drow, PixelWand** srow,
                                     size_t dwidth,
                                     size_t swidth,
@@ -246,7 +256,6 @@ static bool inplace_compare_rows_v2(PixelWand** drow, PixelWand** srow,
 #endif
 
 #define CQ(name,i) (name(drow[i]) == name(srow[i]))
-#define DIST(name,i) (((long)name(drow[i])) - ((long)name(srow[i])))
 
         for (x = 0; x < _min(dwidth, swidth); x++) {
                 bool same;
@@ -257,11 +266,7 @@ static bool inplace_compare_rows_v2(PixelWand** drow, PixelWand** srow,
                                 CQ(PixelGetBlueQuantum, x) &&
                                 CQ(PixelGetGreenQuantum, x);
                 } else {
-                        long a = DIST(PixelGetAlphaQuantum, x);
-                        long r = DIST(PixelGetRedQuantum, x);
-                        long g = DIST(PixelGetGreenQuantum, x);
-                        long b = DIST(PixelGetBlueQuantum, x);
-                        same = ((a*a + r*r + g*g + b*b) <= sq_dist);
+                        same = (get_square_dist(srow[x], drow[x]) <= sq_dist);
                 }
                 if (same) {
                         draw_transparent(drow[x]);
@@ -371,4 +376,28 @@ screenshotbot_resize(MagickWand *wand,
                 ,1.0
 #endif
          );
+}
+
+/*
+ * Given the PixelIterators for two rows of same length, calculate the square of the RMSE. i.e.
+ * it calculates (dr^2 + dg^2  + db^2 + da^2) / 4*len
+ */
+extern double screenshotbot_calculate_row_rmse_square(PixelIterator* one, PixelIterator* two) {
+        size_t width1 = 0;
+        size_t width2 = 0;
+
+        PixelWand** row1 = PixelGetNextIteratorRow(one, &width1);
+        PixelWand** row2 = PixelGetNextIteratorRow(two, &width2);
+
+        if (width1 != width2) {
+                return 1.0;
+        }
+
+        long res = 0;
+
+        for (size_t i = 0; i < width1; i++) {
+                res += get_square_dist(row1[i], row2[i]);
+        }
+
+        return ((double)res) / MAX_QUANTUM / MAX_QUANTUM / width1 / 4 ;
 }

@@ -10,6 +10,7 @@
         #:fiveam-matchers
         #:screenshotbot/mask-rect-api)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:calculate-difference-rmse
                 #:screenshotbot-inplace-compare-v2
                 #:get-px-as-string
                 #:magick-bad-exif-data
@@ -256,10 +257,11 @@
                                               width
                                               height
                                               default-mark
+                                              (default-color "none")
                                               &fn fn)
   (with-wand (wand)
     (with-pixel-wand (pwand)
-      (pixel-set-color pwand "none")
+      (pixel-set-color pwand default-color)
       (check-boolean
        (magick-new-image wand
                          width height
@@ -632,3 +634,31 @@
       (mark-pixel wand2 3 4 :color "srgb(31,9,13)")
       (is (eql 1 (screenshotbot-inplace-compare-v2 wand1 wand2
                                                    1))))))
+
+(test compute-difference-rmse-simple-test
+  (with-single-pixel-image (:wand wand1 :height 20
+                            :default-color "black"
+                            :width 20)
+    (with-single-pixel-image (:wand wand2 :height 20 :width 20
+                              :default-color "black"
+                              :default-mark t)
+      (let ((rmse (calculate-difference-rmse wand1 wand2)))
+        (is (<
+             (abs (- rmse (sqrt (/  (/ 100 (* 255 255)) (* 4 20 20)))))
+             0.0001))))))
+
+(test compute-difference-rmse-if-widths-are-difference
+  (with-single-pixel-image (:wand wand1 :height 20
+                            :width 21)
+    (with-single-pixel-image (:wand wand2 :height 20 :width 20
+                              :default-mark t)
+      (let ((rmse (calculate-difference-rmse wand1 wand2)))
+        (is (< 0.999d0  rmse))))))
+
+(test compute-difference-rmse-if-heights-are-difference
+  (with-single-pixel-image (:wand wand1 :height 21
+                            :width 20)
+    (with-single-pixel-image (:wand wand2 :height 20 :width 20
+                              :default-mark t)
+      (let ((rmse (calculate-difference-rmse wand1 wand2)))
+        (is (< 0.999d0  rmse))))))
