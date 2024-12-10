@@ -202,15 +202,6 @@ cleanup:
         return ret;
 }
 
-extern size_t screenshotbot_find_non_transparent_pixels(MagickWand* wand, pixel* output, size_t max) {
-        return screenshotbot_find_non_transparent_pixels_with_masks(
-                wand,
-                NULL,
-                0,
-                output,
-                max);
-}
-
 static void draw_red(PixelWand* wand) {
         PixelSetAlphaQuantum(wand, QuantumRange);
         PixelSetRedQuantum(wand, QuantumRange);
