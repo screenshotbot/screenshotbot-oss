@@ -170,13 +170,17 @@ images. If the first value was T, then this will always be 0.0"
                (values same-p rmse)))))))))
 
 (defmethod find-image-comparison-on-images ((before image)
-                                            (after image))
+                                            (after image)
+                                            &key only-cached-p)
   "Finds an existing image comparison for before and after, if it
   doesn't exist calls creator with a temporary file. The creator
   should create the image in the file provided. The creator should
   returns true if the images are completely identical, or nil
-  otherwise"
+  otherwise
 
+  If CACHE-ONLY is T, we won't create the image-comparison, and should
+  respond quickly."
+  
   (when (> (store-object-id before)
            (store-object-id after))
     (rotatef before after))
@@ -189,18 +193,19 @@ images. If the first value was T, then this will always be 0.0"
            (find-image-comparison-from-cache :before before :after after)))
     (or
      (find)
-     (with-tmp-image-file (:pathname p :type "webp" :prefix "comparison")
-       (multiple-value-bind (identical-p
-                             difference-value)
-           (do-image-comparison before after p)
-         (let* ((image (make-image :pathname p
-                                   :company (company after))))
-           (make-image-comparison
-            :before before
-            :after after
-            :identical-p identical-p
-            :difference-value difference-value
-            :result image)))))))
+     (unless only-cached-p
+       (with-tmp-image-file (:pathname p :type "webp" :prefix "comparison")
+         (multiple-value-bind (identical-p
+                               difference-value)
+             (do-image-comparison before after p)
+           (let* ((image (make-image :pathname p
+                                     :company (company after))))
+             (make-image-comparison
+              :before before
+              :after after
+              :identical-p identical-p
+              :difference-value difference-value
+              :result image))))))))
 
 (with-auto-restart ()
   (defmethod recreate-image-comparison ((self image-comparison))

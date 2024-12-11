@@ -70,6 +70,10 @@
                 #:render-change-group)
   (:import-from #:screenshotbot/diff-report
                 #:make-diff-report)
+  (:import-from #:screenshotbot/model/image-comparison
+                #:find-image-comparison-on-images)
+  (:import-from #:screenshotbot/screenshot-api
+                #:screenshot-image)
   (:export #:report-page #:report-link
            #:shared-report-page)
   (:local-nicknames (#:diff-report #:screenshotbot/diff-report)))
@@ -387,6 +391,16 @@
 (defhandler (sorted-by-changes-page :uri "/report/:oid/sorted") (oid)
   (let ((report (util:find-by-oid oid)))
     (with-report-login (report)
-      "hello")))
+      (let* ((diff-report (report-diff-report report))
+             (changes (diff-report:diff-report-changes diff-report))
+             (comparison (loop for change in changes
+                               collect (find-image-comparison-on-images
+                                        (screenshot-image (diff-report:before change))
+                                        (screenshot-image (diff-report:after change))
+                                        
+                                        :only-cached-p t))))
+        <span>
+          ,(format nil "~s" comparison)
+        </span>))))
 
 

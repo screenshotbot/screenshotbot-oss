@@ -121,6 +121,15 @@
         (is-true result)
         (is (eql result (find-image-comparison-on-images after before)))))))
 
+(test only-cached-p-should-not-create-a-new-one
+  (with-fixture state ()
+    (let ((before (make-image :pathname im1))
+          (after (make-image :pathname im3)))
+      ;; this will create a new image-comparison
+      (is (eql nil
+               (find-image-comparison-on-images before after
+                                                :only-cached-p t))))))
+
 (test propagates-company
   (with-fixture state ()
     (let ((before (make-image :pathname im1 :company :company-2))
