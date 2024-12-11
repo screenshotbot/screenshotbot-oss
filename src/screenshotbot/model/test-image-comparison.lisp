@@ -112,25 +112,31 @@
         (is-false (identical-p result))
         (is (< 0 (image-comparison-difference-value result)))))))
 
+(test order-doesnt-matter
+  (with-fixture state ()
+    (let ((before (make-image :pathname im1))
+          (after (make-image :pathname im3)))
+      ;; this will create a new image-comparison
+      (let ((result (find-image-comparison-on-images before after)))
+        (is-true result)
+        (is (eql result (find-image-comparison-on-images after before)))))))
+
 (test propagates-company
   (with-fixture state ()
-    (let ((before (make-image :pathname im1 :company :company-1))
+    (let ((before (make-image :pathname im1 :company :company-2))
           (after (make-image :pathname im2 :company :company-2)))
       (let ((result (find-image-comparison-on-images before after)))
         (is
          (eql
           :company-2
-          (company (image-comparison-result result)))))))
-  ;; What if we swap the before and after? As implemented now, order
-  ;; matters.
+          (company (image-comparison-result result))))))))
+
+(test both-images-have-to-be-same-company
   (with-fixture state ()
     (let ((before (make-image :pathname im1 :company :company-1))
           (after (make-image :pathname im2 :company :company-2)))
-      (let ((result (find-image-comparison-on-images after before #| here |#)))
-        (is
-         (eql
-          :company-1
-          (company (image-comparison-result result))))))))
+      (signals simple-error
+       (find-image-comparison-on-images after before #| here |#)))))
 
 
 (def-easy-macro with-file-copy (&binding result file &fn fn)

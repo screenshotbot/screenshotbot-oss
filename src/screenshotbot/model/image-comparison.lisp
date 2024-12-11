@@ -2,6 +2,7 @@
   (:use #:cl)
   (:shadow #:find)
   (:import-from #:bknr.datastore
+                #:store-object-id
                 #:snapshot-subsystem-async
                 #:persistent-class)
   (:import-from #:screenshotbot/model/transient-object
@@ -175,6 +176,15 @@ images. If the first value was T, then this will always be 0.0"
   should create the image in the file provided. The creator should
   returns true if the images are completely identical, or nil
   otherwise"
+
+  (when (> (store-object-id before)
+           (store-object-id after))
+    (rotatef before after))
+
+  (unless (eql (company before)
+               (company after))
+    (error "Trying to compare images from different companies"))
+
   (flet ((find ()
            (find-image-comparison-from-cache :before before :after after)))
     (or

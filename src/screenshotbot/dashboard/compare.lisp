@@ -302,12 +302,10 @@
                                   (after-screenshot abstract-screenshot))
   ;; second level of caching, we're going to look through the
   ;; datastore to see if there are any previous images
+  
   (let ((before (screenshot-image before-screenshot))
         (after (screenshot-image after-screenshot)))
     ;; Avoid computation for large reverts
-    (when (> (store-object-id before)
-             (store-object-id after))
-      (rotatef before after))
     (find-image-comparison-on-images
      before
      after)))
