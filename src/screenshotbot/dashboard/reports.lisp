@@ -388,19 +388,35 @@
                                              :run (report-run report))
           </app-template>)))))
 
+(markup:deftag sorted-template (children &key report)
+  <app-template>
+    <div class= "page-title-box mb-3">
+      <div class= "mb-2" ><a href= (report-link report) >Back to report</a></div>
+    </div>
+    ,@children
+  </app-template>)
+
 (defhandler (sorted-by-changes-page :uri "/report/:oid/sorted") (oid)
   (let ((report (util:find-by-oid oid)))
     (with-report-login (report)
-      (let* ((diff-report (report-diff-report report))
-             (changes (diff-report:diff-report-changes diff-report))
-             (comparison (loop for change in changes
-                               collect (find-image-comparison-on-images
-                                        (screenshot-image (diff-report:before change))
-                                        (screenshot-image (diff-report:after change))
-                                        
-                                        :only-cached-p t))))
-        <span>
-          ,(format nil "~s" comparison)
-        </span>))))
+      (%render-sorted-by-changes report))))
+
+(defmethod %render-sorted-by-changes ((report report))
+  (let* ((diff-report (report-diff-report report))
+         (changes (diff-report:diff-report-changes diff-report))
+         (comparisons (loop for change in changes
+                            collect (find-image-comparison-on-images
+                                     (screenshot-image (diff-report:before change))
+                                     (screenshot-image (diff-report:after change))
+                                     :only-cached-p t))))
+    (setf (elt comparisons 0) nil)
+    (cond
+      ((remove-if-not #'null comparisons)
+       <sorted-template report=report >
+         <div class= "alert alert-danger mt-2">
+           Image processing for this report is not complete yet, so we're unable to show you
+           the changes sorted by difference. Please refresh in a few minutes.
+         </div>
+       </sorted-template>))))
 
 
