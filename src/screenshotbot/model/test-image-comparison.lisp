@@ -14,6 +14,8 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/model/image-comparison
+                #:identical-p
+                #:image-comparison-difference-value
                 #:image-comparison-after
                 #:image-comparison-result
                 #:find-image-comparison-from-cache
@@ -54,6 +56,7 @@
 
 (util/fiveam:def-suite)
 
+;; TODO: im1 and im2 seem like they're identical, and that might've been a typo from the past
 (defvar im1 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
 (defvar im2 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-2.png"))
 (defvar im3 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
@@ -99,13 +102,15 @@
 (test find-image-comparison-on-images
   (with-fixture state ()
     (let ((before (make-image :pathname im1))
-          (after (make-image :pathname im2)))
+          (after (make-image :pathname im3)))
       ;; this will create a new image-comparison
       (let ((result (find-image-comparison-on-images before after)))
         (is-true result)
         ;; We used to test that this object is the same as before, but
         ;; with sqlite that might no longer be the case.
-        (is-true (find-image-comparison-on-images before after))))))
+        (is-true (find-image-comparison-on-images before after))
+        (is-false (identical-p result))
+        (is (< 0 (image-comparison-difference-value result)))))))
 
 (test propagates-company
   (with-fixture state ()
@@ -212,3 +217,5 @@
        (with-test-store (:dir dir)
          (is (eql 1 (fset:size *stored-cache*)))
          (check-for-bad-state))))))
+
+ 

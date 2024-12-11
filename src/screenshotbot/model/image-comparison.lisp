@@ -43,6 +43,7 @@
   (:import-from #:screenshotbot/events
                 #:push-event)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:calculate-difference-rmse
                 #:compare-wands
                 #:with-image-comparison
                 #:with-wand)
@@ -82,7 +83,8 @@
    #:%image-comparisons-for-before
    #:image-comparison-after
    #:image-comparison-result
-   #:identical-p))
+   #:identical-p
+   #:image-comparison-difference-value))
 (in-package :screenshotbot/model/image-comparison)
 
 (with-transient-copy (transient-image-comparison abstract-image-comparison)
@@ -98,6 +100,10 @@
      (masks :initarg :masks
             :initform nil
             :documentation "DEPRECATED: do not use.")
+     (difference-value :initarg :difference-value
+                       :initform nil
+                       :reader image-comparison-difference-value
+                       :documentation "The difference as computed as a value, currently only RMSE metric. Will be a DOUBLE or NIL for older image-comparisons where this was not computed.")
      (identical-p :initform nil
                   :accessor identical-p
                   :initarg :identical-p
@@ -147,15 +153,20 @@
                             p)
   "Compares before-screenshot and after-screenshot, and saves the result image to P.
 
-If the images are identical, we return t, else we return NIL."
+Returns two values. If the images are identical, we return T for the
+primary value, else we return NIL.
+
+Second second value will be the RMSE difference between the two
+images. If the first value was T, then this will always be 0.0"
   (with-tracing (:image-comparison)
     (with-local-image (before-file before-image)
       (with-local-image (after-file after-image)
         (with-wand (before :file before-file)
           (with-wand (after :file after-file)
-            (let ((same-p (compare-wands before after p
-                                         :in-place-p t)))
-              same-p)))))))
+            (let ((rmse (calculate-difference-rmse before after)))
+             (let ((same-p (compare-wands before after p
+                                          :in-place-p t)))
+               (values same-p rmse)))))))))
 
 (defmethod find-image-comparison-on-images ((before image)
                                             (after image))
@@ -169,16 +180,16 @@ If the images are identical, we return t, else we return NIL."
     (or
      (find)
      (with-tmp-image-file (:pathname p :type "webp" :prefix "comparison")
-       (let ((identical-p (do-image-comparison
-                            before
-                            after
-                            p)))
+       (multiple-value-bind (identical-p
+                             difference-value)
+           (do-image-comparison before after p)
          (let* ((image (make-image :pathname p
                                    :company (company after))))
            (make-image-comparison
             :before before
             :after after
             :identical-p identical-p
+            :difference-value difference-value
             :result image)))))))
 
 (with-auto-restart ()
