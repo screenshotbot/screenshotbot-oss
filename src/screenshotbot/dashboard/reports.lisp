@@ -127,6 +127,9 @@
     </div>
   </app-template>)
 
+(defun report-diff-report (report)
+  (make-diff-report (report-run report) (report-previous-run report)))
+
 (defun render-report-page (report &key alert skip-access-checks)
   (check-type report report)
   (unless skip-access-checks
@@ -148,7 +151,7 @@
       ,(render-notes :for report)
 
 
-      <render-diff-report diff-report= (make-diff-report (report-run report) (report-previous-run report))
+      <render-diff-report diff-report= (report-diff-report report)
                           acceptable= (report-acceptable report)
                           more= (remove-if #'null (more-links-for-report report))
                           >
@@ -374,9 +377,7 @@
   (let ((report (util:find-by-oid oid))
         (key-id (parse-integer key-id)))
     (with-report-login (report)
-      (let ((diff-report (diff-report:make-diff-report
-                          (report-run report)
-                          (report-previous-run report))))
+      (let ((diff-report (report-diff-report report)))
         (let ((report-link (format nil "/report/~a" oid)))
           <app-template body-class= "dashboard bg-white">
             ,(render-single-change-permalink diff-report key-id report-link
