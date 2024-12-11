@@ -145,9 +145,6 @@
 
 (defvar *summarizer* nil)
 
-(defmethod gk:compute-default-value ((name (eql :image-permalink)) company)
-  t)
-
 (defparameter *always-async-p* nil
   "Always use async for WITH-ASYNC-DIFF-REPORT. Only useful for testing the async flow.")
 
@@ -627,13 +624,12 @@ If the diff-report is cached, then we process the body immediately instead."
             </a>
           </li>
 
-          ,(when (gk:check :image-permalink (auth:current-company))
-             <li>
-               <a href= (format nil "~a/image/~a" script-name (bknr.datastore:store-object-id
-                  (screenshot-key s ))) >
-                 Permalink
-               </a>
-             </li>)
+          <li>
+            <a href= (format nil "~a/image/~a" script-name (bknr.datastore:store-object-id
+               (screenshot-key s ))) >
+              Permalink
+            </a>
+           </li>
 
           ,(let ((id (format nil "a~a" (random 10000000000))))
              <li>
@@ -1083,10 +1079,9 @@ additional actions in the More dropdown menu.
                        <div>
                          <div class= "screenshot-header" >
                            <ul class= "screenshot-options-menu" >
-                             ,(when (gk:check :image-permalink (auth:current-company))
-                                <li>
-                                  <a href= (format nil "~a/image/~a" script-name (store-object-id (screenshot-key screenshot))) >Permalink</a>
-                                </li>)
+                             <li>
+                               <a href= (format nil "~a/image/~a" script-name (store-object-id (screenshot-key screenshot))) >Permalink</a>
+                              </li>
                              <li>
                                <a href= (image-public-url (screenshot-image screenshot) :originalp t)
                                   >Download Original</a>
