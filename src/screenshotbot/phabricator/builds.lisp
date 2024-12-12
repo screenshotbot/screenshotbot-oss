@@ -58,6 +58,7 @@
    ((diff :initarg :diff
           :reader build-info-diff)
     (revision :initarg :revision
+              :initform nil
               :accessor build-info-revision)
     (target-phid :initarg :target-phid
                  :accessor target-phid)
