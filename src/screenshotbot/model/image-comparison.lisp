@@ -207,31 +207,6 @@ images. If the first value was T, then this will always be 0.0"
               :difference-value difference-value
               :result image))))))))
 
-(with-auto-restart ()
-  (defmethod recreate-image-comparison ((self image-comparison))
-    (log:info "recreating: ~a" (bknr.datastore:store-object-id self))
-    (let* ((image (image-comparison-result self)))
-      (check-type image image)
-      (with-local-image (pathname image)
-        (restart-case
-            (progn
-              (let ((before (image-comparison-before self))
-                    (after (image-comparison-after self)))
-                (delete-object self)
-                (find-image-comparison-on-images
-                 before after))
-              (delete-object image)
-              (log:info "Deleting ~a" pathname)
-              (delete-file pathname))
-          (ignore-this-comparison ()
-            (values)))))))
-
-
-(defmethod recreate-all-image-comparisons ()
-  (loop for image-comparison in (reverse
-                                 (bknr.datastore:store-objects-with-class 'image-comparison))
-        do
-        (recreate-image-comparison image-comparison)))
 
 (defclass image-comparison-subsystem ()
   ())
