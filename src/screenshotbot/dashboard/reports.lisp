@@ -409,7 +409,6 @@
                                      (screenshot-image (diff-report:before change))
                                      (screenshot-image (diff-report:after change))
                                      :only-cached-p t))))
-    (setf (elt comparisons 0) nil)
     (cond
       ((remove-if-not #'null comparisons)
        <sorted-template report=report >
@@ -417,6 +416,8 @@
            Image processing for this report is not complete yet, so we're unable to show you
            the changes sorted by difference. Please refresh in a few minutes.
          </div>
-       </sorted-template>))))
+       </sorted-template>)
+      (t
+       "unimpl"))))
 
 
