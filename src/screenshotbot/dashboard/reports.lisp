@@ -428,7 +428,7 @@
          (Warn "comparison for older reports")
          <sorted-template report=report >
            <div class= "alert alert-danger mt-2">
-             We were unable to generate the report, probably because this is an older report. Please contact support@screenshotbot.io if you need more help.
+             We were unable to generate the report, probably because this is an older report. Please contact support@screenshotbot.io if you think this is an error.
            </div>
          </sorted-template>)
         (t
