@@ -422,6 +422,10 @@ If the diff-report is cached, then we process the body immediately instead."
            :diff-report diff-report
            (remove-from-plist args :run :to))))
 
+(defun warmup-report (report)
+  (when (report-previous-run report)
+    (warmup-comparison-images (report-run report) (report-previous-run report))))
+
 
 (defun warmup-comparison-images (run previous-run)
   (make-thread

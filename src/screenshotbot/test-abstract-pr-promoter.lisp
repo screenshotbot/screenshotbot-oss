@@ -102,7 +102,9 @@
                 #:disable-pull-request-checks-p
                 #:pr-rollout-rule)
   (:import-from #:bknr.datastore
-                #:persistent-class))
+                #:persistent-class)
+  (:import-from #:screenshotbot/dashboard/compare
+                #:warmup-report))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
@@ -302,6 +304,7 @@
                                    :state :rejected
                                    :user old-user))
            (promoter (make-instance 'test-promoter)))
+      (answer (warmup-report report))
       (answer (promoter-pull-id promoter run)
         20)
       (answer (make-acceptable promoter report)

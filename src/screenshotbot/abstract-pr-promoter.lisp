@@ -100,6 +100,8 @@
   (:import-from #:screenshotbot/model/pr-rollout-rule
                 #:disable-pull-request-checks-p
                 #:pr-rollout-rule-for-company)
+  (:import-from #:screenshotbot/dashboard/compare
+                #:warmup-report)
   (:export
    #:check
    #:check-status
@@ -487,6 +489,7 @@ we return NIL."
                                    :previous-run base-run
                                    :channel (when run (recorder-run-channel run))
                                    :title  (diff-report-title diff-report))))
+        (warmup-report report)
         (flet ((setup-acceptable (&rest args)
                  (with-transaction ()
                    (setf (report-acceptable report)

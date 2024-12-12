@@ -41,6 +41,8 @@
                 #:report-to-dto)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:screenshotbot/dashboard/compare
+                #:warmup-report)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/tasks/common)
 
@@ -135,11 +137,7 @@ Don't panic! This is might not be a regression! Usually screenshot changes are i
                                (recorder-run-company run)
                                report)
                               report)))
-               ;; This is only used by the frontend when viewed
-               ;; by the user, it's not used in the promotion
-               ;; flows.
-               (when previous-run
-                 (warmup-comparison-images run previous-run))
+               (warmup-report report)
                (send-webhook company
                              (make-instance 'channel-promoted-payload
                                             :channel (channel-name channel)
