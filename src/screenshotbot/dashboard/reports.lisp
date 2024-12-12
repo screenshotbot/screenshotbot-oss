@@ -76,6 +76,8 @@
                 #:find-image-comparison-on-images)
   (:import-from #:screenshotbot/screenshot-api
                 #:screenshot-image)
+  (:import-from #:core/ui/paginated
+                #:paginated)
   (:export #:report-page #:report-link
            #:shared-report-page)
   (:local-nicknames (#:diff-report #:screenshotbot/diff-report)))
@@ -435,18 +437,20 @@
                                      (image-comparison-difference-value
                                       (change-to-comparison change))))))
            <sorted-template report=report >
-             ,@ (loop for change in changes
-                      for key = (screenshot-key (diff-report:before change))
-                      collect
-                      (render-change-group
-                        (make-instance 'diff-report:group
-                                       :title (screenshot-name key)
-                                       :items (list
-                                               (make-instance 'diff-report:group-item
-                                                              :subtitle nil
-                                                              :actual-item change)))
-                        (report-run report)
-                        (format nil "/report/:oid" (oid report))))
+             
+             ,(paginated
+                (lambda (change)
+                  (let ((key (screenshot-key (diff-report:before change))))
+                   (render-change-group
+                    (make-instance 'diff-report:group
+                                   :title (screenshot-name key)
+                                   :items (list
+                                           (make-instance 'diff-report:group-item
+                                                          :subtitle nil
+                                                          :actual-item change)))
+                    (report-run report)
+                    (format nil "/report/:oid" (oid report)))))
+                :items changes)
            </sorted-template>)
          )))))
 
