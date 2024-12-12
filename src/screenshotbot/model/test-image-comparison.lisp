@@ -128,6 +128,21 @@ from beginning of time. It might be reasonable to delete in the future."
         (is-true (image-comparison-difference-value result))
         (is (< 0 (image-comparison-difference-value result)))))))
 
+(test difference-value-is-not-populated-if-we-request-only-cached-values
+  "Same as the previous test, if if we have :only-cached-p, then we don't expect
+to be doing image processing during the request."
+  (with-fixture state ()
+    (let ((before (make-image :pathname im1))
+          (after (make-image :pathname im3)))
+      ;; this will create a new image-comparison
+      (let ((result (find-image-comparison-on-images before after)))
+        (setf (image-comparison-difference-value result) nil)
+
+        (is-true (find-image-comparison-on-images before after :only-cached-p t))
+        (is-false (identical-p result))
+
+        (is-false (image-comparison-difference-value result))))))
+
 (test order-doesnt-matter
   (with-fixture state ()
     (let ((before (make-image :pathname im1))

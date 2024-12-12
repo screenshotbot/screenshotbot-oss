@@ -191,7 +191,7 @@ images. If the first value was T, then this will always be 0.0"
 
   (flet ((find ()
            (let ((res (find-image-comparison-from-cache :before before :after after)))
-             (when res
+             (when (and res (not only-cached-p))
               (maybe-populate-difference-value res))
              res)))
     (or
