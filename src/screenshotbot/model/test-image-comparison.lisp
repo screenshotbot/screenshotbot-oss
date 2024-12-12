@@ -112,6 +112,22 @@
         (is-false (identical-p result))
         (is (< 0 (image-comparison-difference-value result)))))))
 
+(test difference-value-is-populated-if-it-doesnt-exist
+  "This is a migration strategy, to avoid having to recompute everything
+from beginning of time. It might be reasonable to delete in the future."
+  (with-fixture state ()
+    (let ((before (make-image :pathname im1))
+          (after (make-image :pathname im3)))
+      ;; this will create a new image-comparison
+      (let ((result (find-image-comparison-on-images before after)))
+        (setf (image-comparison-difference-value result) nil)
+
+        (is-true (find-image-comparison-on-images before after))
+        (is-false (identical-p result))
+
+        (is-true (image-comparison-difference-value result))
+        (is (< 0 (image-comparison-difference-value result)))))))
+
 (test order-doesnt-matter
   (with-fixture state ()
     (let ((before (make-image :pathname im1))

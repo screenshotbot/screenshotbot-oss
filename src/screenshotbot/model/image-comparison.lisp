@@ -103,7 +103,7 @@
             :documentation "DEPRECATED: do not use.")
      (difference-value :initarg :difference-value
                        :initform nil
-                       :reader image-comparison-difference-value
+                       :accessor image-comparison-difference-value
                        :documentation "The difference as computed as a value, currently only RMSE metric. Will be a DOUBLE or NIL for older image-comparisons where this was not computed.")
      (identical-p :initform nil
                   :accessor identical-p
@@ -190,7 +190,10 @@ images. If the first value was T, then this will always be 0.0"
     (error "Trying to compare images from different companies"))
 
   (flet ((find ()
-           (find-image-comparison-from-cache :before before :after after)))
+           (let ((res (find-image-comparison-from-cache :before before :after after)))
+             (when res
+              (maybe-populate-difference-value res))
+             res)))
     (or
      (find)
      (unless only-cached-p
@@ -206,6 +209,23 @@ images. If the first value was T, then this will always be 0.0"
               :identical-p identical-p
               :difference-value difference-value
               :result image))))))))
+
+(defun maybe-populate-difference-value (image-comparison)
+  "As a migration strategy for T1547, if the difference-value is not
+already present, let's recompute it. We expect this logic to not be
+hit too much in production."
+  (cond
+    ((image-comparison-difference-value image-comparison)
+     (values))
+    (t
+     (with-tmp-image-file (:pathname output-image :type "webp")
+       (multiple-value-bind (identical-p difference-value)
+           (do-image-comparison (image-comparison-before image-comparison)
+             (image-comparison-after image-comparison)
+             output-image)
+         (declare (ignore identical-p))
+         (setf (image-comparison-difference-value image-comparison)
+               difference-value))))))
 
 
 (defclass image-comparison-subsystem ()
