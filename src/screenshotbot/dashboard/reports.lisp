@@ -66,6 +66,7 @@
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-key)
   (:import-from #:screenshotbot/dashboard/compare
+                #:render-single-group-list
                 #:render-single-change-permalink
                 #:render-change-group)
   (:import-from #:screenshotbot/diff-report
@@ -403,29 +404,50 @@
       (%render-sorted-by-changes report))))
 
 (defmethod %render-sorted-by-changes ((report report))
-  (let* ((diff-report (report-diff-report report))
-         (changes (diff-report:diff-report-changes diff-report))
-         (comparisons (loop for change in changes
-                            collect (find-image-comparison-on-images
-                                     (screenshot-image (diff-report:before change))
-                                     (screenshot-image (diff-report:after change))
-                                     :only-cached-p t))))
-    (cond
-      ((remove-if-not #'null comparisons)
-       <sorted-template report=report >
-         <div class= "alert alert-danger mt-2">
-           Image processing for this report is not complete yet, so we're unable to show you
-           the changes sorted by difference. Please refresh in a few minutes.
-         </div>
-       </sorted-template>)
-      ((some (alexandria:compose #'null #'image-comparison-difference-value) comparisons)
-       (Warn "comparison for older reports")
-       <sorted-template report=report >
-         <div class= "alert alert-danger mt-2">
-           We were unable to generate the report, probably because this is an older report. Please contact support@screenshotbot.io if you need more help.
-         </div>
-       </sorted-template>)
-      (t
-       "unimpl"))))
+  (flet ((change-to-comparison (change)
+           (find-image-comparison-on-images
+            (screenshot-image (diff-report:before change))
+            (screenshot-image (diff-report:after change))
+            :only-cached-p t)))
+    (let* ((diff-report (report-diff-report report))
+           (changes (diff-report:diff-report-changes diff-report))
+           (comparisons (loop for change in changes
+                              collect (change-to-comparison change))))
+      (cond
+        ((remove-if-not #'null comparisons)
+         <sorted-template report=report >
+           <div class= "alert alert-danger mt-2">
+             Image processing for this report is not complete yet, so we're unable to show you
+             the changes sorted by difference. Please refresh in a few minutes.
+           </div>
+         </sorted-template>)
+        ((some (alexandria:compose #'null #'image-comparison-difference-value) comparisons)
+         (Warn "comparison for older reports")
+         <sorted-template report=report >
+           <div class= "alert alert-danger mt-2">
+             We were unable to generate the report, probably because this is an older report. Please contact support@screenshotbot.io if you need more help.
+           </div>
+         </sorted-template>)
+        (t
+         (let ((changes (sort (copy-list changes)
+                              #'>
+                              :key (lambda (change)
+                                     (image-comparison-difference-value
+                                      (change-to-comparison change))))))
+           <sorted-template report=report >
+             ,@ (loop for change in changes
+                      for key = (screenshot-key (diff-report:before change))
+                      collect
+                      (render-change-group
+                        (make-instance 'diff-report:group
+                                       :title (screenshot-name key)
+                                       :items (list
+                                               (make-instance 'diff-report:group-item
+                                                              :subtitle nil
+                                                              :actual-item change)))
+                        (report-run report)
+                        (format nil "/report/:oid" (oid report))))
+           </sorted-template>)
+         )))))
 
 
