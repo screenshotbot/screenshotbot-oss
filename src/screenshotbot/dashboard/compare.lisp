@@ -654,7 +654,11 @@ If the diff-report is cached, then we process the body immediately instead."
                         />
       <comparison-modal before=x after=s toggle-id=toggle-id />
     </div>)))
-      :header  <h4 class= "screenshot-title">,(highlight-search-term search (diff-report:group-title group))</h4>)
+      :header  (cond
+                 ((stringp (diff-report:group-title group))
+                  <h4 class= "screenshot-title">,(highlight-search-term search (diff-report:group-title group))</h4>)
+                 (t
+                  (diff-report:group-title group))))
   </div>
   </div>)
 

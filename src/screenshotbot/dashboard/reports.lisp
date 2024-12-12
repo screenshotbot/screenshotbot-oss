@@ -78,6 +78,8 @@
                 #:screenshot-image)
   (:import-from #:core/ui/paginated
                 #:paginated)
+  (:import-from #:screenshotbot/dashboard/explain
+                #:explain)
   (:export #:report-page #:report-link
            #:shared-report-page)
   (:local-nicknames (#:diff-report #:screenshotbot/diff-report)))
@@ -443,7 +445,19 @@
                   (let ((key (screenshot-key (diff-report:before change))))
                    (render-change-group
                     (make-instance 'diff-report:group
-                                   :title (screenshot-name key)
+                                   :title
+                                   <div>
+                                   <h4 class= "screenshot-title">,(screenshot-name key) <tt class= "text-small" >,(format nil "~1,4f"(image-comparison-difference-value (change-to-comparison change))) </tt>
+
+                                     <explain>
+                                       We use the Root-Mean-Squared-Error to compute this difference. This might not
+                                       correspond to whether or not this is a regression.
+                                     </explain>
+
+                                   </h4>
+                                   </div>
+                                   
+                                   
                                    :items (list
                                            (make-instance 'diff-report:group-item
                                                           :subtitle nil
