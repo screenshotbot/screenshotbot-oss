@@ -451,7 +451,7 @@
                                      <explain>
                                        We use the Root-Mean-Squared-Error to compute this difference. This might not
                                        correspond to whether or not this is a regression. Many real regressions
-                                       small RMSE differences.
+                                       have small RMSE values.
                                      </explain>
 
                                    </h4>
