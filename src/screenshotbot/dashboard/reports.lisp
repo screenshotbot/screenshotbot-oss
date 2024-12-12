@@ -71,6 +71,7 @@
   (:import-from #:screenshotbot/diff-report
                 #:make-diff-report)
   (:import-from #:screenshotbot/model/image-comparison
+                #:image-comparison-difference-value
                 #:find-image-comparison-on-images)
   (:import-from #:screenshotbot/screenshot-api
                 #:screenshot-image)
@@ -415,6 +416,13 @@
          <div class= "alert alert-danger mt-2">
            Image processing for this report is not complete yet, so we're unable to show you
            the changes sorted by difference. Please refresh in a few minutes.
+         </div>
+       </sorted-template>)
+      ((some (alexandria:compose #'null #'image-comparison-difference-value) comparisons)
+       (Warn "comparison for older reports")
+       <sorted-template report=report >
+         <div class= "alert alert-danger mt-2">
+           We were unable to generate the report, probably because this is an older report. Please contact support@screenshotbot.io if you need more help.
          </div>
        </sorted-template>)
       (t
