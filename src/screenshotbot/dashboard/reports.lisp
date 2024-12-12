@@ -269,10 +269,9 @@
      <span><mdi name= "history"/> Feedback history</span>
      (nibble (:name "review-history")
        (render-acceptable-history acceptable))))
-   (when (gk:check :sorted-changes (auth:current-company))
-     (cons
-      <span><mdi name= "sort" />Sorted by changes</span>
-      (format nil "/report/~a/sorted" (oid report))))))
+   (cons
+    <span><mdi name= "sort" />Sorted by changes</span>
+    (format nil "/report/~a/sorted" (oid report)))))
 
 (defun render-acceptable-history (acceptable)
   (let ((history-items (acceptable-history acceptable)))
