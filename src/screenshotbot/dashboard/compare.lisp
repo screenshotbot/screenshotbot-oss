@@ -749,12 +749,15 @@ If the diff-report is cached, then we process the body immediately instead."
       </div>
     </div>))
 
+(defvar +metrics-page-changed-limit+ 9999
+  "The max number of pixels we're willing to detect.")
 
 (defun metrics-page (image-comparison masks)
+  
   (with-local-image (file (image-comparison-result image-comparison))
     (with-wand (wand :file file)
       (log:debug"random-zoom-to-on-result on ~a" file)
-      (multiple-value-bind (pixels) (get-non-alpha-pixels wand :masks masks)
+      (multiple-value-bind (pixels) (get-non-alpha-pixels wand :masks masks :limit (1+ +metrics-page-changed-limit+))
         (flet ((read-px-values (image)
                  (with-local-image (file image)
                    (with-wand (wand :file file)
@@ -805,15 +808,19 @@ If the diff-report is cached, then we process the body immediately instead."
                              # changed pixels
                            </td>
                            <td>
-                             ,(if (>= num-changed 999)
-                                  "> 999"
-                                  num-changed)
+                             ,(if (>= num-changed +metrics-page-changed-limit+)
+                                  <span>&gt;</span>
+                                  )
+                             ,(progn num-changed)
                            </td>
                          </tr>
 
                          <tr>
                            <td>Fraction changed pixels</td>
                            <td>
+                             ,(if (>= num-changed +metrics-page-changed-limit+)
+                                  <span>&gt;</span>
+                                  )                             
                              ,(/ (* 1.0 num-changed) (* height width))
                            </td>
                          </tr>
