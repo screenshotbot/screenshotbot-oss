@@ -1,3 +1,9 @@
+;;;; Copyright 2018-Present Modern Interpreters Inc.
+;;;;
+;;;; This Source Code Form is subject to the terms of the Mozilla Public
+;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
+;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 (defpackage :screenshotbot/sso/settings
   (:use #:cl)
   (:import-from #:screenshotbot/settings-api
@@ -18,7 +24,7 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/sso/settings)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defvar *default-scope*
   "openid email profile")
