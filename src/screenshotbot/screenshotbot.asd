@@ -139,6 +139,7 @@
                  (:file "transient-object")
                  (:file "auto-cleanup")
                  (:file "company")
+                 (:file "sso")
                  (:file "sharing")
                  (:file "user")
                  (:file "view")
