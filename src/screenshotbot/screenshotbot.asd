@@ -263,7 +263,8 @@
    (:module "sso"
     :serial t
     :components ((:file "model")
-                 (:file "fake")))
+                 (:file "fake")
+                 (:file "settings")))
    (:module "login"
     :serial t
     :components ((:file "github-oauth")

@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/sso/settings
   (:use #:cl)
   (:import-from #:screenshotbot/settings-api
+                #:should-show-settings-p
                 #:defsettings
                 #:settings-template)
   (:import-from #:screenshotbot/template
@@ -106,6 +107,8 @@
 (defsettings sso
   :name "sso"
   :title "Single sign-on"
-  :staging-p t
   :section nil
   :handler 'sso-settings)
+
+(defmethod should-show-settings-p (installation (name (eql 'sso)))
+  (gk:check :self-service-sso (auth:current-company)))
