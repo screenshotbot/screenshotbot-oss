@@ -8,7 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/version-check
-                #:bad-version-p)
+                #:bad-version-p
+                #:warn-for-bad-versions)
   (:import-from #:util/request
                 #:*engine*
                 #:http-request)
@@ -76,3 +77,9 @@
     (is-false (bad-version-p 102))
     (is-false (bad-version-p 101))
     (is-false (bad-version-p 103))))
+
+(test warn-for-bad-versions ()
+  (let ((*api-version* 102))
+    (finishes (warn-for-bad-versions 102))
+    (finishes (warn-for-bad-versions 95))
+    (finishes (warn-for-bad-versions 106))))

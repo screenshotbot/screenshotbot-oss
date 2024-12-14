@@ -82,14 +82,15 @@ might get logged in the webserver logs."
    1))
 
 (defun warn-for-bad-versions (remote-version)
-  (when (bad-version-p remote-version)
-    (log:warn "Server is running API version ~a, but this client uses version ~a. ~%
-
-This is most likely supported, however, it's more likely to have
-bugs. If you're using OSS Screenshotbot, we suggest upgrading.
-"
-              remote-version
-              *api-version*)))
+  (when (not (bad-version-p remote-version))
+    (return-from warn-for-bad-versions nil))
+  (flet ((warning (reason)
+           (log:warn "Server is running API version ~a, but this client uses version ~a. This is most likely supported, however, it's more likely to have bugs. ~a" remote-version *api-version* reason)))
+    (cond
+      ((> *api-version* remote-version)
+       (warning "If you're using OSS Screenshotbot, we suggest upgrading."))
+      ((< *api-version* remote-version)
+       (warning "Consider upgrading the CLI tool.")))))
 
 (def-health-check verify-can-decode-json ()
   (eql 10 (version-number (decode-json "{\"version\":10}" 'version))))
