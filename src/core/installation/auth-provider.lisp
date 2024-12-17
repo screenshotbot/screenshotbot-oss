@@ -33,7 +33,9 @@ incomplete implementation, but we plan to build this out at some point
 of time."))
 
 (defmethod call-with-company-login (auth-provider company fn)
-  (:documentation "Given the auth provider, generate a page with the given auth-provider."))
+  "Given the auth provider, generate a page with the given auth-provider."
+
+  (error "call-with-company-login unimplemented"))
 
 (defgeneric auth-providers (installation)
   (:method (self)
