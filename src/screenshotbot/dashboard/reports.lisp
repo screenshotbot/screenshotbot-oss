@@ -90,8 +90,7 @@
 (def-easy-macro with-report-login (report &fn fn)
   (maybe-redirect-for-company (report-company report))
   (with-login (:needs-login (not (can-public-view report))
-               :allow-url-redirect t
-                       :company (report-company report))
+               :allow-url-redirect t)
     (auth:can-view! report)
     (fn)))
 

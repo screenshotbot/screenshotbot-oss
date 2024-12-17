@@ -744,7 +744,7 @@
 (defhandler (run-delete-page :uri "/runs/:id" :method :delete) (id)
   (setf (hunchentoot:content-type*) "application/json")
   (let ((run (find-by-oid id 'recorder-run)))
-    (with-login (:company (recorder-run-company run))
+    (with-login ()
       (can-view! run)
       (cond
         ((or (activep run)
