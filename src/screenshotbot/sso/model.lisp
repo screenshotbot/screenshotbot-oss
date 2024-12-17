@@ -10,11 +10,28 @@
                 #:store-object)
   (:import-from #:bknr.datastore
                 #:persistent-class)
+  (:import-from #:util/store/store
+                #:with-class-validation)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:fake-sso-auth-provider))
 (in-package :screenshotbot/sso/model)
 
-(defclass fake-sso-auth-provider (store-object)
+(defclass abstract-sso-auth-provider (store-object)
   ()
   (:metaclass persistent-class))
+
+(with-class-validation
+  (defclass fake-sso-auth-provider (abstract-sso-auth-provider)
+    ()
+    (:metaclass persistent-class)))
+
+(with-class-validation
+  (defclass basic-sso-auth-provider (abstract-sso-auth-provider)
+    ((issuer :initarg :issuer
+             :accessor auth-provider-issuer)
+     (client-id :initarg :client-id
+                :accessor auth-provider-client-id)
+     (client-secret :initarg :client-secret
+                    :accessor auth-provider-client-secret))
+    (:metaclass persistent-class)))
