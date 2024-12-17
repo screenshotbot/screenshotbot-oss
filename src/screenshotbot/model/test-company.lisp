@@ -30,7 +30,10 @@
                 #:*installation*
                 #:installation-domain)
   (:import-from #:auth/viewer-context
+                #:normal-viewer-context
                 #:logged-in-viewer-context)
+  (:import-from #:core/installation/auth-provider
+                #:company-sso-auth-provider)
   (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/test-company)
 
@@ -148,3 +151,30 @@
            (sub-company (make-instance 'sub-company
                                        :parent company)))
       (is (eql :foobar (emails-enabled-by-default-p company))))))
+
+(def-fixture user-company-with-sso (&key (role 'roles:admin)
+                                    (sso-p t))
+  (let ((user (make-user))
+        (company (make-instance 'company)))
+    (when sso-p
+     (setf (company-sso-auth-provider company) :foobar))
+    (roles:ensure-has-role company user role)
+    (&body)))
+
+(test normal-viewer-context-can-view-sso-company-if-the-user-is-an-admin
+  (with-fixture state ()
+    (with-fixture user-company-with-sso (:role 'roles:admin)
+      (let ((vc (make-instance 'normal-viewer-context :user user)))
+        (is-true (auth:can-viewer-view vc company))))))
+
+(test normal-viewer-context-cant-view-sso-company
+  (with-fixture state ()
+    (with-fixture user-company-with-sso (:role 'roles:standard-member)
+      (let ((vc (make-instance 'normal-viewer-context :user user)))
+        (is-false (auth:can-viewer-view vc company))))))
+
+(test normal-viewer-context-can-view-non-sso-company
+  (with-fixture state ()
+    (with-fixture user-company-with-sso (:role 'roles:standard-member :sso-p nil)
+      (let ((vc (make-instance 'normal-viewer-context :user user)))
+        (is-true (auth:can-viewer-view vc company))))))

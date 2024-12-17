@@ -49,6 +49,7 @@
   (:import-from #:auth/login/roles-auth-provider
                 #:get-company-for-auth-provider)
   (:import-from #:auth/viewer-context
+                #:normal-viewer-context
                 #:viewer-context-user
                 #:logged-in-viewer-context)
   (:export
@@ -365,6 +366,18 @@ parent organization.")))
   (or
    (call-next-method)
    (auth:can-viewer-view vc (company-parent company))))
+
+(defmethod auth:can-viewer-view ((vc normal-viewer-context)
+                                 (company company))
+  "This is not an SSO viewer context. We must make sure the company is
+not set up for SSO."
+  (cond
+    ((company-sso-auth-provider company)
+     (and
+      (roles:has-role-p company (viewer-context-user vc) 'roles:admin)
+      (call-next-method)))
+    (t
+     (call-next-method))))
 
 (defgeneric company (obj)
   (:documentation "For a given obj, figure out which company it belongs to"))
