@@ -9,18 +9,8 @@
         #:screenshotbot/sso/model)
   (:import-from #:nibble
                 #:nibble)
-  (:import-from #:core/installation/auth-provider
-                #:call-with-company-login)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/sso/fake)
 
 (markup:enable-reader)
 
-(defmethod call-with-company-login ((sso fake-sso-auth-provider)
-                                    company
-                                    fn)
-  <html>
-    <body>
-      See page <a href= (nibble () (funcall fn)) >here.</a>
-    </body>
-  </html>)
