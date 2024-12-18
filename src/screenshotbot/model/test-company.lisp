@@ -17,6 +17,7 @@
   (:import-from #:screenshotbot/model/user
                 #:make-user)
   (:import-from #:screenshotbot/model/company
+                #:needs-sso-condition
                 #:emails-enabled-by-default-p
                 #:ensure-company-using-roles
                 #:company-owner
@@ -172,6 +173,17 @@
     (with-fixture user-company-with-sso (:role 'roles:standard-member)
       (let ((vc (make-instance 'normal-viewer-context :user user)))
         (is-false (auth:can-viewer-view vc company))))))
+
+(test normal-viewer-context-cant-view-sso-company-and-signals-condition
+  (with-fixture state ()
+    (with-fixture user-company-with-sso (:role 'roles:standard-member)
+      (let ((vc (make-instance 'normal-viewer-context :user user))
+            (actual-condition))
+        (handler-bind ((needs-sso-condition (lambda (c)
+                                              (setf actual-condition c))))
+          (auth:can-viewer-view vc company))
+        (is-true actual-condition)
+        (is (eql company (company actual-condition)))))))
 
 (test normal-viewer-context-can-view-non-sso-company
   (with-fixture state ()
