@@ -75,7 +75,8 @@
    #:call-init-hooks
    #:request
    #:redirect-home
-   #:home-url)
+   #:home-url
+   #:needs-sso-condition-company)
   (:local-nicknames (#:threading #:util/threading)))
 (in-package :screenshotbot/server)
 
@@ -174,6 +175,11 @@
                  (log-crash-extras hunchentoot:*acceptor* e))
                threading:*extras*)))
     (funcall fn)))
+
+(define-condition needs-sso-condition (condition)
+  ((company :initarg :company
+            :reader needs-sso-condition-company)))
+
 
 (defun %handler-wrap (impl)
   (with-sentry-extras ()

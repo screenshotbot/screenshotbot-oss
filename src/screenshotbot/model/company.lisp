@@ -52,6 +52,8 @@
                 #:normal-viewer-context
                 #:viewer-context-user
                 #:logged-in-viewer-context)
+  (:import-from #:screenshotbot/server
+                #:needs-sso-condition)
   (:export
    #:company
    #:company-reports
@@ -367,10 +369,6 @@ parent organization.")))
    (call-next-method)
    (auth:can-viewer-view vc (company-parent company))))
 
-(define-condition needs-sso-condition (condition)
-  ((company :initarg :company
-            :reader company)))
-
 (defmethod auth:can-viewer-view ((vc normal-viewer-context)
                                  (company company))
   "This is not an SSO viewer context. We must make sure the company is
@@ -380,7 +378,8 @@ not set up for SSO."
      (let ((res (and
                  (roles:has-role-p company (viewer-context-user vc) 'roles:admin)
                  (call-next-method))))
-       (signal 'needs-sso-condition :company company)
+       (unless res
+         (signal 'needs-sso-condition :company company))
        res))
     (t
      (call-next-method))))

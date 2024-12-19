@@ -35,6 +35,9 @@
                 #:logged-in-viewer-context)
   (:import-from #:core/installation/auth-provider
                 #:company-sso-auth-provider)
+  (:import-from #:screenshotbot/server
+                #:needs-sso-condition-company
+                #:needs-sso-condition)
   (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/test-company)
 
@@ -183,7 +186,7 @@
                                               (setf actual-condition c))))
           (auth:can-viewer-view vc company))
         (is-true actual-condition)
-        (is (eql company (company actual-condition)))))))
+        (is (eql company (needs-sso-condition-company actual-condition)))))))
 
 (test normal-viewer-context-can-view-non-sso-company
   (with-fixture state ()
