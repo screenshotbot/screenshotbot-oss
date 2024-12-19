@@ -180,6 +180,8 @@
   ((company :initarg :company
             :reader needs-sso-condition-company)))
 
+(defgeneric maybe-redirect-for-sso (company)
+  (:documentation "Maybe redirect if SSO is enabled for the company, might not return if redirected."))
 
 (defun %handler-wrap (impl)
   (with-sentry-extras ()
@@ -191,7 +193,7 @@
            (funcall impl))
         (no-access-error (e)
           (when sso-company
-            (error "unimplemented: take them through the sso flow for sso-company" ))
+            (maybe-redirect-for-sso sso-company))
           (push-event :no-access-error)
           (no-access-error-page))
         (throttled-error (e)

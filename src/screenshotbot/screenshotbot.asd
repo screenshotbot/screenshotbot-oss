@@ -264,7 +264,8 @@
     :serial t
     :components ((:file "model")
                  (:file "fake")
-                 (:file "settings")))
+                 (:file "settings")
+                 (:file "redirect")))
    (:module "login"
     :serial t
     :components ((:file "github-oauth")
