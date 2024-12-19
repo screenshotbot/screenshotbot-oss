@@ -183,16 +183,22 @@
 
 (defun %handler-wrap (impl)
   (with-sentry-extras ()
-    (handler-case
-        (funcall impl)
-      (no-access-error (e)
-        (push-event :no-access-error)
-        (no-access-error-page))
-      (throttled-error (e)
-        (declare (ignore e))
-        (setf (hunchentoot:return-code*) 429)
-        (warn "Too many request: ~a" e)
-        "Too many requests"))))
+    (let ((sso-company))
+      (handler-case
+          (handler-bind ((needs-sso-condition
+                           (lambda (condition)
+                             (setf sso-company (needs-sso-condition-company condition)))))
+           (funcall impl))
+        (no-access-error (e)
+          (when sso-company
+            (error "unimplemented: take them through the sso flow for sso-company" ))
+          (push-event :no-access-error)
+          (no-access-error-page))
+        (throttled-error (e)
+          (declare (ignore e))
+          (setf (hunchentoot:return-code*) 429)
+          (warn "Too many request: ~a" e)
+          "Too many requests")))))
 
 (defmacro defhandler ((name &key uri method intern
                               want-login) params &body body)

@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/server
+                #:needs-sso-condition
                 #:%handler-wrap
                 #:request)
   (:import-from #:util/store/store
@@ -48,3 +49,10 @@
         (assert-that
          (markup:write-html body)
          (contains-string "You do not have permission to access this page"))))))
+
+(test sso-condition-happy-path
+  (with-test-store ()
+    (finishes
+      (%handler-wrap
+       (lambda ()
+         (signal 'needs-sso-condition :company :foobar))))))
