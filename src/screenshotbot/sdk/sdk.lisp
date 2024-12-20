@@ -454,9 +454,12 @@ error."
               file)))))
 
 (defun warn-if-not-recent-file (stream)
-  (when (< (file-write-date stream)
-           (- (get-universal-time) 7200))
-    (warn 'not-recent-file-warning :file (pathname stream))))
+  ;; Heads up: file-write-date can return NIL, see T1632. Unable to
+  ;; repro in tests though.
+  (when-let ((write-date (file-write-date stream)))
+    (when (< write-date
+             (- (get-universal-time) 7200))
+      (warn 'not-recent-file-warning :file (pathname stream)))))
 
 (defmethod find-existing-images (api-context
                                  hashes)

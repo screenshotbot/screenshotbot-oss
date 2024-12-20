@@ -411,6 +411,18 @@
       (signals not-recent-file-warning
         (warn-if-not-recent-file s)))))
 
+(test warn-if-not-recent-file-should-handle-nil-write-date
+  (dotimes (i 10)
+   (uiop:with-temporary-file (:pathname p :type "png"
+                              :direction :output
+                              :element-type 'flexi-streams:octet)
+     (with-open-file (stream p :direction :output
+                               :if-exists :supersede)
+       (format stream "hello"))
+     ;; I can't repro T1632 locally sadly
+     (finishes
+       (warn-if-not-recent-file p)))))
+
 (test format-not-recent-file-warning
   (finishes
    (format nil "~a"
