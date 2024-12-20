@@ -32,10 +32,10 @@
        (&body)
     (clrhash *public-repo-p-cache*)))
 
-#-sbcl ;; java
 (test simple-creation
-  (finishes
-    (github-client)))
+  (when (jvm:jvm-supported-p)
+   (finishes
+     (github-client))))
 
 
 (test github-repo-commit-link

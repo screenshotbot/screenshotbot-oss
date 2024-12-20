@@ -31,9 +31,9 @@
   :depends-on (:fiveam
                :fiveam-matchers
                :util.java)
-  :components (#+ (or ccl lispworks)
+  :components (#+jvm-supported-p
                (:file "test-binding")
-               #+ (or ccl lispworks)
+               #+:jvm-supported-p
                (:file "test-java")
-               #+ (or ccl lispworks)
+               #+:jvm-supported-p
                (:file "test-iterate")))

@@ -18,7 +18,8 @@
            :*libjvm*
            :free-memory
    :total-memory
-   :*initedp*))
+   :*initedp*
+   :jvm-supported-p))
 (in-package :jvm)
 
 (defvar *initedp* nil)
@@ -143,3 +144,10 @@
 #+lispworks
 (def-health-check lispcalls.jar-is-accessible ()
   (lw-ji:find-java-class "com.lispworks.LispCalls"))
+
+(defun jvm-supported-p ()
+  #+(and :lispworks :linux)
+  t)
+
+#+ (and :lispworks :linux)
+(push :jvm-supported-p *features*)
