@@ -52,7 +52,7 @@
 (def-easy-macro with-firebase-output (filename &fn fn)
   (let ((firebase-output (parse-firebase-output (uiop:read-file-string filename))))
     (tmpdir:with-tmpdir (dir)
-      (let ((cloud-location (format nil "gs://~a/~a/"
+      (let ((cloud-location (format nil "gs://~a/~a/artifacts/"
                                     (firebase-output-bucket firebase-output)
                                     (firebase-output-location firebase-output))))
         (log:info "Downloading screenshots from Google Cloud: ~a" cloud-location)
