@@ -51,7 +51,6 @@
                #-lispworks
                :util/fake-fli
                :auth
-               #+(or ccl lispworks)
                :jvm
                #-screenshotbot-oss
                :sentry
