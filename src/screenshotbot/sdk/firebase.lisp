@@ -70,6 +70,19 @@
            if artifact
              return artifact))))
 
+(auto-restart:with-auto-restart (:retries 3)
+  (defun gcloud-storage-cp (src dest)
+    (uiop:run-program
+     (list "gcloud" "storage" "cp"
+           ;; Hopefully the --no-clobber allows us to retry the download safely if
+           ;; some objects fail. See T1635
+           "--no-clobber"
+           "-r"
+           src
+           (namestring dest))
+     :output *standard-output*
+     :error-output *standard-output*)))
+
 
 (def-easy-macro with-firebase-output (filename &fn fn)
   (let ((firebase-output (parse-firebase-output (uiop:read-file-string filename))))
@@ -79,12 +92,7 @@
                                     (firebase-output-location firebase-output)
                                     (firebase-output-test-axis firebase-output))))
         (log:info "Downloading screenshots from Google Cloud: ~a" cloud-location)
-        (uiop:run-program
-         (list "gcloud" "alpha" "storage" "cp" "-r"
-               cloud-location
-               (namestring dir))
-         :output *standard-output*
-         :error-output *standard-output*)
+        (gcloud-storage-cp cloud-location (namestring dir))
         (log:info "Cleaning up the Google cloud directory before we continue")
         #+nil
         (uiop:run-program
