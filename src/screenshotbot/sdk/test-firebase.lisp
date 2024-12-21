@@ -3,8 +3,11 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/firebase
+                #:%parse-test-axis-line
                 #:parse-firebase-output
                 #:firebase-output-bucket)
+  (:import-from #:screenshotbot/sdk/firebase
+                #:firebase-output-test-axis)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/sdk/test-firebase)
 
@@ -60,3 +63,13 @@ CircleCI")
   (let ((res (parse-firebase-output *output*)))
     (is (equal "cloud-test-screenshotbot-example"
                (firebase-output-bucket res)))))
+
+(test parse-test-axis
+  (let ((res (parse-firebase-output *output*)))
+    (is (equal "Pixel2-27-en-portrait"
+               (firebase-output-test-axis res)))))
+
+(test parse-test-axis-line
+  (is (equal "Pixel2-27-en-portrait"
+             (%parse-test-axis-line "│ Passed  │ Pixel2-27-en-portrait │ 12 test cases passed │"))))
+

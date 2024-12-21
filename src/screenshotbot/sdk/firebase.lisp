@@ -1,3 +1,4 @@
+;; -*- encoding: utf-8 -*-
 (defpackage :screenshotbot/sdk/firebase
   (:use #:cl)
   (:import-from #:easy-macros
@@ -14,7 +15,27 @@
     :initarg :bucket
     :reader firebase-output-bucket)
    (location :initarg :location
-             :reader firebase-output-location)))
+             :reader firebase-output-location)
+   (test-axis :initarg :test-axis
+              :initform nil
+              :reader firebase-output-test-axis)))
+
+(defun %parse-test-axis-line (line)
+  ;; This is not the same as |, this is a different UTF character! To
+  ;; be safe, we're pulling the character directly from the string, in
+  ;; case it changes based on how things are encoded.
+  (let ((parts (str:split (elt line 0) line)))
+    (unless (eql 5 (length parts))
+      (error "Could not figure out test axis in: `~a`. It's possible the FTL output has changed, please reach out to support@screenshotbot.io" line))
+    (str:trim (elt parts 2))))
+
+(defun %parse-test-axis (output)
+  (loop for (line . rest) on (str:lines output)
+        if (and
+            (str:containsp "OUTCOME" line)
+            (str:containsp "TEST_AXIS_VALUE" line))
+          return
+             (%parse-test-axis-line (cadr rest))))
 
 
 (defun parse-firebase-output (output)
@@ -32,7 +53,8 @@
                  (oops))
                (make-instance 'firebase-output
                                :bucket (elt parts 0)
-                               :location (elt parts 1)))
+                               :location (elt parts 1)
+                               :test-axis (%parse-test-axis output)))
            finally
               (oops)))))
 
@@ -52,9 +74,10 @@
 (def-easy-macro with-firebase-output (filename &fn fn)
   (let ((firebase-output (parse-firebase-output (uiop:read-file-string filename))))
     (tmpdir:with-tmpdir (dir)
-      (let ((cloud-location (format nil "gs://~a/~a/artifacts/"
+      (let ((cloud-location (format nil "gs://~a/~a/~a/artifacts/"
                                     (firebase-output-bucket firebase-output)
-                                    (firebase-output-location firebase-output))))
+                                    (firebase-output-location firebase-output)
+                                    (firebase-output-test-axis firebase-output))))
         (log:info "Downloading screenshots from Google Cloud: ~a" cloud-location)
         (uiop:run-program
          (list "gcloud" "alpha" "storage" "cp" "-r"
