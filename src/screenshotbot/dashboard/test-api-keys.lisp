@@ -26,8 +26,7 @@
   (:import-from #:screenshotbot/factory
                 #:*company*
                 #:test-api-key
-                #:test-user
-                #:test-company)
+                #:test-user)
   (:import-from #:screenshotbot/installation
                 #:installation)
   (:import-from #:screenshotbot/model/api-key
@@ -76,20 +75,15 @@
     (with-fake-request (:acceptor 'my-acceptor)
       (answer (auth:can-view! nil))
       (auth:with-sessions ()
-        
-        (let* ((test-user (make-instance 'test-user))
-               (test-api-keys (list (make-instance 'test-api-key
-                                                  :key "foo"
-                                                  :secret "sdfsdfdfdfs"
-                                                  :user test-user)))
-               (test-company (make-instance 'test-company :api-keys test-api-keys))
-               (content (markup:write-html
-                         (%api-key-page :user test-user
-                                        :company test-company))))
-          (screenshot-static-page
-           :screenshotbot
-           "api-key-page"
-           content))))))
+       (screenshot-static-page
+        :screenshotbot
+        "api-key-page"
+        (markup:write-html
+         (%api-key-page :user (make-instance 'test-user
+                                             :api-keys (list (make-instance 'test-api-key
+                                                                            :key "foo"
+                                                                            :secret "sdfsdfdfdfs")))
+                        :company *company*)))))))
 
 (test empty-api-keys-page-test
   (with-fixture state ()

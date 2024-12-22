@@ -9,8 +9,7 @@
   (:nicknames :core/api/dashboard/api-keys)
   (:import-from #:auth
                 #:current-company
-                #:current-user
-                #:user-full-name)
+                #:current-user)
   (:import-from #:core/ui/mdi
                 #:mdi)
   (:import-from #:core/ui/simple-card-page
@@ -37,7 +36,6 @@
                 #:cli-api-key
                 #:expires-at
                 #:render-api-token
-                #:company-api-keys
                 #:user-api-keys)
   (:import-from #:util/throttler
                 #:throttle!
@@ -54,8 +52,7 @@
   (:import-from #:core/installation/installation
                 #:*installation*)
   (:import-from #:core/api/model/api-key
-                #:api-key-permissions
-                #:api-key-user))
+                #:api-key-permissions))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (named-readtables:in-readtable markup:syntax)
@@ -194,8 +191,7 @@
                         (script-name "/api-keys"))
   (declare (ignore script-name))
   (auth:can-view! company)
-  (let* ((api-keys (reverse (company-api-keys company)))
-         (is-admin (roles:has-role-p company user 'roles:admin))
+  (let* ((api-keys (reverse (user-api-keys user company)))
          (create-api-key (nibble ()
                            (%create-api-key user company))))
     <app-template title= "Screenshotbot: API Keys" >
@@ -213,9 +209,7 @@
                       ""  "API Key")
                   (if (api-token-mode-p hunchentoot:*acceptor*)
                       "Token" "Secret")
-                  "Description"
-                  "Creator"
-                  "Expires"
+                  "Description" "Expires"
                   "Last used" "Actions")
         :empty-message "You haven't created an API Key yet"
         :checkboxes nil
@@ -224,8 +218,6 @@
                                                       "~a~a"
                                                       (str:repeat 36 "*")
                                                       (str:substring  36 nil (api-key-secret-key api-key))))
-                                (api-key-creator (api-key-user api-key))
-                                (api-key-creator-p (eq user api-key-creator))
                                 (delete-api-key (nibble ()
                                                   (%confirm-delete api-key))))
 
@@ -238,9 +230,7 @@
                                <span class= "d-inline-block text-truncate" style= "max-width: 20em" title= (api-key-description api-key) >
                                  ,(or (api-key-description api-key) "")
                                </span>
-                               <span>
-                                 ,(user-full-name api-key-creator)
-                               </span>
+
                                <span>
                                  ,(let ((expires (expires-at api-key)))
                                     (cond
@@ -259,15 +249,14 @@
                                <a href= (nibble () (edit-api-key api-key)) >
                                  <mdi name= "edit" />
                                </a>
-                               ,(when (or is-admin api-key-creator-p)
-                                  <form style="display:inline-block" class= "ml-4" method= "post" >
-                                    <button type= "submit" formaction=delete-api-key
-                                            formmethod= "post"
-                                            class= "btn btn-link"
-                                            value= "Delete" >
-                                      <mdi name="delete" class= "text-danger" />
-                                    </button>
-                                  </form>)
+                               <form style="display:inline-block" class= "ml-4" method= "post" >
+                                 <button type= "submit" formaction=delete-api-key
+                                        formmethod= "post"
+                                        class= "btn btn-link"
+                                        value= "Delete" >
+                                   <mdi name="delete" class= "text-danger" />
+                                 </button>
+                               </form>
                              </span>
                            </taskie-row>)))
     </app-template>))
