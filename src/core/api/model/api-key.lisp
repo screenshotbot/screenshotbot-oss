@@ -49,6 +49,7 @@
    #:delete-api-key
    #:make-transient-key
    #:render-api-token
+   #:company-api-keys
    #:api-key-for-secret))
 (in-package :core/api/model/api-key)
 
@@ -270,11 +271,15 @@ need a better deletion model in the future."
 (defmethod delete-api-key ((api-key api-key))
   (tx-delete-api-key api-key))
 
-(defmethod user-api-keys (user company)
+(defmethod company-api-keys (company)
   (loop for api-key in (bknr.datastore:class-instances 'api-key)
-        if (and (eq user (api-key-user api-key))
-                (slot-boundp api-key 'api-key) ;; See T929
+        if (and (slot-boundp api-key 'api-key) ;; See T929
                 (eq company (api-key-company api-key)))
+          collect api-key))
+
+(defmethod user-api-keys (user company)
+  (loop for api-key in (company-api-keys company)
+        if (eq user (api-key-user api-key))
           collect api-key))
 
 (defmethod cleanup-expired-api-keys ()

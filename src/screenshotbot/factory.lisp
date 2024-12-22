@@ -56,7 +56,9 @@
   ((runs :initarg :runs
          :accessor company-runs)
    (singletonp :initform nil
-               :accessor singletonp)))
+               :accessor singletonp)
+   (api-keys :initarg :api-keys
+             :initform nil)))
 
 (defclass test-channel ()
   ((name :initform "dummy-channel"
@@ -93,12 +95,17 @@
 (defmethod user-api-keys ((user test-user) company)
   (slot-value user 'api-keys))
 
+(defmethod core/api/model/api-key:company-api-keys ((company test-company))
+  (slot-value company 'api-keys))
+
 (defclass test-api-key ()
   ((key :initarg :key
         :accessor api-key-key)
    (description :initarg :description
                 :initform nil
                 :accessor api-key-description)
+   (user :initarg :user
+         :accessor api-key-user)
    (last-used :initform nil
               :accessor core/api/model/api-key::last-used)
    (secret :initarg :secret

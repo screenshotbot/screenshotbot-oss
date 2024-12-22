@@ -7,6 +7,9 @@
 (defpackage :core/api/model/test-api-key
   (:use #:cl
         #:fiveam)
+  (:import-from #:bknr.datastore
+                #:persistent-class
+                #:store-object)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/api-key-api
@@ -39,6 +42,7 @@
                 #:run-migrations)
   (:import-from #:core/api/model/api-key
                 #:api-key-permissions
+                #:company-api-keys
                 #:%permissions)
   (:import-from #:core/installation/installation
                 #:abstract-installation
@@ -177,3 +181,18 @@
             (*snapshot-store-version* 23))
         (run-migrations))
       (is (eql nil (api-key-permissions api-key))))))
+
+(defclass fake-company (store-object)
+  ()
+  (:metaclass persistent-class))
+
+(test company-api-keys
+  (with-fixture state ()
+    (let* ((company-1 (make-instance 'fake-company))
+           (company-2 (make-instance 'fake-company))
+           (api-key-1 (make-instance 'api-key :company company-1))
+           (api-key-2 (make-instance 'api-key :company company-2)))
+      (is (equal (list api-key-1) (company-api-keys company-1)))
+      (is (equal (list api-key-2) (company-api-keys company-2)))
+      (is (not (equal (list api-key-1) (company-api-keys company-2))))
+      (is (not (equal (list api-key-2) (company-api-keys company-1)))))))
