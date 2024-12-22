@@ -41,6 +41,7 @@
   (:import-from #:util/store/store-migrations
                 #:run-migrations)
   (:import-from #:core/api/model/api-key
+                #:user-api-keys
                 #:api-key-permissions
                 #:company-api-keys
                 #:%permissions)
@@ -154,6 +155,21 @@
       (is-true (slot-boundp api-key-1 'api-key))
       (is-false (slot-boundp api-key-2 'api-key)))))
 
+(test user-api-keys-should-work-even-with-deleted-api-keys
+  (with-fixture state ()
+    (let ((api-key (make-instance 'api-key
+                                  :user :user1
+                                  :company :company1)))
+      (is (equal (list api-key)
+                 (user-api-keys :user1 :company1)))
+      (is (equal (list api-key)
+                 (company-api-keys :company1)))
+      (delete-api-key api-key)
+      (is (equal nil
+                 (user-api-keys :user1 :company1)))
+      (is (equal nil
+                 (company-api-keys :company1))))))
+
 
 (test mark-api-key-used
   (with-fixture state ()
@@ -161,6 +177,7 @@
       (mark-api-key-used api-key)
       (mark-api-key-used api-key)
       (is (eql 1 (fset:size *last-used-cache*))))))
+
 
 (test flush-last-used
   (with-fixture state ()
