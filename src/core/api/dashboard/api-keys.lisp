@@ -256,9 +256,10 @@
                                </span>
 
                              <span>
-                               <a href= (nibble () (edit-api-key api-key)) >
-                                 <mdi name= "edit" />
-                               </a>
+                               ,(when api-key-creator-p
+                                  <a href= (nibble () (edit-api-key api-key)) >
+                                    <mdi name= "edit" />
+                                  </a>)
                                ,(when (or is-admin api-key-creator-p)
                                   <form style="display:inline-block" class= "ml-4" method= "post" >
                                     <button type= "submit" formaction=delete-api-key
