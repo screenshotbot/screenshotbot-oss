@@ -125,7 +125,12 @@
                       stream))
     (when load
       (fli:register-module (name self)
-                           :real-name output
+                           ;; Not sure why I need the #+lispworks
+                           ;; here, but basically the file names have
+                           ;; a .so, and Lispworks on Mac seems to
+                           ;; handle that fine.
+                           :real-name #+lispworks output
+                                      #-lispworks (find-module output)
                            :connection-style :immediate))))
 
 (defmethod load-module :around (self &key force)

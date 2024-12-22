@@ -4,9 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+SBCL_C_FLAGS=--dynamic-space-size 2048
 sbcl=build/sbcl-console
 CACHE_KEY=8
-SBCL_CORE=sbcl --dynamic-space-size 2048 --no-userinit
+SBCL_CORE=sbcl $(SBCL_C_FLAGS) --no-userinit
 CCL_DEFAULT_DIRECTORY?=/opt/software/ccl
 CCL_CORE=$(CCL_DEFAULT_DIRECTORY)/lx86cl64
 CCL_IMAGE=build/ccl-console
@@ -156,7 +157,7 @@ tests:| show-info clean-sys-index test-parts selenium-tests conditional-copybara
 test-parts: test-sb test-lw test-ccl test-store
 
 test-sb: submodule $(sbcl) build/affected-files.txt
-	$(sbcl) --script ./scripts/jenkins.lisp
+	$(sbcl) $(SBCL_C_FLAGS) --script ./scripts/jenkins.lisp
 
 test-ccl: submodule $(CCL_IMAGE)
 	$(CCL_SCRIPT) ./scripts/jenkins.lisp

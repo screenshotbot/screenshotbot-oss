@@ -97,7 +97,9 @@ have to be called just before returning.")
    `(cffi:defctype ,name ,type)))
 
 (defun register-module (name &key real-name file-name connection-style)
+  "REAL-NAME is deprecated."
   (declare (ignore name))
+  (assert (or file-name real-name))
   (cffi:load-foreign-library (or file-name real-name)))
 
 (defmacro define-c-struct (name &rest fields)
