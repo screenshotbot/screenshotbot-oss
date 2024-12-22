@@ -6,7 +6,7 @@
 
 sbcl=build/sbcl-console
 CACHE_KEY=8
-SBCL_CORE=sbcl --no-userinit
+SBCL_CORE=sbcl --dynamic-space-size 2048 --no-userinit
 CCL_DEFAULT_DIRECTORY?=/opt/software/ccl
 CCL_CORE=$(CCL_DEFAULT_DIRECTORY)/lx86cl64
 CCL_IMAGE=build/ccl-console
@@ -202,7 +202,7 @@ $(LW): build/.keep $(IMAGE_DEPS) build/private-patches/load.lisp
 # $$PWD is workaround over LW issue #42471
 	$(ARCH_CMD) $(LW_CORE) -build scripts/build-image.lisp
 
-$(sbcl): build/.keep $(IMAGE_DEPS) .PHONY
+$(sbcl): build/.keep $(IMAGE_DEPS) .PHONY Makefile
 	$(SBCL_CORE) --script scripts/build-image.lisp
 
 selenium-tests: $(LW)
