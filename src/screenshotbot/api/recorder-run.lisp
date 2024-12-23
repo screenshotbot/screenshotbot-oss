@@ -88,6 +88,8 @@
   (:import-from #:util/hash-lock
                 #:hash-lock
                 #:with-hash-lock-held)
+  (:import-from #:util/threading
+                #:with-extras)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -239,7 +241,8 @@
            (log:info "Being promotion logic")
            (start-promotion-thread recorder-run)
            (with-tracing (:warmup-image-caches)
-             (warmup-image-caches recorder-run))))
+             (with-extras (("run" recorder-run))
+              (warmup-image-caches recorder-run)))))
     (cond
       (*synchronous-promotion*
        (promotion))
