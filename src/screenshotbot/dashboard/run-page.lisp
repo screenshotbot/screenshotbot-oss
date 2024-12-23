@@ -124,8 +124,7 @@
        ((can-public-view run)
         (render))
        (t
-        (with-login (:company (recorder-run-company run)
-                     :allow-url-redirect t)
+        (with-login (:allow-url-redirect t)
           (render)))))))
 
 (deftag render-run-tags (&key tags)
