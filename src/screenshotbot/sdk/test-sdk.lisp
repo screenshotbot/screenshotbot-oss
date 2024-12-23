@@ -356,44 +356,46 @@
 
 (test retries-%request
   (with-fixture state ()
-    (let ((count 0))
-     (cl-mock:if-called 'http-request
-                        (lambda (url &rest args)
-                          (incf count)
-                          (cond
-                            ((<= count 3)
-                             (values (make-string-input-stream "Bad") 502))
-                            (t
-                             (values (make-string-input-stream "Good") 200)))))
-      (is
-       (equal "Good"
-              (%request (make-instance 'api-context
-                                       :remote-version *api-version*
-                                       :key "foo"
-                                       :secret "bar"
-                                       :hostname "https://example.com")
-                        "/api/test"
-                        :backoff 0))))))
+    (let ((auto-restart:*global-enable-auto-retries-p* t))
+     (let ((count 0))
+       (cl-mock:if-called 'http-request
+                          (lambda (url &rest args)
+                            (incf count)
+                            (cond
+                              ((<= count 3)
+                               (values (make-string-input-stream "Bad") 502))
+                              (t
+                               (values (make-string-input-stream "Good") 200)))))
+       (is
+        (equal "Good"
+               (%request (make-instance 'api-context
+                                        :remote-version *api-version*
+                                        :key "foo"
+                                        :secret "bar"
+                                        :hostname "https://example.com")
+                         "/api/test"
+                         :backoff 0)))))))
 
 (test retries-%request-will-finally-fail
   (with-fixture state ()
-    (let ((count 0))
-     (cl-mock:if-called 'http-request
-                        (lambda (url &rest args)
-                          (incf count)
-                          (cond
-                            ((<= count 10)
-                             (values (make-string-input-stream "Bad") 502))
-                            (t
-                             (values (make-string-input-stream "Good") 200)))))
-      (signals server-unavailable
-       (%request (make-instance 'api-context
-                                :remote-version *api-version*
-                                :key "foo"
-                                :secret "bar"
-                                :hostname "https://example.com")
-                 "/api/test"
-                 :backoff 0)))))
+    (let ((auto-restart:*global-enable-auto-retries-p* t))
+     (let ((count 0))
+       (cl-mock:if-called 'http-request
+                          (lambda (url &rest args)
+                            (incf count)
+                            (cond
+                              ((<= count 10)
+                               (values (make-string-input-stream "Bad") 502))
+                              (t
+                               (values (make-string-input-stream "Good") 200)))))
+       (signals server-unavailable
+         (%request (make-instance 'api-context
+                                  :remote-version *api-version*
+                                  :key "foo"
+                                  :secret "bar"
+                                  :hostname "https://example.com")
+                   "/api/test"
+                   :backoff 0))))))
 
 (test warn-if-not-recent-file
   (uiop:with-temporary-file (:stream s)

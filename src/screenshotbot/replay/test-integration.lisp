@@ -64,8 +64,7 @@
   (:import-from #:hunchentoot
                 #:single-threaded-taskmaster)
   (:import-from #:util/testing
-                #:with-global-binding
-                #:with-local-acceptor)
+                #:with-global-binding)
   (:import-from #:screenshotbot/replay/services
                 #:selenium-server
                 #:call-with-selenium-server)
@@ -79,6 +78,10 @@
                 #:with-installation)
   (:import-from #:screenshotbot/model/user
                 #:make-user)
+  (:import-from #:util/request
+                #:*engine*)
+  (:import-from #:util/hunchentoot-engine
+                #:hunchentoot-engine)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)
                     (#:run-builder #:screenshotbot/replay/run-builder)))
@@ -201,9 +204,10 @@
 
 (test process-results
   (with-installation (:globally t)
-   (with-local-acceptor (host)
-       ('acceptor)
-     (with-fixture state (:host host)
+    (let ((engine (make-instance 'hunchentoot-engine
+                                   :acceptor (make-instance 'acceptor)))
+          (auto-restart:*global-enable-auto-retries-p* nil))
+     (with-fixture state (:host "localhost:9098")
        (unwind-protect
             (let ((all-screenshots (make-instance 'all-screenshots
                                                   :company company)))
@@ -220,7 +224,7 @@
                 (process-results
                  run
                  all-screenshots
-                 ))))))))
+                 :engine engine))))))))
 
 (test if-old-image-is-rewritten-on-disk-we-still-dont-reupload
   (with-installation (:globally t)

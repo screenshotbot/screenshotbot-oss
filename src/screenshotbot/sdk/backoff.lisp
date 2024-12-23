@@ -32,7 +32,9 @@
   (assert (find-restart restart))
   (when (member response-code '(429 502 503))
     (cond
-      ((< attempt 5)
+      ((and
+        (< attempt 5)
+        auto-restart:*global-enable-auto-retries-p*)
        (let ((timeout (add-jitter (expt backoff (1+ attempt)))))
          (flet ((%warn (message)
                   (log:warn "~a, backing off for ~ds" message (ceiling timeout))))

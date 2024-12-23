@@ -94,6 +94,7 @@
   (:import-from #:util/reused-ssl
                 #:with-reused-ssl)
   (:import-from #:util/request
+                #:*engine*
                 #:engine)
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
@@ -226,7 +227,8 @@ accessing the urls or sitemap slot."
                   (funcall fn))))
 
 
-(defun process-results (run results)
+(defun process-results (run results
+                        &key (engine *engine*))
   ;; The SDK has an ugly API when used from a non-SDK world
 
   (restart-case
@@ -247,7 +249,8 @@ accessing the urls or sitemap slot."
           (let ((api-context (make-instance 'api-context
                                             :key (api-key-key api-key)
                                             :secret (api-key-secret-key api-key)
-                                            :hostname (host run))))
+                                            :hostname (host run)
+                                            :engine engine)))
             (with-reused-ssl ((engine api-context))
              (make-directory-run
               api-context
