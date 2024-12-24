@@ -69,12 +69,18 @@
 (defmethod module-pathname ((self native-module))
   (funcall (pathname-provider self)))
 
-(defun ensure-pathname-type (&key type defaults)
-  (cond
-   ((equal "so" (pathname-type defaults))
-    (make-pathname :type type :defaults defaults))
-   (t
-    defaults)))
+(defun ensure-pathname-type (defaults)
+  (let ((type #+darwin "dylib"
+              #+linux "so"
+              #+mswindows "dll"))
+   (cond
+     ((equal "so" (pathname-type defaults))
+      (make-pathname :type type :defaults defaults))
+     (t
+      defaults))))
+
+(defun ensure-right-lib-type (lib)
+  )
 
 (defun find-module (pathname)
   "During the embed step, we need the absolute pathname"
@@ -87,10 +93,6 @@
      (loop for p in path
            for abs =
              (ensure-pathname-type
-              :type #+darwin "dylib"
-              #+linux "so"
-              #+mswindows "dll"
-              :defaults
               (path:catfile p pathname))
            if (path:-e abs)
              return abs)))
@@ -157,7 +159,8 @@
         (t
          (fli:register-module
           (name self)
-          (pathname-flag self) (module-pathname self))))
+          (pathname-flag self)
+          (ensure-pathname-type (module-pathname self)))))
       (setf needs-verify t)
       t)
     :thread-safe t
