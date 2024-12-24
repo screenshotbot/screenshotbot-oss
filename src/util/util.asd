@@ -185,6 +185,7 @@
   :depends-on (:fiveam
                :pkg
                :cl-mock
+               :log4cl
                :cl-store
                :str)
   :serial t
