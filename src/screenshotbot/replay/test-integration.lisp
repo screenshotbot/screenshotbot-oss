@@ -228,48 +228,45 @@
 
 (test if-old-image-is-rewritten-on-disk-we-still-dont-reupload
   (with-installation (:globally t)
-   (let ((port (random-port)))
-     (with-fixture state (:host (format nil "http://127.0.0.1:~a" port))
-       (let ((acceptor (make-instance 'acceptor
-                                      :port port)))
-         (hunchentoot:start acceptor)
+    (let ((engine (make-instance 'hunchentoot-engine
+                                 :acceptor (make-instance 'acceptor)))
+          (auto-restart:*global-enable-auto-retries-p* nil))
+      (with-fixture state (:host "localhost:9098")
+        (unwind-protect
+             (let ((all-screenshots (make-instance 'all-screenshots
+                                                   :company company)))
+               (let ((pathname #.(asdf:system-relative-pathname
+                                  :screenshotbot
+                                  "fixture/rose.png")))
+                 (run-builder:record-screenshot
+                  all-screenshots
+                  :title "rose"
+                  :md5 (md5:md5sum-file pathname)
+                  :fetch (lambda (dest)
+                           (fad:copy-file pathname dest))))
+               (finishes
+                 (process-results
+                  run
+                  all-screenshots
+                  :engine engine))
+               (let ((objs (bknr.datastore:store-objects-with-class 'image)))
+                 (is (eql 1 (length objs))))
+               (loop for im in (bknr.datastore:store-objects-with-class 'image)
+                     do
+                        (with-local-image (pathname im)
+                          (fad:copy-file
+                           #.(asdf:system-relative-pathname
+                              :screenshotbot
+                              "fixture/rose.webp")
+                           pathname
+                           :overwrite t)))
 
-         (unwind-protect
-              (let ((all-screenshots (make-instance 'all-screenshots
-                                                    :company company)))
-                (let ((pathname #.(asdf:system-relative-pathname
-                                   :screenshotbot
-                                   "fixture/rose.png")))
-                  (run-builder:record-screenshot
-                   all-screenshots
-                   :title "rose"
-                   :md5 (md5:md5sum-file pathname)
-                   :fetch (lambda (dest)
-                            (fad:copy-file pathname dest))))
-                (finishes
-                  (process-results
-                   run
-                   all-screenshots))
-                (let ((objs (bknr.datastore:store-objects-with-class 'image)))
-                  (is (eql 1 (length objs))))
-                (loop for im in (bknr.datastore:store-objects-with-class 'image)
-                      do
-                         (with-local-image (pathname im)
-                           (fad:copy-file
-                            #.(asdf:system-relative-pathname
-                               :screenshotbot
-                               "fixture/rose.webp")
-                            pathname
-                            :overwrite t)))
+               (process-results
+                run
+                all-screenshots
+                :engine engine)
 
-                (process-results
-                 run
-                 all-screenshots)
-
-                (is (eql 1 (length (bknr.datastore:store-objects-with-class 'image)))))
-
-
-           (hunchentoot:stop acceptor)))))))
+               (is (eql 1 (length (bknr.datastore:store-objects-with-class 'image))))))))))
 
 (def-fixture state-2 ()
   (with-installation ()
