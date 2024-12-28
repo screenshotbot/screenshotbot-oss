@@ -69,10 +69,6 @@
     (asdf:system-relative-pathname :screenshotbot.magick
                                    (format nil "../fixture/~a" name))))
 
-(defun disabled-for-t1641-p ()
-  #+ (and sbcl darwin)
-  t)
-
 (def-fixture state ()
   (tmpdir:with-tmpdir (tmpdir)
     (let ((rose #.(fixture "rose.png"))
@@ -87,29 +83,26 @@
      (pass))))
 
 (test compare-nil
-  (unless (disabled-for-t1641-p)
-   (with-fixture state ()
-     (with-wand (wand1 :file rose)
-       (with-wand (wand2 :file wizard)
-         (is-false (compare-images wand1 wand2)))))))
+  (with-fixture state ()
+    (with-wand (wand1 :file rose)
+      (with-wand (wand2 :file wizard)
+        (is-false (compare-images wand1 wand2))))))
 
 (test compare-is-true
-  (unless (disabled-for-t1641-p)
-   (with-fixture state ()
-     (with-wand (wand1 :file rose)
-       (with-wand (wand2 :file rose-webp)
-         (is-true (compare-images wand1 wand2)))))))
+  (with-fixture state ()
+    (with-wand (wand1 :file rose)
+      (with-wand (wand2 :file rose-webp)
+        (is-true (compare-images wand1 wand2))))))
 
 (test convert-to-webp
-  (unless (disabled-for-t1641-p)
-   (with-fixture state ()
-     (uiop:with-temporary-file (:pathname out :type "webp")
-       (convert-to-lossless-webp
-        (make-instance 'magick-native)
-        rose out)
-       (with-wand (rose1 :file rose)
-         (with-wand (out1 :file out)
-           (is-true (compare-images rose1 out1))))))))
+  (with-fixture state ()
+    (uiop:with-temporary-file (:pathname out :type "webp")
+      (convert-to-lossless-webp
+       (make-instance 'magick-native)
+       rose out)
+      (with-wand (rose1 :file rose)
+        (with-wand (out1 :file out)
+          (is-true (compare-images rose1 out1)))))))
 
 (test ensure-convert-to-webp-is-deterministic
   (with-fixture state ()
@@ -186,19 +179,18 @@
                                     rose-webp)))))
 
 (test no-background-in-compare
-  (unless (disabled-for-t1641-p)
-   (with-fixture state ()
-     (with-wand (one :file rose)
-       (with-wand (two :file rose)
-         (with-image-comparison (one two :result result :same-p same-p)
-           (is-true same-p)
-           (let ((non-alphas 0))
-             (map-non-alpha-pixels result
-                                   (lambda (x y)
-                                     (incf non-alphas)))
-             (assert-that non-alphas
-                          (described-as "We shouldn't have a background image in the comparison"
-                            (equal-to 0))))))))))
+  (with-fixture state ()
+    (with-wand (one :file rose)
+      (with-wand (two :file rose)
+        (with-image-comparison (one two :result result :same-p same-p)
+          (is-true same-p)
+          (let ((non-alphas 0))
+            (map-non-alpha-pixels result
+                                  (lambda (x y)
+                                    (incf non-alphas)))
+            (assert-that non-alphas
+                         (described-as "We shouldn't have a background image in the comparison"
+                           (equal-to 0)))))))))
 
 (test verify-magick-native
   (load-magick-native)
@@ -235,24 +227,22 @@
  sure if I changed myself in my local instance. On the docker
  instances it doesn't look like the height policy is set, and I'm too
  lazy to figure out what the default is. "
-  (unless (disabled-for-t1641-p)
-   (with-large-wand (before)
-     (with-large-wand (after)
-       (uiop:with-temporary-file (:pathname output :type "webp")
-         ;; This does not work in Magick-6. I don't know why. Ideally
-         ;; I'd like to make it work, but for now I'll just disable
-         ;; this test. Essentially, expect compare-wands to fail on
-         ;; large images in magic-6.
-         (finishes
-           (compare-wands before after output)))))))
+  (with-large-wand (before)
+    (with-large-wand (after)
+      (uiop:with-temporary-file (:pathname output :type "webp")
+        ;; This does not work in Magick-6. I don't know why. Ideally
+        ;; I'd like to make it work, but for now I'll just disable
+        ;; this test. Essentially, expect compare-wands to fail on
+        ;; large images in magic-6.
+        (finishes
+          (compare-wands before after output))))))
 
 (test small-image-comparison-happy-path
-  (unless (disabled-for-t1641-p)
-   (with-large-wand (before :height 20)
-     (with-large-wand (after :height 20)
-       (uiop:with-temporary-file (:pathname output :type "webp")
-         (finishes
-           (compare-wands before after output)))))))
+  (with-large-wand (before :height 20)
+    (with-large-wand (after :height 20)
+      (uiop:with-temporary-file (:pathname output :type "webp")
+        (finishes
+          (compare-wands before after output))))))
 
 (defun  mark-pixel (wand x y &key (color "rgba(10,0,0,1.0)"))
   (with-pixel (pixel x y)
@@ -574,24 +564,22 @@
           (is (eql 5 (magick-get-image-width res))))))))
 
 (test identify-image
-  (unless (disabled-for-t1641-p)
-   (with-fixture state ()
-     (with-wand (wand :file rose)
-       (assert-that (magick-identify-image wand)
-                    (matches-regex "png:IHDR.bit_depth: 8"))))))
+  (with-fixture state ()
+    (with-wand (wand :file rose)
+      (assert-that (magick-identify-image wand)
+                   (matches-regex "png:IHDR.bit_depth: 8")))))
 
 (test magick-bad-exif-data ()
-  (unless (disabled-for-t1641-p)
-   (with-fixture state ()
-     (with-wand (wand :file rose)
-       (is (fset:equal? (fset:empty-map)
-                        (magick-bad-exif-data wand))))
-     (with-wand (wand :file #. (fixture "image-with-timestamp.png"))
-       (is (fset:equal?
-            (fset:with
-             (fset:empty-map)
-             "png:tIME" "2023-06-06T14:13:20Z")
-            (magick-bad-exif-data wand)))))))
+  (with-fixture state ()
+    (with-wand (wand :file rose)
+      (is (fset:equal? (fset:empty-map)
+                       (magick-bad-exif-data wand))))
+    (with-wand (wand :file #. (fixture "image-with-timestamp.png"))
+      (is (fset:equal?
+           (fset:with
+            (fset:empty-map)
+            "png:tIME" "2023-06-06T14:13:20Z")
+           (magick-bad-exif-data wand))))))
 
 (test get-px-as-string
   (with-single-pixel-image (:wand wand :height 20 :width 30 :default-mark t)

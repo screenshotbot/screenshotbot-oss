@@ -141,6 +141,13 @@ have to be called just before returning.")
                                `(let ((,var ',real-var))
                                   ,lisp-to-foreign))))))))
 
+(defun funcall-with-native-error-handling (fn &rest args)
+  #-sbcl
+  (apply fn args)
+  #+sbcl
+  (sb-int:with-float-traps-masked (:divide-by-zero)
+    (apply fn args)))
+
 (defmacro define-foreign-function (name args &key result-type documentation module)
   (declare (ignore module))
   (assert result-type)
@@ -167,7 +174,7 @@ have to be called just before returning.")
                                    `(cffi:mem-ref ,(car x) ',(cadr (cadr x)))
                                    )))
                 `(let ((*funcall-cleanups* nil))
-                   (let ((ret (,cffi-name
+                   (let ((ret (funcall-with-native-error-handling #',cffi-name
                                ,@(loop for (name type) in args
                                        collect `(,(%find-lisp-to-foreign-converter type)
                                                  ,name)))))
