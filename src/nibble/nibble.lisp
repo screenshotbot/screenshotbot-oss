@@ -238,14 +238,7 @@
                           session current-session))
                     (warn "Incorrect session: this is not a cause for concern unless it's spiking")
                     (render-incorrect-session plugin))
-                   ((let ((nibble-user (nibble-user nibble)))
-                      (and
-                       ;; if the nibble was created when they
-                       ;; weren't logged in, and they are logged
-                       ;; in now, that's always okay
-                       nibble-user
-                       (not (eql (auth:request-user hunchentoot:*request*)
-                                 nibble-user))))
+                   ((different-user-viewing-p nibble)
                     (nibble-render-logged-out
                      hunchentoot:*acceptor*
                      nibble))
@@ -253,6 +246,18 @@
                     (final-render)))))
               (t
                (final-render))))))))))
+
+(defun different-user-viewing-p (nibble)
+  "Check that if it's the same user that created the nibble, except in
+certain cases where the user object might change."
+  (let ((nibble-user (nibble-user nibble)))
+    (and
+     ;; if the nibble was created when they
+     ;; weren't logged in, and they are logged
+     ;; in now, that's always okay
+     nibble-user
+     (not (eql (auth:request-user hunchentoot:*request*)
+               nibble-user)))))
 
 (defmethod render-incorrect-session ((plugin nibble-acceptor-mixin))
   <html>
