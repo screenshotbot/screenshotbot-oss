@@ -350,7 +350,7 @@
 
 (fli:define-foreign-function (magick-relinquish-memory "MagickRelinquishMemory")
   ((resource (:pointer :void)))
-  :result-type :void)
+  :result-type (:pointer :void))
 
 (fli:define-foreign-function (magick-get-resource-limit "MagickGetResourceLimit")
     ((op resource-type))
