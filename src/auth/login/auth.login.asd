@@ -18,6 +18,7 @@
                (:file "github")
                (:file "oidc")
                (:file "login")
+               (:file "sso")
                (:file "signup")
                (:file "verify-email")
                (:file "saml")
@@ -29,4 +30,5 @@
                :fiveam-matchers
                :util/fiveam)
   :components ((:file "test-roles-auth-provider")
-               (:file "test-verify-email")))
+               (:file "test-verify-email")
+               (:file "test-sso")))

@@ -6,8 +6,6 @@
 
 (defpackage :screenshotbot/sso/redirect
   (:use #:cl)
-  (:import-from #:screenshotbot/server
-                #:maybe-redirect-for-sso)
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:core/installation/auth-provider
@@ -23,7 +21,9 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/login/common
-                #:oauth-signin-link))
+                #:oauth-signin-link)
+  (:import-from #:auth/login/sso
+                #:maybe-redirect-for-sso))
 (in-package :screenshotbot/sso/redirect)
 
 (defmethod maybe-redirect-for-sso ((company company))

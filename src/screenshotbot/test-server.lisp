@@ -8,7 +8,6 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/server
-                #:needs-sso-condition
                 #:%handler-wrap
                 #:request)
   (:import-from #:util/store/store
@@ -22,6 +21,11 @@
                 #:contains-string)
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
+  (:import-from #:auth/login/sso
+                #:maybe-redirect-for-sso
+                #:needs-sso-condition)
+  (:import-from #:auth
+                #:no-access-error)  
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/test-server)
 
@@ -30,14 +34,14 @@
 
 (test authenticate-request-happy-path
   (with-installation ()
-   (with-test-store ()
-     (with-fake-request ()
-       (let ((request (make-instance 'request
-                                     :uri "/foo"
-                                     :headers-in nil)))
-         (auth:with-sessions ()
-           (finishes
-             (auth:authenticate-request request))))))))
+    (with-test-store ()
+      (with-fake-request ()
+        (let ((request (make-instance 'request
+                                      :uri "/foo"
+                                      :headers-in nil)))
+          (auth:with-sessions ()
+            (finishes
+              (auth:authenticate-request request))))))))
 
 (test no-access-error-happy-path
   (with-test-store ()
@@ -51,8 +55,17 @@
          (contains-string "You do not have permission to access this page"))))))
 
 (test sso-condition-happy-path
-  (with-test-store ()
-    (finishes
-      (%handler-wrap
-       (lambda ()
-         (signal 'needs-sso-condition :company :foobar))))))
+  (cl-mock:with-mocks ()
+    (with-test-store ()
+      (with-installation ()
+       (with-fake-request ()
+         (let ((redirected))
+           (cl-mock:if-called 'maybe-redirect-for-sso
+                              (lambda (company)
+                                (setf redirected company)))
+           (finishes
+             (%handler-wrap
+              (lambda ()
+                (signal 'needs-sso-condition :company :foobar)
+                (error 'no-access-error))))
+           (is (eql :foobar redirected))))))))

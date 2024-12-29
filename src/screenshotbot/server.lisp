@@ -51,6 +51,10 @@
                 #:with-installation-for-request)
   (:import-from #:screenshotbot/throttler
                 #:maybe-throttle-request)
+  (:import-from #:auth/login/sso
+                #:with-handle-needs-sso
+                #:needs-sso-condition-company
+                #:needs-sso-condition)
   (:export
    #:defhandler
    #:with-login
@@ -176,31 +180,20 @@
                threading:*extras*)))
     (funcall fn)))
 
-(define-condition needs-sso-condition (condition)
-  ((company :initarg :company
-            :reader needs-sso-condition-company)))
-
-(defgeneric maybe-redirect-for-sso (company)
-  (:documentation "Maybe redirect if SSO is enabled for the company, might not return if redirected."))
 
 (defun %handler-wrap (impl)
   (with-sentry-extras ()
-    (let ((sso-company))
-      (handler-case
-          (handler-bind ((needs-sso-condition
-                           (lambda (condition)
-                             (setf sso-company (needs-sso-condition-company condition)))))
-           (funcall impl))
-        (no-access-error (e)
-          (when sso-company
-            (maybe-redirect-for-sso sso-company))
-          (push-event :no-access-error)
-          (no-access-error-page))
-        (throttled-error (e)
-          (declare (ignore e))
-          (setf (hunchentoot:return-code*) 429)
-          (warn "Too many request: ~a" e)
-          "Too many requests")))))
+    (handler-case
+        (with-handle-needs-sso ()
+          (funcall impl))
+      (no-access-error (e)
+        (push-event :no-access-error)
+        (no-access-error-page))
+      (throttled-error (e)
+        (declare (ignore e))
+        (setf (hunchentoot:return-code*) 429)
+        (warn "Too many request: ~a" e)
+        "Too many requests"))))
 
 (defmacro defhandler ((name &key uri method intern
                               want-login) params &body body)
