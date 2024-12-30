@@ -505,6 +505,7 @@
                :fset
                :uuid
                :easy-macros
+               :util/hunchentoot-engine
                :cl-store
                :util/threading
                :util/misc

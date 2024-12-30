@@ -258,7 +258,7 @@
                (:file "reused-ssl")))
 
 (defsystem :util/hunchentoot-engine
-  :depends-on (:util
+  :depends-on (:util/request
                :hunchentoot)
   :serial t
   :components ((:file "hunchentoot-engine")))
