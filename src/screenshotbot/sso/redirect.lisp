@@ -26,7 +26,7 @@
                 #:maybe-redirect-for-sso))
 (in-package :screenshotbot/sso/redirect)
 
-(defmethod maybe-redirect-for-sso ((company company))
+(defmethod maybe-redirect-for-sso ((company company) final-redirect)
   ;; 1. check if SSO will actually help
   ;; 2. actually do the redirect.
   (when-let* ((sso-auth-provider (company-sso-auth-provider company))
@@ -40,5 +40,5 @@
      (oauth-signin-link oidc-provider
                         (nibble:allow-user-change
                          (nibble ()
-                           (error "don't know what to do")))))))
+                           (hex:safe-redirect final-redirect)))))))
 

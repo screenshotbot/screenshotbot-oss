@@ -27,15 +27,16 @@
     (with-handle-needs-sso ()
       (error 'auth:no-access-error))))
 
-(defmethod maybe-redirect-for-sso ((company (eql 'foobar)))
+(defmethod maybe-redirect-for-sso ((company (eql 'foobar)) final-redirect)
   (hex:safe-redirect "/"))
 
 (test sso-signal
   (with-fake-request ()
-    (is
-     (equal nil ;; from the redirect
-            (catch 'hunchentoot::handler-done
-              (with-handle-needs-sso ()
-                (signal 'needs-sso-condition :company 'foobar)
-                (error 'auth:no-access-error)))))))
+    (auth:with-sessions ()
+     (is
+      (equal nil ;; from the redirect
+             (catch 'hunchentoot::handler-done
+               (with-handle-needs-sso ()
+                 (signal 'needs-sso-condition :company 'foobar)
+                 (error 'auth:no-access-error))))))))
 

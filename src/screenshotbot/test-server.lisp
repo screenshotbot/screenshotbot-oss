@@ -58,14 +58,15 @@
   (cl-mock:with-mocks ()
     (with-test-store ()
       (with-installation ()
-       (with-fake-request ()
-         (let ((redirected))
-           (cl-mock:if-called 'maybe-redirect-for-sso
-                              (lambda (company)
-                                (setf redirected company)))
-           (finishes
-             (%handler-wrap
-              (lambda ()
-                (signal 'needs-sso-condition :company :foobar)
-                (error 'no-access-error))))
-           (is (eql :foobar redirected))))))))
+        (with-fake-request ()
+          (auth:with-sessions ()
+           (let ((redirected))
+             (cl-mock:if-called 'maybe-redirect-for-sso
+                                (lambda (company redirect)
+                                  (setf redirected company)))
+             (finishes
+               (%handler-wrap
+                (lambda ()
+                  (signal 'needs-sso-condition :company :foobar)
+                  (error 'no-access-error))))
+             (is (eql :foobar redirected)))))))))
