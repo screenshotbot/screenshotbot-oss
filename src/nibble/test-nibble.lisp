@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:nibble
+                #:different-user-viewing-p
+                #:allow-user-change
                 #:nibble-full-url
                 #:expired-nibble
                 #:make-id
@@ -136,3 +138,12 @@
    (util/testing:with-fake-request (:script-name "/n/nnnnnnn")
      (acceptor-dispatch-request hunchentoot:*acceptor*
                                 hunchentoot:*request*))))
+
+(test allow-user-change
+  (with-fixture state ()
+    (let ((nibble (nibble ()
+                    "hellO")))
+      (util/testing:with-fake-request ()
+        (is-true (different-user-viewing-p nibble))
+        (is (eql nibble (allow-user-change nibble)))
+        (is-false (different-user-viewing-p nibble))))))

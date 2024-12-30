@@ -39,6 +39,13 @@
                     :initform nil)
    (ts :initarg :ts)))
 
+(defun allow-user-change (nibble)
+  "Allow this nibble to switch users (i.e. this nibble will be used during a login flow.)
+
+Returns the nibble for convenience."
+  (setf (nibble-user nibble) nil)
+  nibble)
+
 (defun all-nibbles ()
   (bt:with-lock-held (*lock*)
     (loop for v being the hash-values of *nibbles* collect v)))
@@ -77,6 +84,7 @@
   (bt:with-lock-held (*lock*)
     (let ((nibble (gethash id *nibbles*)))
       nibble)))
+
 
 (defun current-session ()
   (when (boundp 'hunchentoot:*request*)
@@ -320,3 +328,5 @@ purposes to be maintained across server restarts."
 
 (defmethod print-object ((nibble nibble) out)
   (format out "#<NIBBLE ~a>" (ignore-errors (slot-value nibble 'impl))))
+
+ 

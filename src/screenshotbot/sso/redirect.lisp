@@ -38,6 +38,7 @@
                                             :expiration-seconds (* 24 3600))))
     (hex:safe-redirect
      (oauth-signin-link oidc-provider
-                        (nibble ()
-                          (error "don't know what to do"))))))
+                        (nibble:allow-user-change
+                         (nibble ()
+                           (error "don't know what to do")))))))
 

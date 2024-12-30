@@ -16,4 +16,5 @@
            #:defnibble
            #:nibble-current-user
            #:nibble-acceptor-mixin
+           #:allow-user-change
            #:nibble-funcall))
