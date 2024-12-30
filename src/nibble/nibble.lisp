@@ -39,12 +39,18 @@
                     :initform nil)
    (ts :initarg :ts)))
 
-(defun allow-user-change (nibble)
+(defmethod allow-user-change ((nibble nibble))
   "Allow this nibble to switch users (i.e. this nibble will be used during a login flow.)
 
 Returns the nibble for convenience."
   (setf (nibble-user nibble) nil)
   nibble)
+
+(defmethod allow-user-change ((url string))
+  "A URL will always allow user change. This defmethod is a convenience
+so we can propagate user changes without knowing if the next url is a
+nibble or not."
+  url)
 
 (defun all-nibbles ()
   (bt:with-lock-held (*lock*)

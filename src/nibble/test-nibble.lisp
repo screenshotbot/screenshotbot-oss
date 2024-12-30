@@ -147,3 +147,8 @@
         (is-true (different-user-viewing-p nibble))
         (is (eql nibble (allow-user-change nibble)))
         (is-false (different-user-viewing-p nibble))))))
+
+(test allow-user-change-for-strings
+  (with-fixture state ()
+    (is (equal "foobar"
+               (allow-user-change "foobar")))))
