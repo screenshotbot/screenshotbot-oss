@@ -11,6 +11,7 @@
   (:import-from #:bknr.datastore
                 #:delete-object)
   (:import-from #:screenshotbot/user-api
+                #:user
                 #:company-name)
   (:import-from #:util/store
                 #:with-test-store)
@@ -38,6 +39,15 @@
   (:import-from #:screenshotbot/server
                 #:needs-sso-condition-company
                 #:needs-sso-condition)
+  (:import-from #:auth/login/sso
+                #:cant-view-company-condition-company
+                #:cant-view-company-condition)
+  (:import-from #:fiveam-matchers/core
+                #:has-typep
+                #:is-equal-to
+                #:assert-that)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as)
   (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/test-company)
 
@@ -50,7 +60,9 @@
 (def-fixture state ()
   (with-test-store ()
     (with-installation (:installation (make-instance 'my-installation))
-     (&body))))
+      (let ((company (make-instance 'company))
+            (user (make-instance 'user)))
+        (&body)))))
 
 (test jira-config
   (with-fixture state ()
@@ -193,3 +205,29 @@
     (with-fixture user-company-with-sso (:role 'roles:standard-member :sso-p nil)
       (let ((vc (make-instance 'normal-viewer-context :user user)))
         (is-true (auth:can-viewer-view vc company))))))
+
+(test cant-view-company-condition-not-triggered
+  (with-fixture state ()
+    (roles:ensure-has-role company user 'roles:standard-member)
+    (let ((vc (make-instance 'normal-viewer-context :user user)))
+      (is-true (auth:can-viewer-view vc company))
+      (handler-case
+          (auth:can-viewer-view vc company)
+        (cant-view-company-condition (c)
+          (fail "not expected to see this condition"))))))
+
+(test cant-view-company-condition-is-triggered
+  (with-fixture state ()
+    (let ((vc (make-instance 'normal-viewer-context :user user)))
+      (is-false (auth:can-viewer-view vc company))
+      (let ((condition nil))
+        (finishes
+          (handler-bind ((cant-view-company-condition (lambda (c)
+                                                        (setf condition c))))
+            (auth:can-viewer-view vc company)))
+        (assert-that condition
+                     (described-as "cant-view-company-condition should've been signalled"
+                       (has-typep 'cant-view-company-condition)))
+        (assert-that
+         (cant-view-company-condition-company condition)
+         (is-equal-to company))))))

@@ -12,9 +12,13 @@
                 #:nibble))
 (in-package :auth/login/sso)
 
-(define-condition needs-sso-condition (condition)
+(define-condition cant-view-company-condition (condition)
   ((company :initarg :company
-            :reader needs-sso-condition-company)))
+            :reader needs-sso-condition-company
+            :reader cant-view-company-condition-company)))
+
+(define-condition needs-sso-condition (cant-view-company-condition)
+  ())
 
 (defgeneric maybe-redirect-for-sso (company final-redirect)
   (:documentation "Maybe redirect if SSO is enabled for the company, might not return if redirected. The redirect will finally redirecto to final-redirect"))

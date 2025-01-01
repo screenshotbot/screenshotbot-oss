@@ -54,6 +54,8 @@
                 #:logged-in-viewer-context)
   (:import-from #:screenshotbot/server
                 #:needs-sso-condition)
+  (:import-from #:auth/login/sso
+                #:cant-view-company-condition)
   (:export
    #:company
    #:company-reports
@@ -382,7 +384,10 @@ not set up for SSO."
          (signal 'needs-sso-condition :company company))
        res))
     (t
-     (call-next-method))))
+     (let ((res (call-next-method)))
+       (unless res
+         (signal 'cant-view-company-condition :company company))
+       res))))
 
 (defgeneric company (obj)
   (:documentation "For a given obj, figure out which company it belongs to"))
