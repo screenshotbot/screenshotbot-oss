@@ -25,6 +25,7 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/invite
+                #:invite-enabled-p
                 #:%user-count
                 #:invite-page
                 #:user-can-invite-p
@@ -44,7 +45,11 @@
   (:import-from #:auth/model/invite
                 #:invite-used-p
                 #:invite-code)
-  (:local-nicknames (#:roles #:auth/model/roles)))
+  (:import-from #:core/installation/auth-provider
+                #:default-oidc-provider
+                #:company-sso-auth-provider)
+  (:import-from #:core/installation/installation
+                #:*installation*))
 (in-package :screenshotbot/test-invite)
 
 (util/fiveam:def-suite)
@@ -194,3 +199,15 @@
       (is (eql 3 (%user-count company)))
       (setf (invite-used-p (elt invites 2)) t)
       (is (eql 2 (%user-count company))))))
+
+(test invite-enabled-p-happy-path
+  (with-fixture state ()
+    (is-true (invite-enabled-p company))
+    (setf (company-sso-auth-provider company) 'fake)
+    (is-false (invite-enabled-p company))))
+
+(test invite-enabled-p-for-installation-with-default-sso
+  (with-fixture state ()
+    (is-true (invite-enabled-p company))
+    (setf (default-oidc-provider *installation*) 'fake)
+    (is-false (invite-enabled-p company))))

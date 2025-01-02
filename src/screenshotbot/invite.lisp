@@ -51,18 +51,31 @@
                 #:plan)
   (:import-from #:auth/model/invite
                 #:all-invites)
+  (:import-from #:core/installation/auth-provider
+                #:default-oidc-provider
+                #:company-sso-auth-provider)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:local-nicknames (#:roles #:auth/model/roles))
   (:export
    #:invite-page
    #:render-invite-page
-   #:accept-invite))
+   #:accept-invite
+   #:invite-enabled-p))
 (in-package :screenshotbot/invite)
 
 (named-readtables:in-readtable markup:syntax)
 
+(defmethod invite-enabled-p (company)
+  (and
+   (not (company-sso-auth-provider company))
+   (not (default-oidc-provider *installation*))))
+
 (defmethod user-can-invite-p (company user)
-  (roles:has-role-p company user
-                    (company-invitation-role company)))
+  (and
+   (invite-enabled-p company)
+   (roles:has-role-p company user
+                     (company-invitation-role company))))
 
 (defmethod render-invite-page (installation)
   (%invite-page))

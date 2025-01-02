@@ -38,6 +38,8 @@
                 #:mdi)
   (:import-from #:auth/model/invite
                 #:all-unused-invites)
+  (:import-from #:screenshotbot/invite
+                #:invite-enabled-p)
   (:local-nicknames (#:a #:alexandria)
                     (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/company/members)
@@ -169,22 +171,27 @@
       </span>
     </taskie-row>))
 
+(defun invites-section (company)
+  <markup:merge-tag>
+    ,(taskie-page-title
+      :title "Pending Invites"
+      <a href= "/invite" class= "btn btn-success btn-sm">Invite Member</a>)
+    ,(taskie-list
+      :headers '("Name" "Email" "Status" "Actions")
+      :items (all-unused-invites :company company)
+      :checkboxes nil
+      :empty-message "No pending invites"
+      :row-generator (lambda (invite)
+                       (render-invite-row invite company)))
+  </markup:merge-tag>)
+
 (defun members-page ()
   (settings-template
    (let ((company (current-company)))
 
      <markup:merge-tag>
-       ,(taskie-page-title
-         :title "Pending Invites"
-         <a href= "/invite" class= "btn btn-success btn-sm">Invite Member</a>)
-
-       ,(taskie-list
-         :headers '("Name" "Email" "Status" "Actions")
-         :items (all-unused-invites :company company)
-         :checkboxes nil
-         :empty-message "No pending invites"
-         :row-generator (lambda (invite)
-                          (render-invite-row invite company)))
+       ,(when (invite-enabled-p company)
+          (invites-section company))
 
        ,(taskie-page-title :title "Members" :class "pt-3")
 

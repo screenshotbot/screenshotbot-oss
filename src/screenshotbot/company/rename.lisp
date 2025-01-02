@@ -28,6 +28,8 @@
                 #:with-transaction)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:screenshotbot/invite
+                #:invite-enabled-p)
   (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/company/rename)
 
@@ -74,15 +76,15 @@
                      id= "name" />
             </div>
 
-            <div class= "form-group mt-3">
-              <label for= "invitation-role" class= "form-label">Who can invite other members?</label>
-              <select name= "invitation-role" id= "invitation-role" class= "form-select" >
-                ,@ (loop for (type desc role) in *roles*
-                         collect
-                         <option value= type selected= (when (eql role (company-invitation-role company)) "selected") >,(progn desc)</option>)
-              </select>
-            </div>
-
+            ,(when (invite-enabled-p company)
+               <div class= "form-group mt-3">
+                 <label for= "invitation-role" class= "form-label">Who can invite other members?</label>
+                 <select name= "invitation-role" id= "invitation-role" class= "form-select" >
+                   ,@ (loop for (type desc role) in *roles*
+                            collect
+                            <option value= type selected= (when (eql role (company-invitation-role company)) "selected") >,(progn desc)</option>)
+                 </select>
+               </div>)
 
           </div>
 
