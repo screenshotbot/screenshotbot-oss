@@ -133,6 +133,17 @@
        (nibble ()
          (%render-api-key api-key))))))
 
+
+(markup:deftag export-sh-var (&key name value)
+  <markup:merge-tag><code style="float: left; padding-right: 10px;"><span class="react-syntax-highlighter-line-number"></span></code><span class="language-built_in">export</span><span> ,(progn name)=</span><span class="language-string">,(progn value)</span></markup:merge-tag>)
+
+(markup:deftag code-sample-pre (children)
+  "Similar to <pre> tag, but treats all of the children tags as its own line, making it easier to work with since we don't have to deal with whitespaces."
+  (let* ((children (remove-if 'stringp children))
+         (children (butlast (loop for child in children
+                                  append (list child (format nil "~%"))))))
+    <pre class="syntax-highlighter code-sample-pre">,@ (progn children)</pre>))
+
 (defun %render-api-key (api-key)
   (let ((result-api-key (api-key-key api-key))
         (result-api-key-secret (api-key-secret-key api-key)))
@@ -158,8 +169,10 @@
                <div class="code-sample-title">Example: use these variables on macOS or Linux</div>
              </div>
              <div class="code-sample-body">
-               <pre class="syntax-highlighter code-sample-pre"><code style="float: left; padding-right: 10px;"><span class="react-syntax-highlighter-line-number">1</span></code><span class="language-built_in">export</span><span> SCREENSHOTBOT_API_KEY=</span><span class="language-string">,(progn result-api-key)</span>
-<code style="float: left; padding-right: 10px;"><span class="react-syntax-highlighter-line-number">2</span></code><span class="language-built_in">export</span><span> SCREENSHOTBOT_API_SECRET=</span><span class="language-string">,(progn result-api-key-secret)</span></pre>
+               <code-sample-pre>
+                 <export-sh-var name= "SCREENSHOTBOT_API_KEY" value=result-api-key />
+                 <export-sh-var name= "SCREENSHOTBOT_API_SECRET" value=result-api-key-secret />
+               </code-sample-pre>
              </div>
            </div>
          </div>))

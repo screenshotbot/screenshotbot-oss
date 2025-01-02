@@ -494,11 +494,23 @@ footer label {
     color: #008c6a;
 }
 
-.syntax-highlighter .react-syntax-highlighter-line-number {
-    color: #8e8ea0;
-    user-select: none;
-    opacity: .5;
-    text-align: right;
+.syntax-highlighter {
+    counter-reset: line;
+}
+
+.syntax-highlighter {
+    .react-syntax-highlighter-line-number {
+        color: #8e8ea0;
+        user-select: none;
+        opacity: .5;
+        text-align: right;
+    }
+
+    // See https://stackoverflow.com/questions/40842277/create-line-numbers-on-pre-with-css-only
+    .react-syntax-highlighter-line-number:before {
+        counter-increment: line;
+        content: counter(line);
+    }
 }
 
 .card-pricing .card-footer {
