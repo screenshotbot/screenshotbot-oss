@@ -11,11 +11,25 @@
                 #:abstract-installation
                 #:*installation*)
   (:import-from #:screenshotbot/dashboard/api-keys
+                #:%render-api-key
                 #:permission
                 #:%read-permissions
                 #:api-key-available-permissions)
   (:import-from #:util/store/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:fiveam-matchers/core
+                #:does-not
+                #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
+  (:import-from #:screenshotbot/api-key-api
+                #:api-key)
+  (:import-from #:util/testing
+                #:with-fake-request)
+  (:import-from #:core/api/acceptor
+                #:api-token-mode-p)
+  (:import-from #:cl-mock
+                #:answer))
 (in-package :core/api/dashboard/test-api-keys)
 
 
@@ -36,13 +50,37 @@
     'permission
     :name :full)))
 
-(def-fixture state (&key api-key-roles)
-  (with-test-store ()
-   (let ((*installation* (make-instance 'my-installation)))
-     (gk:create :api-key-roles)
-     (funcall (if api-key-roles #'gk:enable #'gk:disable) :api-key-roles)
-     (&body))))
+(def-fixture state (&key api-key-roles (domain "https://example.com"))
+  (cl-mock:with-mocks ()
+   (with-test-store ()
+     (let ((*installation* (make-instance 'my-installation
+                                          :domain domain)))
+       (gk:create :api-key-roles)
+       (funcall (if api-key-roles #'gk:enable #'gk:disable) :api-key-roles)
+       (&body)))))
 
 (test %read-permissions-without-gk
   (with-fixture state (:api-key-roles nil)
     (is (equal '(:ci) (%read-permissions)))))
+
+(test api-hostname-is-shown-for-enterprise-and-oss-installs
+  (with-fixture state (:domain "https://example.com")
+    (with-fake-request ()
+      (answer (api-token-mode-p *acceptor*) nil)
+      (let ((api-key (make-instance 'api-key)))
+        (let ((content (%render-api-key api-key)))
+          (assert-that (markup:write-html content)
+                       (contains-string "SCREENSHOTBOT_API_HOSTNAME")))))))
+
+(test api-hostname-is-not-shown-for-screenshotbot.io
+  (with-fixture state (:domain "https://screenshotbot.io")
+    (with-fake-request ()
+      (answer (api-token-mode-p *acceptor*) nil)
+      (let ((api-key (make-instance 'api-key)))
+        (let ((content (%render-api-key api-key)))
+          (assert-that (markup:write-html content)
+                       (does-not
+                        (contains-string "example.com")))
+          (assert-that (markup:write-html content)
+                       (does-not
+                        (contains-string "SCREENSHOTBOT_API_HOSTNAME"))))))))

@@ -52,6 +52,7 @@
   (:import-from #:alexandria
                 #:when-let)
   (:import-from #:core/installation/installation
+                #:installation-domain
                 #:*installation*)
   (:import-from #:core/api/model/api-key
                 #:api-key-permissions
@@ -172,6 +173,9 @@
                <code-sample-pre>
                  <export-sh-var name= "SCREENSHOTBOT_API_KEY" value=result-api-key />
                  <export-sh-var name= "SCREENSHOTBOT_API_SECRET" value=result-api-key-secret />
+                 ,(let ((hostname (installation-domain *installation*)))
+                    (unless (equal "https://screenshotbot.io" hostname)
+                      <export-sh-var name= "SCREENSHOTBOT_API_HOSTNAME" value=hostname />))
                </code-sample-pre>
              </div>
            </div>
