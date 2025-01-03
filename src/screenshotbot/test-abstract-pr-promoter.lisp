@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:same-pull-request-p
                 #:pr-merge-base
                 #:make-run-check
                 #:push-remote-check-via-batching
@@ -34,6 +35,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/user-api
+                #:pull-request-url
                 #:%created-at
                 #:created-at
                 #:channel-repo
@@ -325,6 +327,33 @@
         (assert-that (check-title check)
                      (contains-string "previously rejected by Arnold"))))))
 
+(defclass fake-github-promoter (abstract-pr-promoter)
+  ()
+  (:documentation "Fake in the sense that it only implements promoter-pull-id"))
+
+(defmethod promoter-pull-id ((self fake-github-promoter) run)
+  (pull-request-url run))
+
+(test same-pull-request-p-happy-path
+  (with-fixture state ()
+   (let ((promoter (make-instance 'fake-github-promoter)))
+     (is-true (same-pull-request-p
+               promoter
+               (make-recorder-run
+                :pull-request "foo1")
+               (make-recorder-run
+                :pull-request "foo1"))))))
+
+(test same-pull-request-p-not-same!
+  (with-fixture state ()
+   (let ((promoter (make-instance 'fake-github-promoter)))
+     (is-false (same-pull-request-p
+                promoter
+                (make-recorder-run
+                 :pull-request "foo2")
+                (make-recorder-run
+                 :pull-request "foo1"))))))
+
 (test make-check-for-report
   (with-fixture state ()
     (is (equal "1 changes, accepted by Arnold"
@@ -513,6 +542,7 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
       (answer (promoter-pull-id promoter run1) "foo")
       (is (eql nil (previous-review promoter run1))))))
 
+
 (test previous-review-returns-the-older-run
   (with-fixture state ()
     (flet ((make-recorder-run (&rest args &key created-at &allow-other-keys)
@@ -592,5 +622,6 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
       (maybe-promote promoter run)
       (assert-that checks
                    (is-equal-to nil)))))
+
 
 
