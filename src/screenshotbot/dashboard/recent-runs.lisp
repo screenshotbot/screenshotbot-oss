@@ -108,6 +108,8 @@
              <span>
                on
                <commit repo= repo hash=hash />
+               ,(when (recorder-run-work-branch run)
+                  <span>(,(recorder-run-work-branch run))</span>)
              </span>)
         </span>)))))
 
