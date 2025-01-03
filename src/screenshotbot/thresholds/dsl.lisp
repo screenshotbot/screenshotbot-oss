@@ -46,7 +46,8 @@
     (discard-whitespace stream)))
 
 (defparameter *symbols*
-  '(exact-images))
+  '(exact-images
+    + * / -))
 
 
 (defun discard-whitespace (stream)
@@ -75,6 +76,10 @@
       (t
        (parse-symbol
         (read-symbol-as-string stream))))))
+
+(defun eval-dsl (dsl)
+  "Takes a DSL and returns a function that can be evaluated later."
+  (eval `(lambda () ,dsl)))
 
 
 

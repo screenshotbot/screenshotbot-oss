@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/thresholds/dsl
+                #:eval-dsl
                 #:%read-dsl-from-string
                 #:%read-dsl)
   (:local-nicknames
@@ -43,4 +44,11 @@
    (equal
     '(22)
     (%read-dsl-from-string "(22)"))))
+
+(test evalate
+  (is
+   (equal 3
+          (funcall
+           (eval-dsl
+            (%read-dsl-from-string "(+ 1 2)"))))))
 
