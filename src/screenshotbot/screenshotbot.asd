@@ -160,6 +160,8 @@
                  (:file "test-object")
                  (:file "note")
                  (:file "company-graph")))
+   (:module "thresholds"
+    :components ((:file "dsl")))
    (:file "audit-log")
    (:file "site-admin")
    (:file "diff-report")
@@ -352,6 +354,9 @@
                (:file "test-audit-log")
                (:file "test-abstract-pr-promoter")
                (:file "test-batch-promoter")
+               (:module "thresholds"
+                :serial t
+                :components ((:file "test-dsl")))
                (:module "tasks"
                 :components ((:file "test-common")))
                (:module "company"
