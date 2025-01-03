@@ -6,12 +6,19 @@
 
 (defpackage :screenshotbot/thresholds/dsl
   (:use #:cl)
+  #+lispworks
+  (:import-from #:lw
+                #:whitespace-char-p)
   (:export #:exact-images))
 (in-package :screenshotbot/thresholds/dsl)
 
+#-lispworks
+(defun whitespace-char-p (ch)
+  (ppcre:scan-to-strings "\\s" (string ch)))
 
 (defun %read-dsl-from-string (code)
   (let ((input (make-string-input-stream code)))
+    (discard-whitespace input)
     (let ((*package* (symbol-package 'foo)))
       (%read-dsl input))))
 
@@ -20,6 +27,7 @@
     (cond
       ((eql #\) next)
        (read-char stream)
+       (discard-whitespace stream)
        (reverse read-so-far))
       (t
        (read-list
@@ -27,15 +35,24 @@
         (list* (%read-dsl stream) read-so-far))))))
 
 (defun read-symbol-as-string (stream)
-  (coerce
-   (loop for next = (peek-char nil stream)
-         until (or
-                (eql next #\)))
-         collect (read-char stream))
-   'string))
+  (prog1
+      (coerce
+       (loop for next = (peek-char nil stream)
+             until (or
+                    (eql next #\))
+                    (whitespace-char-p next))
+             collect (read-char stream))
+       'string)
+    (discard-whitespace stream)))
 
 (defparameter *symbols*
   '(exact-images))
+
+
+(defun discard-whitespace (stream)
+  (loop for ch = (peek-char nil stream nil nil)
+        while (and ch (whitespace-char-p ch))
+        do (read-char stream)))
 
 (defun parse-symbol (string)
   (loop for sym in *symbols*
@@ -49,6 +66,7 @@
     (cond
       ((eql #\( next)
        (read-char stream)
+       (discard-whitespace stream)
        (read-list stream))
       (t
        (parse-symbol

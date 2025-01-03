@@ -21,3 +21,20 @@
    (equal
     '(dsl:exact-images)
     (%read-dsl-from-string "(exact-images)"))))
+
+(test read-with-whitespace
+  (is
+   (equal
+    '(dsl:exact-images)
+    (%read-dsl-from-string "( exact-images )")))
+  (is
+   (equal
+    '(dsl:exact-images)
+    (%read-dsl-from-string "  ( exact-images )  "))))
+
+(test nested
+  (is
+   (equal
+    '((dsl:exact-images (dsl:exact-images)))
+    (%read-dsl-from-string "(( exact-images (exact-images) ))"))))
+
