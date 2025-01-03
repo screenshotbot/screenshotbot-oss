@@ -426,24 +426,26 @@ Revision. It will be tested with EQUAL"))
                 (acceptable-reviewer acceptable))
           return acceptable))
 
-(defun %find-reusable-acceptable (promoter run previous-run pull-id)
+(defun %find-reusable-acceptable (promoter run previous-run)
   "Find an acceptable from the previous-run that can be re-used for this
 run. If the previous-run or any of its acceptables cannot be re-used,
 we return NIL."
-  (flet ((p (x message)
-           (format-log run :info "For ~a: ~a: Got ~a" previous-run message x)
-           x))
-    (and
-     (not (eql previous-run run))
-     (timestamp< (created-at previous-run)
-                 (created-at run))
-     (equal (promoter-pull-id promoter previous-run) pull-id)
-     (p (diff-report-empty-p
-         (make-diff-report run previous-run))
-        "Check if diff-report is empty")
-     (p
-      (review-status previous-run)
-      "Check if report is accepted or rejected"))))
+  (let ((pull-id (promoter-pull-id promoter run)))
+    (unless (str:emptyp pull-id)
+     (flet ((p (x message)
+              (format-log run :info "For ~a: ~a: Got ~a" previous-run message x)
+              x))
+       (and
+        (not (eql previous-run run))
+        (timestamp< (created-at previous-run)
+                    (created-at run))
+        (equal (promoter-pull-id promoter previous-run) pull-id)
+        (p (diff-report-empty-p
+            (make-diff-report run previous-run))
+           "Check if diff-report is empty")
+        (p
+         (review-status previous-run)
+         "Check if report is accepted or rejected"))))))
 
 (defmethod previous-review (promoter run)
   (when-let ((pull-id (promoter-pull-id promoter run)))
@@ -455,7 +457,7 @@ we return NIL."
           ((local-time:timestamp> cut-off (created-at previous-run))
            (return nil))
           (t
-           (let ((acceptable (%find-reusable-acceptable promoter run previous-run pull-id)))
+           (let ((acceptable (%find-reusable-acceptable promoter run previous-run)))
              (when acceptable
                (return acceptable)))))))))
 
