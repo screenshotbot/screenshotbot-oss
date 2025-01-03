@@ -55,11 +55,15 @@
         do (read-char stream)))
 
 (defun parse-symbol (string)
-  (loop for sym in *symbols*
-        if (equal (string-downcase sym) string)
-          return sym
-        finally
-         (error "Invalid symbol: ~a" string)))
+  (cond
+    ((ppcre:scan "\\d+" string)
+     (parse-integer string))
+    (t
+     (loop for sym in *symbols*
+           if (equal (string-downcase sym) string)
+             return sym
+           finally
+              (error "Invalid symbol: ~a" string)))))
 
 (defun %read-dsl (stream)
   (let ((next (peek-char nil stream)))
@@ -71,6 +75,7 @@
       (t
        (parse-symbol
         (read-symbol-as-string stream))))))
+
 
 
 

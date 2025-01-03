@@ -38,3 +38,9 @@
     '((dsl:exact-images (dsl:exact-images)))
     (%read-dsl-from-string "(( exact-images (exact-images) ))"))))
 
+(test numbers
+  (is
+   (equal
+    '(22)
+    (%read-dsl-from-string "(22)"))))
+
