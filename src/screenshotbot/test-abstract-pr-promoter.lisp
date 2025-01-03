@@ -354,6 +354,77 @@
                 (make-recorder-run
                  :pull-request "foo1"))))))
 
+(test same-pull-request-p-when-pull-request-url-is-not-provided-but-branch-is-same
+  (with-fixture state ()
+    (let ((promoter (make-instance 'fake-github-promoter)))
+      (is-true (same-pull-request-p
+                promoter
+                (make-recorder-run
+                 :author "foo@example.com"
+                 :work-branch "carbar"
+                 :pull-request "")
+                (make-recorder-run
+                 :author "foo@example.com"
+                 :work-branch "carbar"
+                 :pull-request ""))))))
+
+
+(test if-the-pull-ids-dont-match-then-its-always-false
+  (with-fixture state ()
+    (let ((promoter (make-instance 'fake-github-promoter)))
+      (is-false (same-pull-request-p
+                 promoter
+                 (make-recorder-run
+                  :author "foo@example.com"
+                  :work-branch "carbar"
+                  :pull-request "foo1")
+                 (make-recorder-run
+                  :author "foo@example.com"
+                  :work-branch "carbar"
+                  :pull-request "foo2"))))))
+
+(test if-one-pull-request-url-is-unavable-then-we-still-match-by-branch
+  (with-fixture state ()
+    (let ((promoter (make-instance 'fake-github-promoter)))
+      (is-true (same-pull-request-p
+                promoter
+                (make-recorder-run
+                 :author "foo@example.com"
+                 :work-branch "carbar"
+                 :pull-request "")
+                (make-recorder-run
+                 :author "foo@example.com"
+                 :work-branch "carbar"
+                 :pull-request "foo2"))))))
+
+(test same-pull-request-p-when-pull-request-url-is-not-provided-but-branch-is-not-same
+  (with-fixture state ()
+    (let ((promoter (make-instance 'fake-github-promoter)))
+      (is-false (same-pull-request-p
+                 promoter
+                 (make-recorder-run
+                  :author "foo@example.com"
+                  :work-branch "carbar2"
+                  :pull-request "")
+                 (make-recorder-run
+                  :author "foo@example.com"
+                  :work-branch "carbar"
+                  :pull-request ""))))))
+
+(test same-pull-request-p-ignores-branch-name-when-empty
+  (with-fixture state ()
+    (let ((promoter (make-instance 'fake-github-promoter)))
+      (is-false (same-pull-request-p
+                 promoter
+                 (make-recorder-run
+                  :author "foo@example.com"
+                  :work-branch ""
+                  :pull-request "")
+                 (make-recorder-run
+                  :author "foo@example.com"
+                  :work-branch ""
+                  :pull-request ""))))))
+
 (test make-check-for-report
   (with-fixture state ()
     (is (equal "1 changes, accepted by Arnold"

@@ -46,6 +46,7 @@
                 #:get-parent-commit
                 #:repo-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-author
                 #:push-run-warning
                 #:runs-for-channel
                 #:recorder-run-branch-hash
@@ -428,9 +429,29 @@ Revision. It will be tested with EQUAL"))
 
 (defmethod same-pull-request-p (promoter run previous-run)
   "Check if two runs are on the same Pull Request. "
-  (let ((pull-id (promoter-pull-id promoter run)))
-    (unless (str:emptyp pull-id)
-      (equal (promoter-pull-id promoter previous-run) pull-id))))
+  (let ((pull-id (promoter-pull-id promoter run))
+        (previous-pull-id (promoter-pull-id promoter previous-run)))
+    (cond
+      ((and (not (str:emptyp pull-id))
+            (not (str:emptyp previous-pull-id)))
+       (equal previous-pull-id pull-id))
+      (t
+       ;; We didn't have the Pull Request URL on one of the runs. This
+       ;; could be because the CI started the job before the Pull
+       ;; Request was created, but it could also be a complex CI job
+       ;; where the Pull Request information was not able to be
+       ;; extracted. For now, we're matching by branch-name in that
+       ;; case.  There's a chance that branch name might overlap
+       ;; across multiple PRs, but for that to actually be an issue we
+       ;; also have to have the screenshots overlapping across those
+       ;; two PRs. And even then that's only when the PR URL is not
+       ;; available.
+       (let ((branch1 (recorder-run-work-branch run))
+             (branch2 (recorder-run-work-branch previous-run)))
+         (unless (or
+                  (str:emptyp branch1)
+                  (str:emptyp branch2))
+           (equal branch1 branch2)))))))
 
 (defun %find-reusable-acceptable (promoter run previous-run)
   "Find an acceptable from the previous-run that can be re-used for this
