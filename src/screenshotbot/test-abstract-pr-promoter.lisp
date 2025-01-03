@@ -661,6 +661,57 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
 
          (is (eql acceptable (previous-review promoter run3))))))))
 
+(test previous-review-returns-the-older-run-for-branch-too
+  (with-fixture state ()
+    (flet ((make-recorder-run (&rest args &key created-at &allow-other-keys)
+             (let ((run (apply #'make-recorder-run
+                               (remove-from-plist args :created-at))))
+               ;; As of this writing, created-at is actually ignored
+               ;; because of the base has-created-at class.
+               (setf (%created-at run) (+ (get-universal-time)
+                                          -2000
+                                          created-at))
+               run)))
+     (let* ((screenshot (make-screenshot
+                         :name "foo"
+                         :image (make-image :pathname (asdf:system-relative-pathname
+                                                       :screenshotbot
+                                                       "fixture/rose.png"))))
+            (base-run (make-recorder-run
+                       :created-at 999
+                       :screenshots nil
+                       :channel channel))
+            (run1 (make-recorder-run
+                   :created-at 1000
+                   :screenshots (list screenshot)
+                   :work-branch "foo"
+                   :channel channel))
+            (run2 (make-recorder-run
+                   :created-at 1003
+                   :work-branch "foo"
+                   :screenshots (list screenshot)
+                   :channel channel))
+            (run3 (make-recorder-run
+                   :created-at 1005
+                   :work-branch "foo"
+                   :screenshots (list screenshot)
+                   :channel channel)))
+
+       (let* ((acceptable (make-instance 'base-acceptable
+                                         :user (make-user)
+                                         :state :accepted))
+              (report (make-instance 'report
+                                     :acceptable acceptable
+                                     :run run2
+                                     :previous-run base-run)))
+         (assert-that (reports-for-run run2)
+                      (contains report))
+         (cl-mock:if-called 'promoter-pull-id
+                            (lambda (promoter run)
+                              nil))
+
+         (is (eql acceptable (previous-review promoter run3))))))))
+
 (defclass always-blocked-pr-rollout-rule (pr-rollout-rule)
   ()
   (:metaclass persistent-class))

@@ -473,7 +473,7 @@ we return NIL."
       "Check if report is accepted or rejected"))))
 
 (defmethod previous-review (promoter run)
-  (when-let ((pull-id (promoter-pull-id promoter run)))
+  (let ((pull-id (promoter-pull-id promoter run)))
     (format-log run :info "Looking for previous reports on ~a" pull-id)
     (let ((cut-off (timestamp- (local-time:now) 30 :day))
           (channel (recorder-run-channel run)))
