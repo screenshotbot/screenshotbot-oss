@@ -36,6 +36,7 @@
   (:import-from #:util/http-cache
                 #:parse-max-age)
   (:import-from #:util/misc
+                #:not-null!
                 #:make-mp-hash-table)
   (:export
    #:call-with-hosted-snapshot
@@ -284,7 +285,9 @@
 
 (defun handle-asset-from-company (acceptor company asset-file-name)
   (loop for (snapshot . check-company) in (snapshots-company acceptor)
-        for asset-map = (gethash snapshot (asset-maps acceptor))
+        for asset-map = (not-null! (gethash snapshot
+                                            (not-null!
+                                             (asset-maps acceptor))))
         for asset = (gethash asset-file-name asset-map)
         if (and (eql company check-company) asset)
           do
