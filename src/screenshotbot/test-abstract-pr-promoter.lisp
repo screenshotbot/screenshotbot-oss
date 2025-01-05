@@ -344,6 +344,20 @@
                (make-recorder-run
                 :pull-request "foo1"))))))
 
+(test same-pull-request-p-when-pull-id-is-integer
+  "The Phabricator promoter returns integers"
+  (with-fixture state ()
+    (let ((promoter (make-instance 'fake-github-promoter)))
+      (cl-mock:if-called 'promoter-pull-id
+                         (lambda (promoter run)
+                           22))
+      (is-true (same-pull-request-p
+                promoter
+                (make-recorder-run
+                 :pull-request "foo1")
+                (make-recorder-run
+                 :pull-request "foo1"))))))
+
 (test same-pull-request-p-not-same!
   (with-fixture state ()
    (let ((promoter (make-instance 'fake-github-promoter)))
