@@ -106,6 +106,9 @@
                 :accessor api-key-description)
    (user :initarg :user
          :accessor api-key-user)
+   (company :initarg :company
+            :initform nil
+            :accessor api-key-company)
    (last-used :initform nil
               :accessor core/api/model/api-key::last-used)
    (secret :initarg :secret

@@ -56,7 +56,8 @@
                 #:*installation*)
   (:import-from #:core/api/model/api-key
                 #:api-key-permissions
-                #:api-key-user))
+                #:api-key-user
+                #:api-key-company))
 (in-package :screenshotbot/dashboard/api-keys)
 
 (named-readtables:in-readtable markup:syntax)
@@ -79,6 +80,10 @@
 (defmethod api-key-available-permissions (installation)
   nil)
 
+(defun %can-user-modify (user api-key)
+  (or
+   (roles:has-role-p (api-key-company api-key) user 'roles:admin)
+   (eq user (api-key-user api-key))))
 
 (defun %read-permissions ()
   (if (gk:check :api-key-roles (auth:current-company))
@@ -212,7 +217,6 @@
   (declare (ignore script-name))
   (auth:can-view! company)
   (let* ((api-keys (reverse (company-api-keys company)))
-         (is-admin (roles:has-role-p company user 'roles:admin))
          (create-api-key (nibble ()
                            (%create-api-key user company))))
     <app-template title= "Screenshotbot: API Keys" >
@@ -242,7 +246,6 @@
                                                       (str:repeat 36 "*")
                                                       (str:substring  36 nil (api-key-secret-key api-key))))
                                 (api-key-creator (api-key-user api-key))
-                                (api-key-creator-p (eq user api-key-creator))
                                 (delete-api-key (nibble ()
                                                   (%confirm-delete api-key))))
 
@@ -272,21 +275,20 @@
                                     (timeago :timestamp last-used))
                                </span>
 
-                             <span>
-                               ,(when api-key-creator-p
-                                  <a href= (nibble () (edit-api-key api-key)) >
-                                    <mdi name= "edit" />
-                                  </a>)
-                               ,(when (or is-admin api-key-creator-p)
-                                  <form style="display:inline-block" class= "ml-4" method= "post" >
-                                    <button type= "submit" formaction=delete-api-key
-                                            formmethod= "post"
-                                            class= "btn btn-link"
-                                            value= "Delete" >
-                                      <mdi name="delete" class= "text-danger" />
-                                    </button>
-                                  </form>)
-                             </span>
+                               ,(when (%can-user-modify user api-key)
+                                  <span>
+                                    <a href= (nibble () (edit-api-key api-key)) >
+                                        <mdi name= "edit" />
+                                    </a>
+                                    <form style="display:inline-block" class= "ml-4" method= "post" >
+                                        <button type= "submit" formaction=delete-api-key
+                                                formmethod= "post"
+                                                class= "btn btn-link"
+                                                value= "Delete" >
+                                        <mdi name="delete" class= "text-danger" />
+                                        </button>
+                                    </form>
+                                  </span>)
                            </taskie-row>)))
     </app-template>))
 

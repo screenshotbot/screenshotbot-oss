@@ -10,10 +10,14 @@
   (:import-from #:core/installation/installation
                 #:abstract-installation
                 #:*installation*)
+  (:import-from #:bknr.datastore
+                #:persistent-class
+                #:store-object)
   (:import-from #:screenshotbot/dashboard/api-keys
                 #:%render-api-key
                 #:permission
                 #:%read-permissions
+                #:%can-user-modify
                 #:api-key-available-permissions)
   (:import-from #:util/store/store
                 #:with-test-store)
@@ -62,6 +66,23 @@
 (test %read-permissions-without-gk
   (with-fixture state (:api-key-roles nil)
     (is (equal '(:ci) (%read-permissions)))))
+
+(defclass fake-company (store-object)
+  ()
+  (:metaclass persistent-class))
+
+(test %can-user-modify-by-owner-only
+  (with-fixture state ()
+    (let ((api-key (make-instance 'api-key :user 'user)))
+      (is-true (%can-user-modify 'user api-key))
+      (is-false (%can-user-modify 'other api-key)))))
+
+(test %can-user-modify-by-admin
+  (with-fixture state ()
+    (let* ((api-key (make-instance 'api-key :user 'user))
+           (company (make-instance 'fake-company)))
+      (roles:ensure-has-role company 'user 'roles:admin)
+      (is-true (%can-user-modify 'user api-key)))))
 
 (test api-hostname-is-shown-for-enterprise-and-oss-installs
   (with-fixture state (:domain "https://example.com")
