@@ -495,6 +495,44 @@
       (assert-that (recorder-run-screenshots run)
                    (has-length 10)))))
 
+(test we-also-handle-1-indexed-shards
+  (with-fixture state ()
+    (assert company)
+    (loop for i from 1 below 10
+          do
+             (make-instance 'shard
+                            :key "shard-key"
+                            :screenshots (list
+                                          (make-screenshot
+                                           :name (format nil "img~a" i)
+                                           :image img1))
+                            :channel (find-or-create-channel company "foo")
+                            :number i
+                            :count 10))
+    (assert-that
+     (%put-run company
+               (make-instance 'dto:run
+                              :channel "foo"
+                              :batch nil
+                              :shard-spec (make-instance 'dto:shard-spec
+                                                         :key "shard-key"
+                                                         :number 10
+                                                         :count 10)
+                              :screenshots (list
+                                            (make-instance 'dto:screenshot
+                                                           :name "foo"
+                                                           :image-id (oid img1))))
+               :api-key api-key)
+     (contains
+      (has-typep t)
+      (has-typep 'recorder-run)
+      (has-typep t)))
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 1))
+    (let ((run (car (class-instances 'recorder-run))))
+      (assert-that (recorder-run-screenshots run)
+                   (has-length 10)))))
+
 (test we-dont-create-the-run-if-a-shard-was-repeated
   (with-fixture state ()
     (assert company)

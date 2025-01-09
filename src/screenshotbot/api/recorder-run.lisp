@@ -324,6 +324,9 @@
     (when-let ((shard (dto:shard-spec run)))
       (verify (< (length (dto:shard-spec-key shard)) 200)
               "Shard key too long")
+      (verify (<= 0 (dto:shard-spec-number shard)
+                  (dto:shard-spec-count shard))
+              "Invalid shard number: ~a" (dto:shard-spec-number shard))
       (verify (and
                (integerp (dto:shard-spec-number shard))
                (integerp (dto:shard-spec-count shard)))
@@ -417,7 +420,7 @@
     (let ((res (make-array count :initial-element nil)))
       (dolist (shard shards)
         (util:or-setf
-         (aref res (shard-number shard))
+         (aref res (mod (shard-number shard) count))
          shard))
       (cond
         ((not (every #'identity (loop for shard across res
