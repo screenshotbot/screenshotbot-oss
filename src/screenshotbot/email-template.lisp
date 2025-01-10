@@ -11,11 +11,20 @@
                 #:wrap-template
                 #:mailer*
                 #:send-mail)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:installation-domain)
   (:export
    #:templated-smtp-mailer))
 (in-package :screenshotbot/email-template)
 
 (named-readtables:in-readtable markup:syntax)
+
+(defun logo-dark ()
+  (quri:render-uri
+   (quri:merge-uris
+    "/assets/images/logo-dark.png"
+    (installation-domain *installation*))))
 
 (markup:deftag email-template (body)
 <html xmlns="http://www.w3.org/1999/xhtml">
@@ -50,7 +59,8 @@
       align-items: center;
     }
     .logo {
-      height: 50px;
+      max-height: 50px;
+      max-width: 300px;
       margin-bottom: 2em;
       margin-top: 1em;
     }
@@ -70,7 +80,9 @@
       <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <tr>
           <td align="center">
-            <img src="https://cdn.screenshotbot.io/assets/images/logo-dark.svg" alt="Screenshotbot" class="logo" />
+            <a href= "https://screenshotbot.io">
+              <img src= (logo-dark) alt="Screenshotbot" class="logo" />
+            </a>
           </td>
         </tr>
       </table>

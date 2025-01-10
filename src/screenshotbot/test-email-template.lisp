@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/testing
+                #:with-installation
                 #:screenshot-test)
   (:import-from #:screenshotbot/email-template
                 #:templated-mailer
@@ -20,30 +21,36 @@
 
 (named-readtables:in-readtable markup:syntax)
 
+(def-fixture state ()
+  (with-installation ()
+    (&body)))
+
 (screenshot-test basic-email-template-test
-  <email-template>
-    <p>Hello world!</p>
-  </email-template>)
+  (with-fixture state ()
+    <email-template>
+      <p>Hello world!</p>
+    </email-template>))
 
 
-(test wrapt-template-for-email-template
-  (let ((mailer (make-instance 'templated-mailer)))
-    (finishes
-     (wrap-template
-      mailer
-      <html>
-      <body>hello</body>
-      </html>))
-    (finishes
-      (wrap-template
-       mailer
-       <html>
-         <head></head>
-         <body>hello</body>
-       </html>))
-    (finishes
-      (wrap-template
-       mailer
-       <html>
-         <head />
-       </html>))))
+(test wrap-template-for-email-template
+  (with-fixture state ()
+    (let ((mailer (make-instance 'templated-mailer)))
+      (finishes
+        (wrap-template
+         mailer
+         <html>
+           <body>hello</body>
+         </html>))
+      (finishes
+        (wrap-template
+         mailer
+         <html>
+           <head></head>
+           <body>hello</body>
+         </html>))
+      (finishes
+        (wrap-template
+         mailer
+         <html>
+           <head />
+         </html>)))))
