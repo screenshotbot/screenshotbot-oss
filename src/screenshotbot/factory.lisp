@@ -27,7 +27,6 @@
   (:export #:test-user
            #:test-company
            #:test-screenshot
-           #:test-recorder-run
            #:test-image
            #:test-channel))
 (in-package :screenshotbot/factory)
@@ -45,18 +44,6 @@
    (repo :initarg :repo
          :initform (make-instance 'github-repo :link "https://github.com/tdrhq/foo.git")
          :accessor channel-repo)))
-
-(defclass test-recorder-run ()
-  ((commit :initform "foo"
-           :initarg :commit
-           :accessor recorder-run-commit)
-   (%created-at :initform (get-universal-time)
-                :accessor %created-at)
-   (threshold :initform nil
-              :accessor compare-threshold)
-   (tolerance :initform nil
-              :accessor compare-tolerance)))
-
 
 (defclass test-image ()
   ((url :initarg :url
