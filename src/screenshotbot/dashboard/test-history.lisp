@@ -8,8 +8,7 @@
     (:use #:cl
           #:alexandria
           #:fiveam
-          #:screenshotbot/screenshot-api
-          #:screenshotbot/factory)
+          #:screenshotbot/screenshot-api)
   (:import-from #:screenshotbot/dashboard/history
                 #:render-history)
   (:import-from #:util/testing
@@ -26,7 +25,11 @@
                 #:make-recorder-run
                 #:recorder-run)
   (:import-from #:util/store/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:screenshotbot/user-api
+                #:channel)
+  (:import-from #:screenshotbot/testing
+                #:with-installation))
 
 (util/fiveam:def-suite)
 
@@ -66,20 +69,21 @@
     (make-list-iterator screenshots runs)))
 
 (test simple-render-history
-  (with-test-store ()
-   (let ((ctr 0))
-     (cl-mock:with-mocks ()
-       (cl-mock:if-called 'get-screenshot-history
-                          (lambda (channel screenshot-name &key iterator)
-                            (declare (ignore channel screenshot-name))
-                            (is-true iterator)
-                            (make-history-iterator)))
-       (cl-mock:if-called 'image-hash
-                          (lambda (image)
-                            (incf ctr)))
-       (with-fake-request ()
-         (auth:with-sessions ()
-           (render-history
-            :screenshot-name "foo"
-            :channel (make-instance 'test-channel))))))) ()
+  (with-installation ()
+   (with-test-store ()
+     (let ((ctr 0))
+       (cl-mock:with-mocks ()
+         (cl-mock:if-called 'get-screenshot-history
+                            (lambda (channel screenshot-name &key iterator)
+                              (declare (ignore channel screenshot-name))
+                              (is-true iterator)
+                              (make-history-iterator)))
+         (cl-mock:if-called 'image-hash
+                            (lambda (image)
+                              (incf ctr)))
+         (with-fake-request ()
+           (auth:with-sessions ()
+             (render-history
+              :screenshot-name "foo"
+              :channel (make-instance 'channel :name "foobar")))))))) ()
   (pass))

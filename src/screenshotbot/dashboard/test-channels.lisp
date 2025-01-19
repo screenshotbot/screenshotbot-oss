@@ -18,10 +18,6 @@
                 #:single-channel-view
                 #:run-for-channel
                 #:%list-projects)
-  (:import-from #:screenshotbot/factory
-                #:test-user
-                #:test-channel
-                #:test-company)
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:*installation*)
@@ -44,6 +40,7 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/user-api
+                #:channel
                 #:user
                 #:can-view!
                 #:can-view)
@@ -69,7 +66,7 @@
   (:metaclass persistent-class))
 
 (defmethod company-channels ((company company-with-channels))
-  (list (make-instance 'test-channel)))
+  (list (make-instance 'channel :name "Foobar")))
 
 (test simple-view
   (with-test-store ()

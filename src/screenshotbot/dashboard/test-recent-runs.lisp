@@ -18,9 +18,6 @@
                 #:render-recent-runs)
   (:import-from #:bknr.datastore
                 #:store-object-id)
-  (:import-from #:screenshotbot/factory
-                #:*company*
-                #:test-company)
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:*installation*)

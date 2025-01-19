@@ -336,8 +336,7 @@
                :tmpdir
                :cl-mock
                :screenshotbot)
-  :components ((:file "factory")
-               (:file "test-server")
+  :components ((:file "test-server")
                (:file "test-throttler")
                (:file "test-testing")
                (:file "test-artifacts")
