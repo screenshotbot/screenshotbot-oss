@@ -25,8 +25,6 @@
                 #:with-description)
   (:import-from #:screenshotbot/factory
                 #:*company*
-                #:test-api-key
-                #:test-user
                 #:test-company)
   (:import-from #:screenshotbot/installation
                 #:installation)
@@ -35,6 +33,7 @@
   (:import-from #:screenshotbot/server
                 #:screenshotbot-template)
   (:import-from #:screenshotbot/testing
+                #:fix-timestamps
                 #:screenshot-test
                 #:with-installation
                 #:with-test-user)
@@ -50,7 +49,9 @@
   (:import-from #:screenshotbot/api-key-api
                 #:api-key
                 #:api-key-secret-key
-                #:api-key-key))
+                #:api-key-key)
+  (:import-from #:screenshotbot/user-api
+                #:user))
 (in-package :screenshotbot/dashboard/test-api-keys)
 
 
@@ -68,7 +69,8 @@
   (let* ((*installation* (make-instance 'installation))
          (*app-template* (make-instance 'screenshotbot-template)))
     (cl-mock:with-mocks ()
-     (&body))))
+      (with-test-store ()
+       (&body)))))
 
 
 (test simple-page-test
@@ -76,16 +78,17 @@
     (with-fake-request (:acceptor 'my-acceptor)
       (answer (auth:can-view! nil))
       (auth:with-sessions ()
-        
-        (let* ((test-user (make-instance 'test-user))
-               (test-api-keys (list (make-instance 'test-api-key
-                                                  :key "foo"
-                                                  :secret "sdfsdfdfdfs"
+        (let* ((test-user (make-instance 'user
+                                         :full-name "Arnold Noronha"))
+               (test-api-keys (list (make-instance 'api-key
+                                                  :api-key "foo"
+                                                  :api-secret-key "sdfsdfdfdfs"
                                                   :user test-user)))
                (test-company (make-instance 'test-company :api-keys test-api-keys))
                (content (markup:write-html
-                         (%api-key-page :user test-user
-                                        :company test-company))))
+                         (fix-timestamps
+                          (%api-key-page :user test-user
+                                         :company test-company)))))
           (screenshot-static-page
            :screenshotbot
            "api-key-page"
@@ -100,7 +103,7 @@
         :screenshotbot
         "api-key-page-empty"
         (markup:write-html
-         (%api-key-page :user (make-instance 'test-user)
+         (%api-key-page :user (make-instance 'user)
                         :company *company*)))))))
 
 (screenshot-test api-key-page-description-page
