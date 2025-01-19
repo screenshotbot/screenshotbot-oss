@@ -54,26 +54,32 @@
                 #:if-called
                 #:answer)
   (:import-from #:screenshotbot/model/user
-                #:make-user))
+                #:make-user)
+  (:import-from #:bknr.datastore
+                #:persistent-class)
+  (:import-from #:util/store/store
+                #:with-test-store))
 (in-package :screenshotbot/dashboard/test-channels)
 
 (util/fiveam:def-suite)
 
-(defclass company-with-channels (test-company)
-  ())
+(defclass company-with-channels (company)
+  ()
+  (:metaclass persistent-class))
 
 (defmethod company-channels ((company company-with-channels))
   (list (make-instance 'test-channel)))
 
 (test simple-view
-  (with-installation ()
-    (cl-mock:with-mocks ()
-     (let ((user (make-instance 'test-user))
-           (company (make-instance 'company-with-channels)))
-       (answer (auth:can-view! nil))
-       (finishes
-         (%list-projects :user user
-                         :company company))))))
+  (with-test-store ()
+   (with-installation ()
+     (cl-mock:with-mocks ()
+       (let ((user (make-instance 'test-user))
+             (company (make-instance 'company-with-channels :name "Foobar")))
+         (answer (auth:can-view! nil))
+         (finishes
+           (%list-projects :user user
+                           :company company)))))))
 
 (def-fixture state ()
   (with-installation ()

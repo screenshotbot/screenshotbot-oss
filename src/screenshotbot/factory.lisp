@@ -30,8 +30,7 @@
            #:test-recorder-run
            #:test-image
            #:test-channel
-           #:*user*
-           #:*company*))
+           #:*user*))
 (in-package :screenshotbot/factory)
 
 (defclass test-user ()
@@ -50,14 +49,6 @@
 
 (defmethod user-email ((u test-user))
   "dummy@example.com")
-
-(defclass test-company ()
-  ((runs :initarg :runs
-         :accessor company-runs)
-   (singletonp :initform nil
-               :accessor singletonp)
-   (api-keys :initarg :api-keys
-             :initform nil)))
 
 (defclass test-channel ()
   ((name :initform "dummy-channel"
@@ -94,21 +85,15 @@
 (defmethod user-api-keys ((user test-user) company)
   (slot-value user 'api-keys))
 
-(defmethod core/api/model/api-key:company-api-keys ((company test-company))
-  (slot-value company 'api-keys))
 
 (defclass test-screenshot ()
   ((name :initarg :name
          :accessor screenshot-name)))
 
 (defvar *user* (make-instance 'test-user))
-(defvar *company* (make-instance 'test-company))
 
 (defmethod screenshotbot/model/user:user-image-url ((u test-user) &rest args)
   "https://foo/bar.jpg")
-
-(defmethod screenshotbot/model/user:personalp ((u test-company))
-  t)
 
 (defmethod screenshotbot/model/user:user-full-name ((u test-user))
   "Arnold Noronha")

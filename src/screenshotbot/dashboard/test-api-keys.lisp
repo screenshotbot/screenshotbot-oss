@@ -23,9 +23,6 @@
                 #:%api-key-page
                 #:api-key-cli-generate
                 #:with-description)
-  (:import-from #:screenshotbot/factory
-                #:*company*
-                #:test-company)
   (:import-from #:screenshotbot/installation
                 #:installation)
   (:import-from #:screenshotbot/model/api-key
@@ -51,7 +48,9 @@
                 #:api-key-secret-key
                 #:api-key-key)
   (:import-from #:screenshotbot/user-api
-                #:user))
+                #:user)
+  (:import-from #:screenshotbot/model/company
+                #:company))
 (in-package :screenshotbot/dashboard/test-api-keys)
 
 
@@ -80,11 +79,12 @@
       (auth:with-sessions ()
         (let* ((test-user (make-instance 'user
                                          :full-name "Arnold Noronha"))
+               (test-company (make-instance 'company))
                (test-api-keys (list (make-instance 'api-key
                                                   :api-key "foo"
+                                                  :company test-company
                                                   :api-secret-key "sdfsdfdfdfs"
                                                   :user test-user)))
-               (test-company (make-instance 'test-company :api-keys test-api-keys))
                (content (markup:write-html
                          (fix-timestamps
                           (%api-key-page :user test-user
@@ -104,7 +104,7 @@
         "api-key-page-empty"
         (markup:write-html
          (%api-key-page :user (make-instance 'user)
-                        :company *company*)))))))
+                        :company (make-instance 'company))))))))
 
 (screenshot-test api-key-page-description-page
   (with-installation ()

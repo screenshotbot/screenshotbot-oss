@@ -111,24 +111,25 @@
      (pass))))
 
 (test recent-runs
-  (let ((*installation* (make-instance 'installation)))
-    (with-fake-request ()
-      (auth:with-sessions ()
-       (let ((runs (loop for i from 1 to 100 collect
-                                             (make-instance 'test-run
-                                                            :tags (if (= i 2)
-                                                                      (list "foo")
-                                                                      nil)))))
-         (let ((company (make-instance 'test-company :runs runs)))
-           (screenshot-static-page
-            :screenshotbot
-            "recent-runs"
-            (fix-timestamps
-             (render-recent-runs runs
-                                 :user *user*
-                                 :check-access-p nil
-                                 :script-name "/runs"
-                                 :company company)))))))))
+  (with-test-store ()
+   (let ((*installation* (make-instance 'installation)))
+     (with-fake-request ()
+       (auth:with-sessions ()
+         (let ((runs (loop for i from 1 to 100 collect
+                                               (make-instance 'test-run
+                                                              :tags (if (= i 2)
+                                                                        (list "foo")
+                                                                        nil)))))
+           (let ((company (make-instance 'company :name "bleh")))
+             (screenshot-static-page
+              :screenshotbot
+              "recent-runs"
+              (fix-timestamps
+               (render-recent-runs runs
+                                   :user *user*
+                                   :check-access-p nil
+                                   :script-name "/runs"
+                                   :company company))))))))))
 
 (def-fixture state ()
   (with-installation ()

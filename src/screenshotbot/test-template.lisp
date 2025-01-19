@@ -10,8 +10,7 @@
           #:screenshotbot/template
           #:fiveam)
   (:import-from #:screenshotbot/factory
-                #:*user*
-                #:*company*)
+                #:*user*)
   (:import-from #:screenshotbot/template
                 #:analyticsp
                 #:something-went-wrong)
@@ -30,19 +29,25 @@
                 #:screenshot-static-page)
   (:import-from #:screenshotbot/testing
                 #:with-installation
-                #:screenshot-test))
+                #:screenshot-test)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:screenshotbot/model/company
+                #:company))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let ((*installation* (make-instance 'installation)))
-    (&body)))
+  (with-test-store ()
+    (let ((*installation* (make-instance 'installation)))
+      (let ((company (make-instance 'company :name "Test Company")))
+        (&body)))))
 
 (test simple-template
   (with-fixture state ()
    (screenshotbot/template:dashboard-template
     :user *user*
-    :company *company*
+    :company company
     :script-name "/runs"))
   (pass))
 
