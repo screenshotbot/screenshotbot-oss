@@ -30,7 +30,6 @@
            #:test-recorder-run
            #:test-image
            #:test-channel
-           #:test-api-key
            #:*user*
            #:*company*))
 (in-package :screenshotbot/factory)
@@ -97,25 +96,6 @@
 
 (defmethod core/api/model/api-key:company-api-keys ((company test-company))
   (slot-value company 'api-keys))
-
-(defclass test-api-key ()
-  ((key :initarg :key
-        :accessor api-key-key)
-   (description :initarg :description
-                :initform nil
-                :accessor api-key-description)
-   (user :initarg :user
-         :accessor api-key-user)
-   (company :initarg :company
-            :initform nil
-            :accessor api-key-company)
-   (last-used :initform nil
-              :accessor core/api/model/api-key::last-used)
-   (secret :initarg :secret
-           :accessor api-key-secret-key)))
-
-(defmethod expires-at ((self test-api-key))
-  nil)
 
 (defclass test-screenshot ()
   ((name :initarg :name
