@@ -15,8 +15,10 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/screenshot-api
+                #:make-screenshot
                 #:get-screenshot-history)
   (:import-from #:screenshotbot/model/image
+                #:make-image
                 #:image-hash)
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
@@ -28,17 +30,10 @@
 
 (util/fiveam:def-suite)
 
-(defclass my-screenshot (test-screenshot)
-  ())
-
-(defmethod screenshot-image ((screenshot my-screenshot))
-  (make-instance 'test-image))
-
 (defun make-list-iterator (screenshots runs)
   (cond
     (screenshots
      (lambda ()
-       (check-type (first screenshots) my-screenshot)
        (values (list (first screenshots) (first runs) (second screenshots))
                (make-list-iterator (cdr screenshots) (cdr runs) ))))
     (t
@@ -46,12 +41,22 @@
        (values nil nil)))))
 
 (defun make-history-iterator ()
-  (let ((screenshots (list (make-instance 'my-screenshot
-                                           :name "one")
-                           (make-instance 'my-screenshot
-                                           :name "one")
-                           (make-instance 'my-screenshot
-                                           :name "one")))
+  (let ((screenshots
+          (list (make-screenshot
+                 :image
+                 (make-image
+                  :pathname (asdf:system-relative-pathname :screenshotbot "fixture/rose.png"))
+                 :name "one")
+                (make-screenshot
+                 :image
+                 (make-image
+                  :pathname (asdf:system-relative-pathname :screenshotbot "fixture/rose.png"))
+                 :name "one")
+                (make-screenshot
+                 :image
+                 (make-image
+                  :pathname (asdf:system-relative-pathname :screenshotbot "fixture/rose.png"))
+                 :name "one")))
         (runs (list (make-recorder-run
                      :commit-hash "one")
                     (make-recorder-run

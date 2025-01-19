@@ -26,8 +26,6 @@
                 #:api-key-description)
   (:export #:test-user
            #:test-company
-           #:test-screenshot
-           #:test-image
            #:test-channel))
 (in-package :screenshotbot/factory)
 
@@ -45,16 +43,6 @@
          :initform (make-instance 'github-repo :link "https://github.com/tdrhq/foo.git")
          :accessor channel-repo)))
 
-(defclass test-image ()
-  ((url :initarg :url
-        :initform "https://foo"
-        :accessor %image-public-url)))
-
-(defmethod image-public-url ((image test-image) &key &allow-other-keys)
-  (%image-public-url image))
 
 
-(defclass test-screenshot ()
-  ((name :initarg :name
-         :accessor screenshot-name)))
 
