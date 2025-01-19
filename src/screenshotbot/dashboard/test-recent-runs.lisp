@@ -19,7 +19,6 @@
   (:import-from #:bknr.datastore
                 #:store-object-id)
   (:import-from #:screenshotbot/factory
-                #:*user*
                 #:*company*
                 #:test-company)
   (:import-from #:screenshotbot/installation
@@ -33,6 +32,7 @@
   (:import-from #:screenshotbot/dashboard/recent-runs
                 #:find-recent-runs)
   (:import-from #:screenshotbot/user-api
+                #:user
                 #:pull-request-url)
   (:import-from #:util/testing
                 #:screenshot-static-page
@@ -120,13 +120,14 @@
                                                               :tags (if (= i 2)
                                                                         (list "foo")
                                                                         nil)))))
-           (let ((company (make-instance 'company :name "bleh")))
+           (let ((company (make-instance 'company :name "bleh"))
+                 (user (make-instance 'user)))
              (screenshot-static-page
               :screenshotbot
               "recent-runs"
               (fix-timestamps
                (render-recent-runs runs
-                                   :user *user*
+                                   :user user
                                    :check-access-p nil
                                    :script-name "/runs"
                                    :company company))))))))))

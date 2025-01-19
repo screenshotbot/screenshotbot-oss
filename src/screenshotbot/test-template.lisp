@@ -9,8 +9,6 @@
           #:alexandria
           #:screenshotbot/template
           #:fiveam)
-  (:import-from #:screenshotbot/factory
-                #:*user*)
   (:import-from #:screenshotbot/template
                 #:analyticsp
                 #:something-went-wrong)
@@ -33,20 +31,23 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/company
-                #:company))
+                #:company)
+  (:import-from #:screenshotbot/user-api
+                #:user))
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
   (with-test-store ()
     (let ((*installation* (make-instance 'installation)))
-      (let ((company (make-instance 'company :name "Test Company")))
+      (let ((company (make-instance 'company :name "Test Company"))
+            (user (make-instance 'user)))
         (&body)))))
 
 (test simple-template
   (with-fixture state ()
    (screenshotbot/template:dashboard-template
-    :user *user*
+    :user user
     :company company
     :script-name "/runs"))
   (pass))

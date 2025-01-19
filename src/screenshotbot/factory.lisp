@@ -29,8 +29,7 @@
            #:test-screenshot
            #:test-recorder-run
            #:test-image
-           #:test-channel
-           #:*user*))
+           #:test-channel))
 (in-package :screenshotbot/factory)
 
 (defclass test-user ()
@@ -89,8 +88,6 @@
 (defclass test-screenshot ()
   ((name :initarg :name
          :accessor screenshot-name)))
-
-(defvar *user* (make-instance 'test-user))
 
 (defmethod screenshotbot/model/user:user-image-url ((u test-user) &rest args)
   "https://foo/bar.jpg")
