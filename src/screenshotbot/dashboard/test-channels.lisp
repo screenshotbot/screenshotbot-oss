@@ -44,6 +44,7 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/user-api
+                #:user
                 #:can-view!
                 #:can-view)
   (:import-from #:screenshotbot/testing
@@ -74,7 +75,7 @@
   (with-test-store ()
    (with-installation ()
      (cl-mock:with-mocks ()
-       (let ((user (make-instance 'test-user))
+       (let ((user (make-instance 'user))
              (company (make-instance 'company-with-channels :name "Foobar")))
          (answer (auth:can-view! nil))
          (finishes

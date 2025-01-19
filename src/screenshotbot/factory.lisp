@@ -32,22 +32,7 @@
            #:test-channel))
 (in-package :screenshotbot/factory)
 
-(defclass test-user ()
-  ((api-keys :initarg :api-keys
-             :initform nil)))
 
-(defmethod util:oid ((u test-user) &key (stringp t))
-  (cond
-    (stringp
-     "2sfsfsfsdfdsf")
-    (t
-     (make-oid
-      :arr #(0 0 0 0
-             0 0 0 0
-             0 0 0 0)))))
-
-(defmethod user-email ((u test-user))
-  "dummy@example.com")
 
 (defclass test-channel ()
   ((name :initform "dummy-channel"
@@ -81,25 +66,8 @@
 (defmethod image-public-url ((image test-image) &key &allow-other-keys)
   (%image-public-url image))
 
-(defmethod user-api-keys ((user test-user) company)
-  (slot-value user 'api-keys))
-
 
 (defclass test-screenshot ()
   ((name :initarg :name
          :accessor screenshot-name)))
 
-(defmethod screenshotbot/model/user:user-image-url ((u test-user) &rest args)
-  "https://foo/bar.jpg")
-
-(defmethod screenshotbot/model/user:user-full-name ((u test-user))
-  "Arnold Noronha")
-
-(defmethod screenshotbot/model/user:adminp ((u test-user))
-  nil)
-
-(defmethod screenshotbot/model/user:unaccepted-invites ((u test-user))
-  nil)
-
-(defmethod screenshotbot/model/user:user-notices ((u test-user))
-  nil)
