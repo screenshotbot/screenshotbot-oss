@@ -124,7 +124,8 @@
        ((can-public-view run)
         (render))
        (t
-        (with-login (:allow-url-redirect t)
+        (with-login (:company (recorder-run-company run)
+                     :allow-url-redirect t)
           (render)))))))
 
 (deftag render-run-tags (&key tags)
@@ -743,7 +744,7 @@
 (defhandler (run-delete-page :uri "/runs/:id" :method :delete) (id)
   (setf (hunchentoot:content-type*) "application/json")
   (let ((run (find-by-oid id 'recorder-run)))
-    (with-login ()
+    (with-login (:company (recorder-run-company run))
       (can-view! run)
       (cond
         ((or (activep run)

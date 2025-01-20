@@ -16,6 +16,7 @@
                 #:auth-provider
                 #:auth-provider-signin-form
                 #:auth-provider-signup-form
+                #:call-with-company-login
                 #:company-sso-auth-provider)
   (:import-from #:core/installation/installation
                 #:*installation*)
@@ -103,8 +104,7 @@
       </a>
     </div>)
 
-(defun server-with-login (fn &key needs-login signup alert
-                             company ;; deprecated, delete
+(defun server-with-login (fn &key needs-login signup alert company
                            ;; The invite object that triggered this
                            ;; flow.
                            invite
@@ -116,8 +116,6 @@
                            ;; the user is prepared, so we might want
                            ;; to set this to NIL in those cases.
                            (ensure-prepared t))
-  (when company
-    (warn "deprecated :company provided"))
   (let ((fn (cond
               (ensure-prepared
                (lambda ()
@@ -127,6 +125,13 @@
                   fn)))
               (t fn))))
    (cond
+     ((and
+       needs-login
+       company
+       (company-sso-auth-provider company))
+      (call-with-company-login (company-sso-auth-provider company)
+                               company
+                               fn))
      ((and needs-login (not (auth:current-user)))
       (apply
        (if signup #'signup-get #'signin-get)

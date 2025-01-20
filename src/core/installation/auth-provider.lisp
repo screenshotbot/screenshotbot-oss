@@ -11,6 +11,7 @@
    #:auth-provider-signin-form
    #:auth-provider-signup-form
    #:company-sso-auth-provider
+   #:call-with-company-login
    #:auth-providers
    #:default-oidc-provider))
 (in-package :core/installation/auth-provider)
@@ -31,6 +32,10 @@
 incomplete implementation, but we plan to build this out at some point
 of time."))
 
+(defmethod call-with-company-login (auth-provider company fn)
+  "Given the auth provider, generate a page with the given auth-provider."
+
+  (error "call-with-company-login unimplemented"))
 
 (defgeneric auth-providers (installation)
   (:method (self)
