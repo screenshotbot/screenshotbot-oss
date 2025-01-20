@@ -128,7 +128,8 @@
 
 (screenshot-test list-of-channels
   (with-fixture state ()
-    (%list-projects :user user :company company)))
+    (fix-timestamps
+     (%list-projects :user user :company company))))
 
 (test badge-handler-happy-path
   (with-fixture state ()
