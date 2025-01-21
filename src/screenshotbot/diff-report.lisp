@@ -287,30 +287,30 @@ not try to create the diff report, which might be an expensive operation."
    (unless only-cached-p
      (%make-diff-report run to))))
 
-(defmethod %find-changes (image-comparer names to-names)
+(defmethod %find-changes (image-comparer screenshots to-screenshots)
   (let ((hash-table (make-hash-table :test #'equal)))
-    (loop for x in to-names
+    (loop for before in to-screenshots
           do
-          (setf (gethash (screenshot-name x) hash-table) x))
-    (loop for s1 in names
-          for x = (gethash (screenshot-name s1) hash-table)
+          (setf (gethash (screenshot-name before) hash-table) before))
+    (loop for after in screenshots
+          for before = (gethash (screenshot-name after) hash-table)
           if (and
-              x
+              before
               (not (image=
                     image-comparer
-                    (screenshot-image s1)
-                    (Screenshot-image x)
+                    (screenshot-image after)
+                    (Screenshot-image before)
                     ;; always use the new mask
-                    (screenshot-masks s1))))
+                    (screenshot-masks after))))
             collect
             (make-instance 'change
                            ;; TODO(T1273): this is incorrect. The
-                           ;; "to-names" are the before, and the names
+                           ;; "to-screenshots" are the before, and the screenshots
                            ;; are the after. But we're re-using this
                            ;; correctly in the diff-viewer.
-                           :before s1
-                           :masks (screenshot-masks s1)
-                           :after x))))
+                           :before after
+                           :masks (screenshot-masks after)
+                           :after before))))
 
 (defun diff-report-empty-p (diff-report)
   (not
