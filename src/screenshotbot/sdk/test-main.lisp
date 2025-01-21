@@ -129,8 +129,7 @@
   (with-fixture state ()
     (cl-mock:if-called 'uiop:getenv
                        (lambda (name) nil))
-    (let ((flags:*desktop* nil)
-          (*api-key* nil)
+    (let ((*api-key* nil)
           (*api-secret* nil))
       (handler-case
           (progn
@@ -140,8 +139,7 @@
           (assert-that (format nil "~a" e)
                        (contains-string "SCREENSHOTBOT_API_KEY")))))
 
-    (let ((flags:*desktop* nil)
-          (*api-key* "foo")
+    (let ((*api-key* "foo")
           (*api-secret* nil))
       (handler-case
           (progn
@@ -151,8 +149,7 @@
           (assert-that (format nil "~a" e)
                        (contains-string "SCREENSHOTBOT_API_KEY")))))
 
-    (let ((flags:*desktop* nil)
-          (*api-key* "foo")
+    (let ((*api-key* "foo")
           (*api-secret* "bar"))
       (finishes
         (make-api-context)))))

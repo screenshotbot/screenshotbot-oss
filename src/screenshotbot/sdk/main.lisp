@@ -103,27 +103,23 @@
 
 (defun make-api-context ()
   (let ((env (make-env-reader)))
-    (cond
-      (flags:*desktop*
-       (make-instance 'desktop-api-context))
-      (t
-       (let ((key (or (emptify *api-key*)
-                      (e:api-key env)))
-             (secret (or (emptify *api-secret*)
-                         (e:api-secret env))))
-         (when (str:emptyp key)
-           (error "No --api-key provided. ~a" *api-key-info* ))
-         (when(str:emptyp secret)
-           (error "No --api-secret provided. ~a" *api-key-info*))
-         (let ((hostname (api-hostname
-                          :hostname (or (emptify *hostname*)
-                                        (emptify (e:api-hostname env))
-                                        "https://api.screenshotbot.io"))))
-           (log:debug "Using hostname: ~a" hostname)
-           (make-instance 'api-context
-                          :key key
-                          :secret secret
-                          :hostname hostname)))))))
+    (let ((key (or (emptify *api-key*)
+                   (e:api-key env)))
+          (secret (or (emptify *api-secret*)
+                      (e:api-secret env))))
+      (when (str:emptyp key)
+        (error "No --api-key provided. ~a" *api-key-info* ))
+      (when(str:emptyp secret)
+        (error "No --api-secret provided. ~a" *api-key-info*))
+      (let ((hostname (api-hostname
+                       :hostname (or (emptify *hostname*)
+                                     (emptify (e:api-hostname env))
+                                     "https://api.screenshotbot.io"))))
+        (log:debug "Using hostname: ~a" hostname)
+        (make-instance 'api-context
+                       :key key
+                       :secret secret
+                       :hostname hostname)))))
 
 (defun try-clingon (argv)
   (clingon:run (root/command) (cdr argv)))

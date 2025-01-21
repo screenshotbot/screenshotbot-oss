@@ -15,10 +15,6 @@
 
 (defun api-hostname (&key (hostname (error "must provide :hostname")))
   (cond
-    ((and flags:*desktop*
-          (not
-           (str:starts-with-p "http://localhost" hostname)))
-     "http://localhost:4095")
     ((not (str:containsp "/" hostname))
      (format nil "https://~a" hostname))
     (t
