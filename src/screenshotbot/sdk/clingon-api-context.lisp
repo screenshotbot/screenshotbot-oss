@@ -37,11 +37,8 @@
 
 (defun make-api-context (&key api-key
                            api-secret
-                           hostname
-                           desktop)
+                           hostname)
   (cond
-    (desktop
-     (make-instance 'desktop-api-context))
     ((and (not (str:emptyp api-key))
           (not (str:emptyp api-secret)))
      (let ((key api-key)
@@ -65,7 +62,7 @@
 
 (def-easy-macro with-clingon-api-context (&binding api-context cmd &fn fn)
   (let ((api-context (apply #'make-api-context
-                            (loop for key in '(:api-key :api-secret :hostname :desktop)
+                            (loop for key in '(:api-key :api-secret :hostname)
                                   append `(,key ,(getopt cmd key))))))
     (with-reused-ssl ((engine api-context))
      (funcall fn api-context))))

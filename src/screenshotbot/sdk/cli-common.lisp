@@ -71,11 +71,6 @@
     :description "The API hostname used as an endpoint. You will need to supply this if using this in the OSS version of Screenshotbot, or if you're an Enterprise customer with a dedicated installation.")
    (make-option
     :boolean
-    :key :desktop
-    :long-name "desktop"
-    :description "Whether the server is running on the Desktop version of Screenshotbot.")
-   (make-option
-    :boolean
     :key :verbose
     :long-name "verbose"
     :description "Verbose logging")))

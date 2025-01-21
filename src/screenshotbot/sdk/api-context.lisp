@@ -20,8 +20,6 @@
    #:key
    #:secret
    #:hostname
-   #:desktop-api-context
-   #:desktop-p
    #:remote-version
    #:fetch-version
    #:engine))
@@ -58,10 +56,6 @@
    (engine :initarg :engine
            :reader engine
            :initform *api-engine*)))
-
-(defclass desktop-api-context (base-api-context)
-  ((hostname :reader hostname
-             :initform "http://localhost:4095")))
 
 (defclass json-api-context (api-context)
   ((hostname :initarg :hostname

@@ -32,8 +32,7 @@
                 #:finalize-commit)
   (:import-from #:screenshotbot/sdk/api-context
                 #:remote-version
-                #:api-context
-                #:desktop-api-context)
+                #:api-context)
   (:import-from #:screenshotbot/sdk/hostname
                 #:api-hostname)
   (:import-from #:screenshotbot/sdk/env

@@ -59,7 +59,6 @@
                 #:maybe-retry-request
                 #:backoff)
   (:import-from #:screenshotbot/sdk/api-context
-                #:desktop-api-context
                 #:api-context)
   (:import-from #:screenshotbot/sdk/run-context
                 #:flags-run-context)
@@ -126,9 +125,6 @@
   (list
    (api-context:key api-context)
    (api-context:secret api-context)))
-
-(defmethod %make-basic-auth ((self desktop-api-context))
-  nil)
 
 (auto-restart:with-auto-restart (:attempt attempt)
   (defun %request (api-context
