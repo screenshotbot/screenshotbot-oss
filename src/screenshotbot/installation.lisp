@@ -42,7 +42,6 @@
    #:default-logged-in-page
    #:installation-s3-store
    #:null-s3-store
-   #:desktop-installation
    #:pre-compiled-assets
    #:one-owned-company-per-user
    #:call-with-ensure-user-prepared
@@ -75,11 +74,6 @@
         :initform nil
         :accessor installation-cdn)))
 
-
-(defclass desktop-installation (installation)
-  ((pre-compiled-assets :reader pre-compiled-assets
-                        :initarg :pre-compiled-assets
-                        :initform (make-hash-table))))
 
 (defclass oss-installation (installation)
   ())

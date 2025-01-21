@@ -11,7 +11,6 @@
   (:import-from #:screenshotbot/installation
                 #:base-multi-org-feature
                 #:default-oidc-provider
-                #:desktop-installation
                 #:installation
                 #:multi-org-feature)
   (:import-from #:screenshotbot/template
@@ -167,23 +166,6 @@
     <hr class= "mb-0" />
   </markup:merge-tag>)
 
-(defmethod render-menu-items ((installation desktop-installation) &key script-name)
-  <ul class="nav nav-pills flex-column ps-3 pe-3">
-      <left-nav-item href= "/runs" image-class= "play_arrow"
-                     script-name=script-name >
-         Recent Runs
-        </left-nav-item>
-
-      <left-nav-item href= "/channels" image-class= "book"
-                     script-name=script-name >
-          Channels
-      </left-nav-item>
-
-      <left-nav-item href= "/report" image-class= "flag"
-                     script-name=script-name >
-                         Reports
-        </left-nav-item>
-    </ul>)
 
 (defmethod render-user-menu (installation &key user company)
   (when user
@@ -226,5 +208,3 @@
      (t
       "/signout"))))
 
-(defmethod render-user-menu ((installation desktop-installation) &key &allow-other-keys)
-  nil)

@@ -19,7 +19,6 @@
                 #:artifact-link
                 #:def-artifact-hook)
   (:import-from #:screenshotbot/installation
-                #:desktop-installation
                 #:installation
                 #:installation-cdn
                 #:pre-compiled-assets)
@@ -136,14 +135,6 @@ rm -f $INSTALLER
 (defhandler (recorder-incorrect :uri "/recorder") ()
   (setf (hunchentoot:return-code*) 404)
   "Page not found. Did you mean /recorder.sh? Or for Windows, this would be /recorder-win.exe")
-
-(defmethod %handle-asdf-output ((installation desktop-installation)
-                                op
-                                component
-                                output-files
-                                output-num)
-  (let ((cache (pre-compiled-assets installation)))
-    (elt (gethash component cache) output-num)))
 
 
 (define-js acceptor "/assets/js/dashboard.js" :screenshotbot.js-assets)
