@@ -584,7 +584,8 @@ If the diff-report is cached, then we process the body immediately instead."
      (image-comparison-result
       (prepare-image-comparison-file image-comparison-job))))
 
-(defun render-change-group (group run script-name &key search)
+(defun render-change-group (group run script-name &key search
+                                                    index)
   <div class= "col-12">
   <div class= "card mb-3">
     ,(maybe-tabulate
@@ -657,7 +658,7 @@ If the diff-report is cached, then we process the body immediately instead."
     </div>)))
       :header  (cond
                  ((stringp (diff-report:group-title group))
-                  <h4 class= "screenshot-title">,(highlight-search-term search (diff-report:group-title group))</h4>)
+                  <h4 class= "screenshot-title"><span class= "index">,(1+ index)</span> ,(highlight-search-term search (diff-report:group-title group))</h4>)
                  (t
                   (diff-report:group-title group))))
   </div>
@@ -1054,9 +1055,11 @@ additional actions in the More dropdown menu.
       (t
        <div class= "">
            ,(paginated
-             (lambda (group)
-               (render-change-group group run script-name  :search search))
+             (lambda (group index)
+               (render-change-group group run script-name  :search search
+                                    :index index))
              :num 10
+             :pass-index-p t
              :filter (lambda (group)
                        (group-matches-p group search))
              :items changes-groups
@@ -1112,6 +1115,7 @@ additional actions in the More dropdown menu.
                   <h4 class= "screenshot-title" >
                     ,(when (group-renamed-p group)
                        <span class= "badge bg-warning">Renamed</span>)
+                    <span class= "index">,(1+ i)</span>
                       ,(highlight-search-term search (diff-report:group-title group))
                   </h4>
 
@@ -1193,6 +1197,7 @@ WHY is either \"added\" or \"deleted\", and just describes why we're showing thi
 
 (defun %find-single-change-row (changes key-id report-link &key run)
   (loop for change in changes
+        for index from 0
         for key = (screenshot-key (diff-report:before change))
         if (eql
             key-id
@@ -1210,7 +1215,8 @@ WHY is either \"added\" or \"deleted\", and just describes why we're showing thi
                                                 :subtitle nil
                                                 :actual-item change)))
           run
-          report-link)
+          report-link
+          :index index)
         </markup:merge-tag>))
 
 (defhandler (compare-single-image :uri "/runs/:run/compare/:to/image/:key-id")
