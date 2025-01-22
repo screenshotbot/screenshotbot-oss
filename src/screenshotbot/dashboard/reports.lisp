@@ -438,15 +438,14 @@
                                      (image-comparison-difference-value
                                       (change-to-comparison change))))))
            <sorted-template report=report >
-             
              ,(paginated
-                (lambda (change)
+                (lambda (change index)
                   (let ((key (screenshot-key (diff-report:before change))))
                    (render-change-group
                     (make-instance 'diff-report:group
                                    :title
                                    <div>
-                                   <h4 class= "screenshot-title">,(screenshot-name key) <tt class= "text-small" >,(format nil "~1,4f"(image-comparison-difference-value (change-to-comparison change))) </tt>
+                                     <h4 class= "screenshot-title"><span class= "index">,(1+ index)</span> ,(screenshot-name key) <tt class= "text-small" >,(format nil "~1,4f"(image-comparison-difference-value (change-to-comparison change))) </tt>
 
                                      <explain>
                                        We use the Root-Mean-Squared-Error to compute this difference. This might not
@@ -464,6 +463,7 @@
                                                           :actual-item change)))
                     (report-run report)
                     (format nil "/report/:oid" (oid report)))))
+                :pass-index-p t
                 :items changes)
            </sorted-template>)
          )))))

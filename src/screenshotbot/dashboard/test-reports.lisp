@@ -15,6 +15,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/testing
+                #:snap-all-images
                 #:fix-timestamps
                 #:screenshot-test
                 #:with-test-user)
@@ -23,6 +24,7 @@
   (:import-from #:bknr.datastore
                 #:class-instances)
   (:import-from #:fiveam-matchers/core
+                #:does-not
                 #:equal-to
                 #:has-typep
                 #:assert-that)
@@ -52,6 +54,9 @@
                 #:make-screenshot)
   (:import-from #:screenshotbot/model/image
                 #:make-image)
+  (:import-from #:screenshotbot/dashboard/compare
+                #:warmup-comparison-images-sync
+                #:warmup-report)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-reports)
 
@@ -156,4 +161,30 @@
         (assert-that
          (markup:write-html res)
          (contains-string "not complete"))
+        res))))
+
+(screenshot-test sorted-by-changes
+  (with-fixture report-page ()
+    (let* ((im1 (make-image :pathname
+                            (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png")))
+           (im2 (make-image :pathname
+                            (asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png")))
+           (run1 (make-recorder-run :channel channel
+                                    :screenshots (list (make-screenshot
+                                                        :name "foo"
+                                                        :image im1))))
+           (run2 (make-recorder-run :channel channel
+                                    :screenshots (list
+                                                  (make-screenshot
+                                                   :name "foo"
+                                                   :image im2))))
+           (report (make-instance 'report
+                                  :run run2
+                                  :previous-run run1)))
+      (warmup-comparison-images-sync run2 run1)
+      (snap-all-images)
+      (let ((res (%render-sorted-by-changes report)))
+        (assert-that
+         (markup:write-html res)
+         (does-not (contains-string "not complete")))
         res))))
