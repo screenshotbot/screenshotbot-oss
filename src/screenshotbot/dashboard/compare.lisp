@@ -591,15 +591,15 @@ If the diff-report is cached, then we process the body immediately instead."
       (loop for group-item in (diff-report:group-items group)
             for change = (actual-item group-item)
             for next-id = (random 1000000000000000)
-            for s = (diff-report:after change)
-            for x = (diff-report:before change)
+            for after = (diff-report:after change)
+            for before = (diff-report:before change)
             collect
     (make-instance
     'tab
     :title (diff-report:group-item-subtitle group-item)
     :content
-    (let* ((s s)
-           (x x)
+    (let* ((after after)
+           (before before)
            (toggle-id (format nil "toggle-id-~a" next-id)))
 
     <div class= "" >
@@ -610,14 +610,14 @@ If the diff-report is cached, then we process the body immediately instead."
           </li>
           <li>
             <a href= (hex:make-url "/channel/:channel/history" :channel (store-object-id (recorder-run-channel run))
-                                                                                                                    :screenshot-name (screenshot-name x))>
+                                                                                                                    :screenshot-name (screenshot-name before))>
               Full History
             </a>
           </li>
           <li>
-            <a href= (nibble (:name :mask-editor) (mask-editor (recorder-run-channel run) s
+            <a href= (nibble (:name :mask-editor) (mask-editor (recorder-run-channel run) after
                :redirect script-name
-               :overlay (make-overlay-image x s)))
+               :overlay (make-overlay-image before after)))
                target= "_blank" >
               Edit Masks
             </a>
@@ -625,7 +625,7 @@ If the diff-report is cached, then we process the body immediately instead."
 
           <li>
             <a href= (format nil "~a/image/~a" script-name (bknr.datastore:store-object-id
-               (screenshot-key s ))) >
+               (screenshot-key after))) >
               Permalink
             </a>
            </li>
@@ -637,23 +637,23 @@ If the diff-report is cached, then we process the body immediately instead."
                   aria-expanded= "false" >Download Original</a>
                <ul class= "dropdown-menu" >
                  <li>
-                   <a class= "dropdown-item" href= (image-public-url (screenshot-image x) :originalp t)
+                   <a class= "dropdown-item" href= (image-public-url (screenshot-image before) :originalp t)
                       >Download Previous image</a>
                  </li>
                  <li>
-                   <a class= "dropdown-item" href= (image-public-url (screenshot-image s) :originalp t)
+                   <a class= "dropdown-item" href= (image-public-url (screenshot-image after) :originalp t)
                       >Download Updated image</a>
                  </li>
                </ul>
              </li>)
         </ul>
       </div>
-      <change-image-row before-image=(screenshot-image x)
-                        after-image=(screenshot-image s)
-                        before-dims= (ignore-errors (image-dimensions (screenshot-image x)))
-                        after-dims= (ignore-errors (image-dimensions (screenshot-image s)))
+      <change-image-row before-image=(screenshot-image before)
+                        after-image=(screenshot-image after)
+                        before-dims= (ignore-errors (image-dimensions (screenshot-image before)))
+                        after-dims= (ignore-errors (image-dimensions (screenshot-image after)))
                         />
-      <comparison-modal before=x after=s toggle-id=toggle-id />
+      <comparison-modal before=before after=after toggle-id=toggle-id />
     </div>)))
       :header  (cond
                  ((stringp (diff-report:group-title group))
