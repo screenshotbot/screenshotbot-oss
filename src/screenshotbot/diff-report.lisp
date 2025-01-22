@@ -283,7 +283,7 @@ are typically cached in-memory.
 If ONLY-CACHED-P is true, then we'll only return the cached value and
 not try to create the diff report, which might be an expensive operation."
   (util:or-setf
-   (gethash (list run to :v4) *cache*)
+   (gethash (list run to :v5) *cache*)
    (unless only-cached-p
      (%make-diff-report run to))))
 
@@ -304,13 +304,9 @@ not try to create the diff report, which might be an expensive operation."
                     (screenshot-masks after))))
             collect
             (make-instance 'change
-                           ;; TODO(T1273): this is incorrect. The
-                           ;; "to-screenshots" are the before, and the screenshots
-                           ;; are the after. But we're re-using this
-                           ;; correctly in the diff-viewer.
-                           :before after
+                           :before before
                            :masks (screenshot-masks after)
-                           :after before))))
+                           :after after))))
 
 (defun diff-report-empty-p (diff-report)
   (not

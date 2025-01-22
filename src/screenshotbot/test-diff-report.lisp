@@ -14,6 +14,7 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:it.bese.fiveam
+                #:pass
                 #:def-fixture
                 #:is
                 #:test
@@ -43,11 +44,14 @@
                 #:group-separator
                 #:make-recorder-run)
   (:import-from #:screenshotbot/screenshot-api
+                #:screenshot-image
                 #:make-screenshot)
   (:import-from #:screenshotbot/user-api
                 #:channel)
   (:import-from #:util/store/store
-                #:with-test-store))
+                #:with-test-store)
+  (:local-nicknames (#:diff-report
+                     #:screenshotbot/diff-report)))
 (in-package :screenshotbot/test-diff-report)
 
 (util/fiveam:def-suite)
@@ -78,6 +82,16 @@
                                :before (make-screenshot :name name)
                                :after (make-screenshot :name name))))
          (&body))))))
+
+(test the-order-of-changes--i.e.-before-and-after
+  "At some point, we swapped the order in which this was returned."
+  (with-fixture state ()
+    (let ((diff-report (make-diff-report run2 run1)))
+      (let ((change (car (diff-report:diff-report-changes diff-report))))
+        (is (eql img
+                 (screenshot-image (diff-report:before change))))
+        (is (eql img2
+                 (screenshot-image (diff-report:after change))))))))
 
 (test 2-changed
   (with-fixture state ()

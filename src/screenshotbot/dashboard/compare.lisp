@@ -591,11 +591,8 @@ If the diff-report is cached, then we process the body immediately instead."
       (loop for group-item in (diff-report:group-items group)
             for change = (actual-item group-item)
             for next-id = (random 1000000000000000)
-            ;; TODO(T1273): there's a bug somewhere. diff-report:before here
-            ;; becomes s, but later in change-image-row this is used
-            ;; as the after image. See %find-changes in diff-report.lisp
-            for s = (diff-report:before change)
-            for x = (diff-report:after change)
+            for s = (diff-report:after change)
+            for x = (diff-report:before change)
             collect
     (make-instance
     'tab
