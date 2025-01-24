@@ -267,8 +267,7 @@ If RETURN-SEEN is T, then we return a hash table with all the seen
 nodes (as a set), else we return a list."
   (let ((seen (make-hash-table))
         (depths (make-hash-table :test #'equal))
-        (queue (make-queue))
-        (start 0))
+        (queue (make-queue)))
 
     (enqueue commit queue)
     (setf (gethash commit depths) 1)
@@ -276,7 +275,6 @@ nodes (as a set), else we return a list."
     (loop while (not (queue-emptyp queue))
           for commit-hash = (dequeue queue)
           do
-             (incf start)
              (let ((commit (get-commit dag commit-hash))
                    (this-depth (gethash commit-hash depths)))
                (cond
