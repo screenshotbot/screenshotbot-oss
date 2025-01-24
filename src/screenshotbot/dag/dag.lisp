@@ -265,6 +265,10 @@ time we see a new node. This will include partial nodes.
 "
   (let ((seen (make-hash-table))
         (depths (make-hash-table :test #'equal))
+        ;; The SEEN hash table stores actual commit objects, but not
+        ;; all hashes are present as commit objects, so this is the
+        ;; list of partial hashes that have been "seen"
+        (partial-hashes-seen (make-hash-table :test #'equal))
         (queue (make-queue)))
 
     (enqueue commit queue)
@@ -288,8 +292,10 @@ time we see a new node. This will include partial nodes.
                  (t
                   ;; This node isn't present in the graph, but we
                   ;; still want to indicate that we've seen it.
-                  (funcall seen-callback
-                           (make-instance 'commit :sha commit-hash))))))
+                  (unless (gethash commit-hash partial-hashes-seen)
+                    (setf (gethash commit-hash partial-hashes-seen) t)
+                    (funcall seen-callback
+                             (make-instance 'commit :sha commit-hash)))))))
     (loop for node being the hash-keys of seen
           collect node)))
 

@@ -311,7 +311,6 @@ for you."
                      (contains "dd" "cc"))))))
 
 (test we-get-callbacks-for-nodes-that-arent-present--but-only-once!
-  "This test is currently broken"
   (with-fixture state ()
     (let ((dag (make-instance 'dag)))
       (add-edge "cc" "dd" :dag dag)
@@ -321,10 +320,8 @@ for you."
         (reachable-nodes dag "ee"
                          :seen-callback (lambda (commit)
                                           (push (sha commit) seen)))
-        ;; BOOO! currently we see the node "dd" twice. Just
-        ;; documenting this behavior for now before I fix it.
         (assert-that seen
-                     (contains "dd" "dd" "cc" "ee"))))))
+                     (contains "dd" "cc" "ee"))))))
 
 (test merge-base
   (with-fixture state ()
