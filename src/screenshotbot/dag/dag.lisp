@@ -263,41 +263,41 @@ tree. This version uses the Kahn's algorithm instead of DFS"
 If SEEN-CALLBACK is provided, then that is called with the commit each
 time we see a new node. This will include partial nodes.
 "
-  (let ((seen (make-hash-table))
-        (depths (make-hash-table :test #'equal))
-        ;; The SEEN hash table stores actual commit objects, but not
-        ;; all hashes are present as commit objects, so this is the
-        ;; list of partial hashes that have been "seen"
-        (partial-hashes-seen (make-hash-table :test #'equal))
+  (let ((depths (make-hash-table :test #'equal))
+        (sha-seen (make-hash-table :test #'equal))
         (queue (make-queue)))
 
     (enqueue commit queue)
     (setf (gethash commit depths) 1)
 
-    (loop while (not (queue-emptyp queue))
-          for commit-hash = (dequeue queue)
-          do
-             (let ((commit (get-commit dag commit-hash))
-                   (this-depth (gethash commit-hash depths)))
-               (cond
-                 (commit
-                  (when (not (gethash commit seen))
-                    (setf (gethash commit seen) t)
-                    (funcall seen-callback commit)
-                    (when (< this-depth depth)
-                      (loop for parent in (parents commit) do
-                        (unless (gethash parent depths)
-                          (setf (gethash parent depths) (1+ this-depth)))
-                        (enqueue parent queue)))))
-                 (t
-                  ;; This node isn't present in the graph, but we
-                  ;; still want to indicate that we've seen it.
-                  (unless (gethash commit-hash partial-hashes-seen)
-                    (setf (gethash commit-hash partial-hashes-seen) t)
-                    (funcall seen-callback
-                             (make-instance 'commit :sha commit-hash)))))))
-    (loop for node being the hash-keys of seen
-          collect node)))
+    (macrolet ((sha-seen (hash)
+                 `(gethash ,hash sha-seen)))
+      (setf (sha-seen commit) t)
+
+      (loop while (not (queue-emptyp queue))
+            for sha = (dequeue queue)
+           do
+              (let ((commit (get-commit dag sha))
+                    (this-depth (gethash sha depths)))
+                (cond
+                  (commit
+                   (funcall seen-callback commit)
+                   (when (< this-depth depth)
+                     (loop for parent in (parents commit) do
+                       (unless (gethash parent depths)
+                         (setf (gethash parent depths) (1+ this-depth)))
+                       (unless (sha-seen parent)
+                         (setf (sha-seen parent) t)
+                         (enqueue parent queue)))))
+                  (t
+                   ;; This node isn't present in the graph, but we
+                   ;; still want to indicate that we've seen it.
+                   (funcall seen-callback
+                            (make-instance 'commit :sha sha)))))))
+    (loop for sha being the hash-keys of sha-seen
+          for node = (get-commit dag sha)
+          if node
+            collect node)))
 
 (defun hash-table-intersection (ht1 ht2)
   (let ((result (make-hash-table)))
