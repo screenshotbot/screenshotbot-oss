@@ -256,15 +256,13 @@ tree. This version uses the Kahn's algorithm instead of DFS"
         (add-commit dag commit)
         (assert (gethash node-id (commit-map dag)))))))
 
-(defmethod reachable-nodes ((dag dag) commit &key (depth 1000) (return-seen nil)
+(defmethod reachable-nodes ((dag dag) commit &key (depth 1000)
                                                (seen-callback #'identity))
-  "Find all the reachable nodes from a specific commit, upto the given DEPTH.
+  "Find all the reachable nodes from a specific commit, upto the given DEPTH. Does not return partial nodes (i.e. commits whose information we don't have).
 
 If SEEN-CALLBACK is provided, then that is called with the commit each
-time we see a new node.
-
-If RETURN-SEEN is T, then we return a hash table with all the seen
-nodes (as a set), else we return a list."
+time we see a new node. This will include partial nodes.
+"
   (let ((seen (make-hash-table))
         (depths (make-hash-table :test #'equal))
         (queue (make-queue)))
@@ -292,12 +290,8 @@ nodes (as a set), else we return a list."
                   ;; still want to indicate that we've seen it.
                   (funcall seen-callback
                            (make-instance 'commit :sha commit-hash))))))
-    (cond
-      (return-seen
-       seen)
-      (t
-       (loop for node being the hash-keys of seen
-             collect node)))))
+    (loop for node being the hash-keys of seen
+          collect node)))
 
 (defun hash-table-intersection (ht1 ht2)
   (let ((result (make-hash-table)))
@@ -306,9 +300,15 @@ nodes (as a set), else we return a list."
            do (setf (gethash k result) t))
     result))
 
+(defun list-to-hash-table (list)
+  (let ((hash-table (make-hash-table)))
+    (loop for elem in list
+          do (setf (gethash elem hash-table) t))
+    hash-table))
+
 (defmethod merge-base-for-depth ((dag dag) commit-1 commit-2 &key depth)
-  (let ((reachable-1 (reachable-nodes dag commit-1 :depth depth :return-seen t))
-        (reachable-2 (reachable-nodes dag commit-2 :depth depth :return-seen t)))
+  (let ((reachable-1 (list-to-hash-table (reachable-nodes dag commit-1 :depth depth)))
+        (reachable-2 (list-to-hash-table (reachable-nodes dag commit-2 :depth depth))))
     (let ((intersection (hash-table-intersection reachable-1 reachable-2)))
       ;; Now that we found an intersection, we just need to find the
       ;; first reachable node in this set (from either commit-1 or
