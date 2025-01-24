@@ -58,17 +58,6 @@
   (loop for commit being the hash-values of (commit-map dag)
         collect commit))
 
-(defmethod check-integrity ((dag dag))
-  (log:info "Checking integrity of: ~a" dag)
-  (dolist (commit (all-commits dag))
-    (unless commit
-      (error "nil commit in (all-commits) for ~a" dag))
-    (dolist (parent (parents commit))
-      (unless (gethash (commit-node-id parent) (commit-map dag))
-        (cerror "continue" "Could not find a parent commit ~a in map. This might happen if we only
-have a partial graph."
-                parent)))))
-
 (defmethod ordered-commits ((dag dag))
   (let ((sorted (safe-topological-sort dag)))
     (loop for id in sorted

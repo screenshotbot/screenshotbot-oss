@@ -145,14 +145,6 @@ to the same repo, the graph will still be the same."
           if (needs-flush-p commit-graph)
             do (flush-dag commit-graph))))
 
-(defmethod check-integrity ((commit-graph commit-graph))
-  (declare (optimize (debug 3) (speed 0)))
-  (when-let ((dag (commit-graph-dag commit-graph)))
-    (dag:check-integrity dag)))
-
-(defun check-integrity-for-all ()
-  (mapc #'check-integrity (bknr.datastore:class-instances 'commit-graph)))
-
 (defun load-all ()
   (mapc #'commit-graph-dag (bknr.datastore:class-instances 'commit-graph)))
 
