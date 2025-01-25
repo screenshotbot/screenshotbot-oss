@@ -256,8 +256,11 @@ tree. This version uses the Kahn's algorithm instead of DFS"
         (add-commit dag commit)
         (assert (gethash node-id (commit-map dag)))))))
 
+(defun default-seen-callback (parent commit)
+  (declare (ignore parent commit)))
+
 (defmethod reachable-nodes ((dag dag) commit &key (depth 1000)
-                                               (seen-callback #'identity))
+                                               (seen-callback #'default-seen-callback))
   "Find all the reachable nodes from a specific commit, upto the given DEPTH. Does not return partial nodes (i.e. commits whose information we don't have).
 
 If SEEN-CALLBACK is provided, then that is called with the commit each
@@ -267,7 +270,7 @@ time we see a new node. This will include partial nodes.
         (sha-seen (make-hash-table :test #'equal))
         (queue (make-queue)))
 
-    (enqueue commit queue)
+    (enqueue (cons commit nil) queue)
     (setf (gethash commit depths) 1)
 
     (macrolet ((sha-seen (hash)
@@ -275,25 +278,26 @@ time we see a new node. This will include partial nodes.
       (setf (sha-seen commit) t)
 
       (loop while (not (queue-emptyp queue))
-            for sha = (dequeue queue)
+            for (sha . from) = (dequeue queue)
            do
               (let ((commit (get-commit dag sha))
                     (this-depth (gethash sha depths)))
                 (cond
                   (commit
-                   (funcall seen-callback commit)
+                   (funcall seen-callback commit from)
                    (when (< this-depth depth)
                      (loop for parent in (parents commit) do
                        (unless (gethash parent depths)
                          (setf (gethash parent depths) (1+ this-depth)))
                        (unless (sha-seen parent)
                          (setf (sha-seen parent) t)
-                         (enqueue parent queue)))))
+                         (enqueue (cons parent commit) queue)))))
                   (t
                    ;; This node isn't present in the graph, but we
                    ;; still want to indicate that we've seen it.
                    (funcall seen-callback
-                            (make-instance 'commit :sha sha)))))))
+                            (make-instance 'commit :sha sha)
+                            from))))))
     (loop for sha being the hash-keys of sha-seen
           for node = (get-commit dag sha)
           if node
@@ -322,7 +326,8 @@ time we see a new node. This will include partial nodes.
 
       (reachable-nodes dag commit-2
                        :depth depth
-                       :seen-callback (lambda (commit)
+                       :seen-callback (lambda (commit from)
+                                        (declare (ignore from))
                                         (when (gethash commit intersection)
                                           (return-from merge-base-for-depth (sha commit)))))))
   nil)
