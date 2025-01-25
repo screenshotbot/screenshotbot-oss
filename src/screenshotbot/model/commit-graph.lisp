@@ -158,3 +158,4 @@ to the same repo, the graph will still be the same."
   (loop for cg in (bknr.datastore:class-instances 'commit-graph)
         if (repo-url cg)
           do (setf (normalized-repo-url cg) (normalize-url (repo-url cg)))))
+

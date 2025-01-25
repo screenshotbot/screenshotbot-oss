@@ -26,6 +26,8 @@
                 #:queue-emptyp
                 #:enqueue
                 #:make-queue)
+  (:import-from #:util/misc
+                #:?.)
   (:export #:dag
            #:add-commit
            #:commit
@@ -38,5 +40,6 @@
            #:ordered-commits
            #:sha
            #:author
-           #:merge-base))
+           #:merge-base
+           #:best-path))
 (in-package :dag)

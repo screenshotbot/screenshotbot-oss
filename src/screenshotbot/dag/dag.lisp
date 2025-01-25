@@ -332,3 +332,43 @@ time we see a new node. This will include partial nodes.
    ;; Micro optimization: First look only at the last 100 nodes.
    (merge-base-for-depth dag commit-1 commit-2 :depth 100)
    (merge-base-for-depth dag commit-1 commit-2 :depth 1000)))
+
+(defmethod best-path ((dag dag) (sha-1 string) (sha-2 string) &key (max-depth 100))
+  "Find the best path from SHA-1 to SHA-2, where SHA-2 is the ancestor.
+
+Given two paths, x0->x1->....->xn and y0->y1->...>yn, find the first
+position `i` (0<i<n) where they differ. Look at the edges from
+x_{i-1}->x_i and y{i-1}->y_i. Whichever one is the leftmost parent,
+that path is the better path.
+
+This approximately translates to trying to find a path between the
+commits using leftmost parents when possible.
+
+By this definition, the best solution is to use a DFS. (An alternate
+definition is to give a high cost to the non-leftmost
+parents. However, it adds more complexity, and does not guarantee a
+unique solution.)
+
+We don't attempt to find a path if the path is longer than
+MAX-DEPTH. This makes it acceptable to use recursion for now.
+"
+  (let ((seen (make-hash-table :test #'equal)))
+    (labels ((dfs (sha max-depth path)
+               (let ((parents (?. parents (get-commit dag sha))))
+                 (cond
+                   ((gethash sha seen)
+                    nil)
+                   ((<= max-depth 0)
+                    ;; could not find a path
+                    nil)
+                   ((equal sha sha-2)
+                    (list* sha path))
+                   (t
+                    (setf (gethash sha seen) t)
+                    (loop for parent in parents
+                          for solved-path = (dfs parent (1- max-depth) (list* sha path))
+                          if solved-path
+                            return solved-path)))))
+             )
+      (reverse
+       (dfs sha-1 max-depth nil)))))

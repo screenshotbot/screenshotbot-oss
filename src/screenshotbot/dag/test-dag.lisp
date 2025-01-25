@@ -10,6 +10,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
+                #:best-path
                 #:ancestorp
                 #:merge-base
                 #:reachable-nodes
@@ -340,3 +341,34 @@ for you."
     ;; What if the commit doesn't exist at all?
     (is (ancestorp dag "a1" "a1"))
     (is (not (ancestorp dag "cc" "bb")))))
+
+(def-fixture best-path ()
+  (add-edge "cc" (list "ff" "ee") :dag dag)
+  (add-edge "ff" "dd" :dag dag)
+  (add-edge "dd" (list "ee" "11") :dag dag)
+  (add-edge "22" "33")
+  (&body))
+
+(test best-path
+  (with-fixture state ()
+    (with-fixture best-path ()
+     (assert-that (best-path dag "cc" "ee")
+                  (contains "cc" "ff" "dd" "ee")))))
+
+(test best-path-with-max-depth
+  (with-fixture state ()
+   (with-fixture best-path ()
+     (assert-that (best-path dag "cc" "ee" :max-depth 1)
+                  (contains))
+     (assert-that (best-path dag "cc" "ee" :max-depth 2)
+                  (described-as "Even though there's a longer 'better-path' the max-depth means we'll use the smaller path"
+                    (contains "cc" "ee")))
+     (assert-that (best-path dag "cc" "11" :max-depth 2)
+                  (described-as "Even though there's a longer 'better-path' the max-depth means we'll use the smaller path"
+                    (contains))))))
+
+(test best-path-when-theres-not-path
+  (with-fixture state ()
+    (with-fixture best-path ()
+      (assert-that (best-path dag "cc" "33")
+                   (contains)))))
