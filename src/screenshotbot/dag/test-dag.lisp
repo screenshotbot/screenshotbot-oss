@@ -305,8 +305,7 @@ for you."
 
       (let ((seen nil))
         (reachable-nodes dag "cc"
-                         :seen-callback (lambda (commit from)
-                                          (declare (ignore from))
+                         :seen-callback (lambda (commit)
                                           (push (sha commit) seen)))
         (assert-that seen
                      (contains "dd" "cc"))))))
@@ -319,8 +318,7 @@ for you."
 
       (let ((seen nil))
         (reachable-nodes dag "ee"
-                         :seen-callback (lambda (commit from)
-                                          (declare (ignore from))
+                         :seen-callback (lambda (commit)
                                           (push (sha commit) seen)))
         (assert-that seen
                      (contains "dd" "cc" "ee"))))))
