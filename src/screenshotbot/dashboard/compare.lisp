@@ -128,6 +128,9 @@
                 #:screenshot-key)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/git-repo
+                #:commit-graph-dag
+                #:commit-graph)
   (:export
    #:render-acceptable
    #:render-diff-report
@@ -1006,6 +1009,40 @@ additional actions in the More dropdown menu.
     (t
      <span>empty run</span>)))
 
+(defun %commits-between (run to)
+  (let* ((repo (channel-repo (recorder-run-channel run)))
+         (this-hash (recorder-run-commit run))
+         (prev-hash (?. recorder-run-commit to))
+         (commit-graph (commit-graph repo))
+         (dag (commit-graph-dag commit-graph)))
+    (let ((path
+           (dag:best-path dag
+                          this-hash
+                          prev-hash)))
+      (declare (ignore ancestorp))
+      (cond
+        ((not path)
+         <simple-card-page>
+           <div class= "card-body" >
+             Could not find path in Git graph from <commit repo=repo hash=this-hash />
+             to <commit repo=repo hash=prev-hash />
+           </div>
+         </simple-card-page>)
+        (t
+         <simple-card-page>
+           <div class= "card-header">
+             <h4>Blame commits</h4>
+           </div>
+           <p>
+             This change could be blamed to one or more of these commits:
+           </p>
+           <ol>
+           ,@ (loop for node in (butlast path)
+                    collect <li><commit repo=repo hash=node /></li>)
+           </ol>
+           
+         </simple-card-page>)))))
+
 (defun info-modal (run to)
   <div class="modal" tabindex="-1" id= "comparison-info-modal" >
     <div class="modal-dialog">
@@ -1027,6 +1064,8 @@ additional actions in the More dropdown menu.
                     <span> on ,(progn review-link)</span>)
                  <br />
                  Previous commit: <commit repo= repo hash=prev-hash />
+                 <br />
+                 <a href= (nibble () (%commits-between run to)) >View commits between these commits</a>
                </p>))
         </div>
         <div class="modal-footer">
