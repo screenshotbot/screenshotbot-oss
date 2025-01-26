@@ -372,3 +372,11 @@ for you."
     (with-fixture best-path ()
       (assert-that (best-path dag "cc" "33")
                    (contains)))))
+
+(test best-path-when-original-commit-is-not-present
+  (with-fixture state ()
+    (with-fixture best-path ()
+      (assert-that (best-path dag "44" "55")
+                   (contains))
+      (assert-that (best-path dag "44" "33")
+                   (contains)))))

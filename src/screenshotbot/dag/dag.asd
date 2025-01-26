@@ -8,6 +8,8 @@
   :serial t
   :depends-on (:pkg
                :util/simple-queue
+               :util/misc
+               :cl-json
                :bknr.datastore
                :ironclad)
   :components ((:file "package")
@@ -17,5 +19,6 @@
   :serial t
   :depends-on (:dag
                :fiveam
+               :fiveam-matchers
                :util/fiveam)
   :components ((:file "test-dag")))
