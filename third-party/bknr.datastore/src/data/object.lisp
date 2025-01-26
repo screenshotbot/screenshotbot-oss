@@ -956,8 +956,7 @@ the slots are read from the snapshot and ignored."
   (destroy-object (store-object-with-id id)))
 
 (defun delete-object (object)
-  (if (and (in-transaction-p)
-           (not (in-anonymous-transaction-p)))
+  (if (in-transaction-p)
       (destroy-object object)
       (execute (make-instance 'transaction :function-symbol 'tx-delete-object
                               :timestamp (get-universal-time)

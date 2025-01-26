@@ -64,10 +64,6 @@
   (:documentation
    "Signaled when WITH-TRANSACTION forms are nested."))
 
-(define-condition anonymous-transaction-in-transaction (store-error)
-  ()
-  (:documentation
-   "Signaled when an anonymous transaction is started from within another transaction, transactions do not nest."))
 
 (define-condition no-subsystems (store-error)
   ()
@@ -544,78 +540,6 @@ transaction, if any."
                            *store*)
                        transaction))
 
-;;; anonymous transactions - During execution of such a transactions,
-;;; nothing is written to a log.  After leaving the body of the
-;;; with-transaction block, all transactions which have been executed
-;;; are written to the log as a group which will be restored atomically.
-
-;;; The actual writing to the transaction log is performed by the
-;;; with-transaction macro.
-
-;;; An anonymous transaction has an optional label which is stored in
-;;; the transaction log in order to make the source code location where
-;;; the actual transaction code lives identifieable.
-
-(defclass anonymous-transaction (transaction)
-  ((label :initarg :label
-          :accessor anonymous-transaction-label
-          :initform (error "missing label in anonymous transaction definition"))
-   (log-buffer :initarg :log-buffer
-               :accessor anonymous-transaction-log-buffer
-               :initform (flex:make-in-memory-output-stream))
-   (undo-log :initform nil
-             :accessor anonymous-transaction-undo-log)))
-
-(defmethod print-object ((transaction anonymous-transaction) stream)
-  (print-unreadable-object (transaction stream :type t)
-    (format stream "~A ~A (~A)"
-            (format-date-time (transaction-timestamp transaction))
-            (anonymous-transaction-label transaction)
-            (class-name (class-of (anonymous-transaction-log-buffer transaction))))))
-
-(defmethod in-anonymous-transaction-p ()
-  (subtypep (type-of *current-transaction*) 'anonymous-transaction))
-
-(defmethod encode-object ((transaction anonymous-transaction) stream)
-  (%write-tag #\N stream)
-  (%encode-string (anonymous-transaction-label transaction) stream)
-  (let ((subtxns (flex:get-output-stream-sequence (anonymous-transaction-log-buffer transaction))))
-    (%encode-integer (length subtxns) stream)
-    (write-sequence subtxns stream)))
-
-(defmethod decode-object ((tag (eql #\G)) stream)
-  (make-instance 'anonymous-transaction
-                 :transactions (%decode-list stream)))
-
-(defvar *txn-log-stream* nil
-  "This variable is bound to the transaction log stream while loading
-   the transaction log.  It is used by anonymous transactions to read
-   the subtransactions from the log.")
-
-(defmethod decode-object ((tag (eql #\N)) stream)
-  (let* ((label (%decode-string stream))
-         (length (%decode-integer stream))
-         (buffer (make-array length :element-type '(unsigned-byte 8))))
-    (read-sequence buffer stream)
-    (make-instance 'anonymous-transaction
-                   :label label
-                   :log-buffer (flex:make-in-memory-input-stream buffer))))
-
-(define-condition rollback-failed (error)
-  ((transaction :initarg :transaction)
-   (original-error :initarg :original-error))
-  (:report (lambda (e stream)
-             (with-slots (transaction original-error) e
-               (format stream "Rollback of transaction ~A failed: ~A" transaction original-error)))))
-
-(defun anonymous-transaction-undo (transaction)
-  (handler-case
-      (dolist (command (anonymous-transaction-undo-log transaction))
-        (apply (car command) (cdr command)))
-    (error (e)
-      (error 'rollback-failed
-             :transaction transaction
-             :original-error e))))
 
 (defun do-with-transaction (label thunk)
   (with-store-guard ()
@@ -624,21 +548,6 @@ transaction, if any."
 (defmacro with-transaction ((&optional label) &body body)
   `(do-with-transaction ,(if (symbolp label) (symbol-name label) label)
      (lambda () ,@body)))
-
-(defmethod execute-unlogged ((transaction anonymous-transaction))
-  ;; EXECUTE-UNLOGGED is called for anonymous transactions only when
-  ;; restoring from the transaction log.  It reads and executes the
-  ;; subtransactions from the transaction log.
-  (assert (eq :restore (store-state *store*)) ()
-          "Unexpected store state ~A for EXECUTE-UNLOGGED on an anonymous transaction" (store-state *store*))
-  (let ((stream (anonymous-transaction-log-buffer transaction)))
-    (handler-case
-        (loop
-           (execute-unlogged (decode stream)))
-      (end-of-file ()))))
-
-(defmethod execute-transaction :before ((executor anonymous-transaction) transaction)
-  (encode transaction (anonymous-transaction-log-buffer executor)))
 
 ;;; Subsystems
 
