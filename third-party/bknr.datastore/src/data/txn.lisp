@@ -317,11 +317,6 @@ want to change the store permanently."
 (defun store-open-p ()
   (not (eq :closed (store-state *store*))))
 
-(defun store-current-transaction ()
-  (if (in-transaction-p)
-      *current-transaction*
-      (error 'not-in-transaction)))
-
 ;;; All transactions are executed by an 'executor', which is the store
 ;;; itself or, in the case of a nested transaction, the parent
 ;;; transaction.  Named transactions do not explicitly log the nested
