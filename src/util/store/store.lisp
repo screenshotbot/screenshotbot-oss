@@ -796,6 +796,10 @@ this variable in LET forms, but you can SETF it if you like."
 
 (defmethod generate-sync-test-for-object (obj output))
 
+(defmethod generate-sync-test-for-object :around ((obj store-object) output)
+  (format output "id: ~a" (store-object-id obj))
+  (call-next-method))
+
 (defgeneric validate-index-values (index all-elts slot-name))
 
 (defvar *profilep* nil)

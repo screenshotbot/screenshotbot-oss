@@ -176,4 +176,4 @@ oid to a string. Otherwise we return the OID object as is."
          args))
 
 (defmethod generate-sync-test-for-object ((obj object-with-oid) output)
-  (format output "oid:~a " (oid obj)))
+  (format output "oid:~a " (store-object-id obj) (oid obj)))
