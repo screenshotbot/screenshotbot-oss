@@ -307,6 +307,15 @@ want to change the store permanently."
 
 (defvar *current-transaction* nil)
 
+(defvar *in-restore-p* nil
+  "Dynamically set in code which is restoring. Be careful that this is
+set in threads.
+
+At the moment this is not being used, but we want to replace the
+checks of `(eq :restore store-state)` with *in-restore-p*, since the
+former check is not very thread safe and error prone from background
+threads.")
+
 (defun in-transaction-p ()
   (or *current-transaction*
       (eq :restore (store-state *store*))))
@@ -694,29 +703,30 @@ pathname until a non-existant directory name has been found."
   (let ((*store* store))
     (setf (store-state store) :opened)
     (with-store-state (:restore)
-      (with-store-guard ()
-        (with-log-guard ()
-          (close-transaction-log-stream store)
-          (let ((transaction-log (store-transaction-log-pathname store))
-                (error t))
-            ;; restore the subsystems
-            (unwind-protect
-                 (progn
-                   ;; Subsystems may not do any persistent changes when restoring.
-                   (dolist (subsystem (store-subsystems store))
-                     ;; check that UNTIL > snapshot date
-                     (when *store-debug*
-                       (report-progress "Restoring the subsystem ~A of ~A~%" subsystem store))
-                     (restore-subsystem store subsystem :until until))
-                   (restore-transaction-log store transaction-log :until until)
-                   (setf error nil))
-              (when error
-                (dolist (subsystem (store-subsystems store))
-                  (when *store-debug*
-                    (report-progress "Closing the subsystem ~A of ~A~%"
-                                     subsystem store))
-                  (close-subsystem store subsystem)
-                  (setf (store-state store) :closed))))))))))
+      (let ((*in-restore-p* t))
+        (with-store-guard ()
+          (with-log-guard ()
+            (close-transaction-log-stream store)
+            (let ((transaction-log (store-transaction-log-pathname store))
+                  (error t))
+              ;; restore the subsystems
+              (unwind-protect
+                   (progn
+                     ;; Subsystems may not do any persistent changes when restoring.
+                     (dolist (subsystem (store-subsystems store))
+                       ;; check that UNTIL > snapshot date
+                       (when *store-debug*
+                         (report-progress "Restoring the subsystem ~A of ~A~%" subsystem store))
+                       (restore-subsystem store subsystem :until until))
+                     (restore-transaction-log store transaction-log :until until)
+                     (setf error nil))
+                (when error
+                  (dolist (subsystem (store-subsystems store))
+                    (when *store-debug*
+                      (report-progress "Closing the subsystem ~A of ~A~%"
+                                       subsystem store))
+                    (close-subsystem store subsystem)
+                    (setf (store-state store) :closed)))))))))))
 
 #|
 (defmacro disallow-cl-function-in-transaction (function)

@@ -860,10 +860,11 @@ the slots are read from the snapshot and ignored."
                                    (batch batch))
                                (safe-make-thread
                                 (lambda ()
-                                  (loop for object in batch
-                                        do (encode-set-slots class-layouts object s))
-                                  (bt:with-lock-held (lock)
-                                    (incf count))))))))
+                                  (let ((*in-restore-p* t))
+                                    (loop for object in batch
+                                          do (encode-set-slots class-layouts object s))
+                                    (bt:with-lock-held (lock)
+                                      (incf count)))))))))
                  (mapc #'bt:join-thread threads)
 
                  (unless (= count (length threads))
