@@ -328,7 +328,8 @@ then we make it an error. Once that doesn't fire for a while, we then
 we switch to just *in-restore-p*. (T1659)"
   (let ((response (eq :restore (store-state *store*))))
     (unless (eql response *in-restore-p*)
-      (warn "*in-restore-p* doesn't match :restore in ~a" (bt:current-thread)))
+      (warn "*in-restore-p* doesn't match :restore in ~a" (bt:current-thread))
+      (error "Restore is in progress is another thread" ))
     response))
 
 

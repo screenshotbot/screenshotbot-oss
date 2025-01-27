@@ -3,6 +3,10 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:bknr.datastore
+                #:*in-restore-p*
+                #:next-object-id
+                #:store-object-subsystem
+                #:with-store-state
                 #:encode
                 #:%encode-string
                 #:%encode-integer
@@ -13,7 +17,12 @@
                 #:encode-create-object
                 #:%log-crash)
   (:import-from #:bknr.indices
-                #:base-indexed-object))
+                #:base-indexed-object)
+  (:import-from #:fiveam-matchers/core
+                #:error-with-string-matching
+                #:signals-error-matching)
+  (:import-from #:fiveam-matchers/strings
+                #:matches-regex))
 (in-package :bknr.datastore.tests)
 
 (def-suite* :bknr.datastore.tests)
@@ -493,3 +502,30 @@
      `(defclass foo-dfwersfsdfdsdfdf ()
         ()
         (:metaclass persistent-class)))))
+
+
+(defdstest make-instance-fails-while-restore-is-in-progress-on-another-thread ()
+  (with-store-state (:restore)
+    (let ((*in-restore-p* nil))
+      (is (equal 0 (next-object-id (store-object-subsystem))))
+      (signals-error-matching ()
+         (make-instance 'object-with-init)
+         (error-with-string-matching
+          (matches-regex ".*Restore is in progress.*")))
+      (is (equal 0 (next-object-id (store-object-subsystem)))))))
+
+(defdstest set-slot-value-fails-while-restore-is-in-progress-on-another-thread ()
+  (with-store-state (:restore)
+    (is (equal 0 (next-object-id (store-object-subsystem))))
+    (let ((obj (let ((*in-restore-p* t)) (make-instance 'object-with-init))))
+      (finishes
+        (let ((*in-restore-p* t))
+          (setf (slot-value obj 'arg) 2)))
+
+      (let ((*in-restore-p* nil))
+        (signals-error-matching ()
+          (setf (slot-value obj 'arg) 3)
+          (error-with-string-matching
+           (matches-regex ".*Restore is in progress.*"))))
+      (is (eql 2 (slot-value obj 'arg))))
+    (is (equal 1 (next-object-id (store-object-subsystem))))))
