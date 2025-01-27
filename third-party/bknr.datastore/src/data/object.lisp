@@ -149,7 +149,7 @@ reads will return nil.")))
         (transient-slot-p slotd)
         (member slot-name '(last-change id))
         ;; If we're restoring then we don't need to create a new transaction
-        (in-restore-p))
+        (eq :restore (store-state *store*)))
        (call-next-method))
      (t
       ;; If we're not in a transaction, or this is not a transient
@@ -299,7 +299,7 @@ reads will return nil.")))
   (cond
     ((or
       (in-transaction-p)
-      (in-restore-p))
+      (eq :restore (store-state *store*)))
      (cond
        (id
         (call-next-method))
