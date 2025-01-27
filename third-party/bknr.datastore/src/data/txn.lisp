@@ -318,7 +318,19 @@ threads.")
 
 (defun in-transaction-p ()
   (or *current-transaction*
-      (eq :restore (store-state *store*))))
+      ;; TODO: do we need to check in-restore-p? I think we can get
+      ;; rid of it (T1658)
+      (in-restore-p)))
+
+(defun in-restore-p ()
+  "The plan: we keep this warning here, if that's not caused an issue
+then we make it an error. Once that doesn't fire for a while, we then
+we switch to just *in-restore-p*. (T1659)"
+  (let ((response (eq :restore (store-state *store*))))
+    (unless (eql response *in-restore-p*)
+      (warn "*in-restore-p* doesn't match :restore in ~a" (bt:current-thread)))
+    response))
+
 
 (defun current-transaction-timestamp ()
   (transaction-timestamp *current-transaction*))
