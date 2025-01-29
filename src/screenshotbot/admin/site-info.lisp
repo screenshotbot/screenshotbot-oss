@@ -66,6 +66,12 @@
             (bknr.cluster/server:list-peers bknr.datastore:*store*)))
       </li>
     </ul>
+
+    Helpful links:
+      <ul>
+        <li><a href= "/admin/test-writes">Test writes</a></li>
+        <li><a href= "/admin/thread-list">Threads</a></li>
+      </ul>
   </admin-app-template>)
 
 (defadminhandler (thread-list :uri "/admin/thread-list") ()
