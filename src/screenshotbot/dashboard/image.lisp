@@ -19,6 +19,7 @@
   (:import-from #:hunchentoot
                 #:handle-static-file)
   (:import-from #:screenshotbot/model/image
+                #:abstract-image
                 #:no-image-uploaded-yet
                 #:find-image-by-oid
                 #:with-local-image)
@@ -57,6 +58,8 @@
                 #:ip-throttler)
   (:import-from #:encrypt/hmac
                 #:sign-hmac)
+  (:import-from #:util/store/object-id
+                #:oid-array)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
@@ -323,3 +326,25 @@ right region within that.
                  (not (path:-e new)))
             (log:info "Renaming ~a to ~a" old new)
             (rename-file old new)))))))
+
+(defmethod image-public-url ((image abstract-image) &key size type originalp)
+  (let ((eoid (encrypt:encrypt-mongoid (oid-array image))))
+    (let ((url
+            (let ((args nil))
+              (when size
+                (setf args `(:size ,(string-downcase size))))
+              (when type
+                (setf args (list* :type (str:downcase type) args)))
+              (apply #'hex:make-url 'image-blob-get :oid eoid
+                     args))))
+      (cond
+        (originalp
+         (make-image-cdn-url
+          (hex:make-url "/image/original/:oid"
+                    :oid (format nil "~a.~a" eoid (str:downcase (image-format image))))))
+        (type
+         (make-image-cdn-url url))
+        (t
+         ;; the image endpoint needs to guess the type based on Accept:
+         ;; headers. So we don't cache this for now.
+         url)))))

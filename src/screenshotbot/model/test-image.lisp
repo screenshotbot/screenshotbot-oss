@@ -155,16 +155,6 @@ uses the base-image-comparer."
                  :pathname pathname)))
     image))
 
-(test image-public-url
-  (is (equal "/image/blob/bar/default.webp" (util:make-url 'image-blob-get :oid "bar"))))
-
-(test image-public-url-originalp
-  (with-fixture state ()
-    (assert-that (image-public-url img)
-                 (matches-regex "/image/blob/.*/default.webp"))
-    (assert-that (image-public-url img :originalp t)
-                 (matches-regex "/image/original/.*\\.png"))))
-
 (test image-dimensions
   (with-fixture state ()
     (let* ((file #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))

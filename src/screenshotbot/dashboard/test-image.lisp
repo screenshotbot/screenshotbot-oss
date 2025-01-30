@@ -20,6 +20,7 @@
                 #:chain
                 #:future)
   (:import-from #:screenshotbot/model/image
+                #:image-blob-get
                 #:make-image
                 #:image)
   (:import-from #:bknr.datastore
@@ -52,10 +53,14 @@
                 #:magick-get-image-width
                 #:magick-get-image-height)
   (:import-from #:fiveam-matchers/core
+                #:assert-that
                 #:error-with-string-matching
                 #:signals-error-matching)
   (:import-from #:fiveam-matchers/strings
+                #:matches-regex
                 #:contains-string)
+  (:import-from #:screenshotbot/screenshot-api
+                #:image-public-url)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-image)
 
@@ -178,3 +183,14 @@
                          oid-str
                          :ts (format nil "~a" ts)
                          :signature (%sign-oid oid-str :ts ts))))))))
+
+(test image-public-url
+  (is (equal "/image/blob/bar/default.webp" (util:make-url 'image-blob-get :oid "bar"))))
+
+(test image-public-url-originalp
+  (with-fixture state ()
+    (assert-that (image-public-url im)
+                 (matches-regex "/image/blob/.*/default.webp"))
+    (assert-that (image-public-url im :originalp t)
+                 (matches-regex "/image/original/.*\\.png"))))
+
