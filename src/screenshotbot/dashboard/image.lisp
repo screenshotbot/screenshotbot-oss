@@ -185,7 +185,7 @@
   (setf (hunchentoot:return-code*) hunchentoot:+http-not-found+)
   (hunchentoot:abort-request-handler reason))
 
-(defvar *signature-expiry* (* 48 3600))
+(defparameter *signature-expiry* (* 30 24 3600))
 
 (defmethod %sign-oid ((oid string) &key ts)
   (ironclad:byte-array-to-hex-string (sign-hmac (format nil "~a.~a" oid ts))))
@@ -328,20 +328,27 @@ right region within that.
             (rename-file old new)))))))
 
 (defmethod image-public-url ((image abstract-image) &key size type originalp)
-  (let ((eoid (encrypt:encrypt-mongoid (oid-array image))))
+  (let* ((oid (oid image))
+         (ts (get-universal-time))
+         (ts (- ts (mod ts (/ *signature-expiry* 2))))
+         (signature (%sign-oid oid :ts ts)))
     (let ((url
             (let ((args nil))
               (when size
                 (setf args `(:size ,(string-downcase size))))
               (when type
                 (setf args (list* :type (str:downcase type) args)))
-              (apply #'hex:make-url 'image-blob-get :oid eoid
+              (apply #'hex:make-url 'image-blob-get :oid oid
+                                                    :ts ts
+                                                    :signature signature
                      args))))
       (cond
         (originalp
          (make-image-cdn-url
           (hex:make-url "/image/original/:oid"
-                    :oid (format nil "~a.~a" eoid (str:downcase (image-format image))))))
+                        :oid (format nil "~a.~a" oid (str:downcase (image-format image)))
+                        :ts ts
+                        :signature signature)))
         (type
          (make-image-cdn-url url))
         (t

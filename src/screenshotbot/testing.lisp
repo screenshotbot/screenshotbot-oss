@@ -40,6 +40,8 @@
                 #:*installation*)
   (:import-from #:screenshotbot/server
                 #:screenshotbot-template)
+  (:import-from #:util/store/object-id
+                #:oid)
   (:export
    #:snap-image-blob
    #:snap-all-images
@@ -112,7 +114,7 @@
     (let ((output (path:catfile
                    dir
                    (format nil "~a/default.webp"
-                           (encrypt:encrypt-mongoid (oid-array im1))))))
+                           (oid im1)))))
       (with-local-image (file im1)
         (uiop:copy-file file (ensure-directories-exist output))))))
 
