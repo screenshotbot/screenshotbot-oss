@@ -55,6 +55,8 @@
                 #:throttler
                 #:throttle!
                 #:ip-throttler)
+  (:import-from #:encrypt/hmac
+                #:sign-hmac)
   (:export
    #:handle-resized-image))
 (in-package :screenshotbot/dashboard/image)
@@ -180,9 +182,31 @@
   (setf (hunchentoot:return-code*) hunchentoot:+http-not-found+)
   (hunchentoot:abort-request-handler reason))
 
-(def-easy-macro with-access-checked-image (&binding image oid &fn fn)
+(defvar *signature-expiry* (* 48 3600))
+
+(defmethod %sign-oid ((oid string) &key ts)
+  (ironclad:byte-array-to-hex-string (sign-hmac (format nil "~a.~a" oid ts))))
+
+(defun %decode-oid (oid &key ts signature)
+  (cond
+    ((not (str:emptyp signature))
+     (let ((ts (parse-integer ts)))
+       (when (< (+ ts *signature-expiry*)
+                (get-universal-time))
+         (error "timestamp is too old"))
+       (let ((actual-signature (%sign-oid oid :ts ts)))
+         (unless (equal signature actual-signature)
+           (error "signature does not match")))
+
+       ;; We're returning an array for legacy reasons. It might be
+       ;; safe to just pass the string.
+       (ironclad:hex-string-to-byte-array oid)))
+    (t
+     (encrypt:decrypt-mongoid oid))))
+
+(def-easy-macro with-access-checked-image (&binding image oid &key ts signature &fn fn)
   (handler-case
-      (let ((oid (encrypt:decrypt-mongoid oid)))
+      (let ((oid (%decode-oid oid :ts ts :signature signature)))
         (assert oid)
         (let* ((image (find-image-by-oid oid)))
           (fn image)))
@@ -192,8 +216,9 @@
 (defun set-cors-header ()
   (setf (hunchentoot:header-out :access-control-allow-origin)  "*"))
 
-(defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size type)
-  (with-access-checked-image (image oid)
+(defhandler (image-blob-get :uri "/image/blob/:oid/default.webp") (oid size type
+                                                                       ts signature)
+  (with-access-checked-image (image oid :ts ts :signature signature)
     (setf (hunchentoot:header-out :content-type) "image/png")
     (set-cors-header)
     (cond
@@ -262,9 +287,9 @@ right region within that.
 
 
 
-(defhandler (image-blob-get-original :uri "/image/original/:eoid") (eoid)
+(defhandler (image-blob-get-original :uri "/image/original/:eoid") (eoid ts signature)
   (destructuring-bind (oid &optional type) (str:split "." eoid)
-    (with-access-checked-image (image oid)
+    (with-access-checked-image (image oid :ts ts :signature signature)
       (with-local-image (file image)
         (set-cors-header)
         (cond

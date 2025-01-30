@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/image
+                #:%sign-oid
+                #:%decode-oid
                 #:with-cropped-and-resized
                 #:with-access-checked-image
                 #:send-404
@@ -41,12 +43,19 @@
   (:import-from #:screenshotbot/async
                 #:magick-future)
   (:import-from #:util/store/object-id
+                #:make-oid
+                #:%make-oid
                 #:oid-array
                 #:oid)
   (:import-from #:screenshotbot/magick/magick-lw
                 #:with-wand
                 #:magick-get-image-width
                 #:magick-get-image-height)
+  (:import-from #:fiveam-matchers/core
+                #:error-with-string-matching
+                #:signals-error-matching)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-image)
 
@@ -136,3 +145,36 @@
       (with-wand (wand :file p)
         (is (eql 20 (magick-get-image-width wand)))
         (is (eql 30 (magick-get-image-height wand) ))))))
+
+(length (mongoid:oid))
+
+(test %decode-oid-on-eoid
+  "This could probably be removed in the future"
+  (with-fixture state ()
+   (let ((oid (mongoid:oid)))
+     (is (equalp oid (%decode-oid (encrypt:encrypt-mongoid oid))))
+     (signals-error-matching ()
+       (%decode-oid
+        (mongoid:oid-str oid)
+        :ts "22"
+        :signature "bar")
+       (error-with-string-matching
+        (contains-string "timestamp is too old")))
+     (signals-error-matching ()
+       (%decode-oid
+        (mongoid:oid-str oid)
+        :ts (format nil "~a" (get-universal-time))
+        :signature "bar")
+       (error-with-string-matching
+        (contains-string "signature does not match"))))))
+
+(test %decode-oid-correctly-when-signature-is-present
+  "This could probably be removed in the future"
+  (with-fixture state ()
+    (let* ((oid (mongoid:oid))
+           (oid-str (mongoid:oid-str oid)))
+      (let ((ts (- (get-universal-time) 500)))
+        (is (equalp oid (%decode-oid
+                         oid-str
+                         :ts (format nil "~a" ts)
+                         :signature (%sign-oid oid-str :ts ts))))))))
