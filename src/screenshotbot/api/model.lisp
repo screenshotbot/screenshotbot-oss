@@ -398,6 +398,7 @@ information on runs.")
            :json-type (or null :string)
            :documentation "The author of this run. This is used when implementing policies around reviews.")
    (metadata :initarg :metadata
+             :initform nil
              :reader run-metadata
              :json-key "metadata"
              :json-type (:list :string)
