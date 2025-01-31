@@ -435,6 +435,43 @@
                             (make-array 500 :element-type 'character
                                             :initial-element #\a)))))))
 
+(test validate-metadata-too-long
+  (with-fixture state ()
+    (finishes
+      (validate-dto (make-instance 'dto:run
+                                   :metadata nil)))
+    (finishes
+      (validate-dto (make-instance 'dto:run
+                                   :metadata (list
+                                              (make-instance 'dto:metadata
+                                                             :key "foo"
+                                                             :value "bar")))))
+    (signals validation-error
+      (validate-dto (make-instance
+                     'dto:run
+                     :metadata (list
+                                (make-instance 'dto:metadata
+                                               :key (make-long-string :length 500)
+                                               :value "foo")))))
+    (signals validation-error
+      (validate-dto (make-instance
+                     'dto:run
+                     :metadata (list
+                                (make-instance 'dto:metadata
+                                               :key "foo"
+                                               :value (make-long-string :length 10500))))))))
+
+(test too-many-metadata
+  (with-fixture state ()
+    (signals validation-error
+      (validate-dto (make-instance
+                     'dto:run
+                     :metadata (loop for i from 1 to 100
+                                     collect
+                                     (make-instance 'dto:metadata
+                                                    :key "foo"
+                                                    :value "value")))))))
+
 (test if-a-shard-spec-is-present-we-dont-create-a-run-immediately
   (with-fixture state ()
     (assert company)
