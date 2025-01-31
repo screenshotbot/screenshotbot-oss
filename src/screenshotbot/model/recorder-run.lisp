@@ -129,7 +129,8 @@
    #:shard-number
    #:shard-count
    #:shard-screenshots
-   #:shard-key)
+   #:shard-key
+   #:recorder-run-metadata)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -339,11 +340,15 @@ associated report is rendered.")
                       :documentation "Whether this was ever set as an active run for the run's channel,branch.")
      (%author :initarg :author
               :reader recorder-run-author
-              :documentation "The author, or owner of this run. This will be used for logic to ensure that authors cannot review their own runs. See T1056."))
+              :documentation "The author, or owner of this run. This will be used for logic to ensure that authors cannot review their own runs. See T1056.")
+     (%metadata :initarg :metadata
+                :reader recorder-run-metadata
+                :documentation "An alist of metadata. The keys and values are both strings."))
     (:metaclass has-created-at)
     (:default-initargs :screenshot-map (error "need screenshot-map")
                        :compare-tolerance nil
                        :author nil
+                       :metadata nil
                        :tags nil
                        :was-promoted-p nil)))
 

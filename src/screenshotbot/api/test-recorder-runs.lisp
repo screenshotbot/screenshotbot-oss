@@ -54,6 +54,7 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-metadata
                 #:shard
                 #:trunkp
                 #:recorder-run-batch
@@ -339,6 +340,28 @@
                 :api-key api-key))
     (assert-that (class-instances 'recorder-run)
                  (has-length 1))))
+
+(test metadata-is-saved
+  (with-fixture state ()
+    (finishes
+      (%put-run company
+                (make-instance 'dto:run
+                               :channel "foo"
+                               :commit-hash "deadbeef"
+                               :metadata (list
+                                          (make-instance 'dto:metadata
+                                                         :key "foo"
+                                                         :value "bar"))
+                               :screenshots (list
+                                            (make-instance 'dto:screenshot
+                                                           :name "foo"
+                                                           :image-id (oid img1))))
+                :api-key api-key))
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 1))
+    (let ((run (first (class-instances 'recorder-run))))
+      (is (equal (recorder-run-metadata run)
+                 '(("foo" . "bar")))))))
 
 
 (test batch-is-added

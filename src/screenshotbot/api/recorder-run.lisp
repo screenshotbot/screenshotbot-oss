@@ -442,6 +442,11 @@
 (defun shard-complete-p (channel shard-key)
   (nth-value 1 (build-shard-screenshots channel shard-key)))
 
+(defun parse-metadata (metadata-list)
+  (loop for metadata in metadata-list
+        collect (cons (dto:metadata-key metadata)
+                      (dto:metadata-value metadata))))
+
 (defun %put-run-helper (run &key
                               (company (error "provide :company"))
                               (channel (error "provide :channel"))
@@ -455,6 +460,7 @@ computed differently if we're using sharding."
                         :channel channel
                         :batch batch
                         :screenshots screenshots
+                        :metadata (parse-metadata (dto:run-metadata run))
                         :commit-hash (dto:run-commit run)
                         :author (dto:run-author run)
                         :create-github-issue-p (dto:should-create-github-issue-p run)
