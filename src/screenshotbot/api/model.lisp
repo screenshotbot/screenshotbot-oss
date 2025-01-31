@@ -72,12 +72,16 @@
              #:image-upload-response
              #:image-md5sum
              #:image-upload-url
-             #:image-id))
+             #:image-id
+             #:metadata
+             #:run-metadata
+             #:metadata-key
+             #:metadata-value))
 
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 15)
+(defparameter *api-version* 16)
 
 (defclass version ()
   ((version :initarg :version
@@ -289,6 +293,19 @@ the shards. For instance this might be the CircleCI root build id.")
 shard.")
   (:metaclass ext-json-serializable-class))
 
+(defclass metadata ()
+  ((key :initarg :key
+        :reader metadata-key
+        :json-type :string
+        :json-key "key")
+   (value :initarg :value
+          :reader metadata-value
+          :json-type :string
+          :json-key "value"))
+  (:documentation "An aribtrary key-value pair, typically used for storing debugging
+information on runs.")
+  (:metaclass ext-json-serializable-class))
+
 (defclass run (abstract-run-dto)
   ((id :initarg :id
        :json-key "id"
@@ -380,6 +397,12 @@ shard.")
            :initform nil
            :json-type (or null :string)
            :documentation "The author of this run. This is used when implementing policies around reviews.")
+   (metadata :initarg :metadata
+             :reader run-metadata
+             :json-key "metadata"
+             :json-type (:list :string)
+             :documentation "A list of metadata elements. This information will typically not affect
+runs, but only for debugging.")
    (shard-spec :initarg :shard-spec
                :reader shard-spec
                :json-key "shard"

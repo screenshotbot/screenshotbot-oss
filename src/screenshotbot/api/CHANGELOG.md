@@ -1,6 +1,7 @@
 
 Version
 
+* 16: Added metadata and run-metadata.
 * 15: shard-spec was added to the API
 * 14: When an API request fails, we set error code to 400 or 500
   (Previously, we would return 200 with a JSON body).
