@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/run-context
+                #:run-context-metadata
                 #:parse-shard-spec
                 #:with-flags-from-run-context
                 #:flags-run-context
@@ -22,6 +23,12 @@
                 #:make-env-reader)
   (:import-from #:cl-mock
                 #:if-called)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
                     (#:git #:screenshotbot/sdk/git)
                     (#:dto #:screenshotbot/api/model)
@@ -161,3 +168,30 @@
       (is (equal "foo" (dto:shard-spec-key spec)))
       (is (equal 1 (dto:shard-spec-number spec)))
       (is (equal 3 (dto:shard-spec-count spec))))))
+
+(test metadata-happy-path
+  (with-fixture state ()
+    (let* ((run-context (make-instance 'test-run-context))
+           (metadata (run-context-metadata run-context)))
+      #-windows
+      (assert-that
+       metadata
+       (has-length 1))
+      #+linux
+      (assert-that
+       (dto:metadata-value (first metadata))
+       (contains-string "Linux"))
+      #+darwin
+      (assert-that
+       (dto:metadata-value (first metadata))
+       (contains-string "Darwin")))))
+
+(test uname-should-not-crash
+  (with-fixture state ()
+    (let ((run-context (make-instance 'test-run-context)))
+      (if-called 'uiop:run-program
+                 (lambda (&rest args)
+                   (error "uname crashed!")))
+      (assert-that
+       (run-context-metadata run-context)
+       (has-length 1)))))

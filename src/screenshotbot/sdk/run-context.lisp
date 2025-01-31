@@ -108,6 +108,10 @@
                :initform nil
                :reader shard-spec
                :documentation "A dto:shard-spec object indicating the shard")
+   (metadata :initarg :metadata
+             :initform nil
+             :reader run-context-metadata
+             :documentation "A list of dto:metadata objects")
    (tags :initarg :tags
          :initform nil
          :reader tags)))
@@ -148,6 +152,20 @@
   (or
    (call-next-method)
    (e:work-branch (env self))))
+
+(defmethod run-context-metadata :around ((self env-reader-run-context))
+  (append
+   (call-next-method)
+   (list
+    #+ (or linux darwin)
+    (make-instance 'dto:metadata
+                   :key "uname"
+                   :value
+                   (or
+                    (ignore-errors
+                     (uiop:run-program (list "uname" "-a")
+                                       :output 'string))
+                    "uname failed")))))
 
 (define-condition invalid-pull-request (condition)
   ())
