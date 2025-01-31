@@ -401,7 +401,7 @@ information on runs.")
              :initform nil
              :reader run-metadata
              :json-key "metadata"
-             :json-type (:list :string)
+             :json-type (:list metadata)
              :documentation "A list of metadata elements. This information will typically not affect
 runs, but only for debugging.")
    (shard-spec :initarg :shard-spec

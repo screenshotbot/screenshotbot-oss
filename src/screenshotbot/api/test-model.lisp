@@ -108,6 +108,22 @@
         (with-output-to-string (out)
           (yason:encode run out)))))
 
+(test can-encode-run-metadata
+  (let ((Run (make-instance 'dto:run
+                            :metadata (list
+                                       (make-instance 'dto:metadata
+                                                      :key "foo"
+                                                      :value "bar")))))
+    (finishes
+      (with-output-to-string (out)
+        (yason:encode run out))))
+
+    (let ((run (make-instance 'dto:run
+                            :metadata nil)))
+      (finishes
+        (with-output-to-string (out)
+          (yason:encode run out)))))
+
 (test run-author-is-nil-if-not-bound
   (let ((run (decode-json "{\"batch\": \"foo\"} "
                           'dto:run)))
