@@ -301,7 +301,6 @@ error."
                     (github-repo nil has-github-repo-p)
                     periodic-job-p
                     create-github-issue
-                    (metadata-provider  (make-instance 'metadata-provider))
                     is-trunk)
    (loop for screenshot in screenshots
          ;; We expect it to be a dto:screenshot with name and image-id
@@ -415,9 +414,6 @@ error."
 
 (defclass basic-directory-run ()
   ((directory :initarg :directory)))
-
-(defclass metadata-provider ()
-  ())
 
 (defmethod make-directory-run (api-context dir &rest args)
   (log:debug "Reading images from ~a" dir)
