@@ -42,7 +42,8 @@
    #:tags
    #:author
    #:default-flags-run-context
-   #:shard-spec)
+   #:shard-spec
+   #:run-context-metadata)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:e #:screenshotbot/sdk/env)
                     (#:dto #:screenshotbot/api/model)                    
