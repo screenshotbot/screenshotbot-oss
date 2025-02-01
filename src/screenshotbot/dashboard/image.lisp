@@ -327,10 +327,13 @@ right region within that.
             (log:info "Renaming ~a to ~a" old new)
             (rename-file old new)))))))
 
+(defun quantized-timestamp (ts)
+  (- ts (mod ts (/ *signature-expiry* 2))))
+
 (defmethod image-public-url ((image abstract-image) &key size type originalp)
   (let* ((oid (oid image))
          (ts (get-universal-time))
-         (ts (- ts (mod ts (/ *signature-expiry* 2))))
+         (ts (quantized-timestamp ts))
          (signature (%sign-oid oid :ts ts)))
     (let ((url
             (let ((args nil))

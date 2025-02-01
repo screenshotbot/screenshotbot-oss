@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/image
+                #:*signature-expiry*
+                #:quantized-timestamp
                 #:%sign-oid
                 #:%decode-oid
                 #:with-cropped-and-resized
@@ -194,3 +196,8 @@
     (assert-that (image-public-url im :originalp t)
                  (matches-regex "/image/original/.*\\.png"))))
 
+(test quantized-timestamp
+  (let ((*signature-expiry* 100))
+    (is (eql 400 (quantized-timestamp 420)))
+    (is (eql 400 (quantized-timestamp 400)))
+    (is (eql 450 (quantized-timestamp 470)))))
