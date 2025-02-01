@@ -706,6 +706,9 @@ company as a way of deleting."
             (bknr.datastore:class-instances 'recorder-run)
             slot)))
 
+(def-store-migration ("Add new slot for metadata" :version 28)
+  (ensure-slot-boundp 'recorder-run '%metadata))
+
 (defun push-run-warning (run type &rest args)
   "Create a run warning of type TYPE with args ARGS, and push it to the
 list of warnings for RUN."
