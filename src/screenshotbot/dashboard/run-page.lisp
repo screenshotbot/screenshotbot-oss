@@ -344,7 +344,24 @@
     </a>
             </li>
           </ul>
-        </div>
+
+
+          ,(when (recorder-run-metadata run)
+             <div>
+               <h4 class= "card-title">
+                 Machine Metadata
+               </h4>
+               <p class= "text-muted">
+                 Device information can be useful to for debugging rendering flakiness.
+               </p>
+               <table class= "table border" >
+                 <tbody>
+                   ,@ (loop for (key . value) in (recorder-run-metadata run)
+                            collect <tr><td><tt>,(progn key)</tt></td><td><tt>,(progn value)</tt></td></tr>)
+                 </tbody>
+               </table>
+             </div>)
+    </div>
 
     <div class="card-footer">
       <form>
