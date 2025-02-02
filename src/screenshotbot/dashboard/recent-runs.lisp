@@ -130,6 +130,7 @@
                                   (check-access-p t)
                                   (script-name (hunchentoot:script-name*))
                                   (company (current-company)))
+  (declare (ignore script-name))
   (with-pagination (runs runs :next-link next-link
                               :prev-link prev-link)
     (when check-access-p
@@ -139,13 +140,25 @@
      :title "Screenshotbot: Runs"
      :company company
      :script-name "/runs"
-     (taskie-page-title :title title
-                        (ui/a :id "delete-runs" :btn :danger
-                              :class "btn-sm"
-                              "Delete Selected")
-                        (ui/a :id "compare-runs" :btn :success
-                              :class "btn-sm ms-1"
-                              "Compare"))
+     <taskie-page-title title=title >
+       <a id= "delete-runs" class= "btn btn-sm btn-danger" >
+         Delete Selected
+       </a>
+       <div class= "dropdown ms-1">
+         <button class="btn btn-sm btn-success dropdown-toggle" type="button" id="compare" data-bs-toggle="dropdown" aria-expanded="false">
+           Compare
+         </button>
+
+         <ul class= "dropdown-menu" aria-labbelledby= "compareDropdown">
+           <li>
+             <a id= "compare-runs" class= "dropdown-item" >
+               Compare selected
+             </a>
+           </li>
+         </ul>
+
+       </div>
+     </taskie-page-title>
 
      (taskie-list :empty-message "No recent runs to show. But that's okay, it's easy to get started!"
                   :items runs
