@@ -13,16 +13,16 @@
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
   (:import-from #:nibble
-                #:nibble))
+                #:nibble)
+  (:import-from #:util/form-errors
+                #:with-error-builder))
 (in-package :screenshotbot/dashboard/compare-branches)
 
 (named-readtables:in-readtable markup:syntax)
 
-(defhandler (nil :uri "/compare-branches") ()
-  (assert (gk:check :compare-branches (auth:current-company)))
+(defun %form ()
   (let ((action (nibble (sha1 sha2)
-                  (declare (ignore sha1 sha2))
-                  (error "unimpl"))))
+                  (%post :sha1 sha1 :sha2 sha2))))
     <simple-card-page form-action=action >
       <div class= "card-header">
         <h4>Compare branches or commits</h4>
@@ -49,4 +49,21 @@
       </div>
     </simple-card-page>))
 
+(defhandler (nil :uri "/compare-branches") ()
+  (assert (gk:check :compare-branches (auth:current-company)))
+  (%form))
 
+(defun %post (&key sha1 sha2)
+  (with-error-builder (:check check
+                       :errors errors
+                       :form-builder (%form)
+                       :form-args (:sha1 sha1
+                                   :sha2 sha2)
+                       :success (%perform :sha1 sha1 :sha2 sha2))
+    (check :sha1 (> (length sha1) 0)
+           "Commit SHA should not be empty")
+    (check :sha2 (> (length sha2) 0)
+           "Commit SHA should not be empty")))
+
+(defun %perform (&key sha1 sha2)
+  (error "perform unimpl"))
