@@ -155,6 +155,13 @@
                Compare selected
              </a>
            </li>
+
+           ,(when (gk:check :compare-branches (auth:current-company))
+              <li>
+                <a class= "dropdown-item" href= "/compare-branches" >
+                  Compare branches
+                </a>
+              </li>)
          </ul>
 
        </div>

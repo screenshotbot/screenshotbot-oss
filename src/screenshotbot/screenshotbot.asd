@@ -175,6 +175,7 @@
                  (:file "run-page")
                  (:file "image")
                  (:file "compare")
+                 (:file "compare-branches")
                  (:file "notes")
                  (:file "recent-runs")
                  (:file "notices")
