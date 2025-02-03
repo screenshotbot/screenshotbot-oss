@@ -15,7 +15,19 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:util/form-errors
-                #:with-error-builder))
+                #:with-error-builder)
+  (:import-from #:screenshotbot/user-api
+                #:channel-name
+                #:recorder-run-channel
+                #:recorder-run-commit)
+  (:import-from #:screenshotbot/model/run-commit-lookup
+                #:find-runs-by-commit)
+  (:import-from #:screenshotbot/diff-report
+                #:diff-report-run
+                #:diff-report-empty-p
+                #:make-diff-report)
+  (:import-from #:util/store/object-id
+                #:oid))
 (in-package :screenshotbot/dashboard/compare-branches)
 
 (named-readtables:in-readtable markup:syntax)
@@ -63,7 +75,52 @@
     (check :sha1 (> (length sha1) 0)
            "Commit SHA should not be empty")
     (check :sha2 (> (length sha2) 0)
-           "Commit SHA should not be empty")))
+           "Commit SHA should not be empty")
+    (check :sha2 (not (equal sha1 sha2))
+           "The SHAs shouldn't be the same")))
+
+(defun remove-dup-runs (runs)
+  (remove-duplicates runs
+                     :key #'recorder-run-channel))
+
+(defun find-run (runs channel)
+  (find channel runs :key #'recorder-run-channel))
+
+(defun diff-report-channel (diff-report)
+  (recorder-run-channel (diff-report-run diff-report)))
 
 (defun %perform (&key sha1 sha2)
-  (error "perform unimpl"))
+  (let* ((runs1 (remove-dup-runs (find-runs-by-commit sha1)))
+         (runs2 (remove-dup-runs (find-runs-by-commit sha2)))
+         (channels1 (mapcar #'recorder-run-channel runs1))
+         (channels2 (mapcar #'recorder-run-channel runs2))
+         (common-channels (intersection channels1 channels2))
+         (added (set-difference channels1 channels2))
+         (removed (set-difference channels2 channels1))
+         (diff-reports (loop for channel in common-channels
+                             collect
+                             (make-diff-report
+                              (find-run runs1 channel)
+                              (find-run runs2 channel))))
+         (changed-diff-reports (remove-if #'diff-report-empty-p diff-reports))
+         (unchanged-diff-reports (remove-if-not #'diff-report-empty-p diff-reports)))
+    (declare (ignore unchanged-diff-reports
+                     added
+                     removed))
+    (flet ((list-channels (channels)
+             <table class= "table" >
+               ,@ (loop for channel in channels
+                        for href = (format nil "/runs/~a/compare/~a"
+                                           (oid (find-run runs1 channel))
+                                           (oid (find-run runs2 channel)))
+                        collect
+                        <tr>
+                          <td>
+                            <a href= href >,(channel-name channel)</a>
+                          </td>
+                        </tr>)
+             </table>))
+      <app-template>
+        <h4>Changed channels</h4>
+        ,(list-channels (mapcar #'diff-report-channel changed-diff-reports))
+      </app-template>)))
