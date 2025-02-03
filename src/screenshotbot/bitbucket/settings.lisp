@@ -280,10 +280,12 @@
 
 #-screenshotbot-oss
 (def-health-check production-bitbucket-api-key ()
-  (when-let* ((company (company-with-name "Modern Interpreters"))
-              (token (car (bitbucket-settings-for-company company))))
-    (let ((access-token (get-access-token-from-refresh-token
-                         company
-                         (refresh-token token))))
-      (assert (stringp access-token))
-      (assert (> (length access-token) 1)))))
+  #+bknr.cluster
+  (when (bknr.cluster:leaderp bknr.datastore:*store*)
+    (when-let* ((company (company-with-name "Modern Interpreters"))
+                (token (car (bitbucket-settings-for-company company))))
+      (let ((access-token (get-access-token-from-refresh-token
+                           company
+                           (refresh-token token))))
+        (assert (stringp access-token))
+        (assert (> (length access-token) 1))))))
