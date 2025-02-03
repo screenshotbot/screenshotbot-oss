@@ -23,6 +23,7 @@
   (:import-from #:screenshotbot/model/run-commit-lookup
                 #:find-runs-by-commit)
   (:import-from #:screenshotbot/diff-report
+                #:diff-report-title
                 #:diff-report-run
                 #:diff-report-empty-p
                 #:make-diff-report)
@@ -107,9 +108,10 @@
     (declare (ignore unchanged-diff-reports
                      added
                      removed))
-    (flet ((list-channels (channels)
-             <table class= "table" >
-               ,@ (loop for channel in channels
+    (flet ((list-channels (diff-reports)
+             <table class= "table border table-striped table-hover" >
+               ,@ (loop for diff-report in diff-reports
+                        for channel = (diff-report-channel diff-report)
                         for href = (format nil "/runs/~a/compare/~a"
                                            (oid (find-run runs1 channel))
                                            (oid (find-run runs2 channel)))
@@ -118,9 +120,12 @@
                           <td>
                             <a href= href >,(channel-name channel)</a>
                           </td>
+                          <td>
+                            ,(diff-report-title diff-report)
+                          </td>
                         </tr>)
              </table>))
       <app-template>
-        <h4>Changed channels</h4>
-        ,(list-channels (mapcar #'diff-report-channel changed-diff-reports))
+        <h4 class= "mt-2 mb-2" >Changed channels</h4>
+        ,(list-channels changed-diff-reports)
       </app-template>)))
