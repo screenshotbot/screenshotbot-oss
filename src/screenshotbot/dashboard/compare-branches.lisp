@@ -66,6 +66,11 @@
   (assert (gk:check :compare-branches (auth:current-company)))
   (%form))
 
+(defun resolve-commits (company prefix)
+  (fset:convert 'fset:set
+                (mapcar #'recorder-run-commit
+                        (find-runs-by-commit prefix :company company))))
+
 (defun %post (&key sha1 sha2)
   (with-error-builder (:check check
                        :errors errors
@@ -73,12 +78,29 @@
                        :form-args (:sha1 sha1
                                    :sha2 sha2)
                        :success (%perform :sha1 sha1 :sha2 sha2))
-    (check :sha1 (> (length sha1) 0)
-           "Commit SHA should not be empty")
-    (check :sha2 (> (length sha2) 0)
-           "Commit SHA should not be empty")
-    (check :sha2 (not (equal sha1 sha2))
-           "The SHAs shouldn't be the same")))
+    (macrolet ((both-check (expr message)
+                 "Simple macro to run a check on both sha1 and sha2. Use SHA in the
+                  expression instead of SHA1/SHA2"
+                 `(progn
+                    ,@(loop for key in '(sha1 sha2)
+                            collect
+                            `(check ,(intern (string key) :keyword)
+                                    (let ((sha ,key))
+                                      ,expr)
+                                    ,message)))
+                 ))
+      (both-check (> (length sha) 0)
+                  "Commit SHA should not be empty")
+      (unless errors
+        (both-check (<= (fset:size (resolve-commits (auth:current-company) sha)) 1)
+                    "Prefix does not uniquely resolve to a commit"))
+      (unless errors
+        (both-check (eql (fset:size (resolve-commits (auth:current-company) sha)) 1)
+                    "Could not find a commit with that prefix")))
+    
+    (unless errors
+      (check :sha2 (not (equal sha1 sha2))
+             "The SHAs shouldn't be the same"))))
 
 (defun remove-dup-runs (runs)
   (remove-duplicates runs
