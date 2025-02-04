@@ -85,7 +85,10 @@
                      :key #'recorder-run-channel))
 
 (defun find-run (runs channel)
-  (find channel runs :key #'recorder-run-channel))
+  (let ((run (find channel runs :key #'recorder-run-channel)))
+    (when run
+      (auth:can-view! run))
+    run))
 
 (defun diff-report-channel (diff-report)
   (recorder-run-channel (diff-report-run diff-report)))
