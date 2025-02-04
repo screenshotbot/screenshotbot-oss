@@ -13,14 +13,22 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run)
   (:import-from #:screenshotbot/user-api
-                #:recorder-run-commit))
+                #:recorder-run-commit)
+  (:import-from #:util/misc
+                #:or-setf))
 (in-package :screenshotbot/model/run-commit-lookup)
 
+(defvar *cache* (make-hash-table :test #'equal
+                                 #+lispworks #+lispworks
+                                 :weak-kind :key))
+
 (defun find-runs-by-commit (commit &key)
-  (let ((runs (bknr.datastore:class-instances 'recorder-run)))
-    (loop for run in runs
-          if (str:starts-with-p commit (recorder-run-commit run))
-            collect run)))
+  (or-setf
+   (gethash commit *cache*)
+   (let ((runs (bknr.datastore:class-instances 'recorder-run)))
+     (loop for run in runs
+           if (str:starts-with-p commit (recorder-run-commit run))
+             collect run))))
 
 
 

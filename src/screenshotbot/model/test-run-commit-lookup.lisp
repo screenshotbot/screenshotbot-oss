@@ -14,6 +14,7 @@
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
   (:import-from #:screenshotbot/model/run-commit-lookup
+                #:*cache*
                 #:find-runs-by-commit)
   (:import-from #:fiveam-matchers/lists
                 #:contains-in-any-order
@@ -24,6 +25,7 @@
 
 (def-fixture state ()
   (with-test-store ()
+    (clrhash *cache*)
     (let ((run1 (make-recorder-run
                  :screenshots nil
                  :commit-hash "abcd1234"))
@@ -40,3 +42,10 @@
                  (contains-in-any-order run1 run2))
     (assert-that (find-runs-by-commit "abef")
                  (contains))))
+
+(test caching
+  (with-fixture state ()
+    (let ((key "abcd"))
+      (is (eql
+           (find-runs-by-commit key)
+           (find-runs-by-commit key))))))
