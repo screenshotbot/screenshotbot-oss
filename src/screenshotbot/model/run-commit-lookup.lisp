@@ -23,21 +23,20 @@
                                  #+lispworks #+lispworks
                                  :weak-kind :key))
 
-(defun find-runs-by-commit (commit &key (company nil company-provided-p))
-  "Find runs for a given commit prefix. If company is provided, then we
-only search runs for the given company, otherwise we search all runs
-globally.
+(defun find-runs-by-commit (commit &key (company (error "must provide company (or :all)")))
+  "Find runs for a given commit prefix and given company.
 
-TODO: we might want to make the global runs more explicit, like :all,
-since it's only used for the admin panel."
+To search for all companies (i.e. only for internal dashboards),
+provide a :company of :all.
+"
   (or-setf
-   (gethash (list commit company-provided-p company) *cache*)
+   (gethash (list commit company) *cache*)
    (let ((runs (cond
-                 (company-provided-p
+                 ((eql :all company)
+                  (bknr.datastore:class-instances 'recorder-run))
+                 (company
                   (fset:convert 'list
-                                (runs-for-company company)))
-                 (t
-                  (bknr.datastore:class-instances 'recorder-run)))))
+                                (runs-for-company company))))))
      (loop for run in runs
            if (str:starts-with-p commit (recorder-run-commit run))
              collect run))))

@@ -39,19 +39,19 @@
 
 (test simple-lookup
   (with-fixture state ()
-    (assert-that (find-runs-by-commit "abcd")
+    (assert-that (find-runs-by-commit "abcd" :company :all)
                  (contains run1))
-    (assert-that (find-runs-by-commit "ab")
+    (assert-that (find-runs-by-commit "ab" :company :all)
                  (contains-in-any-order run1 run2))
-    (assert-that (find-runs-by-commit "abef")
+    (assert-that (find-runs-by-commit "abef" :company :all)
                  (contains))))
 
 (test caching
   (with-fixture state ()
     (let ((key "abcd"))
       (is (eql
-           (find-runs-by-commit key)
-           (find-runs-by-commit key))))))
+           (find-runs-by-commit key :company :all)
+           (find-runs-by-commit key :company :all))))))
 
 (test lookup-by-company-being-nil
   (with-fixture state ()
@@ -66,5 +66,5 @@
                  :commit-hash "abcd1234")))
       (assert-that (find-runs-by-commit "abcd" :company company)
                    (contains run3))
-      (assert-that (find-runs-by-commit "abcd")
+      (assert-that (find-runs-by-commit "abcd" :company :all)
                    (contains-in-any-order run1 run3)))))
