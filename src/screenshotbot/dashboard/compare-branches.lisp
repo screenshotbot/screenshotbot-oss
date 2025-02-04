@@ -96,7 +96,11 @@
                     "Prefix does not uniquely resolve to a commit"))
       (unless errors
         (both-check (eql (fset:size (resolve-commits (auth:current-company) sha)) 1)
-                    "Could not find a commit with that prefix")))
+                    "Could not find a commit with that prefix"))
+      (unless errors
+        (both-check
+         (< (length (find-runs-by-commit sha :company (auth:current-company))) 1000)
+         "Too many runs for that commit to compare")))
     
     (unless errors
       (check :sha2 (not (equal sha1 sha2))
