@@ -18,7 +18,9 @@
                 #:find-runs-by-commit)
   (:import-from #:fiveam-matchers/lists
                 #:contains-in-any-order
-                #:contains))
+                #:contains)
+  (:import-from #:screenshotbot/model/company
+                #:company))
 (in-package :screenshotbot/model/test-run-commit-lookup)
 
 (util/fiveam:def-suite)
@@ -26,7 +28,8 @@
 (def-fixture state ()
   (with-test-store ()
     (clrhash *cache*)
-    (let ((run1 (make-recorder-run
+    (let ((company (make-instance 'company))
+          (run1 (make-recorder-run
                  :screenshots nil
                  :commit-hash "abcd1234"))
           (run2 (make-recorder-run
@@ -49,3 +52,19 @@
       (is (eql
            (find-runs-by-commit key)
            (find-runs-by-commit key))))))
+
+(test lookup-by-company-being-nil
+  (with-fixture state ()
+   (assert-that (find-runs-by-commit "abcd" :company nil)
+                (contains))))
+
+(test lookup-by-specific-company
+  (with-fixture state ()
+    (let ((run3 (make-recorder-run
+                 :screenshots nil
+                 :company company
+                 :commit-hash "abcd1234")))
+      (assert-that (find-runs-by-commit "abcd" :company company)
+                   (contains run3))
+      (assert-that (find-runs-by-commit "abcd")
+                   (contains-in-any-order run1 run3)))))

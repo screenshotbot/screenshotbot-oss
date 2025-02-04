@@ -94,8 +94,9 @@
   (recorder-run-channel (diff-report-run diff-report)))
 
 (defun %perform (&key sha1 sha2)
-  (let* ((runs1 (remove-dup-runs (find-runs-by-commit sha1)))
-         (runs2 (remove-dup-runs (find-runs-by-commit sha2)))
+  (let* ((company (auth:current-company))
+         (runs1 (remove-dup-runs (find-runs-by-commit sha1 :company company)))
+         (runs2 (remove-dup-runs (find-runs-by-commit sha2 :company company)))
          (channels1 (mapcar #'recorder-run-channel runs1))
          (channels2 (mapcar #'recorder-run-channel runs2))
          (common-channels (intersection channels1 channels2))

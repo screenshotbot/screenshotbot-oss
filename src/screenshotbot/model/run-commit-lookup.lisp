@@ -11,6 +11,7 @@
 (defpackage :screenshotbot/model/run-commit-lookup
   (:use #:cl)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-company
                 #:recorder-run)
   (:import-from #:screenshotbot/user-api
                 #:recorder-run-commit)
@@ -22,10 +23,21 @@
                                  #+lispworks #+lispworks
                                  :weak-kind :key))
 
-(defun find-runs-by-commit (commit &key)
+(defun find-runs-by-commit (commit &key (company nil company-provided-p))
+  "Find runs for a given commit prefix. If company is provided, then we
+only search runs for the given company, otherwise we search all runs
+globally.
+
+TODO: we might want to make the global runs more explicit, like :all,
+since it's only used for the admin panel."
   (or-setf
-   (gethash commit *cache*)
-   (let ((runs (bknr.datastore:class-instances 'recorder-run)))
+   (gethash (list commit company-provided-p company) *cache*)
+   (let ((runs (cond
+                 (company-provided-p
+                  (fset:convert 'list
+                                (runs-for-company company)))
+                 (t
+                  (bknr.datastore:class-instances 'recorder-run)))))
      (loop for run in runs
            if (str:starts-with-p commit (recorder-run-commit run))
              collect run))))
