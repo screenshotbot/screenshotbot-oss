@@ -30,10 +30,16 @@
   (:import-from #:util/store/object-id
                 #:oid)
   (:import-from #:screenshotbot/model/channel
-                #:repos-for-company))
+                #:repos-for-company)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:throttler))
 (in-package :screenshotbot/dashboard/compare-branches)
 
 (named-readtables:in-readtable markup:syntax)
+
+(defvar *throttler* (make-instance 'throttler
+                                   :tokens 100))
 
 (defun %form ()
   (let* ((repos (repos-for-company (auth:current-company)))
@@ -88,6 +94,7 @@
                         (find-runs-by-commit prefix :company company :repo repo))))
 
 (defun %post (&key sha1 sha2 repo)
+  (throttle! *throttler* :key (auth:current-user))
   (with-error-builder (:check check
                        :errors errors
                        :form-builder (%form)
