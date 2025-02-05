@@ -166,7 +166,8 @@
 
 (defmethod channels-for-company (company)
   (loop for channel in (bknr.datastore:class-instances 'channel)
-        if (eql company (company channel))
+        if (eql company (ignore-errors
+                         (company channel)))
           collect channel))
 
 (defmethod print-object ((self channel) stream)

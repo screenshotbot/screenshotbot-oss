@@ -20,7 +20,9 @@
                 #:contains-in-any-order
                 #:contains)
   (:import-from #:screenshotbot/model/company
-                #:company))
+                #:company)
+  (:import-from #:screenshotbot/user-api
+                #:channel))
 (in-package :screenshotbot/model/test-run-commit-lookup)
 
 (util/fiveam:def-suite)
@@ -28,14 +30,18 @@
 (def-fixture state ()
   (with-test-store ()
     (clrhash *cache*)
-    (let ((company (make-instance 'company))
-          (run1 (make-recorder-run
-                 :screenshots nil
-                 :commit-hash "abcd1234"))
-          (run2 (make-recorder-run
-                 :screenshots nil
-                 :commit-hash "ab1234ab")))
-     (&body))))
+    (let* ((company (make-instance 'company))
+           (channel (make-instance 'channel
+                                   :github-repo "foo"))
+           (run1 (make-recorder-run
+                  :screenshots nil
+                  :channel channel
+                  :commit-hash "abcd1234"))
+           (run2 (make-recorder-run
+                  :screenshots nil
+                  :channel channel
+                  :commit-hash "ab1234ab")))
+      (&body))))
 
 (test simple-lookup
   (with-fixture state ()
@@ -55,16 +61,38 @@
 
 (test lookup-by-company-being-nil
   (with-fixture state ()
-   (assert-that (find-runs-by-commit "abcd" :company nil)
-                (contains))))
+    (assert-that (find-runs-by-commit "abcd" :company nil
+                                             :repo "foo")
+                 (contains))))
 
 (test lookup-by-specific-company
   (with-fixture state ()
     (let ((run3 (make-recorder-run
                  :screenshots nil
                  :company company
+                 :channel channel
                  :commit-hash "abcd1234")))
-      (assert-that (find-runs-by-commit "abcd" :company company)
+      (assert-that (find-runs-by-commit "abcd" :company company :repo "foo")
                    (contains run3))
       (assert-that (find-runs-by-commit "abcd" :company :all)
                    (contains-in-any-order run1 run3)))))
+
+(test filters-by-right-channel
+  (with-fixture state ()
+    (let* ((channel-2 (make-instance 'channel
+                                     :github-repo "bar"))
+           (run3 (make-recorder-run
+                  :screenshots nil
+                  :company company
+                  :channel channel
+                  :commit-hash "abcd1234"))
+           (run4 (make-recorder-run
+                  :screenshots nil
+                  :company company
+                  :channel channel-2
+                  :commit-hash "abcd1234")))
+      (assert-that (find-runs-by-commit "abcd" :company company :repo "foo")
+                   (contains run3))
+      (assert-that (find-runs-by-commit "abcd" :company company :repo "bar")
+                   (contains run4)))))
+
