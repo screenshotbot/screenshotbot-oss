@@ -371,6 +371,7 @@
                 :components ((:file "test-recent-runs")
                              (:file "test-ensure-company")
                              (:file "test-review-link")
+                             (:file "test-compare-branches")
                              (:file "test-run-page")
                              (:file "test-compare")
                              (:file "test-reports")
