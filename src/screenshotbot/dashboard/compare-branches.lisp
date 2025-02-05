@@ -71,6 +71,9 @@
                 (mapcar #'recorder-run-commit
                         (find-runs-by-commit prefix :company company))))
 
+(defun company-repos (company)
+  ())
+
 (defun %post (&key sha1 sha2)
   (with-error-builder (:check check
                        :errors errors

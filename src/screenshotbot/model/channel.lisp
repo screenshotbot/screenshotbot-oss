@@ -164,6 +164,11 @@
    (:default-initargs :review-policy :allow-author
                       :allow-public-badge-p nil)))
 
+(defmethod channels-for-company (company)
+  (loop for channel in (bknr.datastore:class-instances 'channel)
+        if (eql company (company channel))
+          collect channel))
+
 (defmethod print-object ((self channel) stream)
   (format stream "#<CHANNEL ~a>" (ignore-errors (channel-name self))))
 
@@ -369,3 +374,11 @@
 
 (defmethod channel-deleted-p ((channel channel))
   (not (company channel)))
+
+(defmethod repos-for-company (company)
+  (let ((channels (channels-for-company company)))
+    (fset:convert
+     'list
+     (fset:convert
+      'fset:set
+      (mapcar #'github-repo channels)))))

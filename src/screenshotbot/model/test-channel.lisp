@@ -12,6 +12,8 @@
         #:screenshotbot/model/company
         #:fiveam)
   (:import-from #:screenshotbot/model/channel
+                #:repos-for-company
+                #:channels-for-company
                 #:review-policy-name
                 #:review-policy
                 #:%review-policy
@@ -29,7 +31,10 @@
                 #:make-recorder-run)
   (:import-from #:screenshotbot/model/review-policy
                 #:disallow-author-review-policy
-                #:anyone-can-review))
+                #:anyone-can-review)
+  (:import-from #:fiveam-matchers/lists
+                #:contains
+                #:contains-in-any-order))
 
 (util/fiveam:def-suite)
 
@@ -139,3 +144,58 @@
     (setf (active-run channel "master") (make-recorder-run :channel channel
                                                            :screenshots nil))
     (is-true (was-promoted-p run))))
+
+(test channels-for-company
+  (with-fixture state ()
+    (let ((channel-1
+            (make-instance 'channel
+                           :company :company-1))
+          (channel-2
+            (make-instance 'channel
+                           :company :company-1))
+          (channel-3
+            (make-instance 'channel
+                           :company :company-3)))
+      (assert-that
+       (channels-for-company :company-1)
+       (contains-in-any-order channel-1 channel-2))
+      (assert-that
+       (channels-for-company :company-3)
+       (contains channel-3)))))
+
+(test repos-for-company
+  (with-fixture state ()
+   (let ((channel-1
+           (make-instance 'channel
+                          :company :company-1
+                          :github-repo "https://github.com/tdrhq/fast-example.git"))
+         (channel-2
+           (make-instance 'channel
+                          :company :company-1
+                          :github-repo "https://gitlab.com/foo/bar.git"))
+         (channel-3
+           (make-instance 'channel
+                          :company :company-3
+                          :github-repo "https://github.com/tdrhq/bleh.git")))
+     (assert-that
+      (repos-for-company :company-1)
+      (contains-in-any-order "https://github.com/tdrhq/fast-example.git"
+                             "https://gitlab.com/foo/bar.git")))))
+
+(test repos-for-company-removes-duplicates
+  (with-fixture state ()
+   (let ((channel-1
+           (make-instance 'channel
+                          :company :company-1
+                          :github-repo "https://github.com/tdrhq/fast-example.git"))
+         (channel-2
+           (make-instance 'channel
+                          :company :company-1
+                          :github-repo "https://github.com/tdrhq/fast-example.git"))
+         (channel-3
+           (make-instance 'channel
+                          :company :company-3
+                          :github-repo "https://github.com/tdrhq/bleh.git")))
+     (assert-that
+      (repos-for-company :company-1)
+      (contains-in-any-order "https://github.com/tdrhq/fast-example.git")))))
