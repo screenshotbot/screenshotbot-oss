@@ -80,6 +80,14 @@
                    :accepted))))))
     actions))
 
+(defun pr-to-actions-to-csv (company output)
+  "Meant to sending over this data manually to customers"
+  (with-open-file (output output :direction :output)
+    (loop for pr being the hash-keys of (pr-to-actions company)
+            using (hash-value state)
+          do
+             (format output "~a,~a~%" pr (string-downcase state)))))
+
 (defun user-reviews-last-30-days (company)
   (let ((result (make-hash-table)))
     (do-run-report (run report company :num-days *num-days*)
