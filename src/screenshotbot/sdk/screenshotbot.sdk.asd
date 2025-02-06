@@ -7,7 +7,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.10.11"
+  :version "2.11.0"
   :depends-on (:com.google.flag
                :pkg
                :quri
@@ -112,6 +112,7 @@
   :components ((:file "integration-fixture")
                (:file "test-bundle")
                (:file "test-backoff")
+               (:file "test-installer")
                (:file "test-unchanged-run")
                (:file "test-clingon-api-context")
                (:file "test-version-check")

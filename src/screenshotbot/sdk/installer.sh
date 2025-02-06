@@ -2,9 +2,12 @@
 
 set +e
 
-OUTPUT=~/screenshotbot
-RECORDER=$OUTPUT/recorder
-mkdir $OUTPUT 2>/dev/null || true
+if [ "$SCREENSHOTBOT_DIR" = "" ] ; then
+    SCREENSHOTBOT_DIR=~/screenshotbot
+fi
+
+RECORDER=$SCREENSHOTBOT_DIR/recorder
+mkdir $SCREENSHOTBOT_DIR 2>/dev/null || true
 rm -f $RECORDER
 cp sdk $RECORDER
 chmod a+x $RECORDER
@@ -15,4 +18,4 @@ if [ -e sdk.lwheap ] ; then
     cp sdk.lwheap $RECORDER.lwheap
 fi
 
-echo "Installed ~/screenshotbot/recorder"
+echo "Installed $RECORDER"
