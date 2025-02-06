@@ -41,11 +41,16 @@
 (defvar *throttler* (make-instance 'throttler
                                    :tokens 100))
 
+(defhandler (nil :uri "/compare-branches/search-sha") ()
+  (json:encode-json-to-string
+   #("foo" "bar")))
+
 (defun %form ()
   (let* ((repos (repos-for-company (auth:current-company)))
          (action (nibble (sha1 sha2 repo-idx)
                   (%post :sha1 sha1 :sha2 sha2
-                         :repo (elt repos (parse-integer repo-idx))))))
+                         :repo (elt repos (parse-integer repo-idx)))))
+         (autocomplete "/compare-branches/search-sha"))
     <simple-card-page form-action=action >
       <div class= "card-header">
         <h4>Compare branches or commits</h4>
@@ -62,19 +67,19 @@
                      collect <option value= idx >,(progn repo)</option>)
           </select>
         </div>
-
         <div class= "mb-2">
           <label for= "sha1" class= "form-label" >
             First SHA/branch
           </label>
-          <input type= "text" class= "form-control" id= "sha1" name= "sha1" placeholder= "abcdef0102" />
+          <input type= "text" class= "form-control sha-autocomplete" id= "sha1" name= "sha1" placeholder= "abcdef0102" data-autocomplete=autocomplete />
         </div>
 
         <div class= "mb-2">
           <label for= "sha2" class= "form-label" >
             Second SHA/branch
           </label>
-          <input type= "text" class= "form-control" id= "sha2" name= "sha2" placeholder= "abcdef0102"/>
+          <input type= "text" class= "form-control sha-autocomplete" id= "sha2" name= "sha2" placeholder= "abcdef0102"
+                 data-autocomplete=autocomplete />
         </div>
 
       </div>

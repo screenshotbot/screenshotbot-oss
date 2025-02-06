@@ -55,6 +55,7 @@
                ("build-utils:js-file" "image-canvas")
                ("build-utils:js-file" "runs")
                ("build-utils:js-file" "mask-editor")
+               ("build-utils:js-file" "compare-branches")
                ("build-utils:js-file" "websocket-logs")
                ("build-utils:js-file" "acceptance")
                ("build-utils:js-file" "git-graph")
