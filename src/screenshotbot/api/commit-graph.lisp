@@ -9,19 +9,22 @@
         #:alexandria
         #:screenshotbot/api/core
         #:screenshotbot/model/commit-graph
-        #:screenshotbot/user-api))
+        #:screenshotbot/user-api)
+  (:import-from #:util/events
+                #:with-tracing))
 (in-package :screenshotbot/api/commit-graph)
 
 (defun %merge-dags (repo-url new-dag)
   (log:info "Updating commit graph for ~S and ~S" (current-company) repo-url)
-  (let* ((commit-graph (find-or-create-commit-graph
-                        (current-company)
-                        repo-url)))
-    (bt:with-recursive-lock-held ((lock commit-graph))
-      (let ((dag (commit-graph-dag commit-graph)))
-         (dag:merge-dag dag new-dag)
-         (setf (commit-graph-dag commit-graph)
-               dag)))))
+  (with-tracing (:merge-dags :repo-url repo-url)
+    (let* ((commit-graph (find-or-create-commit-graph
+                          (current-company)
+                          repo-url)))
+      (bt:with-recursive-lock-held ((lock commit-graph))
+        (let ((dag (commit-graph-dag commit-graph)))
+          (dag:merge-dag dag new-dag)
+          (setf (commit-graph-dag commit-graph)
+                dag))))))
 
 (auto-restart:with-auto-restart ()
  (defun %update-commit-graph-v2 (repo-url graph-json)
