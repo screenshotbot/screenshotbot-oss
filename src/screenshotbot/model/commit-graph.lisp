@@ -7,6 +7,7 @@
 (uiop:define-package :screenshotbot/model/commit-graph
   (:use #:cl #:alexandria)
   (:import-from #:bknr.datastore
+                #:store-object-id
                 #:store-objects-with-class
                 #:blob-pathname
                 #:persistent-class)
@@ -28,6 +29,8 @@
                 #:defindex)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
+  (:import-from #:util/events
+                #:with-tracing)
   (:export
    #:commit-graph
    #:repo-url
@@ -130,13 +133,14 @@ to the same repo, the graph will still be the same."
 
 (defmethod flush-dag ((obj commit-graph))
   (bt:with-recursive-lock-held ((lock obj))
-    (let ((dag (%commit-graph-dag obj)))
-     (with-open-file (s (blob-pathname obj) :if-does-not-exist :create
-                                            :direction :output
-                                            :if-exists :supersede)
-       (dag:write-to-stream dag s)
-       (finish-output s)
-       (log:info "Updated commit graph in ~s" (blob-pathname obj)))))
+    (with-tracing (:flush-dag :id (store-object-id obj))
+      (let ((dag (%commit-graph-dag obj)))
+        (with-open-file (s (blob-pathname obj) :if-does-not-exist :create
+                                               :direction :output
+                                               :if-exists :supersede)
+          (dag:write-to-stream dag s)
+          (finish-output s)
+          (log:info "Updated commit graph in ~s" (blob-pathname obj))))))
   (setf (needs-flush-p obj) nil))
 
 (defun flush-dags ()
