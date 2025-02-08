@@ -229,6 +229,7 @@
   (flush-last-used-cache))
 
 (defun %find-api-key (str)
+  "TODO(T1681): Rename to find-api-key (without prefix)"
   (let ((result (or
                  (cond
                    ((str:starts-with-p "cli-" str)
