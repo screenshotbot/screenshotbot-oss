@@ -109,6 +109,7 @@
    (:file "installation")
    (:file "throttler")
    (:file "server" :depends-on ("analytics"))
+   (:file "debugging")
    (:module "s3"
     :serial t
     :components ((:file "core")

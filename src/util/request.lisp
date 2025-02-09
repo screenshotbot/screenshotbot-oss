@@ -21,6 +21,20 @@
      (str:replace-all "|" "%7C" url))
     (t  url)))
 
+;; NOT BEING USED
+(define-condition request-error (error)
+  ())
+
+;; NOT BEING USED
+(define-condition network-error (request-error)
+  ()
+  (:documentation "Errors that typically correspond to network failures, as opposed to
+server failures."))
+
+;; NOT BEING USED
+(define-condition timeout-error (network-error)
+  ())
+
 
 (def-easy-macro wrap-ssl-errors (&key ensure-success want-stream &fn fn)
   "When calling http-request, most code expects it not crash if the
@@ -162,7 +176,6 @@ use stream pools.")
                                 ;; We're not going to actually return the stream
                                 (when (streamp res)
                                   (close res)))))
-
           (values
            (cond
              (want-string

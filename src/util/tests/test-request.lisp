@@ -134,3 +134,4 @@
   (signals comm:ssl-closed
     (wrap-ssl-errors (:ensure-success t)
       (error 'comm:ssl-closed))))
+

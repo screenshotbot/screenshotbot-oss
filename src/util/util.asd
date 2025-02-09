@@ -392,6 +392,7 @@
                              (:file "test-misc")
                              (:file "test-copy-file")
                              (:file "test-request")
+                             (:file "test-request-integration")
                              (:file "test-timeago")
                              (:file "test-random-port")
                              (:file "test-json-mop")
