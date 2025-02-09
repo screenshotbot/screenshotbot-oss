@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/request
+                #:http-request
                 #:timeout-error))
 (in-package :util/tests/test-request-integration)
 
@@ -42,3 +43,33 @@ expensive.")
          :write-timeout 5
          :connection-timeout 5)
       (Error "here"))))
+
+
+(test timeout-while-sending
+  (with-fixture state ()
+    (let ((res (http-request
+                "https://staging.screenshotbot.io/test-timeout-while-sending"
+                :read-timeout 5
+                :write-timeout 5
+                :connection-timeout 5)))
+      (is (equal "arnoldfoobar" res)))))
+
+(defvar +crlf+
+  (format nil "~a~a" #\Return #\Linefeed))
+
+#+lispworks
+(test manual-test-for-lispworks-reproduction
+  (with-fixture state ()
+    (let ((stream (comm:open-tcp-stream "staging.screenshotbot.io" 443 :ssl-ctx t
+                                                                       :direction :io
+                                                                       :read-timeout 5)))
+      (format stream "GET /test-timeout-while-sending HTTP/1.1")
+      (format stream +crlf+)
+      (format stream "Host: staging.screenshotbot.io")
+      (format stream +crlf+)
+      (format stream +crlf+)
+      (force-output stream)
+      (let ((lines 
+              (loop for line = (read-line stream nil)
+                    while line
+                    collect line)))))))

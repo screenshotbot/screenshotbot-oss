@@ -10,10 +10,21 @@
                 #:defhandler))
 (in-package :screenshotbot/debugging)
 
+(defun enabledp ()
+  (equal "thecharmer" (uiop:hostname)))
+
 (defhandler (nil :uri "/test-timeout") ()
   "For testing timeout handling from the SDK"
-  (when (equal "thecharmer" (uiop:hostname))
+  (when (enabledp)
     (sleep 120)))
 
-
+(defhandler (nil :uri "/test-timeout-while-sending") ()
+  "What happens if we timeout half-way through? Can we detect it?"
+  (when (enabledp)
+    (let ((stream (hunchentoot:send-headers)))
+      (write-string "arnold" stream)
+      (force-output stream)
+      (sleep 30)
+      (write-string "foobar" stream)
+      (close stream))))
 
