@@ -43,15 +43,29 @@ since the logs might be different for each code."
          :done)))))
 
 (test if-weve-attempted-enough-times-crash-for-service-unavailable
-  (signals server-unavailable
-    (restart-case
-        (maybe-retry-request
-         502
-         :attempt 5
-         :backoff 0
-         :restart 'foobar)
-      (foobar ()
-        :done))))
+  (dolist (code '(408 502))
+   (signals server-unavailable
+     (restart-case
+         (maybe-retry-request
+          code
+          :attempt 5
+          :backoff 0
+          :restart 'foobar)
+       (foobar ()
+         :done)))))
+
+(test but-if-ERRORP-is-nil-then-we-dont-propagate
+  (dolist (code '(408 502))
+   (finishes
+     (restart-case
+         (maybe-retry-request
+          408
+          :attempt 5
+          :backoff 0
+          :errorp nil
+          :restart 'foobar)
+       (foobar ()
+         :done)))))
 
 
 

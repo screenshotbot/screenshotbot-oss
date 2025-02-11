@@ -141,26 +141,35 @@
       (warn "auto-retry won't work for stream content"))
 
     (multiple-value-bind (stream response-code)
-        (http-request
-         (format-api-url api-context api)
-         :method method
-         :want-stream t
-         :method method
-         :basic-authorization (when (remote-supports-basic-auth-p api-context)
-                                (%make-basic-auth api-context))
-         :additional-headers `(("X-client-version" . ,*client-version*)
-                               ("X-client-api-version" . ,*api-version*))
-         :content content
-         :external-format-out :utf-8
-         :read-timeout 45
-         :engine (api-context:engine api-context)
-         :parameters (cond
-                       ((remote-supports-basic-auth-p api-context)
-                        parameters)
-                       (t (list*
-                           (cons "api-key" (api-context:key api-context))
-                           (cons "api-secret-key" (api-context:secret api-context))
-                           parameters))))
+        (handler-bind ((error (lambda (e)
+                                (warn "Retrying request because of error, is this a timeout? ~a" e)
+                                (when auto-retry
+                                  (maybe-retry-request
+                                   408 ;; This is most likely the case this low down
+                                   :attempt attempt
+                                   :restart 'retry-%request
+                                   :errorp nil
+                                   :backoff backoff)))))
+          (http-request
+           (format-api-url api-context api)
+           :method method
+           :want-stream t
+           :method method
+           :basic-authorization (when (remote-supports-basic-auth-p api-context)
+                                  (%make-basic-auth api-context))
+           :additional-headers `(("X-client-version" . ,*client-version*)
+                                 ("X-client-api-version" . ,*api-version*))
+           :content content
+           :external-format-out :utf-8
+           :read-timeout 45
+           :engine (api-context:engine api-context)
+           :parameters (cond
+                         ((remote-supports-basic-auth-p api-context)
+                          parameters)
+                         (t (list*
+                             (cons "api-key" (api-context:key api-context))
+                             (cons "api-secret-key" (api-context:secret api-context))
+                             parameters)))))
       (when auto-retry
         (maybe-retry-request
          response-code
