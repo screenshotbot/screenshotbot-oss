@@ -45,6 +45,7 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:screenshotbot/api/promote
+                #:work-branch-matches-p
                 #:with-log-errors
                 #:delegating-promoter)
   (:import-from #:screenshotbot/promote-api
@@ -221,6 +222,21 @@ situation. Can also happen on a developer branch."
       (assert-that (recorder-run-warnings new-master-run)
                    (contains
                     (has-typep 'not-fast-forward-promotion-warning))))))
+
+
+(test work-branch-must-match-master-if-set
+  "T1690"
+  (with-fixture state ()
+    (%maybe-promote-run run1 channel :wait-timeout 0)
+    (let ((run2 (make-run :branch "master"
+                                    :work-branch "foobar"
+                                    :commit-hash "a6"
+                                    :branch-hash "a6")))
+      (%maybe-promote-run run2 channel :wait-timeout 0)
+      (is-false (work-branch-matches-p run2))
+      (assert-that (activep run2)
+                   (described-as "should not have been promoted"
+                     (equal-to nil))))))
 
 (test unrelated-branch-does-not-create-a-loop
   "When promoting unrelated branches, you could sometimes create a loop in

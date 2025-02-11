@@ -35,6 +35,7 @@
   (:import-from #:bknr.datastore
                 #:blob-pathname)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-work-branch
                 #:push-run-warning
                 #:gitlab-merge-request-iid
                 #:unchanged-run
@@ -195,6 +196,14 @@
     (retry ()
       (%channel-publicp channel))))
 
+(defun work-branch-matches-p (run)
+  "If a work branch is present, it must match the main branch identically"
+  (let ((work-branch (recorder-run-work-branch run))
+        (main-branch (recorder-run-branch run)))
+    (or
+     (str:emptyp work-branch)
+     (equal work-branch main-branch))))
+
 (defun maybe-promote-run (run &rest args &key channel
                                            (wait-timeout (if *disable-ancestor-checks-p*
                                                              0
@@ -222,6 +231,10 @@
               ;; invalid pull-request-url being provided because of
               ;; custom CI scripts.
               (log :error "Looks like there's a Pull Request attached, not promoting"))
+             ((not (work-branch-matches-p run))
+              (log :error "Work-branch doesn't match main-branch ~a ~a"
+                   (recorder-run-work-branch run)
+                   (recorder-run-branch run)))
              ((gitlab-merge-request-iid run)
               (log :error "Looks like there's a GitLab Merge Request attached, not promoting"))
              ((periodic-job-p run)
