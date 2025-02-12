@@ -56,7 +56,8 @@
    #:*author*
    #:*merge-base-commit-hash*
    #:*shard*
-   #:*image-file-types*))
+   #:*image-file-types*
+   #:*release-branch-regex*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -125,6 +126,27 @@ By default we don't scan recursively, see the `--recursive` flag for that.")
   :type (or null string)
   :help "Git Branch of the main branch being tracked. We try first
   `main` and then `master`, by checking for origin/<branch-name>")
+
+(define-flag *release-branch-regex*
+  :selector "release-branch-regex"
+  :default-value nil
+  :type (or null string)
+  :help "A release branch is branched off the main branch, but is tracked
+independently with its own notifications. Release branches are treated
+differently than Pull Requests, since authors are not expected to review
+each change. A work-branch that matches this regex is treated as a release branch.
+
+It is safe to use this regex to identify long-running feature branches too.
+
+The regex is matched to the whole branch name, not just partially.
+
+e.g. --release-branch-regex 'release/.*'
+
+or
+
+--release-branch-regex '(release|long-feature)/.*'
+
+")
 
 (define-flag *main-branch-commit-hash*
   :selector "main-branch-commit-hash"

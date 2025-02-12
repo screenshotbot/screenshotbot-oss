@@ -57,6 +57,9 @@
    (main-branch-hash :initarg :main-branch-hash
                      :initform nil
                      :reader main-branch-hash)
+   (release-branch-regex :initarg :release-branch-regex
+                         :initform nil
+                         :reader release-branch-regex)
    (pull-request-url :initarg :pull-request-url
                      :initform nil
                      :reader pull-request-url)
@@ -213,8 +216,20 @@ pull-request looks incorrect."
 
 (defmethod main-branch :around ((self env-reader-run-context))
   (or
+   (when (work-branch-is-release-branch-p self)
+     (work-branch self))
    (call-next-method)
    (guess-master-branch (git-repo self))))
+
+(defmethod work-branch-is-release-branch-p ((self run-context))
+  (unless (str:emptyp (release-branch-regex self))
+    (handler-case
+        (cl-ppcre:parse-string (release-branch-regex self))
+      (cl-ppcre:ppcre-syntax-error (e)
+        (error "Could not parse regex: ~% ~a~%Got error:~% ~a" (release-branch-regex self) e)))
+    (let ((regex (format nil "^~a$" (release-branch-regex self))))
+      (not (null (cl-ppcre:scan regex
+                                (work-branch self)))))))
 
 (defmethod override-commit-hash :around ((self env-reader-run-context))
   (or
@@ -306,6 +321,7 @@ pull-request looks incorrect."
    :channel flags:*channel*
    :merge-base flags:*merge-base-commit-hash*
    :override-commit-hash flags:*override-commit-hash*
+   :release-branch-regex flags:*release-branch-regex*
    :author flags:*author*
    :compare-threshold flags:*compare-threshold*
    :batch flags:*batch*
@@ -336,3 +352,4 @@ pull-request looks incorrect."
         (flags:*batch* (batch self))
         (flags:*shard* (format-shard-spec (shard-spec self))))
     (fn)))
+

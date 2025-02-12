@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/run-context
+                #:work-branch-is-release-branch-p
                 #:run-context-metadata
                 #:parse-shard-spec
                 #:with-flags-from-run-context
@@ -24,10 +25,13 @@
   (:import-from #:cl-mock
                 #:if-called)
   (:import-from #:fiveam-matchers/core
+                #:error-with-string-matching
+                #:signals-error-matching
                 #:assert-that)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/strings
+                #:matches-regex
                 #:contains-string)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
                     (#:git #:screenshotbot/sdk/git)
@@ -195,3 +199,75 @@
       (assert-that
        (run-context-metadata run-context)
        (has-length 1)))))
+
+(test release-branch-regex-should-fix-main-branch
+  (with-fixture state ()
+    (let ((run-context (make-instance 'test-run-context
+                                      :main-branch "foo")))
+      (is (equal "foo" (run-context:main-branch run-context))))
+    (let ((run-context (make-instance 'test-run-context
+                                      :main-branch "foo"
+                                      :work-branch "bar")))
+      (is (equal "foo" (run-context:main-branch run-context))))
+    (let ((run-context (make-instance 'test-run-context
+                                      :main-branch "foo"
+                                      :work-branch "bar"
+                                      :release-branch-regex "b.*")))
+      ;; This behavior will probably change in the future when we have to
+      ;; pass the release-p information to the server instead. (T1667)
+      (is (equal "bar" (run-context:main-branch run-context))))
+
+    (let ((run-context (make-instance 'test-run-context
+                                      :main-branch "foo"
+                                      :work-branch "bar"
+                                      :release-branch-regex "c.*")))
+      ;; This behavior will probably change in the future when we have to
+      ;; pass the release-p information to the server instead. (T1667)
+      (is (equal "foo" (run-context:main-branch run-context))))))
+
+(test work-branch-is-release-branch-p
+  (let ((run-context (make-instance 'test-run-context
+                                    :work-branch "foo"
+                                    :release-branch-regex "b.*")))
+    (is-false (work-branch-is-release-branch-p run-context)))
+  (let ((run-context (make-instance 'test-run-context
+                                    :work-branch "foo"
+                                    :release-branch-regex "f.*")))
+    (is-true (work-branch-is-release-branch-p run-context)))
+  (let ((run-context (make-instance 'test-run-context
+                                    :work-branch "foo"
+                                    :release-branch-regex "")))
+    (is-false (work-branch-is-release-branch-p run-context))))
+
+(test work-branch-is-release-branch-p--matches-full-branch
+  (let ((run-context (make-instance 'test-run-context
+                                    :work-branch "foo"
+                                    :release-branch-regex "o")))
+    (is-false (work-branch-is-release-branch-p run-context))))
+
+(test invalid-regex
+  (let ((run-context (make-instance 'test-run-context
+                                    :work-branch "foo"
+                                    :release-branch-regex "foo(")))
+    (signals-error-matching ()
+       (work-branch-is-release-branch-p run-context)
+       (error-with-string-matching (matches-regex "Could not parse regex")))))
+
+(test regex-with-parenthesis
+  "Keep this test in sync with the documentation for *release-branch-regex*, this is just
+making sure that the doc is giving a good example."
+  (let ((regex "(release|long-feature)/.*"))
+    (let ((run-context (make-instance 'test-run-context
+                                      :work-branch "release/2025-02"
+                                      :release-branch-regex regex)))
+      (is-true (work-branch-is-release-branch-p run-context)))
+    (let ((run-context (make-instance 'test-run-context
+                                      :work-branch "long-feature/big-thing"
+                                      :release-branch-regex regex)))
+      (is-true (work-branch-is-release-branch-p run-context)))
+    (let ((run-context (make-instance 'test-run-context
+                                      :work-branch "main"
+                                      :release-branch-regex regex)))
+      (is-false (work-branch-is-release-branch-p run-context)))))
+
+
