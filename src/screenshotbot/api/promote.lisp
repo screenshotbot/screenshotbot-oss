@@ -315,6 +315,9 @@
             ;; Because of the check on line marked `TAG`, we know run
             ;; is not an ancestor of previous-run. If the other
             ;; direction is also not true, then we apply the warning
+            ;;
+            ;; TODO(T1691) avoid non-fast-forwards if we know we can
+            ;; fast-forward later?
             (cond
               ((and previous-run (not (previous-run-is-ancestor-p)))
                (cond
