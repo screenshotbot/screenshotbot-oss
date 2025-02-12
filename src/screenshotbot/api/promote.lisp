@@ -48,6 +48,10 @@
                 #:maybe-send-tasks)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:util/events
+                #:push-event)
+  (:import-from #:util/store/object-id
+                #:oid)
   (:export
    #:with-promotion-log
    #:default-promoter)
@@ -324,6 +328,7 @@
                (call-finalize))))))))))
 
 (defun add-not-fast-forward-promotion-warning (run)
+  (push-event :not-fast-forward :run (oid run))
   (push-run-warning run
                     'not-fast-forward-promotion-warning))
 
