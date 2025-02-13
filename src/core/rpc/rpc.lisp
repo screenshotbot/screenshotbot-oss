@@ -90,11 +90,15 @@
 
 (defun send-rpc (url rpc &key (read-timeout 600))
   (decode-bknr-object
-   (http-request
-    url
-    :method :post
-    :read-timeout read-timeout
-    :content (encode-bknr-object rpc))))
+   (handler-bind ((drakma::drakma-simple-error
+                    (lambda (e)
+                      (error "RPC request to ~a probably timed out: ~a"
+                             url e))))
+     (http-request
+      url
+      :method :post
+      :read-timeout read-timeout
+      :content (encode-bknr-object rpc)))))
 
 (defun %servers ()
   (typecase bknr.datastore:*store*
