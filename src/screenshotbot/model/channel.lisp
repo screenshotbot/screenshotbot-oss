@@ -118,7 +118,7 @@
                    :initform "master")
     (masks :initform nil
            :reader masks
-           :reader channel-masks
+           :accessor channel-masks
            :documentation "assoc value from screenshot name to list of MASK-RECTs")
     (publicp :initform nil
              :initarg :publicp

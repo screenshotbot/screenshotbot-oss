@@ -394,17 +394,30 @@
          </table>
        </app-template>))))
 
+(defun %delete-mask (channel name)
+  (setf
+   (channel-masks channel)
+   (remove name (channel-masks channel)
+           :test #'equal
+           :key #'car))
+  (hex:safe-redirect (nibble () (view-masks channel))))
+
 (defmethod %edit-masks-for-screenshot (run (name string))
   (let* ((screenshots (recorder-run-screenshots run))
          (channel (recorder-run-channel run))
          (screenshot (loop for screenshot in screenshots
                            if (equal name (screenshot-name screenshot))
-                             return screenshot)))
+                             return screenshot))
+         (delete-action (nibble ()
+                          (%delete-mask channel name))))
 
     (cond
       ((not screenshot)
-       <simple-card-page>
+       <simple-card-page form-action=delete-action >
          <span>This screenshot is no longer active and the mask cannot be edited</span>
+         <div class= "card-footer">
+           <input type= "submit" class= "btn btn-danger" value= "Delete Mask" />
+         </div>
        </simple-card-page>)
       (t
        (mask-editor channel screenshot :redirect (format nil "/channels/~a" (store-object-id channel)))))))
