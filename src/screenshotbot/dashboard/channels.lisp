@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
   (:import-from #:screenshotbot/model/channel
+                #:channel-masks
                 #:allow-public-badge-p
                 #:review-policy-name
                 #:with-channel-lock
@@ -30,6 +31,7 @@
                 #:find-by-oid
                 #:oid)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:mask-editor
                 #:run-page)
   (:import-from #:core/ui/taskie
                 #:taskie-page-title)
@@ -56,6 +58,7 @@
   (:import-from #:util/misc
                 #:make-mp-hash-table)
   (:import-from #:bknr.datastore
+                #:store-object-id
                 #:without-sync
                 #:deftransaction)
   (:import-from #:bknr.datastore
@@ -79,7 +82,9 @@
                 #:mdi)
   (:import-from #:screenshotbot/dashboard/flaky-screenshots
                 #:view-noisy-screenshots
-                #:view-flaky-screenshots))
+                #:view-flaky-screenshots)
+  (:import-from #:util/copying
+                #:copying))
 (in-package :screenshotbot/dashboard/channels)
 
 (named-readtables:in-readtable markup:syntax)
@@ -287,7 +292,14 @@
                      <mdi name= "flaky" />
                      Debug flaky screenshots
                    </a>
-                 </li>                 
+                 </li>
+
+                 <li>
+                   <a href= (nibble () (view-masks channel)) >
+                     <mdi name= "masks" />
+                     View masks
+                   </a>
+                 </li>
                           
               </ul>
             </p>
@@ -347,6 +359,52 @@
       </div>
     </div>
   </app-template>)
+
+(defun view-masks (channel)
+  (let ((run (fset:greatest (runs-for-channel channel))))
+    (cond
+      ((not (channel-masks channel))
+       <simple-card-page>
+         <span>No masks are set for this channel</span>
+       </simple-card-page>)
+      ((not run)
+       <simple-card-page>
+         <span>No runs available for this channel</span>
+       </simple-card-page>)
+      (t
+       <app-template>
+         <h4 class= "mt-3" >All masks for ,(channel-name channel)</h4>
+         <table class= "table table-striped" >
+         ,@ (loop for (name . masks) in (channel-masks channel)
+                  collect
+                  (copying (name)
+                    <tr>
+                      <td>
+                        <div>
+                          <a href= (nibble () (%edit-masks-for-screenshot run name)) >,(progn name)</a>
+                        </div>
+                      </td>
+                      <td>
+                        ,(length masks) masks
+                      </td>
+                    </tr>))
+         </table>
+       </app-template>))))
+
+(defmethod %edit-masks-for-screenshot (run (name string))
+  (let* ((screenshots (recorder-run-screenshots run))
+         (channel (recorder-run-channel run))
+         (screenshot (loop for screenshot in screenshots
+                           if (equal name (screenshot-name screenshot))
+                             return screenshot)))
+
+    (cond
+      ((not screenshot)
+       <simple-card-page>
+         <span>This screenshot is no longer active and the mask cannot be edited</span>
+       </simple-card-page>)
+      (t
+       (mask-editor channel screenshot :redirect (format nil "/channels/~a" (store-object-id channel)))))))
 
 (defun confirm-delete (channel)
   (cond
