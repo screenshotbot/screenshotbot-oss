@@ -434,7 +434,7 @@
     #+linux ;; mostly for the `touch`
     (uiop:with-temporary-file (:stream s :pathname p)
       (uiop:run-program
-       (list "touch" "-d" "2 days ago" (namestring p)))
+       (list "touch" "-d" "3 days ago" (namestring p)))
       (signals not-recent-file-warning
         (warn-if-not-recent-file s)))))
 

@@ -62,6 +62,8 @@
                 #:api-context)
   (:import-from #:screenshotbot/sdk/run-context
                 #:flags-run-context)
+  (:import-from #:util/threading
+                #:with-extras)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model)
                     (#:e #:screenshotbot/sdk/env)
@@ -452,7 +454,7 @@ error."
   (:report
    (lambda (self output)
      (with-slots (file) self
-      (format output "The file ~a is an old file, and might be a stale screenshot from a previous build"
+      (format output "The file ~a is older than 48hrs, and might be a stale screenshot from a previous build"
               file)))))
 
 (defun warn-if-not-recent-file (stream)
@@ -460,8 +462,9 @@ error."
   ;; repro in tests though.
   (when-let ((write-date (file-write-date stream)))
     (when (< write-date
-             (- (get-universal-time) 7200))
-      (warn 'not-recent-file-warning :file (pathname stream)))))
+             (- (get-universal-time) (* 48 3600)))
+      (with-extras (("file-ts" write-date))
+        (warn 'not-recent-file-warning :file (pathname stream))))))
 
 (defmethod find-existing-images (api-context
                                  hashes)
