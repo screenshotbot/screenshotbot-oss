@@ -460,7 +460,10 @@ computed differently if we're using sharding."
                         :channel channel
                         :batch batch
                         :screenshots screenshots
-                        :metadata (parse-metadata (dto:run-metadata run))
+                        :metadata (acons
+                                   "client-version" (when (boundp 'hunchentoot:*request*)
+                                                      (hunchentoot:header-in* :x-client-version))
+                                   (parse-metadata (dto:run-metadata run)))
                         :commit-hash (dto:run-commit run)
                         :author (dto:run-author run)
                         :create-github-issue-p (dto:should-create-github-issue-p run)

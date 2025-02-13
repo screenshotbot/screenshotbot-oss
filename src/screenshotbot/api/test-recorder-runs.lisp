@@ -81,6 +81,7 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/lists
+                #:has-item
                 #:contains)
   (:import-from #:bknr.datastore
                 #:class-instances)
@@ -360,8 +361,9 @@
     (assert-that (class-instances 'recorder-run)
                  (has-length 1))
     (let ((run (first (class-instances 'recorder-run))))
-      (is (equal (recorder-run-metadata run)
-                 '(("foo" . "bar")))))))
+      (assert-that (recorder-run-metadata run)
+                   (has-item 
+                    '("foo" . "bar"))))))
 
 
 (test batch-is-added
