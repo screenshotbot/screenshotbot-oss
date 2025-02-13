@@ -361,9 +361,12 @@
   </app-template>)
 
 (defun view-masks (channel)
-  (let ((run (fset:greatest (runs-for-channel channel))))
+  (let ((run (fset:greatest (runs-for-channel channel)))
+        (mask-map (loop for (name . masks) in (channel-masks channel)
+                        if masks
+                          collect (cons name masks))))
     (cond
-      ((not (channel-masks channel))
+      ((not mask-map)
        <simple-card-page>
          <span>No masks are set for this channel</span>
        </simple-card-page>)
@@ -375,7 +378,7 @@
        <app-template>
          <h4 class= "mt-3" >All masks for ,(channel-name channel)</h4>
          <table class= "table table-striped" >
-         ,@ (loop for (name . masks) in (channel-masks channel)
+         ,@ (loop for (name . masks) in mask-map
                   collect
                   (copying (name)
                     <tr>
