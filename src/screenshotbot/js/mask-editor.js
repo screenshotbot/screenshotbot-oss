@@ -161,21 +161,31 @@ function prepareMaskEditorHelper(img, overlay) {
 
     var getRects = function () {
         var ret = [];
+        getRectObjects().forEach(function (x) {
+            ret.push({
+                left: x.left,
+                top: x.top,
+                width: x.width * x.scaleX,
+                height: x.height * x.scaleY,
+            });
+        });
+        return ret;
+    };
+
+    var getRectObjects = function() {
+        var ret = [];
         canvas.getObjects().forEach(function (x) {
+            console.log("saw object", x);
             if (x.isType("rect")) {
-                ret.push({
-                    left: x.left,
-                    top: x.top,
-                    width: x.width * x.scaleX,
-                    height: x.height * x.scaleY,
-                });
+                ret.push(x);
             }
         });
         return ret;
-    }
+        
+    };
 
     $("#clear-masks").click(function () {
-        getRects().forEach(function (x) {
+        getRectObjects().forEach(function (x) {
             console.log("removing ", x);
             canvas.remove(x);
         });
