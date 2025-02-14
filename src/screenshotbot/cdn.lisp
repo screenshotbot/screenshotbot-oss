@@ -18,8 +18,8 @@
 
 (markup:enable-reader)
 
-(markup:deftag script (children &key src type)
-  <:script src= (when src (util.cdn:make-cdn src)) type=type >,@ (progn children)</:script>)
+(markup:deftag script (children &key src type async)
+  <:script src= (when src (util.cdn:make-cdn src)) type=type async=async >,@ (progn children)</:script>)
 
 (markup:deftag link (&key rel as href type crossorigin media id)
   <:link rel=rel as=as type=type crossorigin=crossorigin media=media
