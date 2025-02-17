@@ -149,7 +149,7 @@
            Compare
          </button>
 
-         <ul class= "dropdown-menu" aria-labbelledby= "compareDropdown">
+         <ul class= "dropdown-menu dropdown-menu-end" aria-labbelledby= "compareDropdown">
            <li>
              <a id= "compare-runs" class= "dropdown-item" >
                Compare selected
