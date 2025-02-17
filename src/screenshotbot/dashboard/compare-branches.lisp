@@ -45,6 +45,9 @@
   (json:encode-json-to-string
    #("foo" "bar")))
 
+(defun maybe-parameter (param)
+  (hunchentoot:parameter (str:downcase param)))
+
 (defun %form ()
   (let* ((repos (repos-for-company (auth:current-company)))
          (action (nibble (sha1 sha2 repo-idx)
@@ -55,7 +58,13 @@
       <div class= "card-header">
         <h4>Compare branches or commits</h4>
       </div>
-      <div class= "card-body">
+      ,(unless (and (maybe-parameter :repo)
+                    (maybe-parameter :sha1)
+                    (maybe-parameter :sha2))
+         <div class= "alert alert-info mb-3">
+           We currently do not support branch names, but you can auto-fill commit information when linking from external tools. Use <tt>?repo=<em>repo</em>&sha1=<em>sha</em>&sha2=<em>sha</em></tt> to prefill this form.
+         </div>)
+      <div class= "">
 
         <div class= "mb-3">
           <label for= "repo" class= "form-label">
@@ -71,7 +80,7 @@
           <label for= "sha1" class= "form-label" >
             First SHA
           </label>
-          <input type= "text" class= "form-control sha-autocomplete" id= "sha1" name= "sha1" placeholder= "abcdef0102" data-autocomplete=autocomplete />
+          <input type= "text" class= "form-control sha-autocomplete" id= "sha1" name= "sha1" placeholder= "abcdef0102" data-autocomplete=autocomplete value= (maybe-parameter :sha1) />
         </div>
 
         <div class= "mb-2">
@@ -79,10 +88,12 @@
             Second SHA
           </label>
           <input type= "text" class= "form-control sha-autocomplete" id= "sha2" name= "sha2" placeholder= "abcdef0102"
-                 data-autocomplete=autocomplete />
+                 data-autocomplete=autocomplete
+                 value= (maybe-parameter :sha2) />
         </div>
 
       </div>
+      
       <div class= "card-footer">
         <input type= "submit" value= "Compare" class= "btn btn-primary" />
         <a href= "/" class= "btn btn-secondary" >Cancel</a>
