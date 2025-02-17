@@ -69,14 +69,14 @@
         </div>
         <div class= "mb-2">
           <label for= "sha1" class= "form-label" >
-            First SHA/branch
+            First SHA
           </label>
           <input type= "text" class= "form-control sha-autocomplete" id= "sha1" name= "sha1" placeholder= "abcdef0102" data-autocomplete=autocomplete />
         </div>
 
         <div class= "mb-2">
           <label for= "sha2" class= "form-label" >
-            Second SHA/branch
+            Second SHA
           </label>
           <input type= "text" class= "form-control sha-autocomplete" id= "sha2" name= "sha2" placeholder= "abcdef0102"
                  data-autocomplete=autocomplete />
