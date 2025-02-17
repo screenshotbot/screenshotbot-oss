@@ -101,7 +101,6 @@
     </simple-card-page>))
 
 (defhandler (nil :uri "/compare-branches") ()
-  (assert (gk:check :compare-branches (auth:current-company)))
   (%form))
 
 (defun resolve-commits (company prefix &key repo)
