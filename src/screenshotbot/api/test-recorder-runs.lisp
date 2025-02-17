@@ -54,6 +54,8 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-work-branch
+                #:recorder-run-branch
                 #:recorder-run-metadata
                 #:shard
                 #:trunkp
@@ -61,6 +63,7 @@
                 #:make-recorder-run
                 #:recorder-run)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:has-typep
                 #:assert-that
                 #:equal-to)
@@ -364,6 +367,56 @@
       (assert-that (recorder-run-metadata run)
                    (has-item 
                     '("foo" . "bar"))))))
+
+(test main-branch-is-set-to-release-branch
+  "This is a temporary test. (T1667). Once we have a specific model for
+storing release-branch-p, we'll update this test."
+  (with-fixture state ()
+    (finishes
+      (%put-run company
+                (make-instance 'dto:run
+                               :channel "foo"
+                               :commit-hash "deadbeef"
+                               :work-branch "foo"
+                               :main-branch "main"
+                               :release-branch-p t
+                               :screenshots (list
+                                            (make-instance 'dto:screenshot
+                                                           :name "foo"
+                                                           :image-id (oid img1))))
+                :api-key api-key))
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 1))
+    (let ((run (first (class-instances 'recorder-run))))
+      (assert-that (recorder-run-branch run)
+                   (is-equal-to "foo"))
+      (assert-that (recorder-run-work-branch run)
+                   (is-equal-to "foo")))))
+
+(test main-branch-is-***NOT***-set-to-release-branch
+  "This is a temporary test. (T1667). Once we have a specific model for
+storing release-branch-p, we'll update this test."
+  (with-fixture state ()
+    (finishes
+      (%put-run company
+                (make-instance 'dto:run
+                               :channel "foo"
+                               :commit-hash "deadbeef"
+                               :work-branch "foo"
+                               :main-branch "main"
+                               :release-branch-p nil
+                               :screenshots (list
+                                            (make-instance 'dto:screenshot
+                                                           :name "foo"
+                                                           :image-id (oid img1))))
+                :api-key api-key))
+    (assert-that (class-instances 'recorder-run)
+                 (has-length 1))
+    (let ((run (first (class-instances 'recorder-run))))
+      (assert-that (recorder-run-branch run)
+                   (is-equal-to "main"))
+      (assert-that (recorder-run-work-branch run)
+                   (is-equal-to "foo")))))
 
 
 (test batch-is-added

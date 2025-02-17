@@ -471,7 +471,14 @@ computed differently if we're using sharding."
                         :periodic-job-p (dto:periodic-job-p run)
                         :cleanp (dto:cleanp run)
                         :pull-request (dto:pull-request-url run)
-                        :branch (dto:main-branch run)
+                        :branch (cond
+                                  ((dto:release-branch-p run)
+                                   ;; Heads up: we're logging the
+                                   ;; old main-branch in the
+                                   ;; :run-created event below.
+                                   (dto:work-branch run))
+                                  (t
+                                   (dto:main-branch run)))
                         :work-branch (dto:work-branch run)
                         :branch-hash (dto:main-branch-hash run)
                         :override-commit-hash (dto:override-commit-hash run)
@@ -493,6 +500,7 @@ computed differently if we're using sharding."
                 :company (oid company)
                 ;; We're logging this in case we want to verify the
                 ;; screenshot-map is behaving correctly.
+                :original-main-branch (dto:work-branch run)
                 :num-screenshots (length screenshots)
                 ;; This let's us monitor that a specific company is
                 ;; using the right domain name. See T1124.
