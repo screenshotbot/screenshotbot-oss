@@ -129,6 +129,19 @@
                           'dto:run)))
     (is (eql nil (dto:run-author run)))))
 
+(test release-branch-p-is-nil-if-not-bound
+  (let ((run (decode-json "{\"batch\": \"foo\"} "
+                          'dto:run)))
+    (is (eql nil (dto:release-branch-p run)))))
+
+(test release-branch-p-is-set-in-a-few-cases
+  (let ((run (decode-json "{\"batch\": \"foo\", \"isReleaseBranch\":true} "
+                          'dto:run)))
+    (is (eql t (dto:release-branch-p run))))
+  (let ((run (decode-json "{\"batch\": \"foo\", \"isReleaseBranch\":false} "
+                          'dto:run)))
+    (is (eql nil (dto:release-branch-p run)))))
+
 (test abstract-run-args-are-parsed
   (let ((run (decode-json "{\"batch\": \"foo\"} "
                           'dto:run)))

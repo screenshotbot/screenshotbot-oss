@@ -76,12 +76,13 @@
              #:metadata
              #:run-metadata
              #:metadata-key
-             #:metadata-value))
+             #:metadata-value
+             #:release-branch-p))
 
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 16)
+(defparameter *api-version* 17)
 
 (defclass version ()
   ((version :initarg :version
@@ -169,6 +170,13 @@
                 :initform nil
                 :reader work-branch
                 :documentation "The branch on which the CI job was run")
+   (release-branch-p :initarg :release-branch-p
+                     :json-key "isReleaseBranch"
+                     :json-type (or null :bool)
+                     :initform nil
+                     :reader release-branch-p
+                     :documentation "Is the work-branch a release branch, typically this
+is computed on the CLI via a regex.")
    (merge-base :initarg :merge-base
                :json-key "mergeBase"
                :json-type (or null :string)

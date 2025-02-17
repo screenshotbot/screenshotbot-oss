@@ -1,6 +1,7 @@
 
 Version
 
+* 17: Added isReleaseBranch to run model
 * 16: Added metadata and run-metadata.
 * 15: shard-spec was added to the API
 * 14: When an API request fails, we set error code to 400 or 500
