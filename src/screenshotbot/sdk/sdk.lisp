@@ -316,65 +316,74 @@ error."
    (loop for screenshot in screenshots
          ;; We expect it to be a dto:screenshot with name and image-id
          do (check-type screenshot dto:screenshot))
-   (let ((run-context (or
-                       run-context
-                       ;; TODO: move out of make-run:
-                       (make-instance 'run-context:flags-run-context
-                                      :repo-url (?. repo-link repo)
-                                      :channel channel
-                                      :pull-request-url pull-request
-                                      :productionp is-trunk
-                                      :create-github-issue-p create-github-issue
-                                      :env (e:make-env-reader)))))
-     (unless (or screenshots (run-context:shard-spec run-context))
-       (error 'empty-run-error))
+   (let ((extra-run-context-args nil))
+     (flet ((push-extra-arg (key value)
+              (setf extra-run-context-args
+                    (list* key value extra-run-context-args))))
+       (when has-commit-p
+         (warn ":has-commit-p is still being used")
+         (push-extra-arg :commit-hash commit))
+
+       (when has-merge-base-p
+         (warn ":has-merge-base-p is still being used")
+         (push-extra-arg :merge-base merge-base))
+
+       (let ((run-context (or
+                           run-context
+                           ;; TODO: move out of make-run:
+                           (apply #'make-instance 'run-context:flags-run-context
+                                  :repo-url (?. repo-link repo)
+                                  :channel channel
+                                  :pull-request-url pull-request
+                                  :productionp is-trunk
+                                  :create-github-issue-p create-github-issue
+                                  :env (e:make-env-reader)
+                                  extra-run-context-args))))
+         (unless (or screenshots (run-context:shard-spec run-context))
+           (error 'empty-run-error))
      
-     ;;(log:info "screenshot records: ~s" screenshots)
-     (let* ((branch-hash
-              (if has-branch-hash-p branch-hash
-                  (or
-                   (run-context:main-branch-hash run-context)
-                   (when branch
-                     (let ((hash (rev-parse repo branch)))
-                       (unless hash
-                         (log:warn "Could not rev-parse origin/~a" branch))
-                       hash)))))
-            (commit (if has-commit-p commit (run-context:commit-hash run-context)))
-            (merge-base (cond
-                          (has-merge-base-p merge-base)
-                          (t (run-context:merge-base run-context))))
-            (github-repo (if has-github-repo-p
-                             github-repo
-                             (run-context:repo-url run-context)))
-            (run (make-instance 'dto:run
-                                :channel (run-context:channel run-context)
-                                :screenshots screenshots
-                                :metadata (run-context:run-context-metadata run-context)
-                                :main-branch branch
-                                :shard-spec (run-context:shard-spec run-context)
-                                :work-branch (run-context:work-branch run-context)
-                                :main-branch-hash branch-hash
-                                :github-repo github-repo
-                                :merge-base merge-base
-                                :author (run-context:author run-context)
-                                :periodic-job-p periodic-job-p
-                                :build-url (run-context:build-url run-context)
-                                :compare-threshold (run-context:compare-threshold run-context)
-                                :batch (run-context:batch run-context)
-                                :pull-request (run-context:pull-request-url run-context)
-                                :commit-hash commit
-                                :override-commit-hash (run-context:override-commit-hash run-context)
-                                :create-github-issue-p (run-context:create-github-issue-p run-context)
-                                :cleanp (cleanp repo)
-                                :tags (run-context:tags run-context)
-                                :gitlab-merge-request-iid (safe-parse-int
-                                                           (run-context:gitlab-merge-request-iid run-context))
-                                :phabricator-diff-id (safe-parse-int
-                                                      (run-context:phabricator-diff-id run-context))
-                                :trunkp (run-context:productionp run-context))))
-       (if (remote-supports-put-run api-context)
-           (put-run api-context run)
-           (put-run-via-old-api api-context run))))))
+         ;;(log:info "screenshot records: ~s" screenshots)
+         (let* ((branch-hash
+                  (if has-branch-hash-p branch-hash
+                      (or
+                       (run-context:main-branch-hash run-context)
+                       (when branch
+                         (let ((hash (rev-parse repo branch)))
+                           (unless hash
+                             (log:warn "Could not rev-parse origin/~a" branch))
+                           hash)))))
+                (github-repo (if has-github-repo-p
+                                 github-repo
+                                 (run-context:repo-url run-context)))
+                (run (make-instance 'dto:run
+                                    :channel (run-context:channel run-context)
+                                    :screenshots screenshots
+                                    :metadata (run-context:run-context-metadata run-context)
+                                    :main-branch branch
+                                    :shard-spec (run-context:shard-spec run-context)
+                                    :work-branch (run-context:work-branch run-context)
+                                    :main-branch-hash branch-hash
+                                    :github-repo github-repo
+                                    :merge-base (run-context:merge-base run-context)
+                                    :author (run-context:author run-context)
+                                    :periodic-job-p periodic-job-p
+                                    :build-url (run-context:build-url run-context)
+                                    :compare-threshold (run-context:compare-threshold run-context)
+                                    :batch (run-context:batch run-context)
+                                    :pull-request (run-context:pull-request-url run-context)
+                                    :commit-hash (run-context:commit-hash run-context)
+                                    :override-commit-hash (run-context:override-commit-hash run-context)
+                                    :create-github-issue-p (run-context:create-github-issue-p run-context)
+                                    :cleanp (cleanp repo)
+                                    :tags (run-context:tags run-context)
+                                    :gitlab-merge-request-iid (safe-parse-int
+                                                               (run-context:gitlab-merge-request-iid run-context))
+                                    :phabricator-diff-id (safe-parse-int
+                                                          (run-context:phabricator-diff-id run-context))
+                                    :trunkp (run-context:productionp run-context))))
+           (if (remote-supports-put-run api-context)
+               (put-run api-context run)
+               (put-run-via-old-api api-context run))))))))
 
 (auto-restart:with-auto-restart ()
   (defmethod put-run ((api-context api-context) run)

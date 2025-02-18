@@ -85,6 +85,13 @@
                 #:*synchronous-promotion*)
   (:import-from #:screenshotbot/api/core
                 #:*wrap-internal-errors*)
+  (:import-from #:bknr.datastore
+                #:class-instances)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-merge-base
+                #:recorder-run)
+  (:import-from #:screenshotbot/user-api
+                #:recorder-run-commit)
   (:local-nicknames (#:a #:alexandria)
                     (#:api-key #:core/api/model/api-key)
                     (#:dto #:screenshotbot/api/model)
@@ -574,6 +581,19 @@
       (make-run api-context images
                 :repo (make-instance 'null-repo)
                 :channel "blah"))))
+
+(test make-run-integration-test-with-commit
+  "Possible not required, especially if we remove the :commit parameter"
+  (with-fixture state ()
+    (with-upload-image-directory (api-context images)
+      (make-run api-context images
+                :repo (make-instance 'null-repo)
+                :channel "blah"
+                :commit "abcd"
+                :merge-base "cbad")
+      (let ((run (car (class-instances 'recorder-run))))
+        (is (equal "abcd" (recorder-run-commit run)))
+        (is (equal "cbad" (recorder-run-merge-base run)))))))
 
 (test keyword-except-md5
   (is (eql 32 (length "82142ae81caba45bb76aa21fb6acf16d")))
