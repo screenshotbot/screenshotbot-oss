@@ -309,7 +309,7 @@ error."
                     (branch-hash nil has-branch-hash-p)
                     (commit nil has-commit-p)
                     (merge-base nil has-merge-base-p)
-                    (github-repo nil has-github-repo-p)
+                    github-repo ;; probably only used by replay T1708
                     periodic-job-p
                     create-github-issue
                     is-trunk)
@@ -334,7 +334,8 @@ error."
                            run-context
                            ;; TODO: move out of make-run:
                            (apply #'make-instance 'run-context:flags-run-context
-                                  :repo-url (?. repo-link repo)
+                                  :repo-url (or (?. repo-link repo)
+                                                github-repo)
                                   :channel channel
                                   :pull-request-url pull-request
                                   :productionp is-trunk
@@ -354,9 +355,6 @@ error."
                            (unless hash
                              (log:warn "Could not rev-parse origin/~a" branch))
                            hash)))))
-                (github-repo (if has-github-repo-p
-                                 github-repo
-                                 (run-context:repo-url run-context)))
                 (run (make-instance 'dto:run
                                     :channel (run-context:channel run-context)
                                     :screenshots screenshots
@@ -365,7 +363,7 @@ error."
                                     :shard-spec (run-context:shard-spec run-context)
                                     :work-branch (run-context:work-branch run-context)
                                     :main-branch-hash branch-hash
-                                    :github-repo github-repo
+                                    :github-repo (run-context:repo-url run-context)
                                     :merge-base (run-context:merge-base run-context)
                                     :author (run-context:author run-context)
                                     :periodic-job-p periodic-job-p
