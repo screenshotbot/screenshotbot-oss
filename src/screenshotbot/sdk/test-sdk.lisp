@@ -78,6 +78,10 @@
                 #:http-request)
   (:import-from #:util/testing
                 #:with-local-acceptor)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
+  (:import-from #:screenshotbot/api/recorder-run
+                #:*synchronous-promotion*)
   (:local-nicknames (#:a #:alexandria)
                     (#:api-key #:core/api/model/api-key)
                     (#:dto #:screenshotbot/api/model)
@@ -91,10 +95,10 @@
 (def-fixture state ()
   (cl-mock:with-mocks ()
     (let ((auto-restart:*global-enable-auto-retries-p* nil))
-     (util:copying (flags:*pull-request*
-                    flags:*override-commit-hash*
-                    flags:*main-branch*)
-       (&body)))))
+      (util:copying (flags:*pull-request*
+                     flags:*override-commit-hash*
+                     flags:*main-branch*)
+        (&body)))))
 
 (test read-directory-for-ios
   (with-fixture state ()
@@ -541,6 +545,27 @@
            (make-directory-run api-context bundle
                                :repo (make-instance 'null-repo)
                                :channel "bleh")))))))
+
+(def-easy-macro with-upload-image-directory (&binding api-context &binding images &fn fn)
+  (with-sdk-integration (api-context)
+    (tmpdir:with-tmpdir (dir)
+      (write-string-to-file "foobar" (path:catfile dir "one.png"))
+      (write-string-to-file "foobar" (path:catfile dir "two.png"))
+      (write-string-to-file "foobar3" (path:catfile dir "three.png"))        
+      (cl-mock:with-mocks ()
+        (let ((bundle (make-instance 'image-directory
+                                     :directory dir)))
+          (let ((images
+                  (upload-image-directory api-context
+                                          bundle)))
+            (fn api-context images)))))))
+
+(test make-run-integration-test-1
+  (with-fixture state ()
+    (with-upload-image-directory (api-context images)
+      (make-run api-context images
+                :repo (make-instance 'null-repo)
+                :channel "blah"))))
 
 (test keyword-except-md5
   (is (eql 32 (length "82142ae81caba45bb76aa21fb6acf16d")))
