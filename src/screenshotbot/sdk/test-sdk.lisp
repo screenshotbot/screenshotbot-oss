@@ -81,7 +81,10 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/api/recorder-run
+                #:warmup-image-caches
                 #:*synchronous-promotion*)
+  (:import-from #:screenshotbot/api/core
+                #:*wrap-internal-errors*)
   (:local-nicknames (#:a #:alexandria)
                     (#:api-key #:core/api/model/api-key)
                     (#:dto #:screenshotbot/api/model)
@@ -93,12 +96,17 @@
 
 
 (def-fixture state ()
-  (cl-mock:with-mocks ()
-    (let ((auto-restart:*global-enable-auto-retries-p* nil))
-      (util:copying (flags:*pull-request*
-                     flags:*override-commit-hash*
-                     flags:*main-branch*)
-        (&body)))))
+  (let ((*synchronous-promotion* t)
+        (*wrap-internal-errors* nil))
+    (cl-mock:with-mocks ()
+      (if-called 'warmup-image-caches
+                 (lambda (run)
+                   (declare (ignore run))))
+      (let ((auto-restart:*global-enable-auto-retries-p* nil))
+        (util:copying (flags:*pull-request*
+                       flags:*override-commit-hash*
+                       flags:*main-branch*)
+          (&body))))))
 
 (test read-directory-for-ios
   (with-fixture state ()
