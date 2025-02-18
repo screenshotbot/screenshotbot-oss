@@ -330,6 +330,9 @@ error."
          (warn ":has-merge-base-p is still being used")
          (push-extra-arg :merge-base merge-base))
 
+       (when has-branch-hash-p
+         (push-extra-arg :main-branch-hash branch-hash))
+
        (let ((run-context (or
                            run-context
                            ;; TODO: move out of make-run:
@@ -346,17 +349,14 @@ error."
            (error 'empty-run-error))
      
          ;;(log:info "screenshot records: ~s" screenshots)
-         (let* ((branch-hash
-                  (if has-branch-hash-p branch-hash
-                      (run-context:main-branch-hash run-context)))
-                (run (make-instance 'dto:run
+         (let* ((run (make-instance 'dto:run
                                     :channel (run-context:channel run-context)
                                     :screenshots screenshots
                                     :metadata (run-context:run-context-metadata run-context)
                                     :main-branch branch
                                     :shard-spec (run-context:shard-spec run-context)
                                     :work-branch (run-context:work-branch run-context)
-                                    :main-branch-hash branch-hash
+                                    :main-branch-hash (run-context:main-branch-hash run-context)
                                     :github-repo (run-context:repo-url run-context)
                                     :merge-base (run-context:merge-base run-context)
                                     :author (run-context:author run-context)

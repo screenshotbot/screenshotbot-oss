@@ -590,7 +590,8 @@
                 :repo (make-instance 'null-repo)
                 :channel "blah"
                 :commit "abcd"
-                :merge-base "cbad")
+                :merge-base "cbad"
+                :branch-hash "dabc")
       (let ((run (car (class-instances 'recorder-run))))
         (is (equal "abcd" (recorder-run-commit run)))
         (is (equal "cbad" (recorder-run-merge-base run)))))))
