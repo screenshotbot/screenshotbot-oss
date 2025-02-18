@@ -321,10 +321,12 @@ error."
               (setf extra-run-context-args
                     (list* key value extra-run-context-args))))
        (when has-commit-p
+         #+nil ;; T1708
          (warn ":has-commit-p is still being used")
          (push-extra-arg :commit-hash commit))
 
        (when has-merge-base-p
+         #+nil ;; T1708
          (warn ":has-merge-base-p is still being used")
          (push-extra-arg :merge-base merge-base))
 
