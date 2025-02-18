@@ -348,13 +348,7 @@ error."
          ;;(log:info "screenshot records: ~s" screenshots)
          (let* ((branch-hash
                   (if has-branch-hash-p branch-hash
-                      (or
-                       (run-context:main-branch-hash run-context)
-                       (when branch
-                         (let ((hash (rev-parse repo branch)))
-                           (unless hash
-                             (log:warn "Could not rev-parse origin/~a" branch))
-                           hash)))))
+                      (run-context:main-branch-hash run-context)))
                 (run (make-instance 'dto:run
                                     :channel (run-context:channel run-context)
                                     :screenshots screenshots
