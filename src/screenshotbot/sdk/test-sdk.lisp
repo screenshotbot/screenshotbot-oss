@@ -294,6 +294,7 @@
                       :branch "main"
                       :repo repo
                       :run-context (make-instance 'run-context:run-context
+                                                  :main-branch "main"
                                                   :commit-hash "0002"
                                                   :merge-base "0003"
                                                   :repo-url "https://example.com/foo.git")))

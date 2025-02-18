@@ -342,42 +342,62 @@ error."
                                   :channel channel
                                   :pull-request-url pull-request
                                   :productionp is-trunk
+                                  :main-branch branch
                                   :create-github-issue-p create-github-issue
                                   :env (e:make-env-reader)
                                   extra-run-context-args))))
          (unless (or screenshots (run-context:shard-spec run-context))
            (error 'empty-run-error))
+
+         (unless (str:emptyp branch)
+           (unless (equal branch (run-context:main-branch run-context))
+             (warn "branch does not match run-context: ~a vs ~a" branch (run-context:main-branch run-context))))
      
          ;;(log:info "screenshot records: ~s" screenshots)
-         (let* ((run (make-instance 'dto:run
-                                    :channel (run-context:channel run-context)
-                                    :screenshots screenshots
-                                    :metadata (run-context:run-context-metadata run-context)
-                                    :main-branch branch
-                                    :shard-spec (run-context:shard-spec run-context)
-                                    :work-branch (run-context:work-branch run-context)
-                                    :main-branch-hash (run-context:main-branch-hash run-context)
-                                    :github-repo (run-context:repo-url run-context)
-                                    :merge-base (run-context:merge-base run-context)
-                                    :author (run-context:author run-context)
-                                    :periodic-job-p periodic-job-p
-                                    :build-url (run-context:build-url run-context)
-                                    :compare-threshold (run-context:compare-threshold run-context)
-                                    :batch (run-context:batch run-context)
-                                    :pull-request (run-context:pull-request-url run-context)
-                                    :commit-hash (run-context:commit-hash run-context)
-                                    :override-commit-hash (run-context:override-commit-hash run-context)
-                                    :create-github-issue-p (run-context:create-github-issue-p run-context)
-                                    :cleanp (cleanp repo)
-                                    :tags (run-context:tags run-context)
-                                    :gitlab-merge-request-iid (safe-parse-int
-                                                               (run-context:gitlab-merge-request-iid run-context))
-                                    :phabricator-diff-id (safe-parse-int
-                                                          (run-context:phabricator-diff-id run-context))
-                                    :trunkp (run-context:productionp run-context))))
-           (if (remote-supports-put-run api-context)
-               (put-run api-context run)
-               (put-run-via-old-api api-context run))))))))
+         (put-run-with-run-context
+          api-context
+          run-context
+          screenshots
+          :cleanp (cleanp repo)
+          :periodic-job-p periodic-job-p))))))
+
+(defmethod put-run-with-run-context (api-context run-context screenshots
+                                     &key
+                                       ;; periodic-job is only set
+                                       ;; from the server side at the
+                                       ;; moment, so it's not part of the run-context
+                                       periodic-job-p
+                                       ;; TODO: make cleanp come from the run-context instead.
+                                       cleanp)
+  (let* ((run (make-instance 'dto:run
+                             :channel (run-context:channel run-context)
+                             :screenshots screenshots
+                             :metadata (run-context:run-context-metadata run-context)
+                             :main-branch (run-context:main-branch-hash run-context)
+                             :shard-spec (run-context:shard-spec run-context)
+                             :work-branch (run-context:work-branch run-context)
+                             :main-branch-hash (run-context:main-branch-hash run-context)
+                             :github-repo (run-context:repo-url run-context)
+                             :merge-base (run-context:merge-base run-context)
+                             :author (run-context:author run-context)
+                             :periodic-job-p periodic-job-p
+                             :build-url (run-context:build-url run-context)
+                             :compare-threshold (run-context:compare-threshold run-context)
+                             :batch (run-context:batch run-context)
+                             :pull-request (run-context:pull-request-url run-context)
+                             :commit-hash (run-context:commit-hash run-context)
+                             :override-commit-hash (run-context:override-commit-hash run-context)
+                             :create-github-issue-p (run-context:create-github-issue-p run-context)
+                             :cleanp cleanp
+                             :tags (run-context:tags run-context)
+                             :gitlab-merge-request-iid (safe-parse-int
+                                                        (run-context:gitlab-merge-request-iid run-context))
+                             :phabricator-diff-id (safe-parse-int
+                                                   (run-context:phabricator-diff-id run-context))
+                             :trunkp (run-context:productionp run-context))))
+    (if (remote-supports-put-run api-context)
+        (put-run api-context run)
+        (put-run-via-old-api api-context run))))
 
 (auto-restart:with-auto-restart ()
   (defmethod put-run ((api-context api-context) run)
