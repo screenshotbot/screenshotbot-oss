@@ -88,6 +88,7 @@
   (:import-from #:bknr.datastore
                 #:class-instances)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-branch
                 #:recorder-run-merge-base
                 #:recorder-run)
   (:import-from #:screenshotbot/user-api
@@ -583,6 +584,18 @@
                 :repo (make-instance 'null-repo)
                 :channel "blah"))))
 
+(defun the-only-run ()
+  (car (class-instances 'recorder-run)))
+
+(test make-run-integration-test-propagates-the-right-branch
+  (with-fixture state ()
+    (with-upload-image-directory (api-context images)
+      (make-run api-context images
+                :repo (make-instance 'null-repo)
+                :branch "develop"
+                :channel "blah")
+      (is (equal "develop" (recorder-run-branch (the-only-run)))))))
+
 (test make-run-integration-test-with-commit
   "Possible not required, especially if we remove the :commit parameter"
   (with-fixture state ()
@@ -593,7 +606,7 @@
                 :commit "abcd"
                 :merge-base "cbad"
                 :branch-hash "dabc")
-      (let ((run (car (class-instances 'recorder-run))))
+      (let ((run (the-only-run)))
         (is (equal "abcd" (recorder-run-commit run)))
         (is (equal "cbad" (recorder-run-merge-base run)))))))
 

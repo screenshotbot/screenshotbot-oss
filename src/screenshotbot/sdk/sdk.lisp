@@ -373,7 +373,7 @@ error."
                              :channel (run-context:channel run-context)
                              :screenshots screenshots
                              :metadata (run-context:run-context-metadata run-context)
-                             :main-branch (run-context:main-branch-hash run-context)
+                             :main-branch (run-context:main-branch run-context)
                              :shard-spec (run-context:shard-spec run-context)
                              :work-branch (run-context:work-branch run-context)
                              :main-branch-hash (run-context:main-branch-hash run-context)

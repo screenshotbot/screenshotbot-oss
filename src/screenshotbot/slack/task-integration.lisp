@@ -47,7 +47,7 @@
       ""))))
 
 (defun render-text (report)
-  (format nil "Screenshots changed in *~a*~a~%<~a|~a>"
+  (format nil "Screenshots changed in *~a*~a~%<~a|~a> on branch "
           (channel-name (report-channel report))
           (render-tags report)
           (report-link report)
