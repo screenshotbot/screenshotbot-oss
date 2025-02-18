@@ -452,9 +452,13 @@
                  :message (fli:convert-from-foreign-string message))
       (magick-relinquish-memory message))))
 
+(defun get-disk-resource ()
+  ;; TODO: maybe compute this dynamically?
+  (* 3 1024 1024 1024))
+
 (defun update-resource-limits ()
-  (loop for (name value) in `((AreaResource 3000000)
-                              (DiskResource ,(* 1000 1024 1024))
+  (loop for (name value) in `((AreaResource 3000000) ;; unclear if this being used (T1709)
+                              (DiskResource ,(get-disk-resource))
                               (WidthResource 20000)
                               (HeightResource 40000)
                               (ListLengthResource ,(* 10000 1024  1024))
