@@ -714,6 +714,9 @@ company as a way of deleting."
 (def-store-migration ("Add new slot for metadata" :version 28)
   (ensure-slot-boundp 'recorder-run '%metadata))
 
+(def-store-migration ("Add new slot for release-branch-p" :version 30)
+  (ensure-slot-boundp 'recorder-run 'release-branch-p))
+
 (defun push-run-warning (run type &rest args)
   "Create a run warning of type TYPE with args ARGS, and push it to the
 list of warnings for RUN."
