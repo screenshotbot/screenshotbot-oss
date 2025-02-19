@@ -47,11 +47,20 @@
       ""))))
 
 (defun render-text (report)
-  (format nil "Screenshots changed in *~a*~a~%<~a|~a> on branch "
-          (channel-name (report-channel report))
-          (render-tags report)
-          (report-link report)
-          (report-title report)))
+  (let ((run (report-run report))
+        (first-line (format nil "Screenshots changed in *~a*~a"
+                               (channel-name (report-channel report))
+                               (render-tags report)))
+        (second-line (format nil "<~a|~a>"
+                             (report-link report)
+                             (report-title report))))
+    (format nil "~a~%~a"
+            (cond
+              ((?. recorder-run-work-branch run)
+               (format nil "~a on *~a*" first-line (recorder-run-work-branch run)))
+              (t
+               first-line))
+            second-line)))
 
 
 (defmethod send-task ((inst slack-task-integration) report)

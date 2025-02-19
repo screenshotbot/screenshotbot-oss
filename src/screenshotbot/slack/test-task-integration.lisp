@@ -51,7 +51,7 @@
 
 (util/fiveam:def-suite)
 
-(def-fixture state (&key tags)
+(def-fixture state (&key tags work-branch)
   (with-installation ()
    (with-test-store ()
      (let ((posts))
@@ -62,6 +62,7 @@
          (let* ((company (make-instance 'company))
                 (channel (make-instance 'channel :name "foobar"))
                 (run (make-recorder-run
+                      :work-branch work-branch
                       :screenshots nil
                       :tags tags))
                 (report (make-instance 'report :channel channel
@@ -109,12 +110,19 @@
      (equal ""
             (render-tags report))))  )
 
-(test render-text
+(test render-text-without-branch
   (with-fixture state ()
     (assert-that
      (render-text report)
      (matches-regex
       "Screenshots changed in *foobar*<https://example.com/report/.*|foobar>"))))
+
+(test render-text-with-branch-name
+  (with-fixture state (:work-branch "release/24")
+    (assert-that
+     (render-text report)
+     (matches-regex
+      "Screenshots changed in *foobar* on .*release/24.*<https://example.com/report/.*|foobar>"))))
 
 (test when-channels-are-set-without-slack-config
   (with-fixture state ()
