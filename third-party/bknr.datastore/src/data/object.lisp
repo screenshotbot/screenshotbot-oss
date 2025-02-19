@@ -714,9 +714,10 @@ the slots are read from the snapshot and ignored."
                      id slot-name (type-of container) (store-object-id container))
                (warn "Reference to inexistent object with id ~A from unnamed container, returning NIL." id))
 
-           ;; Possibly determine new "current object id"
            (when (>= id (next-object-id (store-object-subsystem)))
-             (setf (next-object-id (store-object-subsystem)) (1+ id)))
+             ;; In Hans' store, we just update the
+             ;; next-object-id. However, this shouldn't really happen.
+             (error "Decoded an object with an invalid object-id (>= next-object-id): ~a" id))
            nil)
 
           (t (error "Reference to inexistent object with id ~A from slot ~A of object ~A with ID ~A."
