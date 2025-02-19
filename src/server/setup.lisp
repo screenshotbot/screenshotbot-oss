@@ -165,8 +165,6 @@
                                          :filter 4
                                          :layout (make-instance 'log4cl:simple-layout)))))
 
-(defun setup-log4cl-debugger-hook ()
-  )
 
 (defvar *debugger* nil)
 
@@ -361,10 +359,6 @@
                (shell *shell*))
   (log:info "The port is now ~a" port)
 
-  (setup-appenders)
-
-  (setup-log4cl-debugger-hook)
-
 
   ;; set this to t for 404 page. :/
   (setf hunchentoot:*show-lisp-errors-p* t)
@@ -388,7 +382,6 @@
        (with-running-acceptor (acceptor)
          (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
                    (hunchentoot:acceptor-port acceptor))
-         (setup-appenders :clear t)
 
          (log:info "Now we wait indefinitely for shutdown notifications")
          (loop (sleep 60)))))))
