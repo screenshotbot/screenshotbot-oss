@@ -171,7 +171,7 @@
     (log-file :initarg :log-file
               :accessor log-file
               :initform nil
-              :documentation "We've noticed a case where this log-file object was being deleted on staging. Was that a temporary bug during development, or is there a bigger bug? On staging, we fixed it by just setting log-file to NIL for all the destroyed objects.")
+              :documentation "We've noticed a case where this log-file object was being deleted on staging. Was that a temporary bug during development, or is there a bigger bug? On staging, we fixed it by just setting log-file to NIL for all the destroyed objects. e.g. T1718.")
     (oid :initarg :remote-oid
          :initform nil
          :reader remote-oid)
