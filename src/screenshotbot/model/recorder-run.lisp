@@ -245,6 +245,10 @@
       :documentation "The branch we're currently working on, which might
     be the same as the main branch, or it might be the current pull
     request branch")
+     (release-branch-p
+      :initarg :release-branch-p
+      :accessor release-branch-p
+      :documentation "Whether the work-branch is a release branch")
      (branch-hash
       :initarg :branch-hash
       :initform nil
@@ -347,6 +351,7 @@ associated report is rendered.")
     (:metaclass has-created-at)
     (:default-initargs :screenshot-map (error "need screenshot-map")
                        :compare-tolerance nil
+                       :release-branch-p nil
                        :author nil
                        :metadata nil
                        :tags nil
