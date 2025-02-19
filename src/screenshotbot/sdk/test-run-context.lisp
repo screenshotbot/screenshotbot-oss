@@ -200,7 +200,10 @@
        (run-context-metadata run-context)
        (has-length 1)))))
 
-(test release-branch-regex-should-fix-main-branch
+(test release-branch-regex-should-fix-main-branch--old-test!
+  ;; There was a time before T1667, when we were converting the
+  ;; main-branch to release-branch on the CLI side, it should be done
+  ;; on the server side now.
   (with-fixture state ()
     (let ((run-context (make-instance 'test-run-context
                                       :main-branch "foo")))
@@ -213,16 +216,14 @@
                                       :main-branch "foo"
                                       :work-branch "bar"
                                       :release-branch-regex "b.*")))
-      ;; This behavior will probably change in the future when we have to
-      ;; pass the release-p information to the server instead. (T1667)
-      (is (equal "bar" (run-context:main-branch run-context))))
+      (is-true (run-context:work-branch-is-release-branch-p run-context))
+      (is (equal "foo" (run-context:main-branch run-context))))
 
     (let ((run-context (make-instance 'test-run-context
                                       :main-branch "foo"
                                       :work-branch "bar"
                                       :release-branch-regex "c.*")))
-      ;; This behavior will probably change in the future when we have to
-      ;; pass the release-p information to the server instead. (T1667)
+      (is-false (run-context:work-branch-is-release-branch-p run-context))      
       (is (equal "foo" (run-context:main-branch run-context))))))
 
 (test work-branch-is-release-branch-p

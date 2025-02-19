@@ -54,6 +54,7 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/sdk
+                #:put-run-with-run-context
                 #:%request
                 #:empty-run-error
                 #:find-existing-images
@@ -595,6 +596,19 @@
                 :branch "develop"
                 :channel "blah")
       (is (equal "develop" (recorder-run-branch (the-only-run)))))))
+
+(test make-run-integration-with-a-release-branch-regex
+  (with-fixture state ()
+    (with-upload-image-directory (api-context images)
+      (put-run-with-run-context
+       api-context
+       (make-instance 'run-context:run-context
+                      :channel "blah"
+                      :main-branch "master"
+                      :work-branch "release-2"
+                      :release-branch-regex "release.*")
+       images)
+      (is (equal "release-2" (recorder-run-branch (the-only-run)))))))
 
 (test make-run-integration-test-with-commit
   "Possible not required, especially if we remove the :commit parameter"

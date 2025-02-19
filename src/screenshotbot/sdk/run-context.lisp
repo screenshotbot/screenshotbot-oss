@@ -43,7 +43,8 @@
    #:author
    #:default-flags-run-context
    #:shard-spec
-   #:run-context-metadata)
+   #:run-context-metadata
+   #:work-branch-is-release-branch-p)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:e #:screenshotbot/sdk/env)
                     (#:dto #:screenshotbot/api/model)                    
@@ -216,8 +217,6 @@ pull-request looks incorrect."
 
 (defmethod main-branch :around ((self env-reader-run-context))
   (or
-   (when (work-branch-is-release-branch-p self)
-     (work-branch self))
    (call-next-method)
    (guess-master-branch (git-repo self))))
 

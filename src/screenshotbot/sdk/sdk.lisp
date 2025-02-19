@@ -376,6 +376,7 @@ error."
                              :main-branch (run-context:main-branch run-context)
                              :shard-spec (run-context:shard-spec run-context)
                              :work-branch (run-context:work-branch run-context)
+                             :release-branch-p (run-context:work-branch-is-release-branch-p run-context)
                              :main-branch-hash (run-context:main-branch-hash run-context)
                              :github-repo (run-context:repo-url run-context)
                              :merge-base (run-context:merge-base run-context)
