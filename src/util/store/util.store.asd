@@ -2,7 +2,6 @@
   :serial t
   :depends-on (:bknr.datastore
                :util/misc
-               :serapeum
                :trivial-features
                :util/cron
                :file-lock
