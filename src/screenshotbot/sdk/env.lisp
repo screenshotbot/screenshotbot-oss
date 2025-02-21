@@ -62,9 +62,13 @@ get this from the Git repository directly."))
   nil)
 
 (defgeneric pull-request-base-branch (env-reader)
-  (:documentation "At time of writing, we're not really using this. But this is
-supported on everything except CircleCI, so we should use this to
-correctly compare against the merge base on PRs."))
+  (:documentation "This isn't being used, at least not for any significant logic.
+
+It isn't supported by all CI environments, in particular CircleCI
+doesn't provide it.
+
+The bigger problem is that the build might run before this PR
+information is available, so we can't have complex logic rely on it."))
 
 (defmethod pull-request-base-branch ((self env-reader))
   nil)
