@@ -15,6 +15,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/user-api
+                #:adminp
                 #:channel)
   (:import-from #:screenshotbot/model/recorder-run
                 #:runs-for-company
@@ -28,6 +29,7 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:can-view-metadata-p
                 #:render-run-warning
                 #:run-delete-page
                 #:run-page
@@ -139,3 +141,11 @@
   (with-fixture state ()
     (is (eql nil
              (render-run-warning run :foo)))))
+
+(test can-view-metadata-p
+  (with-test-store ()
+    (with-test-user (:logged-in-p t)
+      (is-true (can-view-metadata-p "foo"))
+      (is-false (can-view-metadata-p "%foo"))
+      (setf (adminp (auth:current-user)) t)
+      (is-true (can-view-metadata-p "%foo")))))

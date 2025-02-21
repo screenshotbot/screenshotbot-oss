@@ -357,6 +357,7 @@
                <table class= "table border" >
                  <tbody>
                    ,@ (loop for (key . value) in (recorder-run-metadata run)
+                            if (can-view-metadata-p key)
                             collect <tr><td><tt>,(progn key)</tt></td><td><tt>,(progn value)</tt></td></tr>)
                  </tbody>
                </table>
@@ -382,7 +383,13 @@
 
     </simple-card-page>))
 
-(defmethod extra-advanced-options (run)
+(defun can-view-metadata-p (key)
+  "Hide metadata that starts with % from end-users"
+  (or
+   (not (str:starts-with-p "%" key))
+   (adminp (auth:current-user))))
+
+(DEFMETHOD extra-advanced-options (run)
   )
 
 (defmethod start-review-enabled-p ((installation t) (run t))
