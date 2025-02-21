@@ -54,6 +54,7 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
+                #:release-branch-p
                 #:recorder-run-work-branch
                 #:recorder-run-branch
                 #:recorder-run-metadata
@@ -390,6 +391,7 @@ storing release-branch-p, we'll update this test."
     (let ((run (first (class-instances 'recorder-run))))
       (assert-that (recorder-run-branch run)
                    (is-equal-to "foo"))
+      (is-true (release-branch-p run))
       (assert-that (recorder-run-work-branch run)
                    (is-equal-to "foo")))))
 
@@ -413,6 +415,7 @@ storing release-branch-p, we'll update this test."
     (assert-that (class-instances 'recorder-run)
                  (has-length 1))
     (let ((run (first (class-instances 'recorder-run))))
+      (is-false (release-branch-p run))      
       (assert-that (recorder-run-branch run)
                    (is-equal-to "main"))
       (assert-that (recorder-run-work-branch run)
