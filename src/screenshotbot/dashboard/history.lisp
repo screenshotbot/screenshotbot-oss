@@ -214,6 +214,8 @@
 
 (defhandler (history-page :uri "/channel/:channel/history")
             (channel screenshot-name branch)
+  (when (equal "" branch)
+    (setf branch nil))
   (let ((channel (store-object-with-id (parse-integer channel))))
     (can-view! channel)
     (app-template

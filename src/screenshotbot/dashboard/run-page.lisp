@@ -680,7 +680,10 @@
        (lambda (pair i)
          (destructuring-bind (screenshot-key . image) pair
           (let* ((screenshot (make-screenshot :image image :key screenshot-key))
-                 (name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2)))
+                 (name-parts (str:rsplit "--" (screenshot-name screenshot) :limit 2))
+                 (history-url (make-url 'history-page :channel (store-object-id channel)
+                                                      :screenshot-name (screenshot-name screenshot)
+                                                      :branch (recorder-run-branch run))))
             <div class= " col-sm-12 col-md-4 col-lg-3 mb-1 mt-2">
               <div class="card">
                 <div class="card-body">
@@ -690,9 +693,7 @@
                        <h6>,(cadr name-parts)</h6>)
                     <ul class= "screenshot-options-menu">
                       <li>
-                        <a href= (make-url 'history-page :channel (store-object-id channel)
-                                                                                           :screenshot-name (screenshot-name screenshot))
-                           >
+                        <a href= history-url                           >
                           History
                         </a>
                       </li>

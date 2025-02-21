@@ -114,6 +114,7 @@
                 #:remove-from-plist
                 #:when-let)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-branch
                 #:recorder-run-tags
                 #:run-build-url)
   (:import-from #:core/ui/simple-card-page
@@ -604,8 +605,11 @@ If the diff-report is cached, then we process the body immediately instead."
     :content
     (let* ((after after)
            (before before)
-           (toggle-id (format nil "toggle-id-~a" next-id)))
-
+           (toggle-id (format nil "toggle-id-~a" next-id))
+           (history-url (hex:make-url "/channel/:channel/history" :channel (store-object-id (recorder-run-channel run))
+                                                                  :screenshot-name (screenshot-name before)
+                                                                  :branch (or (recorder-run-branch run) ""))))
+      
     <div class= "" >
       <div class= "screenshot-header" >
         <ul class= "screenshot-options-menu" >
@@ -613,8 +617,7 @@ If the diff-report is cached, then we process the body immediately instead."
             <a href= "#" data-bs-toggle= "modal" data-bs-target= (format nil "#~a" toggle-id) >Compare</a>
           </li>
           <li>
-            <a href= (hex:make-url "/channel/:channel/history" :channel (store-object-id (recorder-run-channel run))
-                                                                                                                    :screenshot-name (screenshot-name before))>
+            <a href= history-url >
               Full History
             </a>
           </li>
