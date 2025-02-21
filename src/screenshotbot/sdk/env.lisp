@@ -24,8 +24,12 @@
    #:build-url
    #:repo-url
    #:guess-channel-name
-   #:work-branch))
+   #:work-branch
+   #:pull-request-base-branch))
 (in-package :screenshotbot/sdk/env)
+
+(define-condition unsupported-variable (condition)
+  ())
 
 (defclass base-env-reader ()
   ((overrides :initarg :overrides
@@ -55,6 +59,14 @@ get this from the Git repository directly."))
   (getenv self "SCREENSHOTBOT_API_HOSTNAME"))
 
 (defmethod pull-request-url ((self env-reader))
+  nil)
+
+(defgeneric pull-request-base-branch (env-reader)
+  (:documentation "At time of writing, we're not really using this. But this is
+supported on everything except CircleCI, so we should use this to
+correctly compare against the merge base on PRs."))
+
+(defmethod pull-request-base-branch ((self env-reader))
   nil)
 
 (defmethod guess-channel-name ((self base-env-reader))
@@ -96,6 +108,10 @@ get this from the Git repository directly."))
 (defmethod pull-request-url ((self circleci-env-reader))
   (getenv self "CIRCLE_PULL_REQUEST"))
 
+(defmethod pull-request-base-branch ((self circleci-env-reader))
+  (signal 'unsupported-variable)
+  nil)
+
 (defmethod sha1 ((self circleci-env-reader))
   (getenv self "CIRCLE_SHA1"))
 
@@ -117,6 +133,9 @@ get this from the Git repository directly."))
   (if-let ((repo-url (repo-url self))
            (pull-id (getenv self "BITRISE_PULL_REQUEST")))
     (link-to-github-pull-request repo-url pull-id)))
+
+(defmethod pull-request-base-branch ((self bitrise-env-reader))
+  (getenv self "BITRISEIO_GIT_BRANCH_DEST"))
 
 (defmethod repo-url ((Self bitrise-env-reader))
   (or
@@ -148,6 +167,10 @@ get this from the Git repository directly."))
         (link-to-github-pull-request
          (repo-url self)
          review-id)))))
+
+(defmethod pull-request-base-branch ((self netlify-env-reader))
+  (signal 'unsupported-variable)
+  nil)
 
 (defmethod build-url ((self netlify-env-reader))
   (let ((build-id (getenv self "BUILD_ID"))
@@ -199,8 +222,12 @@ get this from the Git repository directly."))
            repo-url
            pull-id)))
 
+(defmethod pull-request-base-branch ((self azure-env-reader))
+  (getenv self "System.PullRequest.targetBranchName"))
+
 (defmethod sha1 ((self azure-env-reader))
   (getenv self "Build.SourceVersion"))
+
 
 (defmethod build-url ((self azure-env-reader))
   ;; This does not return an HTTPS url sadly...
@@ -233,6 +260,9 @@ get this from the Git repository directly."))
                   "BUILDKITE_REPO"
                   pr))))
 
+(defmethod pull-request-base-branch ((self buildkite-env-reader))
+  (getenv self "BUILDKITE_PULL_REQUEST_BASE_BRANCH"))
+
 (defmethod sha1 ((self buildkite-env-reader))
   (getenv self "BUILDKITE_COMMIT"))
 
@@ -256,6 +286,9 @@ get this from the Git repository directly."))
    self
    "BITBUCKET_GIT_HTTP_ORIGIN"
    "BITBUCKET_PR_ID"))
+
+(defmethod pull-request-base-branch ((self bitbucket-pipeline-env-reader))
+  (getenv self "BITBUCKET_PR_DESTINATION_BRANCH"))
 
 (defmethod sha1 ((self bitbucket-pipeline-env-reader))
   (getenv self "BITBUCKET_COMMIT"))
@@ -283,6 +316,9 @@ get this from the Git repository directly."))
     (format nil "~a/-/merge_requests/~a"
             url
             iid)))
+
+(defmethod pull-request-base-branch ((self gitlab-ci-env-reader))
+  (getenv self "CI_EXTERNAL_PULL_REQUEST_TARGET_BRANCH_NAME"))
 
 (defmethod sha1 ((self gitlab-ci-env-reader))
   (getenv self "CI_COMMIT_SHA"))
@@ -320,6 +356,9 @@ get this from the Git repository directly."))
          (t
           (warn "could not parse pull request id from ~a" ref)
           nil))))))
+
+(defmethod pull-request-base-branch ((self github-actions-env-reader))
+  (getenv self "GITHUB_BASE_REF"))
 
 (defmethod sha1 ((self github-actions-env-reader))
   (let ((sha (getenv self "GITHUB_SHA")))
@@ -424,6 +463,9 @@ running in Docker."))
      (link-to-github-pull-request
       (repo-url self)
       pull-id))))
+
+(defmethod pull-request-base-branch ((self teamcity-env-reader))
+  (teamcity-build-prop self "teamcity.pullRequest.number"))
 
 (defmethod sha1 ((self teamcity-env-reader))
   (teamcity-build-prop self "build.vcs.number"))

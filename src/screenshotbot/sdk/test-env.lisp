@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/sdk/env)
   (:import-from #:screenshotbot/sdk/env
+                #:pull-request-base-branch
                 #:read-java-property
                 #:teamcity-env-reader
                 #:remove-.git
@@ -47,7 +48,8 @@
   (build-url env-reader)
   (guess-channel-name env-reader)
   (repo-url env-reader)
-  (work-branch env-reader))
+  (work-branch env-reader)
+  (pull-request-base-branch env-reader))
 
 (def-fixture state ()
   (&body))
