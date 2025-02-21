@@ -115,9 +115,9 @@
       <h4>Deleted</h4>
       </div>))))
 
-(markup:deftag render-history (&key screenshot-name channel)
+(markup:deftag render-history (&key screenshot-name channel branch)
   (render-history-from-iterator
-   (get-screenshot-history channel screenshot-name :iterator t)
+   (get-screenshot-history channel screenshot-name :iterator t :branch branch)
    screenshot-name
    channel
    :bisect-options (lambda (run screenshot iterator)
@@ -213,10 +213,11 @@
   </div>)
 
 (defhandler (history-page :uri "/channel/:channel/history")
-            (channel screenshot-name)
+            (channel screenshot-name branch)
   (let ((channel (store-object-with-id (parse-integer channel))))
     (can-view! channel)
     (app-template
      (render-history
       :screenshot-name screenshot-name
-      :channel channel))))
+      :channel channel
+      :branch branch))))

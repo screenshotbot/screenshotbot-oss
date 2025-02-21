@@ -274,8 +274,9 @@
            (t
             (from-rank (1+ rank)))))))))
 
-(defun get-screenshot-history (channel screenshot-name &key (iterator nil))
-  (let* ((branch (master-branch channel))
+(defun get-screenshot-history (channel screenshot-name &key (iterator nil)
+                                                         branch)
+  (let* ((branch (or branch (master-branch channel)))
          (run (active-run channel branch)))
     (assert-no-loops run)
     (flet ((find-by-image (run screenshot)

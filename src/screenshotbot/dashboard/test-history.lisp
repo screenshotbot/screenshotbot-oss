@@ -74,7 +74,7 @@
      (let ((ctr 0))
        (cl-mock:with-mocks ()
          (cl-mock:if-called 'get-screenshot-history
-                            (lambda (channel screenshot-name &key iterator)
+                            (lambda (channel screenshot-name &key iterator branch)
                               (declare (ignore channel screenshot-name))
                               (is-true iterator)
                               (make-history-iterator)))
