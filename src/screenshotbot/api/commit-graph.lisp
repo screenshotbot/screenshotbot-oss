@@ -11,7 +11,9 @@
         #:screenshotbot/model/commit-graph
         #:screenshotbot/user-api)
   (:import-from #:util/events
-                #:with-tracing))
+                #:with-tracing)
+  (:import-from #:screenshotbot/model/commit-graph
+                #:merge-dag-into-commit-graph))
 (in-package :screenshotbot/api/commit-graph)
 
 (defun %merge-dags (repo-url new-dag)
@@ -20,11 +22,9 @@
     (let* ((commit-graph (find-or-create-commit-graph
                           (current-company)
                           repo-url)))
-      (bt:with-recursive-lock-held ((lock commit-graph))
-        (let ((dag (commit-graph-dag commit-graph)))
-          (dag:merge-dag dag new-dag)
-          (setf (commit-graph-dag commit-graph)
-                dag))))))
+      (merge-dag-into-commit-graph commit-graph
+                                   new-dag))))
+
 
 (auto-restart:with-auto-restart ()
  (defun %update-commit-graph-v2 (repo-url graph-json)

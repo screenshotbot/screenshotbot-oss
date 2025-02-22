@@ -163,3 +163,9 @@ to the same repo, the graph will still be the same."
         if (repo-url cg)
           do (setf (normalized-repo-url cg) (normalize-url (repo-url cg)))))
 
+(defmethod merge-dag-into-commit-graph (commit-graph new-dag)
+  (bt:with-recursive-lock-held ((lock commit-graph))
+   (let ((dag (commit-graph-dag commit-graph)))
+     (dag:merge-dag dag new-dag)
+     (setf (commit-graph-dag commit-graph)
+           dag))))
