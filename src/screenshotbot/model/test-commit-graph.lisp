@@ -28,8 +28,8 @@
 
 (util/fiveam:def-suite)
 
-(def-fixture state ()
-  (with-test-store ()
+(def-fixture state (&key dir)
+  (with-test-store (:dir dir)
     (let ((company (make-instance 'company))
           (other-company (make-instance 'company)))
       (let ((dag (make-instance 'dag:dag)))
@@ -108,3 +108,19 @@
       (assert-that
        (find-or-create-commit-graph other-company "https://github.com/tdrhq/fast-example")
        (equal-to other-cg)))))
+
+(test snapshot-happy-path
+  (with-fixture state ()
+    (util:safe-snapshot "...")))
+
+(test snapshot-and-restore-happy-path
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (let ((company (make-instance 'company))
+            (other-company (make-instance 'company)))
+        (let ((dag (make-instance 'dag:dag)))
+          (dag:add-commit dag (make-instance 'dag:commit
+                                             :sha "aa") ))))
+    (with-test-store (:dir dir)
+      ;; TODO: test that we actually restore things here
+      (pass))))

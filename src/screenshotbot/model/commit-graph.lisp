@@ -7,6 +7,10 @@
 (uiop:define-package :screenshotbot/model/commit-graph
   (:use #:cl #:alexandria)
   (:import-from #:bknr.datastore
+                #:encode
+                #:store-subsystem-snapshot-pathname
+                #:restore-subsystem
+                #:snapshot-subsystem-async
                 #:store-object-id
                 #:store-objects-with-class
                 #:blob-pathname
@@ -26,6 +30,7 @@
   (:import-from #:util/store/fset-index
                 #:fset-set-index)
   (:import-from #:util/store/store
+                #:defsubsystem
                 #:defindex)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
@@ -169,3 +174,30 @@ to the same repo, the graph will still be the same."
      (dag:merge-dag dag new-dag)
      (setf (commit-graph-dag commit-graph)
            dag))))
+
+
+(defclass commit-graph-subsystem ()
+  ())
+
+(defconstant +snapshot-version+ 1)
+
+(defun write-snapshot (pathname)
+  (with-open-file (stream pathname :direction :output
+                                   :element-type '(unsigned-byte 8)
+                                   :if-does-not-exist :create
+                                   :if-exists :supersede)
+    (encode +snapshot-version+ stream)
+    (encode (make-hash-table) stream)))
+
+(defmethod snapshot-subsystem-async  ((store bknr.datastore:store)
+                                      (self commit-graph-subsystem))
+  (let ((pathname (store-subsystem-snapshot-pathname store self)))
+    (lambda ()
+      (write-snapshot pathname))))
+
+(defmethod restore-subsystem ((store bknr.datastore:store)
+                              (self commit-graph-subsystem)
+                              &key until)
+  (values))
+
+(defsubsystem commit-graph-subsystem :priority 40)
