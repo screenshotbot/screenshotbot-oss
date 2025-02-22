@@ -23,10 +23,16 @@
    (slot-values :accessor %slot-values))
   (:documentation "We assume that the object is immutable, or if it did mutate, that the mutations are reasonable. If a reference is deleted, then the snapshot will crash"))
 
+(defmethod snapshot-slot-value (obj slot-name)
+  "Override this to 'snapshot' a specific slot. This is assuming a
+simple copy is not good enough."
+  (slot-value obj slot-name))
+
 (defmethod initialize-instance :after ((self simple-object-snapshot) &key except-slots object)
+  (declare (ignore object))
   (setf (%slot-values self)
         (loop for slot in except-slots
-              collect (cons slot (slot-value (%object self) slot)))))
+              collect (cons slot (snapshot-slot-value (%object self) slot)))))
 
 ;; Some of the tests for this are in test-image :/
 (defmethod bknr.datastore:encode-slots-for-object (class-layout (self simple-object-snapshot) stream)
