@@ -10,6 +10,8 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
+                #:all-commits
+                #:dag-difference
                 #:best-path
                 #:ancestorp
                 #:merge-base
@@ -29,6 +31,7 @@
   (:import-from #:flexi-streams
                 #:with-output-to-sequence)
   (:import-from #:fiveam-matchers/core
+                #:does-not
                 #:has-typep
                 #:has-any
                 #:assert-that)
@@ -380,3 +383,15 @@ for you."
                    (contains))
       (assert-that (best-path dag "44" "33")
                    (contains)))))
+
+(test dag-difference
+  (with-fixture state ()
+    (let ((other (make-instance 'dag)))
+      (add-edge "aa" "bb" :dag other)
+      (add-edge "dd" "ee" :dag other)
+      (let ((result (dag:dag-difference dag other)))
+        (assert-that (mapcar #'sha (all-commits result))
+                     (has-item "bb")
+                     (does-not (has-item "aa"))
+                     (does-not (has-item "dd"))
+                     (has-length 1))))))

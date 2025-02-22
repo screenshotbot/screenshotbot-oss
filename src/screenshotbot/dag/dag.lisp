@@ -256,6 +256,13 @@ tree. This version uses the Kahn's algorithm instead of DFS"
         (add-commit dag commit)
         (assert (gethash node-id (commit-map dag)))))))
 
+(defmethod dag-difference ((dag dag) (other dag))
+  (let ((result (make-instance 'dag)))
+    (dolist (commit (all-commits dag))
+      (unless (get-commit other (sha commit))
+        (add-commit result commit)))
+    result))
+
 (defmethod reachable-nodes ((dag dag) commit &key (depth 1000)
                                                (seen-callback #'identity))
   "Find all the reachable nodes from a specific commit, upto the given DEPTH. Does not return partial nodes (i.e. commits whose information we don't have).

@@ -41,5 +41,6 @@
            #:sha
            #:author
            #:merge-base
-           #:best-path))
+           #:best-path
+           #:dag-difference))
 (in-package :dag)
