@@ -7,6 +7,7 @@
 (uiop:define-package :screenshotbot/model/commit-graph
   (:use #:cl #:alexandria)
   (:import-from #:bknr.datastore
+                #:class-instances
                 #:deftransaction
                 #:store-object-id
                 #:store-objects-with-class
@@ -215,4 +216,5 @@ to the same repo, the graph will still be the same."
   (ensure-slot-boundp 'commit-graph 'dag-v2))
 
 (def-store-migration ("Import dag to dag-v2" :version 32)
-  ())
+  (loop for cg in (class-instances 'commit-graph)
+        do (merge-dag-into-commit-graph cg (commit-graph-dag cg))))
