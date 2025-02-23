@@ -245,15 +245,24 @@
 
 (defgeneric make-acceptable (promoter report &rest args))
 
+(defmethod pr-merge-base ((promoter abstract-pr-promoter)
+                          (run recorder-run))
+  (let ((computed (when-let ((repo (channel-repo (recorder-run-channel run)))
+                             (master-commit (recorder-run-branch-hash run))
+                             (this-commit (recorder-run-commit run)))
+                    (compute-merge-base repo
+                                        master-commit
+                                        this-commit))))
+    (push-event :computed-merge-base
+                :computed-value computed
+                :provided-value (recorder-run-merge-base run))
+    (or
+     (call-next-method)
+     computed)))
+
+
 (defmethod pr-merge-base ((promoter abstract-pr-promoter) run)
-  (or
-   (recorder-run-merge-base run)
-   (when-let ((repo (channel-repo (recorder-run-channel run)))
-              (master-commit (recorder-run-branch-hash run))
-              (this-commit (recorder-run-commit run)))
-     (compute-merge-base repo
-                         master-commit
-                         this-commit))))
+  (recorder-run-merge-base run))
 
 (defun make-details-url (&rest args)
   (format nil
