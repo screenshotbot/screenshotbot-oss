@@ -10,6 +10,7 @@
                :util/simple-queue
                :util/misc
                :cl-json
+               :util.store/encodable
                :bknr.datastore
                :ironclad)
   :components ((:file "package")

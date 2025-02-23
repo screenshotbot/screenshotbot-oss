@@ -11,7 +11,7 @@
 
 (defvar *magic* (flex:string-to-octets "bdag" :external-format :latin1))
 
-(defclass commit ()
+(defclass commit (encodable)
   ((sha :initarg :sha
         :accessor sha)
    (author :initarg :author
@@ -40,7 +40,7 @@
               (+ (ash ret 8) i)))
       ret)))
 
-(defclass dag ()
+(defclass dag (encodable)
   ((commits :initform (make-hash-table :test 'equal)
             :initarg :commit-map
             :accessor commit-map

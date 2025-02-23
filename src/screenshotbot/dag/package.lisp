@@ -28,6 +28,8 @@
                 #:make-queue)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:util/store/encodable
+                #:encodable)
   (:export #:dag
            #:add-commit
            #:commit
