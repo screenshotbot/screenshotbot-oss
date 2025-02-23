@@ -7,6 +7,7 @@
 (uiop:define-package :screenshotbot/model/commit-graph
   (:use #:cl #:alexandria)
   (:import-from #:bknr.datastore
+                #:deftransaction
                 #:store-object-id
                 #:store-objects-with-class
                 #:blob-pathname
@@ -36,6 +37,8 @@
   (:import-from #:util/store/simple-object-snapshot
                 #:simple-object-snapshot
                 #:snapshot-slot-value)
+  (:import-from #:util/lists
+                #:with-batches)
   (:export
    #:commit-graph
    #:repo-url
@@ -46,6 +49,8 @@
 (in-package :screenshotbot/model/commit-graph)
 
 (defvar *flush-lock* (bt:make-lock "dag-flush-lock"))
+
+(defvar *lock* (bt:make-lock))
 
 (defindex +normalized-repo-url-index+
   'fset-set-index
@@ -144,6 +149,14 @@ to the same repo, the graph will still be the same."
         (with-open-file (s (blob-pathname obj) :direction :input)
           (dag:read-from-stream s)))))))
 
+(defmethod commit-graph-persisted-dag ((obj commit-graph))
+  "Eventually commit-graph-dag should point here."
+  (util:or-setf
+   (%persisted-dag obj)
+   (make-instance 'dag:dag)
+   :thread-safe t
+   :lock *lock*))
+
 (defmethod (setf commit-graph-dag) (dag (obj commit-graph))
   (setf (%commit-graph-dag obj) dag)
   (setf (needs-flush-p obj) t))
@@ -180,12 +193,26 @@ to the same repo, the graph will still be the same."
         if (repo-url cg)
           do (setf (normalized-repo-url cg) (normalize-url (repo-url cg)))))
 
+(deftransaction tx-add-commits (commit-graph commits)
+  (let ((dag (commit-graph-persisted-dag commit-graph)))
+    (loop for commit in commits
+          do
+             (dag:add-commit dag commit))))
+
 (defmethod merge-dag-into-commit-graph (commit-graph new-dag)
   (bt:with-recursive-lock-held ((lock commit-graph))
    (let ((dag (commit-graph-dag commit-graph)))
      (dag:merge-dag dag new-dag)
      (setf (commit-graph-dag commit-graph)
-           dag))))
+           dag))
+    (let ((dag (commit-graph-persisted-dag commit-graph)))
+      (let ((difference (dag:all-commits
+                         (dag:dag-difference new-dag dag))))
+        (with-batches (commits difference :batch-size 100)
+          (tx-add-commits commit-graph commits))))))
 
 (def-store-migration ("Add dag-v2 slot" :version 31)
   (ensure-slot-boundp 'commit-graph 'dag-v2))
+
+(def-store-migration ("Import dag to dag-v2" :version 32)
+  ())

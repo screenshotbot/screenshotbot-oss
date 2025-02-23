@@ -45,5 +45,6 @@
            #:merge-base
            #:best-path
            #:dag-difference
-           #:clone-dag))
+           #:clone-dag
+           #:all-commits))
 (in-package :dag)

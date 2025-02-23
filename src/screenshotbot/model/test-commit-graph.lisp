@@ -12,6 +12,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/commit-graph
+                #:%commit-graph-dag
                 #:merge-dag-into-commit-graph
                 #:dag-v2
                 #:%persisted-dag
@@ -133,3 +134,19 @@
       (assert-that (snapshot-slot-value cg 'dag-v2)
                    (has-typep 'dag:dag)
                    (is-not (is-equal-to dag))))))
+
+(test merging-into-graph
+  (with-fixture state ()
+    (let ((cg (find-or-create-commit-graph company "foo")))
+      (merge-dag-into-commit-graph cg dag)
+      (is-true (dag:get-commit (%commit-graph-dag cg) "aa"))
+      (is-true (%persisted-dag cg))
+      (is-true (dag:get-commit (%persisted-dag cg) "aa"))
+      (is-false (dag:get-commit (%persisted-dag cg) "bb"))
+      (merge-dag-into-commit-graph cg dag)
+      (let ((dag (make-instance 'dag:dag)))
+        (dag:add-commit dag (make-instance 'dag:commit
+                                           :sha "bb"))
+        (merge-dag-into-commit-graph cg dag)
+        (is-true (dag:get-commit (%persisted-dag cg) "aa"))
+        (is-true (dag:get-commit (%persisted-dag cg) "bb"))))))
