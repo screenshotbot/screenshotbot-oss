@@ -8,10 +8,6 @@
                :initform nil
                :reader extra-args)))
 
-(defparameter *library-file-dir*
-  (make-pathname :name nil :type nil
-                 :defaults *load-truename*))
-
 (defun default-foreign-library-type ()
   "Returns string naming default library type for platform"
   #+(or win32 win64 cygwin mswindows windows) "dll"
@@ -24,7 +20,7 @@
           (default-foreign-library-type)))
     (list (make-pathname :name (component-name c)
                          :type library-file-type
-                         :defaults *library-file-dir*))))
+                         :defaults (asdf:component-pathname c)))))
 
 (defmethod perform ((o load-op) (c lib-source-file))
   t)
@@ -35,8 +31,7 @@
                            "-Werror"
                            "-fPIC"
                            (namestring
-                            (merge-pathnames (format nil "~a.c" (component-name c))
-                                             *library-file-dir*))
+                            (asdf:component-pathname c))
                            (extra-args c))
                     :output t
                     :error-output t))
