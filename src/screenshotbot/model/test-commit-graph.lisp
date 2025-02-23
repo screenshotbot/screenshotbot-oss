@@ -12,7 +12,6 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/commit-graph
-                #:%commit-graph-dag
                 #:merge-dag-into-commit-graph
                 #:dag-v2
                 #:%persisted-dag
@@ -54,9 +53,8 @@
 (test set-and-get-dag
   (with-fixture state ()
     (let ((cg (find-or-create-commit-graph company "Foo")))
-      (setf (commit-graph-dag cg) dag)
-      (is (eql dag (commit-graph-dag cg)))
-      (is-true (needs-flush-p cg)))))
+      (merge-dag-into-commit-graph cg dag)
+      (is-false (needs-flush-p cg)))))
 
 (test simple-snapshot-and-restore
   (tmpdir:with-tmpdir (dir)
@@ -69,7 +67,7 @@
 (test flush-dags
   (with-fixture state ()
     (let ((cg (find-or-create-commit-graph company "Foo")))
-      (setf (commit-graph-dag cg) dag)
+      (merge-dag-into-commit-graph cg dag)
       (finishes
         (flush-dags))
       (is-false (needs-flush-p cg)))))
@@ -139,7 +137,6 @@
   (with-fixture state ()
     (let ((cg (find-or-create-commit-graph company "foo")))
       (merge-dag-into-commit-graph cg dag)
-      (is-true (dag:get-commit (%commit-graph-dag cg) "aa"))
       (is-true (%persisted-dag cg))
       (is-true (dag:get-commit (%persisted-dag cg) "aa"))
       (is-false (dag:get-commit (%persisted-dag cg) "bb"))

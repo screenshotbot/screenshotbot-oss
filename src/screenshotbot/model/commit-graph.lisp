@@ -40,6 +40,8 @@
                 #:snapshot-slot-value)
   (:import-from #:util/lists
                 #:with-batches)
+  (:import-from #:util/store/store-version
+                #:*store-version*)
   (:export
    #:commit-graph
    #:repo-url
@@ -52,6 +54,12 @@
 (defvar *flush-lock* (bt:make-lock "dag-flush-lock"))
 
 (defvar *lock* (bt:make-lock))
+
+(defun transient-dag-p ()
+  "In older versions we used to read the DAG from a transient slot. In
+this new version, we no longer use the transient slot. Eventually you
+can delete this code. T1739"
+  (< *store-version* 32))
 
 (defindex +normalized-repo-url-index+
   'fset-set-index
@@ -140,15 +148,19 @@ to the same repo, the graph will still be the same."
                       :company company)))))
 
 (defmethod commit-graph-dag ((obj commit-graph))
-  (util:or-setf
-   (%commit-graph-dag obj)
-   (bt:with-recursive-lock-held ((lock obj))
-     (cond
-       ((not (path:-e (blob-pathname obj)))
-        (make-instance 'dag:dag))
-       (t
-        (with-open-file (s (blob-pathname obj) :direction :input)
-          (dag:read-from-stream s)))))))
+  (cond
+    ((transient-dag-p)
+     (util:or-setf
+      (%commit-graph-dag obj)
+      (bt:with-recursive-lock-held ((lock obj))
+        (cond
+          ((not (path:-e (blob-pathname obj)))
+           (make-instance 'dag:dag))
+          (t
+           (with-open-file (s (blob-pathname obj) :direction :input)
+             (dag:read-from-stream s)))))))
+    (t
+     (commit-graph-persisted-dag obj))))
 
 (defmethod commit-graph-persisted-dag ((obj commit-graph))
   "Eventually commit-graph-dag should point here."
@@ -159,19 +171,24 @@ to the same repo, the graph will still be the same."
    :lock *lock*))
 
 (defmethod (setf commit-graph-dag) (dag (obj commit-graph))
-  (setf (%commit-graph-dag obj) dag)
-  (setf (needs-flush-p obj) t))
+  (cond
+    ((transient-dag-p)
+     (setf (%commit-graph-dag obj) dag)
+     (setf (needs-flush-p obj) t)))
+    (t
+     (error "unimpl")))
 
 (defmethod flush-dag ((obj commit-graph))
-  (bt:with-recursive-lock-held ((lock obj))
-    (with-tracing (:flush-dag :id (store-object-id obj))
-      (let ((dag (%commit-graph-dag obj)))
-        (with-open-file (s (blob-pathname obj) :if-does-not-exist :create
-                                               :direction :output
-                                               :if-exists :supersede)
-          (dag:write-to-stream dag s)
-          (finish-output s)
-          (log:info "Updated commit graph in ~s" (blob-pathname obj))))))
+  (when (transient-dag-p)
+    (bt:with-recursive-lock-held ((lock obj))
+      (with-tracing (:flush-dag :id (store-object-id obj))
+        (let ((dag (%commit-graph-dag obj)))
+          (with-open-file (s (blob-pathname obj) :if-does-not-exist :create
+                                                 :direction :output
+                                                 :if-exists :supersede)
+            (dag:write-to-stream dag s)
+            (finish-output s)
+            (log:info "Updated commit graph in ~s" (blob-pathname obj)))))))
   (setf (needs-flush-p obj) nil))
 
 (defun flush-dags ()
@@ -180,14 +197,8 @@ to the same repo, the graph will still be the same."
           if (needs-flush-p commit-graph)
             do (flush-dag commit-graph))))
 
-(defun load-all ()
-  (mapc #'commit-graph-dag (bknr.datastore:class-instances 'commit-graph)))
-
 (def-cron flush-dags (:step-min 30)
   (flush-dags))
-
-(def-cron load-all-dags (:step-min 10)
-  (load-all))
 
 (def-store-migration ("Add normalized repos" :version 9)
   (loop for cg in (bknr.datastore:class-instances 'commit-graph)
@@ -202,10 +213,11 @@ to the same repo, the graph will still be the same."
 
 (defmethod merge-dag-into-commit-graph (commit-graph new-dag)
   (bt:with-recursive-lock-held ((lock commit-graph))
-   (let ((dag (commit-graph-dag commit-graph)))
-     (dag:merge-dag dag new-dag)
-     (setf (commit-graph-dag commit-graph)
-           dag))
+    (when (transient-dag-p)
+      (let ((dag (commit-graph-dag commit-graph)))
+        (dag:merge-dag dag new-dag)
+        (setf (commit-graph-dag commit-graph)
+              dag)))
     (let ((dag (commit-graph-persisted-dag commit-graph)))
       (let ((difference (dag:all-commits
                          (dag:dag-difference new-dag dag))))
