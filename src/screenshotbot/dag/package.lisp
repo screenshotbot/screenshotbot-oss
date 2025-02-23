@@ -44,5 +44,6 @@
            #:author
            #:merge-base
            #:best-path
-           #:dag-difference))
+           #:dag-difference
+           #:clone-dag))
 (in-package :dag)

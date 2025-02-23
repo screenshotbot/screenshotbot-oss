@@ -33,6 +33,8 @@
                 #:with-tracing)
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp)
+  (:import-from #:util/store/simple-object-snapshot
+                #:snapshot-slot-value)
   (:export
    #:commit-graph
    #:repo-url
@@ -76,6 +78,14 @@
                     :accessor needs-flush-p))
     (:metaclass persistent-class)
     (:default-initargs :dag nil)))
+
+(defmethod bknr.datastore:make-object-snapshot ((self commit-graph))
+  (make-instance 'simple-object-snapshot
+                 :object self))
+
+(defmethod snapshot-slot-value ((self commit-graph) (slot (eql 'dag-v2)))
+  (when-let ((dag (slot-value self 'dag-v2)))
+   (dag:clone-dag dag)))
 
 (defun normalize-url (repo-url)
   "Normalizing is relatively safe. Even if two distinct repos normalize

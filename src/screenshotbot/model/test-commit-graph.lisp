@@ -12,6 +12,8 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/commit-graph
+                #:dag-v2
+                #:%persisted-dag
                 #:normalize-url
                 #:needs-flush-p
                 #:flush-dags)
@@ -19,11 +21,15 @@
                 #:answer
                 #:if-called)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
+                #:has-typep
                 #:assert-that
                 #:equal-to
                 #:is-not)
   (:import-from #:fiveam-matchers/misc
-                #:is-not-null))
+                #:is-not-null)
+  (:import-from #:util/store/simple-object-snapshot
+                #:snapshot-slot-value))
 (in-package :screenshotbot/model/test-commit-graph)
 
 (util/fiveam:def-suite)
@@ -108,3 +114,13 @@
       (assert-that
        (find-or-create-commit-graph other-company "https://github.com/tdrhq/fast-example")
        (equal-to other-cg)))))
+
+(test snapshot-slot-value
+  (with-fixture state ()
+    (let ((cg (find-or-create-commit-graph company "foo")))
+      (setf (%persisted-dag cg) nil #| probably already nil though |#)
+      (is (eql nil (snapshot-slot-value cg 'dag-v2)))
+      (setf (%persisted-dag cg) dag)
+      (assert-that (snapshot-slot-value cg 'dag-v2)
+                   (has-typep 'dag:dag)
+                   (is-not (is-equal-to dag))))))
