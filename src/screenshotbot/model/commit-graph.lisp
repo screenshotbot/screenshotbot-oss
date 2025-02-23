@@ -31,6 +31,8 @@
                 #:def-store-migration)
   (:import-from #:util/events
                 #:with-tracing)
+  (:import-from #:screenshotbot/model/core
+                #:ensure-slot-boundp)
   (:export
    #:commit-graph
    #:repo-url
@@ -66,10 +68,14 @@
      (dag :initform nil
           :transient t
           :accessor %commit-graph-dag)
+     (dag-v2 :accessor %persisted-dag
+             :initarg :dag
+             :documentation "Move from DAG from DAG-V2 to keep the DAG persisted.")
      (needs-flush-p :initform nil
                     :transient t
                     :accessor needs-flush-p))
-    (:metaclass persistent-class)))
+    (:metaclass persistent-class)
+    (:default-initargs :dag nil)))
 
 (defun normalize-url (repo-url)
   "Normalizing is relatively safe. Even if two distinct repos normalize
@@ -169,3 +175,6 @@ to the same repo, the graph will still be the same."
      (dag:merge-dag dag new-dag)
      (setf (commit-graph-dag commit-graph)
            dag))))
+
+(def-store-migration ("Add dag-v2 slot" :version 31)
+  (ensure-slot-boundp 'commit-graph 'dag-v2))
