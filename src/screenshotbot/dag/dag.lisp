@@ -44,9 +44,7 @@
   ((commits :initform (make-hash-table :test 'equal)
             :initarg :commit-map
             :accessor commit-map
-            :documentation "A map from COMMIT-NODE-ID (number) to COMMIT. We eventually plan to replace this with sha to COMMIT.")
-   (pathname :initarg :pathname
-             :documentation "For debugging only")))
+            :documentation "A map from COMMIT-NODE-ID (number) to COMMIT. We eventually plan to replace this with sha to COMMIT.")))
 
 (defmethod clone-dag ((dag dag))
   "This is not bad in terms of performance! But obviously, we can optimize this in future with either FSET of CoW."
@@ -203,10 +201,7 @@ tree. This version uses the Kahn's algorithm instead of DFS"
 
 
 (defun read-from-stream (stream &key (format :json))
-  (let ((dag (make-instance 'dag :pathname (or
-                                            (ignore-errors
-                                             (pathname stream))
-                                            "Stream not pointing to file"))))
+  (let ((dag (make-instance 'dag)))
     (ecase format
      (:json
       (let ((data (json:decode-json stream)))
