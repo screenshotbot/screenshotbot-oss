@@ -12,6 +12,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/commit-graph
+                #:merge-dag-into-commit-graph
                 #:dag-v2
                 #:%persisted-dag
                 #:normalize-url
@@ -34,8 +35,8 @@
 
 (util/fiveam:def-suite)
 
-(def-fixture state ()
-  (with-test-store ()
+(def-fixture state (&key dir)
+  (with-test-store (:dir dir)
     (let ((company (make-instance 'company))
           (other-company (make-instance 'company)))
       (let ((dag (make-instance 'dag:dag)))
@@ -55,6 +56,14 @@
       (setf (commit-graph-dag cg) dag)
       (is (eql dag (commit-graph-dag cg)))
       (is-true (needs-flush-p cg)))))
+
+(test simple-snapshot-and-restore
+  (tmpdir:with-tmpdir (dir)
+    (with-fixture state (:dir dir)
+      (let ((cg (find-or-create-commit-graph company "Foo")))
+        (merge-dag-into-commit-graph cg dag)
+        (util:safe-snapshot ".." t)))
+    (with-test-store (:dir dir))))
 
 (test flush-dags
   (with-fixture state ()

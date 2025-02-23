@@ -34,6 +34,7 @@
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp)
   (:import-from #:util/store/simple-object-snapshot
+                #:simple-object-snapshot
                 #:snapshot-slot-value)
   (:export
    #:commit-graph
