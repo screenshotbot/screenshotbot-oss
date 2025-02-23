@@ -202,7 +202,25 @@
   `(setf ,place
          (mapcar #'fix-absolute-path ,place)))
 
-(setf asdf::*base-build-directory* *cwd*)
+(defmacro fix-path (place)
+  `(when ,place
+     (setf ,place (fix-absolute-path ,place))))
+
+(defmethod fix-asdf-components ((system asdf::parent-component))
+  (call-next-method)
+  (mapc #'fix-asdf-components (asdf:component-children system)))
+
+(defmethod fix-asdf-components ((system asdf:system))
+  (fix-path (slot-value system 'asdf::source-file))
+  (call-next-method))
+
+(defmethod fix-asdf-components ((c asdf::component))
+  (setf (slot-value c 'asdf/component::additional-input-files)
+        (loop for (key . values) in (slot-value c 'asdf/component::additional-input-files)
+              collect (cons key (mapcar #'fix-absolute-path values))))
+  (fix-path (slot-value c 'asdf::absolute-pathname))
+  (fix-path (slot-value c 'asdf::relative-pathname)))
+
 
 (defun fix-absolute-registry-paths ()
   (when
@@ -217,6 +235,9 @@
     (update-output-translations (uiop:getcwd))
     (setf ql-setup:*quicklisp-home*
           (fix-absolute-path ql-setup:*quicklisp-home*))
+    (loop for system being the hash-values of asdf::*registered-systems*
+          do (fix-asdf-components system))
+
     (quicklisp:setup)
     (ql:register-local-projects)))
 
