@@ -10,6 +10,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
+                #:merge-base-for-depth
                 #:all-commits
                 #:dag-difference
                 #:best-path
@@ -36,6 +37,7 @@
                 #:has-any
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
+                #:contains-in-any-order
                 #:contains)
   (:import-from #:alexandria
                 #:assoc-value))
@@ -347,9 +349,7 @@ for you."
       (add-edge "ee" (list "dd" "ff") :dag dag)
       (add-edge "dd" "cc" :dag dag)
       ;; Currently these return "ff"
-      #+nil
       (is (equal "cc" (merge-base dag "aa" "ee")))
-      #+nil
       (is (equal "cc" (merge-base dag "ee" "aa"))))))
 
 (test merge-base-finds-*greatest*-common-ancestor-not-just-any-ancestor-2
@@ -366,6 +366,25 @@ for you."
       (add-edge "dd" "cc" :dag dag)
       (is (equal "cc" (merge-base dag "aa" "ee")))
       (is (equal "cc" (merge-base dag "ee" "aa"))))))
+
+(test there-can-be-multiple-greatest-common-ancestors
+  (with-fixture state ()
+    ;; This is the graph we're creating:
+    ;; https://phabricator.tdrhq.com/F279382
+    (let ((dag (make-instance 'dag:dag)))
+      (add-edge "aa" (list "bb" "33") :dag dag)
+      (add-edge "bb" "cc" :dag dag)
+      (add-edge "cc" "ff" :dag dag)
+      (add-edge "ff" "11" :dag dag)
+      (add-edge "ee" (list "dd" "33") :dag dag)
+      (add-edge "33" "11" :dag dag)
+      (add-edge "dd" "cc" :dag dag)
+      (assert-that
+       (nth-value 1 (merge-base-for-depth dag "aa" "ee" :depth 100))
+       (contains-in-any-order "cc" "33"))
+      (assert-that
+       (nth-value 1 (merge-base-for-depth dag "ee" "aa" :depth 100))
+       (contains-in-any-order "cc" "33")))))
 
 (test ancestorp
   (with-fixture state ()

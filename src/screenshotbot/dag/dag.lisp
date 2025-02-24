@@ -315,16 +315,25 @@ time we see a new node. This will include partial nodes.
     hash-table))
 
 (defmethod merge-base-for-depth ((dag dag) commit-1 commit-2 &key depth)
-  "This algorithm is incorrect. See
-https://stackoverflow.com/questions/14865081/algorithm-to-find-lowest-common-ancestor-in-directed-acyclic-graph
-for a potential better algorithm"
-  (let ((reachable-1 (list-to-hash-table (reachable-nodes dag commit-1 :depth depth))))
-    (reachable-nodes dag commit-2
-                     :depth depth
-                     :seen-callback (lambda (commit)
-                                      (when (gethash commit reachable-1)
-                                        (return-from merge-base-for-depth (sha commit))))))
-  nil)
+  "See https://stackoverflow.com/questions/14865081/algorithm-to-find-lowest-common-ancestor-in-directed-acyclic-graph
+
+However, here's a better description. Find all the ancestors, this
+forms a subgraph. Now find all the source nodes of that subgraph."
+  (let ((reachable-1 (list-to-hash-table (reachable-nodes dag commit-1 :depth depth)))
+        (reachable-2 (list-to-hash-table (reachable-nodes dag commit-2 :depth depth))))
+    (let ((intersection (hash-table-intersection reachable-1 reachable-2))
+          (definitely-not-source-nodes (make-hash-table :test #'equal)))
+      (loop for commit being the hash-keys of intersection
+            do
+               (dolist (parent (parents commit))
+                 (setf (gethash parent definitely-not-source-nodes) t)))
+
+      (let ((merge-bases (loop for commit being the hash-keys of intersection
+                               unless (gethash (sha commit) definitely-not-source-nodes)
+                                 collect (sha commit))))
+        (when (> (length merge-bases) 1)
+          (warn "fun warning! we hit multiple merge-bases in production!"))
+        (values (car merge-bases) merge-bases)))))
 
 (defmethod merge-base ((dag dag) commit-1 commit-2)
   "Find the merge-base for merging commit-2 into the branch indicated
