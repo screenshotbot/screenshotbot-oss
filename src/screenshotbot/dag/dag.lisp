@@ -315,21 +315,19 @@ time we see a new node. This will include partial nodes.
     hash-table))
 
 (defmethod merge-base-for-depth ((dag dag) commit-1 commit-2 &key depth)
-  (let ((reachable-1 (list-to-hash-table (reachable-nodes dag commit-1 :depth depth)))
-        (reachable-2 (list-to-hash-table (reachable-nodes dag commit-2 :depth depth))))
-    (let ((intersection (hash-table-intersection reachable-1 reachable-2)))
-      ;; Now that we found an intersection, we just need to find the
-      ;; first reachable node in this set (from either commit-1 or
-      ;; commit-2, it doesn't matter)
-
-      (reachable-nodes dag commit-2
-                       :depth depth
-                       :seen-callback (lambda (commit)
-                                        (when (gethash commit intersection)
-                                          (return-from merge-base-for-depth (sha commit)))))))
+  (let ((reachable-1 (list-to-hash-table (reachable-nodes dag commit-1 :depth depth))))
+    (reachable-nodes dag commit-2
+                     :depth depth
+                     :seen-callback (lambda (commit)
+                                      (when (gethash commit reachable-1)
+                                        (return-from merge-base-for-depth (sha commit))))))
   nil)
 
 (defmethod merge-base ((dag dag) commit-1 commit-2)
+  "Find the merge-base for merging commit-2 into the branch indicated
+with commit-1. Note that the merge-base might not be symmetrical. If
+there are multiple equivalent merge-bases, then one will be returned
+arbitrarily."
   (or
    ;; Micro optimization: First look only at the last 100 nodes.
    (merge-base-for-depth dag commit-1 commit-2 :depth 100)
