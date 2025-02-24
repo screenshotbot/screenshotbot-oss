@@ -315,6 +315,9 @@ time we see a new node. This will include partial nodes.
     hash-table))
 
 (defmethod merge-base-for-depth ((dag dag) commit-1 commit-2 &key depth)
+  "This algorithm is incorrect. See
+https://stackoverflow.com/questions/14865081/algorithm-to-find-lowest-common-ancestor-in-directed-acyclic-graph
+for a potential better algorithm"
   (let ((reachable-1 (list-to-hash-table (reachable-nodes dag commit-1 :depth depth))))
     (reachable-nodes dag commit-2
                      :depth depth

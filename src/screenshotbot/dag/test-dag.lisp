@@ -332,8 +332,40 @@ for you."
     (add-edge "cc" "bb" :dag dag)
     (is (equal "bb" (merge-base dag "aa" "cc")))
     (add-edge "dd" "ee")
+    ;; At this point, the graph looks like: https://phabricator.tdrhq.com/F279319
     (is (equal nil (merge-base dag "aa" "dd")))
     (is (equal "aa" (merge-base dag "aa" "aa")))))
+
+(test merge-base-finds-*greatest*-common-ancestor-not-just-any-ancestor
+  (with-fixture state ()
+    ;; This is the graph we're creating: https://phabricator.tdrhq.com/F279321
+    (let ((dag (make-instance 'dag:dag)))
+      (add-edge "aa" "bb" :dag dag)
+      (add-edge "bb" "cc" :dag dag)
+      (add-edge "cc" "ff" :dag dag)
+      (add-edge "ff" "11" :dag dag)
+      (add-edge "ee" (list "dd" "ff") :dag dag)
+      (add-edge "dd" "cc" :dag dag)
+      ;; Currently these return "ff"
+      #+nil
+      (is (equal "cc" (merge-base dag "aa" "ee")))
+      #+nil
+      (is (equal "cc" (merge-base dag "ee" "aa"))))))
+
+(test merge-base-finds-*greatest*-common-ancestor-not-just-any-ancestor-2
+  (with-fixture state ()
+    ;; This is the graph we're creating:
+    ;; https://phabricator.tdrhq.com/F279320 This is almost like the
+    ;; above one, but one extra node in the history, which showed up
+    ;; as a bug when writing the previous one.
+    (let ((dag (make-instance 'dag:dag)))
+      (add-edge "aa" "bb" :dag dag)
+      (add-edge "bb" "cc" :dag dag)
+      (add-edge "cc" "ff" :dag dag)
+      (add-edge "ee" (list "dd" "ff") :dag dag)
+      (add-edge "dd" "cc" :dag dag)
+      (is (equal "cc" (merge-base dag "aa" "ee")))
+      (is (equal "cc" (merge-base dag "ee" "aa"))))))
 
 (test ancestorp
   (with-fixture state ()
