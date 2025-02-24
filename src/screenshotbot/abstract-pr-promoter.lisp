@@ -265,6 +265,7 @@ API. We're eventually going to replace it with this."
   (let ((computed
           (%compute-pr-merge-base-from-graph promoter run)))
     (push-event :computed-merge-base
+                :run (oid run)
                 :computed-value computed
                 :provided-value (recorder-run-merge-base run))
     (or
