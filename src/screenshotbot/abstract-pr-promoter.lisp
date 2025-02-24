@@ -235,7 +235,9 @@
                   :initarg :run-retriever
                   :initform (make-instance 'run-retriever))
    (send-task-args :accessor send-task-args
-                   :initform nil)))
+                   :initform nil)
+   (%pr-merge-base-cache :accessor %pr-merge-base-cache
+                         :initform nil)))
 
 (defgeneric valid-repo? (promoter repo)
   (:method (promoter repo)
@@ -245,14 +247,23 @@
 
 (defgeneric make-acceptable (promoter report &rest args))
 
+(defmethod %compute-pr-merge-base-from-graph ((promoter abstract-pr-promoter)
+                                              (run recorder-run))
+  "We currently use the merge base computed on the client and sent via
+API. We're eventually going to replace it with this."
+  (util:or-setf
+   (slot-value promoter '%pr-merge-base-cache)
+   (when-let ((repo (channel-repo (recorder-run-channel run)))
+              (master-commit (recorder-run-branch-hash run))
+              (this-commit (recorder-run-commit run)))
+     (compute-merge-base repo
+                         master-commit
+                         this-commit))))
+
 (defmethod pr-merge-base ((promoter abstract-pr-promoter)
                           (run recorder-run))
-  (let ((computed (when-let ((repo (channel-repo (recorder-run-channel run)))
-                             (master-commit (recorder-run-branch-hash run))
-                             (this-commit (recorder-run-commit run)))
-                    (compute-merge-base repo
-                                        master-commit
-                                        this-commit))))
+  (let ((computed
+          (%compute-pr-merge-base-from-graph promoter run)))
     (push-event :computed-merge-base
                 :computed-value computed
                 :provided-value (recorder-run-merge-base run))
