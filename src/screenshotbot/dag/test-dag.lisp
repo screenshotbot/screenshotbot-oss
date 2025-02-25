@@ -348,7 +348,6 @@ for you."
       (add-edge "ff" "11" :dag dag)
       (add-edge "ee" (list "dd" "ff") :dag dag)
       (add-edge "dd" "cc" :dag dag)
-      ;; Currently these return "ff"
       (is (equal "cc" (merge-base dag "aa" "ee")))
       (is (equal "cc" (merge-base dag "ee" "aa"))))))
 
