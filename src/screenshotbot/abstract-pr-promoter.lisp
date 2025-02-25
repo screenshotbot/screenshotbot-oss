@@ -364,20 +364,21 @@ reviewable.)"
        (format-log run :info "Not a valid repo for this promoter"))
       ((not (plugin-installed? promoter company repo-url))
        (format-log run :info "Plugin is not installed for this company/repository"))
-      ((not (pr-merge-base promoter run))
-       (format-log run :info "No merge base on run, this is probably a bug on the CI job (Usually missing a `git fetch origin main`"))
       ((unreviewable-run-p promoter run)
        ;; TODO(T1096): do we have to worry about overwriting a
        ;; previously reviewable report? This might happen if a commit
        ;; was part of a PR, and then merged into the main branch, and
        ;; the build was run both times. Perhaps in this case we should
        ;; keep a track of history of notifications?
+       (format-log run :info "This run is not expected to be reviewed, will probably be handled by the master-promoter")
        (push-remote-check
         promoter
         run
         (make-run-check run :status :success
                             :title "Nothing to review"
                             :summary "NA")))
+      ((not (pr-merge-base promoter run))
+       (format-log run :info "No merge base on run, this is probably a bug on the CI job (Usually missing a `git fetch origin main`"))
       ((equal (pr-merge-base promoter run)
               (actual-sha run))
        (format-log run :info "Ignoring since the merge-base is same as the commit-hash"))
