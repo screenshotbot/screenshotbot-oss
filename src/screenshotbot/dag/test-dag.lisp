@@ -10,7 +10,6 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
-                #:merge-base-for-depth
                 #:all-commits
                 #:dag-difference
                 #:best-path
@@ -379,10 +378,10 @@ for you."
       (add-edge "33" "11" :dag dag)
       (add-edge "dd" "cc" :dag dag)
       (assert-that
-       (nth-value 1 (merge-base-for-depth dag "aa" "ee" :depth 100))
+       (nth-value 1 (merge-base dag "aa" "ee"))
        (contains-in-any-order "cc" "33"))
       (assert-that
-       (nth-value 1 (merge-base-for-depth dag "ee" "aa" :depth 100))
+       (nth-value 1 (merge-base dag "ee" "aa"))
        (contains-in-any-order "cc" "33")))))
 
 (test ancestorp

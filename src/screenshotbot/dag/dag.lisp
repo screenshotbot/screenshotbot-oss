@@ -314,7 +314,7 @@ time we see a new node. This will include partial nodes.
           do (setf (gethash elem hash-table) t))
     hash-table))
 
-(defmethod merge-base-for-depth ((dag dag) commit-1 commit-2 &key depth)
+(defmethod merge-bases-for-depth ((dag dag) commit-1 commit-2 &key depth)
   "See https://stackoverflow.com/questions/14865081/algorithm-to-find-lowest-common-ancestor-in-directed-acyclic-graph
 
 However, here's a better description. Find all the ancestors, this
@@ -333,17 +333,20 @@ forms a subgraph. Now find all the source nodes of that subgraph."
                                  collect (sha commit))))
         (when (> (length merge-bases) 1)
           (warn "fun warning! we hit multiple merge-bases in production!"))
-        (values (car merge-bases) merge-bases)))))
+        merge-bases))))
 
 (defmethod merge-base ((dag dag) commit-1 commit-2)
   "Find the merge-base for merging commit-2 into the branch indicated
 with commit-1. Note that the merge-base might not be symmetrical. If
 there are multiple equivalent merge-bases, then one will be returned
 arbitrarily."
-  (or
-   ;; Micro optimization: First look only at the last 100 nodes.
-   (merge-base-for-depth dag commit-1 commit-2 :depth 100)
-   (merge-base-for-depth dag commit-1 commit-2 :depth 1000)))
+  (let ((merge-bases
+          (or
+           ;; Micro optimization: First look only at the last 100 nodes.
+           (merge-bases-for-depth dag commit-1 commit-2 :depth 100)
+           (merge-bases-for-depth dag commit-1 commit-2 :depth 1000))))
+    (values (car merge-bases)
+            merge-bases)))
 
 (defmethod best-path ((dag dag) (sha-1 string) (sha-2 string) &key (max-depth 100))
   "Find the best path from SHA-1 to SHA-2, where SHA-2 is the ancestor.
