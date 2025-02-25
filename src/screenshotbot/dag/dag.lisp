@@ -259,15 +259,22 @@ tree. This version uses the Kahn's algorithm instead of DFS"
     result))
 
 (defmethod reachable-nodes ((dag dag) commit &key (depth 1000)
-                                               (seen-callback #'identity))
+                                               (seen-callback #'identity)
+                                               excludes)
   "Find all the reachable nodes from a specific commit, upto the given DEPTH. Does not return partial nodes (i.e. commits whose information we don't have).
 
 If SEEN-CALLBACK is provided, then that is called with the commit each
 time we see a new node. This will include partial nodes.
+
+EXCLUDES is an optional list of SHAs. If provided, we don't find reachable nodes that require a
+path via any SHA in EXCLUDES.
 "
   (let ((depths (make-hash-table :test #'equal))
         (sha-seen (make-hash-table :test #'equal))
         (queue (make-queue)))
+
+    (loop for sha in excludes
+          do (setf (gethash sha sha-seen) t))
 
     (enqueue commit queue)
     (setf (gethash commit depths) 1)
@@ -296,6 +303,8 @@ time we see a new node. This will include partial nodes.
                    ;; still want to indicate that we've seen it.
                    (funcall seen-callback
                             (make-instance 'commit :sha sha)))))))
+    (loop for sha in excludes
+          do (remhash sha sha-seen))
     (loop for sha being the hash-keys of sha-seen
           for node = (get-commit dag sha)
           if node
@@ -314,13 +323,19 @@ time we see a new node. This will include partial nodes.
           do (setf (gethash elem hash-table) t))
     hash-table))
 
-(defmethod merge-bases-for-depth ((dag dag) commit-1 commit-2 &key depth)
+(defmethod merge-bases-for-depth ((dag dag) commit-1 commit-2
+                                  &key
+                                    depth
+                                    exclude-commit-2)
   "See https://stackoverflow.com/questions/14865081/algorithm-to-find-lowest-common-ancestor-in-directed-acyclic-graph
 
 However, here's a better description. Find all the ancestors, this
 forms a subgraph. Now find all the source nodes of that subgraph."
-  (let ((reachable-1 (list-to-hash-table (reachable-nodes dag commit-1 :depth depth)))
-        (reachable-2 (list-to-hash-table (reachable-nodes dag commit-2 :depth depth))))
+  (let* ((excludes (when exclude-commit-2
+                     (list commit-2)))
+         (reachable-1 (list-to-hash-table (reachable-nodes dag commit-1 :depth depth
+                                                           :excludes excludes)))
+         (reachable-2 (list-to-hash-table (reachable-nodes dag commit-2 :depth depth))))
     (let ((intersection (hash-table-intersection reachable-1 reachable-2))
           (definitely-not-source-nodes (make-hash-table :test #'equal)))
       (loop for commit being the hash-keys of intersection
@@ -335,18 +350,33 @@ forms a subgraph. Now find all the source nodes of that subgraph."
           (warn "fun warning! we hit multiple merge-bases in production!"))
         merge-bases))))
 
-(defmethod merge-base ((dag dag) commit-1 commit-2)
+(defmethod merge-base ((dag dag) commit-1 commit-2
+                       &key (exclude-commit-2 t))
   "Find the merge-base for merging commit-2 into the branch indicated
 with commit-1. Note that the merge-base might not be symmetrical. If
 there are multiple equivalent merge-bases, then one will be returned
-arbitrarily."
-  (let ((merge-bases
-          (or
-           ;; Micro optimization: First look only at the last 100 nodes.
-           (merge-bases-for-depth dag commit-1 commit-2 :depth 100)
-           (merge-bases-for-depth dag commit-1 commit-2 :depth 1000))))
-    (values (car merge-bases)
-            merge-bases)))
+arbitrarily.
+
+If EXCLUDE-COMMIT-2 is true, then we'll exclude any node that's only
+an ancestor of COMMIT-1 via COMMIT-2. This is useful for pull-requests
+that might've already merged."
+  (cond
+    ((equal commit-1 commit-2)
+     (when exclude-commit-2
+       (warn "COMMIT-1 is same as COMMIT-2, but EXCLUDE-COMMIT-2 was provided"))
+     commit-1)
+    (t
+     (let* ((merge-bases
+              (flet ((try-depth (depth)
+                       (merge-bases-for-depth dag commit-1 commit-2
+                                              :depth depth
+                                              :exclude-commit-2 exclude-commit-2)))
+                (or
+                 ;; Micro optimization: First look only at the last 100 nodes.
+                 (try-depth 100)
+                 (try-depth 1000)))))
+       (values (car merge-bases)
+               merge-bases)))))
 
 (defmethod best-path ((dag dag) (sha-1 string) (sha-2 string) &key (max-depth 100))
   "Find the best path from SHA-1 to SHA-2, where SHA-2 is the ancestor.

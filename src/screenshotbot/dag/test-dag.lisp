@@ -31,6 +31,7 @@
   (:import-from #:flexi-streams
                 #:with-output-to-sequence)
   (:import-from #:fiveam-matchers/core
+                #:error-with-string-matching
                 #:does-not
                 #:has-typep
                 #:has-any
@@ -39,7 +40,9 @@
                 #:contains-in-any-order
                 #:contains)
   (:import-from #:alexandria
-                #:assoc-value))
+                #:assoc-value)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string))
 (in-package :screenshotbot/dag/test-dag)
 
 (util/fiveam:def-suite)
@@ -335,7 +338,15 @@ for you."
     (add-edge "dd" "ee")
     ;; At this point, the graph looks like: https://phabricator.tdrhq.com/F279319
     (is (equal nil (merge-base dag "aa" "dd")))
-    (is (equal "aa" (merge-base dag "aa" "aa")))))
+    (is (equal "aa" (merge-base dag "aa" "aa" :exclude-commit-2 nil)))
+    (is (equal "aa" (merge-base dag "aa" "aa" :exclude-commit-2 t)))
+    (handler-case
+        (progn
+          (merge-base dag "aa" "aa" :exclude-commit-2 t)
+          (fail "expected to have got the warning"))
+      (simple-warning (w)
+        (assert-that (format nil "~a" w)
+                     (contains-string "COMMIT-1 is same as COMMIT-2"))))))
 
 (test merge-base-finds-*greatest*-common-ancestor-not-just-any-ancestor
   (with-fixture state ()
@@ -383,6 +394,22 @@ for you."
       (assert-that
        (nth-value 1 (merge-base dag "ee" "aa"))
        (contains-in-any-order "cc" "33")))))
+
+(test excludes-commit-2-when-finding-merge-base
+  (with-fixture state ()
+    (let ((dag (make-instance 'dag)))
+      (flet ((add (a &rest b)
+               (add-edge a b :dag dag)))
+        ;; This is the graph: https://phabricator.tdrhq.com/F279537
+        ;; We're trying to merge "ee" into "22"
+        (add "22" "aa")
+        (add "aa" "bb" "ee")
+        (add "bb" "cc")
+        (add "ee" "dd" "33")
+        (add "dd" "cc")
+        (add "cc" "ff")
+        (add "ff" "11"))
+      (is (equal "cc" (merge-base dag "22" "ee"))))))
 
 (test ancestorp
   (with-fixture state ()
