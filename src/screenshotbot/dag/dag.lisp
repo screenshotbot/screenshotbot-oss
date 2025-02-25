@@ -374,7 +374,11 @@ that might've already merged."
                 (or
                  ;; Micro optimization: First look only at the last 100 nodes.
                  (try-depth 100)
-                 (try-depth 1000)))))
+                 (try-depth 1000)
+                 ;; This likely means that all paths from commit-1 go
+                 ;; through commit-2.
+                 (when (ancestorp dag commit-2 commit-1)
+                   (list commit-2))))))
        (values (car merge-bases)
                merge-bases)))))
 

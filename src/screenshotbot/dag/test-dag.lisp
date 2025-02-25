@@ -411,6 +411,30 @@ for you."
         (add "ff" "11"))
       (is (equal "cc" (merge-base dag "22" "ee"))))))
 
+(test cannot-exclude-commit-2-when-commit-2-all-paths-go-through-commit-2
+  (with-fixture state ()
+    (let ((dag (make-instance 'dag)))
+      (flet ((add (a &rest b)
+               (add-edge a b :dag dag)))
+        ;; This is the graph: https://phabricator.tdrhq.com/F279537
+        ;; We're trying to merge "ff" into "22"
+        (add "22" "aa")
+        (add "aa" "bb" "ee")
+        (add "bb" "cc")
+        (add "ee" "dd" "33")
+        (add "dd" "cc")
+        (add "cc" "ff")
+        (add "ff" "11")
+        ;; This is the case we actually care about:
+        (is (equal "ff" (merge-base dag "22" "ff")))
+
+        ;; But this should also hold true,
+        (is (equal "ff" (merge-base dag "ff" "22")))        
+
+        (add "44" "55")
+        ;; But let's also test the case where it's not an ancestor
+        (is (equal nil (merge-base dag "22" "44")))))))
+
 (test ancestorp
   (with-fixture state ()
     (add-edge "cc" "aa" :dag dag)
