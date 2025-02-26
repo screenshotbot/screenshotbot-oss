@@ -602,9 +602,10 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
          (equal "bleh"
                 (pr-merge-base
                  promoter
-                 run))
-         (is (equal (list "aa" "bbc")
-                    (cdr merge-base-args))))))))
+                 run)))
+        (is (equal (list "bb" "aa")
+                   (cdr merge-base-args)))))))
+
 
 (test pr-merge-base-integration-happy-path
   (with-fixture state ()
