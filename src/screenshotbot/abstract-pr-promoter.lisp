@@ -16,6 +16,7 @@
                 #:report-acceptable
                 #:report)
   (:import-from #:screenshotbot/model/channel
+                #:channel-active-commits
                 #:channel-deleted-p
                 #:channel-company
                 #:production-run-for)
@@ -253,12 +254,18 @@
 API. We're eventually going to replace it with this."
   (util:or-setf
    (slot-value promoter '%pr-merge-base-cache)
-   (when-let ((repo (channel-repo (recorder-run-channel run)))
-              (master-commit (recorder-run-branch-hash run))
-              (this-commit (recorder-run-commit run)))
-     (compute-merge-base repo
-                         master-commit
-                         this-commit))))
+   (when-let* ((channel (recorder-run-channel run))
+               (repo (channel-repo channel))
+               (master-commit (recorder-run-branch-hash run))
+               (this-commit (recorder-run-commit run)))
+     (let ((active-commits (channel-active-commits channel)))
+       ;; TODO: eventually we want to start our search from (list*
+       ;; master-commit active-commits). The master-commit might not
+       ;; be active yet.
+       (declare (ignore active-commits))
+       (compute-merge-base repo
+                           master-commit
+                           this-commit)))))
 
 (defmethod pr-merge-base ((promoter abstract-pr-promoter)
                           (run recorder-run))

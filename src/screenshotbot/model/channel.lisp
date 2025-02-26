@@ -165,6 +165,7 @@
    (:default-initargs :review-policy :allow-author
                       :allow-public-badge-p nil)))
 
+
 (defmethod channels-for-company (company)
   (loop for channel in (bknr.datastore:class-instances 'channel)
         if (eql company (ignore-errors
@@ -384,3 +385,11 @@
      (fset:convert
       'fset:set
       (mapcar #'github-repo channels)))))
+
+(defmethod channel-active-commits (channel)
+  (remove-duplicates
+   (remove-if
+    #'str:emptyp
+    (loop for (branch . run) in (all-active-runs channel)
+          collect (recorder-run-commit run)))
+   :test #'equal))

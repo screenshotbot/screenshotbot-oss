@@ -12,6 +12,7 @@
         #:screenshotbot/model/company
         #:fiveam)
   (:import-from #:screenshotbot/model/channel
+                #:channel-active-commits
                 #:repos-for-company
                 #:channels-for-company
                 #:review-policy-name
@@ -199,3 +200,51 @@
      (assert-that
       (repos-for-company :company-1)
       (contains-in-any-order "https://github.com/tdrhq/fast-example.git")))))
+
+(test active-commits
+  (with-fixture state ()
+    (is (equal nil (channel-active-commits channel)))
+    (let ((run (make-recorder-run
+                :channel channel
+                :work-branch "foobar"
+                :commit-hash "abcd")))
+      (setf (active-run channel "foobar") run)
+      (is (equal (list "abcd") (channel-active-commits channel))))
+    (let ((run (make-recorder-run
+                :channel channel
+                :work-branch "car"
+                :commit-hash "aaaa")))
+      (setf (active-run channel "car") run)
+      (assert-that (channel-active-commits channel)
+                   (contains-in-any-order "aaaa" "abcd" )))
+    (let ((run (make-recorder-run
+                :channel channel
+                :work-branch "car"
+                :commit-hash nil)))
+      (setf (active-run channel "dar") run)
+      (assert-that (channel-active-commits channel)
+                   (contains-in-any-order "aaaa" "abcd" )))
+    (let ((run (make-recorder-run
+                :channel channel
+                :work-branch "car"
+                :commit-hash "")))
+      (setf (active-run channel "dar") run)
+      (assert-that (channel-active-commits channel)
+                   (contains-in-any-order "aaaa" "abcd" )))))
+
+(test active-commits-removes-duplicates
+  (with-fixture state ()
+    (is (equal nil (channel-active-commits channel)))
+    (let ((run (make-recorder-run
+                :channel channel
+                :work-branch "foobar"
+                :commit-hash "abcd")))
+      (setf (active-run channel "foobar") run)
+      (is (equal (list "abcd") (channel-active-commits channel))))
+    (let ((run (make-recorder-run
+                :channel channel
+                :work-branch "car"
+                :commit-hash "abcd")))
+      (setf (active-run channel "car") run)
+      (assert-that (channel-active-commits channel)
+                   (contains-in-any-order "abcd" )))))
