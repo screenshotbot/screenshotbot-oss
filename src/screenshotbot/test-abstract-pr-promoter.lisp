@@ -619,13 +619,12 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
                   :branch-hash "bb"
                   :commit-hash "aa")))
         (is
-         (equal "provided-sha"
+         (equal "computed-sha"
                 (pr-merge-base
                  promoter
                  run)))
         (is (equal (list "bb" "aa")
                    (cdr merge-base-args)))))))
-
 
 
 (test pr-merge-base-integration-happy-path

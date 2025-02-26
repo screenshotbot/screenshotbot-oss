@@ -269,8 +269,8 @@ API. We're eventually going to replace it with this."
                 :computed-value computed
                 :provided-value (recorder-run-merge-base run))
     (or
-     (call-next-method)
-     computed)))
+     computed
+     (call-next-method))))
 
 
 (defmethod pr-merge-base ((promoter abstract-pr-promoter) run)
