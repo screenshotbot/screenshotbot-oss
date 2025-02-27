@@ -25,8 +25,6 @@
             :initform nil
             :accessor parents
             :documentation "array of shas"))
-  #+nil ;; We need to make sure all replicas have this slot before
-        ;; making this change.
   (:default-initargs :ts (get-universal-time)))
 
 (defmacro pp (x)
