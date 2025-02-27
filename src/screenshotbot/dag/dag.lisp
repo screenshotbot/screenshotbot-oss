@@ -17,10 +17,17 @@
    (author :initarg :author
            :initform nil
            :accessor author)
+   (ts :initarg :ts
+       :initform 0
+       :accessor commit-timestamp
+       :documentation "The timestamp this commit was first seen")
    (parents :initarg :parents
             :initform nil
             :accessor parents
-            :documentation "array of shas")))
+            :documentation "array of shas"))
+  #+nil ;; We need to make sure all replicas have this slot before
+        ;; making this change.
+  (:default-initargs :ts (get-universal-time)))
 
 (defmacro pp (x)
   `(let ((y ,x))
