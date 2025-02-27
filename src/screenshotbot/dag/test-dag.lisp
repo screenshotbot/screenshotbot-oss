@@ -10,6 +10,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
+                #:commit-timestamp
                 #:all-commits
                 #:dag-difference
                 #:best-path
@@ -388,12 +389,67 @@ for you."
       (add-edge "ee" (list "dd" "33") :dag dag)
       (add-edge "33" "11" :dag dag)
       (add-edge "dd" "cc" :dag dag)
+
       (assert-that
        (nth-value 1 (merge-base dag "aa" "ee"))
        (contains-in-any-order "cc" "33"))
       (assert-that
        (nth-value 1 (merge-base dag "ee" "aa"))
        (contains-in-any-order "cc" "33")))))
+
+(defun set-timestamp (dag sha ts)
+  (let ((commit (get-commit dag sha)))
+    (setf (commit-timestamp commit) ts)))
+
+(test there-can-be-multiple-greatest-common-ancestors--but-we-always-prefer-the-later-one
+  (with-fixture state ()
+    ;; This is the graph we're creating:
+    ;; https://phabricator.tdrhq.com/F279382
+    (let ((dag (make-instance 'dag:dag)))
+      (add-edge "aa" (list "bb" "33") :dag dag)
+      (add-edge "bb" "cc" :dag dag)
+      (add-edge "cc" "ff" :dag dag)
+      (add-edge "ff" "11" :dag dag)
+      (add-edge "ee" (list "dd" "33") :dag dag)
+      (add-edge "33" "11" :dag dag)
+      (add-edge "dd" "cc" :dag dag)
+
+      (set-timestamp dag "33" 101)
+      (set-timestamp dag "cc" 100);
+
+      (assert-that
+       (nth-value 1 (merge-base dag "aa" "ee"))
+       (contains "33" "cc"))
+      (is (equal "33" (merge-base dag "aa" "ee")))
+      (assert-that
+       (nth-value 1 (merge-base dag "ee" "aa"))
+       (contains "33" "cc"))
+      (is (equal "33" (merge-base dag "ee" "aa"))))))
+
+(test there-can-be-multiple-greatest-common-ancestors--but-we-always-prefer-the-later-one-flipped
+  (with-fixture state ()
+    ;; This is the graph we're creating:
+    ;; https://phabricator.tdrhq.com/F279382
+    (let ((dag (make-instance 'dag:dag)))
+      (add-edge "aa" (list "bb" "33") :dag dag)
+      (add-edge "bb" "cc" :dag dag)
+      (add-edge "cc" "ff" :dag dag)
+      (add-edge "ff" "11" :dag dag)
+      (add-edge "ee" (list "dd" "33") :dag dag)
+      (add-edge "33" "11" :dag dag)
+      (add-edge "dd" "cc" :dag dag)
+
+      (set-timestamp dag "33" 100)
+      (set-timestamp dag "cc" 101);
+
+      (assert-that
+       (nth-value 1 (merge-base dag "aa" "ee"))
+       (contains "cc" "33"))
+      (is (equal "cc" (merge-base dag "aa" "ee")))
+      (assert-that
+       (nth-value 1 (merge-base dag "ee" "aa"))
+       (contains "cc" "33"))
+      (is (equal "cc" (merge-base dag "ee" "aa"))))))
 
 (test excludes-commit-2-when-finding-merge-base
   (with-fixture state ()

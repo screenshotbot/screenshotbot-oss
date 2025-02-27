@@ -384,8 +384,12 @@ that might've already merged."
                  ;; through commit-2.
                  (when (ancestorp dag commit-2 commit-1)
                    (list commit-2))))))
-       (values (car merge-bases)
-               merge-bases)))))
+       (let ((merge-bases (sort (copy-list merge-bases)
+                                #'>
+                                :key (lambda (sha)
+                                       (commit-timestamp (get-commit dag sha))))))
+        (values (car merge-bases)
+                merge-bases))))))
 
 (defmethod best-path ((dag dag) (sha-1 string) (sha-2 string) &key (max-depth 100))
   "Find the best path from SHA-1 to SHA-2, where SHA-2 is the ancestor.
