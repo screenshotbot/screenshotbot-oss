@@ -332,7 +332,40 @@ for you."
         (assert-that seen
                      (contains "dd" "cc" "ee"))))))
 
+(def-fixture F279319 ()
+  (add-edge "cc" "bb" :dag dag)
+  (is (equal "bb" (merge-base dag "aa" "cc")))
+  (add-edge "dd" "ee")
+  ;; At this point, the graph looks like: https://phabricator.tdrhq.com/F279319
+  (&body))
+
 (test merge-base
+  (with-fixture state ()
+    (with-fixture F279319 ()
+      (is (equal nil (merge-base dag "aa" "dd")))
+      (is (equal "aa" (merge-base dag "aa" "aa" :exclude-commit-2 nil)))
+      (is (equal "aa" (merge-base dag "aa" "aa" :exclude-commit-2 t)))
+      (handler-case
+          (progn
+            (merge-base dag "aa" "aa" :exclude-commit-2 t)
+            (fail "expected to have got the warning"))
+        (simple-warning (w)
+          (assert-that (format nil "~a" w)
+                       (contains-string "COMMIT-1 is same as COMMIT-2")))))))
+
+(test merge-base-allows-multiple-commit-1s
+  (with-fixture state ()
+    (with-fixture F279319 ()
+      (is (equal "bb" (merge-base dag (list "aa" "dd") "cc"))))))
+
+(test merge-base-allows-completely-invalid-commits
+  (with-fixture state ()
+    (with-fixture F279319 ()
+      (is (equal "bb" (merge-base dag (list "aa" "ff") "cc")))
+      (is (equal nil (merge-base dag "ff" "cc")))
+      (is (equal nil (merge-base dag nil "cc"))))))
+
+(test merge-base-v2
   (with-fixture state ()
     (add-edge "cc" "bb" :dag dag)
     (is (equal "bb" (merge-base dag "aa" "cc")))
