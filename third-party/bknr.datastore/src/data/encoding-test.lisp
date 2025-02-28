@@ -1,7 +1,16 @@
-(in-package :bknr.datastore)
+(defpackage :bknr.datastore/encoding-test
+  (:use #:cl
+        #:bknr.datastore
+        #:fiveam)
+  (:import-from #:alexandria
+                #:ensure-list)
+  (:import-from #:bknr.datastore
+                #:decode
+                #:encode))
+(in-package :bknr.datastore/encoding-test)
 
-(5am:def-suite :bknr.datastore)
-(5am:in-suite :bknr.datastore)
+(5am:def-suite :bknr.datastore/encoding-test)
+(5am:in-suite :bknr.datastore/encoding-test)
 
 (defun files-identical-content-p (path-a path-b)
   "Are files of PATH-A and PATH-B byte per byte identical?"
