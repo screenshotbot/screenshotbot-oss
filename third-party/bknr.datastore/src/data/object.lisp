@@ -193,7 +193,7 @@ reads will return nil.")))
     (when (typep effective-slot-definition 'persistent-effective-slot-definition)
       (with-slots (relaxed-object-reference transient) effective-slot-definition
         (setf relaxed-object-reference (some #'relaxed-object-reference-slot-p direct-slots)
-              transient (slot-value (first direct-slots) 'transient))))
+              transient (transient-slot-p (first direct-slots)))))
     effective-slot-definition))
 
 (defmethod class-persistent-slots ((class standard-class))
