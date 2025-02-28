@@ -126,26 +126,21 @@ can delete this code. T1739"
 to the same repo, the graph will still be the same."
   (or
    (?. normalization-override-to (find-normalization-override repo-url))
-   (cond
-     ((equal "https://git.bskyb.com/sports-group/sky_sport_group_android" repo-url)
-      ;; Temporary hack for T1748
-      "https://github.com/sky-uk/sky-sport-group-android")
-     (t
-      (let ((repo-url (str:downcase repo-url)))
-        (flet ((remove-prefixes (repo-url)
-                 (let ((git-prefix "^(ssh[:/]//)?git@"))
-                   (cond
-                     ((cl-ppcre:scan git-prefix repo-url)
-                      (cl-ppcre:regex-replace-all
-                       git-prefix (str:replace-all ":" "/" repo-url) "https://"))
-                     (t repo-url)))))
-          (let ((suffixes (list "/" ".git")))
-            (loop for suffix in suffixes
-                  if (str:ends-with-p suffix repo-url)
-                    return (normalize-url (str:substring 0 (- (length repo-url)
-                                                              (length suffix))
-                                                         repo-url))
-                  finally (return (remove-prefixes repo-url))))))))))
+   (let ((repo-url (str:downcase repo-url)))
+     (flet ((remove-prefixes (repo-url)
+              (let ((git-prefix "^(ssh[:/]//)?git@"))
+                (cond
+                  ((cl-ppcre:scan git-prefix repo-url)
+                   (cl-ppcre:regex-replace-all
+                    git-prefix (str:replace-all ":" "/" repo-url) "https://"))
+                  (t repo-url)))))
+       (let ((suffixes (list "/" ".git")))
+         (loop for suffix in suffixes
+               if (str:ends-with-p suffix repo-url)
+                 return (normalize-url (str:substring 0 (- (length repo-url)
+                                                           (length suffix))
+                                                      repo-url))
+               finally (return (remove-prefixes repo-url))))))))
 
 
 (defmethod find-commit-graph ((company company) (url string))
