@@ -378,6 +378,11 @@
 
              Undo promotion
            </a>)
+
+        <a class = "ms-2 btn btn-secondary" href= (nibble ()
+                           (promotion-log-page run)) >
+          Promotion logs
+        </a>
       </form>
         </div>
 
