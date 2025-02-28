@@ -603,7 +603,7 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
                 (pr-merge-base
                  promoter
                  run)))
-        (is (equal (list "bb" "aa")
+        (is (equal (list '("bb") "aa")
                    (cdr merge-base-args)))))))
 
 (test computed-merge-base-will-be-preferred-over-provided-merge-base
@@ -623,7 +623,7 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
                 (pr-merge-base
                  promoter
                  run)))
-        (is (equal (list "bb" "aa")
+        (is (equal (list '("bb") "aa")
                    (cdr merge-base-args)))))))
 
 

@@ -259,12 +259,10 @@ API. We're eventually going to replace it with this."
                (master-commit (recorder-run-branch-hash run))
                (this-commit (recorder-run-commit run)))
      (let ((active-commits (channel-active-commits channel)))
-       ;; TODO: eventually we want to start our search from (list*
-       ;; master-commit active-commits). The master-commit might not
-       ;; be active yet.
-       (declare (ignore active-commits))
        (compute-merge-base repo
-                           master-commit
+                           (list*
+                            master-commit
+                            active-commits)
                            this-commit)))))
 
 (defmethod pr-merge-base ((promoter abstract-pr-promoter)
