@@ -12,6 +12,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/commit-graph
+                #:normalization-override
                 #:merge-dag-into-commit-graph
                 #:dag-v2
                 #:%persisted-dag
@@ -87,6 +88,15 @@
              (normalize-url "git@github.com:tdrhq/fast-example/")))
   (is (equal "https://github.com/tdrhq/fast-example"
              (normalize-url "ssh://git@github.com:tdrhq/fast-example/"))))
+
+(test normalization-overrides
+  (with-fixture state ()
+    (make-instance 'normalization-override
+                   :from "foobar"
+                   :to "bar")
+    (is (equal "bar" (normalize-url "foobar")))
+    (is (equal "https://github.com/tdrhq/fast-example"
+               (normalize-url "git@github.com/tdrhq/fast-example/")))))
 
 (test find-or-create-normalized-commit-graph
   (with-fixture state ()

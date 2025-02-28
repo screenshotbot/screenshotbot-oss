@@ -7,6 +7,7 @@
 (uiop:define-package :screenshotbot/model/commit-graph
   (:use #:cl #:alexandria)
   (:import-from #:bknr.datastore
+                #:store-object
                 #:class-instances
                 #:deftransaction
                 #:store-object-id
@@ -42,6 +43,10 @@
                 #:with-batches)
   (:import-from #:util/store/store-version
                 #:*store-version*)
+  (:import-from #:bknr.indices
+                #:unique-index)
+  (:import-from #:util/misc
+                #:?.)
   (:export
    #:commit-graph
    #:repo-url
@@ -94,6 +99,20 @@ can delete this code. T1739"
     (:metaclass persistent-class)
     (:default-initargs :dag nil)))
 
+(defindex +normalization-override-from+
+  'unique-index
+  :test #'equal
+  :slot-name '%from)
+
+(defclass normalization-override (store-object)
+  ((%from :initarg :from
+          :index +normalization-override-from+
+          :index-reader find-normalization-override)
+   (%to :initarg :to
+        :reader normalization-override-to))
+  (:metaclass persistent-class)
+  (:documentation "See T1748, specific issues with certain customers"))
+
 (defmethod bknr.datastore:make-object-snapshot ((self commit-graph))
   (make-instance 'simple-object-snapshot
                  :object self))
@@ -105,26 +124,28 @@ can delete this code. T1739"
 (defun normalize-url (repo-url)
   "Normalizing is relatively safe. Even if two distinct repos normalize
 to the same repo, the graph will still be the same."
-  (cond
-    ((equal "https://git.bskyb.com/sports-group/sky_sport_group_android" repo-url)
-     ;; Temporary hack for T1748
-     "https://github.com/sky-uk/sky-sport-group-android")
-    (t
-     (let ((repo-url (str:downcase repo-url)))
-       (flet ((remove-prefixes (repo-url)
-                (let ((git-prefix "^(ssh[:/]//)?git@"))
-                  (cond
-                    ((cl-ppcre:scan git-prefix repo-url)
-                     (cl-ppcre:regex-replace-all
-                      git-prefix (str:replace-all ":" "/" repo-url) "https://"))
-                    (t repo-url)))))
-         (let ((suffixes (list "/" ".git")))
-           (loop for suffix in suffixes
-                 if (str:ends-with-p suffix repo-url)
-                   return (normalize-url (str:substring 0 (- (length repo-url)
-                                                             (length suffix))
-                                                        repo-url))
-                 finally (return (remove-prefixes repo-url)))))))))
+  (or
+   (?. normalization-override-to (find-normalization-override repo-url))
+   (cond
+     ((equal "https://git.bskyb.com/sports-group/sky_sport_group_android" repo-url)
+      ;; Temporary hack for T1748
+      "https://github.com/sky-uk/sky-sport-group-android")
+     (t
+      (let ((repo-url (str:downcase repo-url)))
+        (flet ((remove-prefixes (repo-url)
+                 (let ((git-prefix "^(ssh[:/]//)?git@"))
+                   (cond
+                     ((cl-ppcre:scan git-prefix repo-url)
+                      (cl-ppcre:regex-replace-all
+                       git-prefix (str:replace-all ":" "/" repo-url) "https://"))
+                     (t repo-url)))))
+          (let ((suffixes (list "/" ".git")))
+            (loop for suffix in suffixes
+                  if (str:ends-with-p suffix repo-url)
+                    return (normalize-url (str:substring 0 (- (length repo-url)
+                                                              (length suffix))
+                                                         repo-url))
+                  finally (return (remove-prefixes repo-url))))))))))
 
 
 (defmethod find-commit-graph ((company company) (url string))
