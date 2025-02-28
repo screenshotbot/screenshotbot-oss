@@ -681,3 +681,13 @@
 ;;     (regression-5am:do-tests))
 ;;   (when (probe-file *test-file*)
 ;;     (ignore-errors (delete-file *test-file*))))
+
+(test strings-are-the-same-over-multiple-decodings
+  (let ((str (copy-seq "hello world")))
+    (let ((str1 (copy-by-encoding str))
+          (str2 (copy-by-encoding str)))
+      (is (equal str1 str2))
+      (is (eq str1 str2))
+      (is (eq str1 (copy-by-encoding "hello world")))
+      (is (equal "bar" (copy-by-encoding "bar"))))))
+
