@@ -351,7 +351,11 @@
 (defun %decode-char (stream)
   (%read-char stream))
 
-(defvar *all-strings* (make-hash-table :test #'equal))
+(defvar *all-strings* (make-hash-table :test #'equal
+                                       #+lispworks #+lispworks
+                                       :weak-kind :key
+                                       #+sbcl #+sbcl
+                                       :weakness :key))
 
 (defun dedup-string (str)
   (let ((existing (gethash str *all-strings*)))
