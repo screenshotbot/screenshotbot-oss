@@ -3,7 +3,11 @@
         :fiveam-matchers
         :fiveam)
   (:import-from #:bknr.indices
-                #:base-indexed-object))
+                #:index-effective-slot-definition
+                #:object-destroyed-p-v2
+                #:base-indexed-object)
+  (:import-from #:bknr.datastore
+                #:transient-slot-p))
 (in-package :bknr.indices.tests)
 
 (def-suite* :bknr.indices)
@@ -497,3 +501,22 @@
 (define-indexed-class-test ensure-that-we-can-specialize-on-base-indexed-object
     ()
     (is (eql :two (special-fn (make-instance 'another-indexed-object)))))
+
+(define-indexed-class-test simple-slot-access-for-new-destroyed-slot ()
+  (let ((obj (make-instance 'another-indexed-object)))
+    (is (eql nil (slot-value obj 'object-destroyed-p-v2)))
+    (is (eql nil (object-destroyed-p-v2 obj)))
+    (setf (slot-value obj 'object-destroyed-p-v2) t)
+    (is (eql t (slot-value obj 'object-destroyed-p-v2)))
+    (is (eql t (object-destroyed-p-v2 obj)))))
+
+(define-indexed-class-test new-object-destroyed-p-v2-has-the-right-slot-type ()
+  (let ((class-slots (closer-mop:class-slots (find-class 'another-indexed-object))))
+    (let ((new-slot (loop for slotd in class-slots
+                          if (eql 'object-destroyed-p-v2 (closer-mop:slot-definition-name slotd))
+                            return slotd))
+          (old-slot (loop for slotd in class-slots
+                          if (eql 'dfdfdf (closer-mop:slot-definition-name slotd))
+                            return slotd)))
+      (is (typep new-slot 'closer-mop:standard-slot-definition))
+      (is (typep old-slot 'index-effective-slot-definition)))))

@@ -14,6 +14,8 @@
   (:import-from #:util/lists
                 #:head)
   (:import-from #:bknr.indices
+                #:base-indexed-object
+                #:object-destroyed-p-v2
                 #:index-direct-slot-definition-index
                 #:slot-index)
   (:import-from #:util/store/store
@@ -240,13 +242,16 @@
                        (length objects)
                        (length classes))
              (loop for class in classes
+                   if (not (eql class (find-class 'base-indexed-object)))
                    do
                       (loop for direct-slot in (closer-mop:class-direct-slots class)
                             for slot-name = (closer-mop:slot-definition-name direct-slot)
                             for slot = (find-effective-slot class slot-name)
-                            if (or
-                                (bknr.indices::index-direct-slot-definition-index direct-slot)
-                                (bknr.indices::index-direct-slot-definition-index-type direct-slot))
+                            if (and
+                                (not (eql 'object-destroyed-p-v2 slot-name))
+                                (or
+                                 (bknr.indices::index-direct-slot-definition-index direct-slot)
+                                 (bknr.indices::index-direct-slot-definition-index-type direct-slot)))
                               if (not (eql 'bknr.datastore::id slot-name))
                                 do
                                    (let ((indices (bknr.indices::index-effective-slot-definition-indices slot)))

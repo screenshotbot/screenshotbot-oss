@@ -19,7 +19,10 @@
                       :accessor indexed-class-index-definitions)))
 
 (defclass base-indexed-object ()
-  ())
+  ((object-destroyed-p-v2
+    :initform nil
+    :accessor object-destroyed-p-v2
+    :documentation "This slot will eventually replace object-destroyed-p")))
 
 (defstruct index-holder
   class slots name index index-subclasses)
