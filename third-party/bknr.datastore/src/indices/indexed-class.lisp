@@ -527,4 +527,9 @@ also index subclasses of the class to which the slot belongs, default is T")
    (handler-case
        (object-destroyed-p-v2 object)
      (unbound-slot ()
+       ;; This typically doesn't happen on Lispworks, only on SBCL.
+       ;; But the cost of working with the condition is quite high
+       ;; (with allocation), so we want to set it to NIL as soon as
+       ;; possible.
+       (setf (object-destroyed-p-v2 object) nil)
        nil))))
