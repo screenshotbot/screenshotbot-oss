@@ -115,7 +115,8 @@ can delete this code. T1739"
 
 (defmethod bknr.datastore:make-object-snapshot ((self commit-graph))
   (make-instance 'simple-object-snapshot
-                 :object self))
+                 :object self
+                 :except-slots '(dag-v2)))
 
 (defmethod snapshot-slot-value ((self commit-graph) (slot (eql 'dag-v2)))
   (when-let ((dag (slot-value self 'dag-v2)))

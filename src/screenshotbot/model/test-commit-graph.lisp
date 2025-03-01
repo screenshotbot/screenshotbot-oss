@@ -157,3 +157,5 @@
         (merge-dag-into-commit-graph cg dag)
         (is-true (dag:get-commit (%persisted-dag cg) "aa"))
         (is-true (dag:get-commit (%persisted-dag cg) "bb"))))))
+
+
