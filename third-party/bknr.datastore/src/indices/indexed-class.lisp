@@ -306,14 +306,15 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 (defmethod compute-slots ((class indexed-class))
   (let* ((normal-slots (call-next-method))
-	 (destroyed-p-slot #.`(make-instance
-			       'index-effective-slot-definition
-			       :name 'destroyed-p
-			       :initform nil
-			       :class class
-			       #+cmu
-			       ,@'(:readers nil :writers nil)
-			       :initfunction #'(lambda () nil))))
+         ;; old, unused slot!
+         (destroyed-p-slot #.`(make-instance
+                               'index-effective-slot-definition
+                               :name 'destroyed-p
+                               :initform nil
+                               :class class
+                               #+cmu
+                               ,@'(:readers nil :writers nil)
+                               :initfunction #'(lambda () nil))))
     (cons destroyed-p-slot normal-slots)))
 
 (defvar *indexed-class-override* nil)
@@ -327,7 +328,7 @@ also index subclasses of the class to which the slot belongs, default is T")
   (assert (symbolp slot-name))
   (let (#-lispworks (slot-name (slot-definition-name slot)))
     (when (and (not *indexed-class-override*)
-               (not (eql slot-name 'destroyed-p))
+               (not (eql slot-name 'object-destroyed-p-v2))
                (object-destroyed-p object))
      (error "Can not get slot ~A of destroyed object of class ~a."
 	        slot-name (class-name (class-of object))))))
@@ -345,9 +346,9 @@ also index subclasses of the class to which the slot belongs, default is T")
      (slot-name symbol))
   (declare (ignore newvalue))
   (let (#-lispworks (slot-name (slot-definition-name slot)))
-   (when (and (not (eql slot-name 'destroyed-p))
-	          (object-destroyed-p object)
-	          (not *indexed-class-override*))
+    (when (and (not (eql slot-name 'object-destroyed-p-v2))
+               (object-destroyed-p object)
+               (not *indexed-class-override*))
      (error "Can not set slot ~A of destroyed object ~a."
 	        slot-name (class-name (class-of object))))))
 
@@ -359,11 +360,11 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defmethod slot-makunbound-using-class :before ((class indexed-class) object
                                                 (slot slot-definition))
   (when (and (not (eql (if (symbolp slot)
-			   slot
-			   (slot-definition-name slot))
-		       'destroyed-p))
-	     (object-destroyed-p object)
-	     (not *indexed-class-override*))
+                           slot
+                           (slot-definition-name slot))
+                       'object-destroyed-p-v2))
+             (object-destroyed-p object)
+             (not *indexed-class-override*))
     (error "Can not MAKUNBOUND slot ~A of destroyed object ~a."
 	       (slot-definition-name slot) (class-name (class-of object)))))
 
@@ -403,7 +404,7 @@ also index subclasses of the class to which the slot belongs, default is T")
     (newvalue (class indexed-class) object (slot index-effective-slot-definition))
   (declare (ignore newvalue))
 
-  (when (eql (slot-definition-name slot) 'destroyed-p)
+  (when (eql (slot-definition-name slot) 'object-destroyed-p-v2)
     (return-from slot-value-using-class  (call-next-method)))
 
   (when *in-make-instance-p*
@@ -508,7 +509,7 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defmethod destroy-object-with-class ((class indexed-class) object)
   (dolist (index (mapcar #'index-holder-index (indexed-class-indices class)))
     (index-remove index object))
-  (setf (slot-value object 'destroyed-p) t))
+  (setf (object-destroyed-p-v2 object) t))
 
 (defmethod destroy-object ((object t))
   (destroy-object-with-class (class-of object) object))
@@ -521,5 +522,9 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 (defmethod object-destroyed-p ((object base-indexed-object))
   (and
-   (slot-boundp object 'destroyed-p)
-   (slot-value object 'destroyed-p)))
+   #+sbcl ;; Tests break without this on SBCL, very weird, might be related to allocate-instance.
+   (slot-boundp object 'object-destroyed-p-v2)
+   (handler-case
+       (object-destroyed-p-v2 object)
+     (unbound-slot ()
+       nil))))
