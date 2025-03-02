@@ -122,18 +122,26 @@ the index reader returns a list in reverse sorted order instead of a set."))
 (defmethod index-object-key ((self abstract-fset-index) obj)
   (if (= 1 (length (%slots self)))
       (slot-value obj (%slot-name self))
-      (mapcar (curry #'slot-value obj)
-              (%slots self))))
+      (loop for slot in (%slots self)
+            collect (slot-value obj slot))))
+
+(defun every-indexed-slot-boundp (self obj)
+  ;;(every (curry #'slot-boundp obj) (%slots self))
+  (loop for slot in (%slots self)
+        if (not (slot-boundp obj slot))
+          return nil
+        finally
+           (return t)))
 
 (defmethod index-add :around ((self abstract-fset-index) obj)
   (when (and
-         (every (curry #'slot-boundp obj) (%slots self))
+         (every-indexed-slot-boundp self obj)
          (index-object-key self obj))
     (call-next-method)))
 
 (defmethod index-remove :around ((self abstract-fset-index) obj)
   (when (and
-         (every (curry #'slot-boundp obj) (%slots self))
+         (every-indexed-slot-boundp self obj)
          (index-object-key self obj))
     (call-next-method)))
 
