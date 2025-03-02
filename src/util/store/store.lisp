@@ -219,12 +219,15 @@ uses sane defaults."))
    args))
 
 
-(defmethod on-snapshot-load :after ((store base-raft-store) snapshot-reader)
-  #+lispworks
-  (progn
-    (log:info "Running GC :coalesce")
-    (hcl:gc-generation 4 :coalesce t)))
+(defmethod on-snapshot-load :after ((store base-raft-store) snapshot-reader))
 
+(defmethod on-snapshot-load :around ((store base-raft-store) snapshot-reader)
+  (with-tracing (:snapshot-load)
+    (call-next-method)
+    #+lispworks
+    (progn
+      (log:info "Running GC :coalesce")
+      (hcl:gc-generation 4 :coalesce t))))
 
 #+bknr.cluster
 (defmethod log-transaction-error ((sm base-raft-store) trans e)
