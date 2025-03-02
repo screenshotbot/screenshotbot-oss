@@ -351,21 +351,14 @@
 (defun %decode-char (stream)
   (%read-char stream))
 
-(defvar *all-strings* (make-hash-table :test #'equal
-                                       #+lispworks #+lispworks
-                                       :weak-kind :key
-                                       #+sbcl #+sbcl
-                                       :weakness :key))
+(defvar *string-decoding-cache* (make-hash-table :test #'equalp
+                                                 #+lispworks #+lispworks
+                                                 :weak-kind :value
+                                                 #+sbcl #+sbcl
+                                                 :weakness :value))
 
-(defun dedup-string (str)
-  (let ((existing (gethash str *all-strings*)))
-    (or
-     existing
-     (setf (gethash str *all-strings*) str))))
-
-(defun %decode-string (stream)
-  (dedup-string
-   (labels ((octets-to-string-safe (octets) ; safe and portable
+(defun octets-to-string (octets)
+  (labels ((octets-to-string-safe (octets) ; safe and portable
               (let ((flexi-streams:*substitution-char* #\?))
                 (handler-case
                     (flexi-streams:octets-to-string octets :external-format :utf-8)
@@ -373,16 +366,24 @@
                     (declare (ignore e))
                     (let ((string (flexi-streams:octets-to-string octets :external-format :ascii)))
                       (warn "could not decode string ~S as utf-8, decoded as ASCII" string)
-                      string)))))
-            (octets-to-string (octets)
-              (handler-case
-                  (trivial-utf-8:utf-8-bytes-to-string octets)
-                (trivial-utf-8:utf-8-decoding-error ()
-                  (octets-to-string-safe octets)))))
-     (let* ((n (%decode-integer stream))
-            (buffer (make-array n :element-type '(unsigned-byte 8))))
-       (assert (= n (read-sequence buffer stream)))
-       (octets-to-string buffer)))))
+                      string))))))
+    (handler-case
+        (trivial-utf-8:utf-8-bytes-to-string octets)
+      (trivial-utf-8:utf-8-decoding-error ()
+        (octets-to-string-safe octets)))))
+
+(defun octets-to-string-deduped (octets)
+  (let ((existing (gethash octets *string-decoding-cache*)))
+    (or
+     existing
+     (setf (gethash octets *string-decoding-cache*)
+           (octets-to-string octets)))))
+
+(defun %decode-string (stream)
+  (let* ((n (%decode-integer stream))
+         (buffer (make-array n :element-type '(unsigned-byte 8))))
+    (assert (= n (read-sequence buffer stream)))
+    (octets-to-string-deduped buffer)))
 
 (defun find-symbol-in-all-packages (name)
   (let (symbols)
