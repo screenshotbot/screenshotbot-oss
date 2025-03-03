@@ -80,7 +80,9 @@
    #:run-prepare-directory-toplevel
    #:absolute-pathname
    #:update-commit-graph
-   #:validate-pull-request))
+   #:validate-pull-request
+   #:upload-image-directory
+   #:make-run))
 
 (in-package :screenshotbot/sdk/sdk)
 

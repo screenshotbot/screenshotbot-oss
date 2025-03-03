@@ -17,6 +17,7 @@
                 #:screenshots
                 #:job)
   (:import-from #:screenshotbot/sdk/sdk
+                #:upload-image-directory
                 #:make-directory-run)
   (:import-from #:screenshotbot/sdk/git
                 #:null-repo)
@@ -99,7 +100,9 @@
   (:local-nicknames (#:a #:alexandria)
                     (#:frontend #:screenshotbot/replay/frontend)
                     (#:integration #:screenshotbot/replay/integration)
+                    (#:run-context #:screenshotbot/sdk/run-context)
                     (#:replay #:screenshotbot/replay/core)
+                    (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags))
   (:export
    #:sitemap
@@ -226,6 +229,10 @@ accessing the urls or sitemap slot."
         finally (progv symbols values
                   (funcall fn))))
 
+(defclass replay-run-context (run-context:default-flags-run-context
+                              run-context:run-context)
+  ())
+
 
 (defun process-results (run results
                         &key (engine *engine*))
@@ -252,18 +259,25 @@ accessing the urls or sitemap slot."
                                             :hostname (host run)
                                             :engine engine)))
             (with-reused-ssl ((engine api-context))
-             (make-directory-run
-              api-context
-              results
-              :repo (make-instance 'null-repo)
-              :branch "master"
-              :commit (when request (replay:commit request))
-              :merge-base (when request (replay:merge-base request))
-              :branch-hash (when request (replay:branch-hash request))
-              :github-repo (when request (replay:repo-url request))
-              :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
-              :is-trunk t
-              :channel (channel run))))))
+              (let ((images
+                      ;; In this case it's not really uploading, we
+                      ;; should not depend on this method and just
+                      ;; construct the dto objects directly.
+                      (sdk:upload-image-directory api-context results)))
+                (log:debug "Creating run")
+                ;; TODO: replace with put-run-with-run-context instead.
+                (sdk:make-run
+                 api-context
+                 images
+                 :repo (make-instance 'null-repo)
+                 :branch "master"
+                 :commit (when request (replay:commit request))
+                 :merge-base (when request (replay:merge-base request))
+                 :branch-hash (when request (replay:branch-hash request))
+                 :github-repo (when request (replay:repo-url request))
+                 :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
+                 :is-trunk t
+                 :channel (channel run)))))))
     (retry-process-results ()
       (process-results run results))))
 
