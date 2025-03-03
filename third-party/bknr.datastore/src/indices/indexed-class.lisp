@@ -321,7 +321,7 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 (defmethod slot-value-using-class :before ((class indexed-class) object
                                            #-lispworks
-                                           slot
+                                           (slot index-effective-slot-definition)
                                            #+lispworks
                                            (slot-name symbol))
   #+lispworks
@@ -333,15 +333,10 @@ also index subclasses of the class to which the slot belongs, default is T")
      (error "Can not get slot ~A of destroyed object of class ~a."
 	        slot-name (class-name (class-of object))))))
 
-#+lispworks ;; TODO: T393
-(defmethod slot-value-using-class ((class indexed-class) object
-                                   (slot symbol))
-  (call-next-method))
-
 (defmethod (setf slot-value-using-class) :before
     (newvalue (class indexed-class) object
      #-lispworks
-     slot
+     (slot index-effective-slot-definition)
      #+lispworks
      (slot-name symbol))
   (declare (ignore newvalue))
@@ -351,11 +346,6 @@ also index subclasses of the class to which the slot belongs, default is T")
                (not *indexed-class-override*))
      (error "Can not set slot ~A of destroyed object ~a."
 	        slot-name (class-name (class-of object))))))
-
-#+lispworks ;; TODO: T393
-(defmethod (setf slot-value-using-class)
-    (newvalue (class indexed-class) object (slot symbol))
-  (call-next-method))
 
 (defmethod slot-makunbound-using-class :before ((class indexed-class) object
                                                 (slot slot-definition))
