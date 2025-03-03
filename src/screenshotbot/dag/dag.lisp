@@ -347,24 +347,26 @@ path via any SHA in EXCLUDES.
 
 However, here's a better description. Find all the ancestors, this
 forms a subgraph. Now find all the source nodes of that subgraph."
-  (let* ((excludes (when exclude-commit-2
-                     (list commit-2)))
-         (reachable-1 (list-to-hash-table (reachable-nodes dag commit-1s :depth depth
-                                                                         :excludes excludes)))
-         (reachable-2 (list-to-hash-table (reachable-nodes dag commit-2 :depth depth))))
-    (let ((intersection (hash-table-intersection reachable-1 reachable-2))
-          (definitely-not-source-nodes (make-hash-table :test #'equal)))
-      (loop for commit being the hash-keys of intersection
-            do
-               (dolist (parent (parents commit))
-                 (setf (gethash parent definitely-not-source-nodes) t)))
+  (with-extras (("commit-1" commit-1s)
+                ("commit-2" commit-2))
+   (let* ((excludes (when exclude-commit-2
+                      (list commit-2)))
+          (reachable-1 (list-to-hash-table (reachable-nodes dag commit-1s :depth depth
+                                                                          :excludes excludes)))
+          (reachable-2 (list-to-hash-table (reachable-nodes dag commit-2 :depth depth))))
+     (let ((intersection (hash-table-intersection reachable-1 reachable-2))
+           (definitely-not-source-nodes (make-hash-table :test #'equal)))
+       (loop for commit being the hash-keys of intersection
+             do
+                (dolist (parent (parents commit))
+                  (setf (gethash parent definitely-not-source-nodes) t)))
 
-      (let ((merge-bases (loop for commit being the hash-keys of intersection
-                               unless (gethash (sha commit) definitely-not-source-nodes)
-                                 collect (sha commit))))
-        (when (> (length merge-bases) 1)
-          (warn "fun warning! we hit multiple merge-bases in production!"))
-        merge-bases))))
+       (let ((merge-bases (loop for commit being the hash-keys of intersection
+                                unless (gethash (sha commit) definitely-not-source-nodes)
+                                  collect (sha commit))))
+         (when (> (length merge-bases) 1)
+           (warn "fun warning! we hit multiple merge-bases in production!"))
+         merge-bases)))))
 
 (defmethod merge-base ((dag dag) commit-1 commit-2
                        &key (exclude-commit-2 t))

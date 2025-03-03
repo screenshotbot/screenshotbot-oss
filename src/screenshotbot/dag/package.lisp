@@ -30,6 +30,8 @@
                 #:?.)
   (:import-from #:util/store/encodable
                 #:encodable)
+  (:import-from #:util/threading
+                #:with-extras)
   (:export #:dag
            #:add-commit
            #:commit
