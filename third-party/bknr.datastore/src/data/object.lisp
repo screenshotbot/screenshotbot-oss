@@ -210,6 +210,7 @@ reads will return nil.")))
 
 (defclass base-store-object ()
   ((%id-cache
+    :initarg :id
     :accessor %id-cache))
   (:documentation "A regular class with optimized slot access, for storing fast slots."))
 
@@ -220,7 +221,6 @@ reads will return nil.")))
 (defclass store-object (base-indexed-object
                         base-store-object)
   ((id :initarg :id
-       :reader store-object-id
        :type integer
        :index *id-index*
        :index-reader store-object-with-id :index-values all-store-objects
@@ -621,6 +621,7 @@ the slots are read from the snapshot and ignored."
       (when class
         (let ((object (allocate-instance class)))
           (setf (slot-value object 'id) object-id
+                (%id-cache object) object-id
                 (next-object-id (store-object-subsystem)) (max (1+ object-id)
                                                                (next-object-id (store-object-subsystem))))
           (dolist (index (class-slot-indices class 'id))
@@ -1091,3 +1092,10 @@ string designating an integer."
    (class-instances 'store-object)))
 
 (pushnew :mop-store cl:*features*)
+
+(defmethod store-object-id (object)
+  (or
+   (%id-cache object)
+   (progn
+     (warn "shouldn't attempt to use the old slot value!")
+     (slot-value object 'id))))

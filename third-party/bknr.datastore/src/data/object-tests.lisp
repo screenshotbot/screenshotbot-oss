@@ -569,13 +569,15 @@
     (setf (%id-cache obj) 22)
     (is (eql 22 (%id-cache obj)))
 
+    (setf (%id-cache obj) 0)
     (delete-object obj)
-    (is (eql 22 (%id-cache obj)))
+    (is (eql 0 (%id-cache obj)))
     (setf (%id-cache obj) 23)
     (is (eql 23 (%id-cache obj)))))
 
 (defdstest check-id-cache-slot-type ()
-  (let ((obj (make-instance 'parent)))
+  (let* ((obj (make-instance 'parent))
+         (old-id (store-object-id obj)))
     (setf (%id-cache obj) 22)
     (is (eql 22 (%id-cache obj)))
 
@@ -588,9 +590,13 @@
                      ;; ^ but Lispworks still seems to optimize the accessors
                      (is-equal-to 'persistent-effective-slot-definition))))
 
+    ;; Fix the id again so that we can safely delete it
+    (setf (%id-cache obj) old-id)
+    (is (eql old-id (%id-cache obj)))    
     (delete-object obj)
-    (is (eql 22 (%id-cache obj)))
-    (is (eql 22 (slot-value obj '%id-cache)))
+
+    (is (eql old-id (%id-cache obj)))
+    (is (eql old-id (slot-value obj '%id-cache)))
     (setf (%id-cache obj) 23)
     (is (eql 23 (%id-cache obj)))
     (setf (slot-value obj '%id-cache) 34)

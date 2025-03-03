@@ -46,7 +46,8 @@ work."))
 (defun ignorable-slot-p (slot)
   "Slots for which we should just use the underlying non-virtual allocation"
   (member (clos:slot-definition-name slot)
-          '(id last-change bknr.indices::object-destroyed-p-v2)))
+          '(id last-change bknr.indices::object-destroyed-p-v2
+            bknr.datastore::%id-cache)))
 
 (defmethod copy-slot (class (slot persistent-effective-slot-definition) &rest args)
   (apply #'make-instance 'persistent-effective-slot-definition
