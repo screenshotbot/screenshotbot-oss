@@ -601,3 +601,13 @@
     (is (eql 23 (%id-cache obj)))
     (setf (slot-value obj '%id-cache) 34)
     (is (eql 34 (%id-cache obj)))))
+
+
+(defdstest snapshotting-deleted-objects ()
+  (let* ((one (make-instance 'parent))
+         (two (make-instance 'parent :child one)))
+    (finishes
+      (snapshot))
+    (delete-object one)
+    (signals error
+      (snapshot))))
