@@ -606,6 +606,27 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
         (is (equal (list '("bb") "aa")
                    (cdr merge-base-args)))))))
 
+(test pr-merge-base-uses-the-override-commit-hash-when-provided
+  (with-fixture state ()
+    (let ((merge-base-args))
+      (if-called 'compute-merge-base
+                 (lambda (&rest args)
+                   (setf merge-base-args args)
+                   "bleh"))
+      (let ((run (make-recorder-run
+                  :merge-base nil
+                  :channel channel
+                  :branch-hash "bb"
+                  :override-commit-hash "cc"
+                  :commit-hash "aa")))
+        (is
+         (equal "bleh"
+                (pr-merge-base
+                 promoter
+                 run)))
+        (is (equal (list '("bb") "aa")
+                   (cdr merge-base-args)))))))
+
 (test computed-merge-base-will-be-preferred-over-provided-merge-base
   (with-fixture state ()
     (let ((merge-base-args))
@@ -779,6 +800,5 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
       (maybe-promote promoter run)
       (assert-that checks
                    (is-equal-to nil)))))
-
 
 

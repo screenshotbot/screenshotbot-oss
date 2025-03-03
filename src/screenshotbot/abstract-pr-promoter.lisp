@@ -257,7 +257,12 @@ API. We're eventually going to replace it with this."
    (when-let* ((channel (recorder-run-channel run))
                (repo (channel-repo channel))
                (master-commit (recorder-run-branch-hash run))
-               (this-commit (recorder-run-commit run)))
+               (this-commit
+                ;; We intentionally don't use ACTUAL-SHA here. If this
+                ;; commit was merged into the main branch just before
+                ;; generating the screenshots, then we must use the
+                ;; non-overriden COMMIT to compare the merge base.
+                (recorder-run-commit run)))
      (let ((active-commits (channel-active-commits channel)))
        (compute-merge-base repo
                            (list*
