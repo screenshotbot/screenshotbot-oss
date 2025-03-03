@@ -6,6 +6,7 @@
         :bknr.indices :bknr.statistics
         :alexandria)
   (:import-from #:bknr.indices
+                #:allow-destroyed-access-p
                 #:base-indexed-object-required
                 #:base-indexed-object)
   #+cmu

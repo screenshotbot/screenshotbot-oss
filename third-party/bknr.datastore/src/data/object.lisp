@@ -209,8 +209,13 @@ reads will return nil.")))
                    :slots '(id))))
 
 (defclass base-store-object ()
-  ()
+  ((%id-cache
+    :accessor %id-cache))
   (:documentation "A regular class with optimized slot access, for storing fast slots."))
+
+(defmethod bknr.indices::allow-destroyed-access-p ((class persistent-class)
+                                                   (slot (eql '%id-cache)))
+  t)
 
 (defclass store-object (base-indexed-object
                         base-store-object)

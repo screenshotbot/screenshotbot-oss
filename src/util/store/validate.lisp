@@ -7,6 +7,8 @@
 (defpackage :util/store/validate
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:base-store-object
+                #:%id-cache
                 #:store-objects-with-class
                 #:store-object-id)
   (:import-from #:alexandria
@@ -242,12 +244,15 @@
                        (length objects)
                        (length classes))
              (loop for class in classes
-                   if (not (eql class (find-class 'base-indexed-object)))
+                   if (and
+                       (not (eql class (find-class 'base-indexed-object)))
+                       (not (eql class (find-class 'base-store-object))))
                    do
                       (loop for direct-slot in (closer-mop:class-direct-slots class)
                             for slot-name = (closer-mop:slot-definition-name direct-slot)
                             for slot = (find-effective-slot class slot-name)
                             if (and
+                                (not (eql '%id-cache slot-name))                                
                                 (not (eql 'object-destroyed-p-v2 slot-name))
                                 (or
                                  (bknr.indices::index-direct-slot-definition-index direct-slot)

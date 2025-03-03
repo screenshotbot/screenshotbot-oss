@@ -3,6 +3,8 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:bknr.datastore
+                #:persistent-effective-slot-definition
+                #:%id-cache
                 #:*in-restore-p*
                 #:next-object-id
                 #:store-object-subsystem
@@ -22,7 +24,9 @@
                 #:error-with-string-matching
                 #:signals-error-matching)
   (:import-from #:fiveam-matchers/strings
-                #:matches-regex))
+                #:matches-regex)
+  (:import-from #:fiveam-matchers/described-as
+                #:described-as))
 (in-package :bknr.datastore.tests)
 
 (def-suite* :bknr.datastore.tests)
@@ -559,3 +563,35 @@
            (matches-regex ".*Restore is in progress.*"))))
       (is (eql 2 (slot-value obj 'arg))))
     (is (equal 1 (next-object-id (store-object-subsystem))))))
+
+(defdstest can-access-id-cache-without-issues ()
+  (let ((obj (make-instance 'parent)))
+    (setf (%id-cache obj) 22)
+    (is (eql 22 (%id-cache obj)))
+
+    (delete-object obj)
+    (is (eql 22 (%id-cache obj)))
+    (setf (%id-cache obj) 23)
+    (is (eql 23 (%id-cache obj)))))
+
+(defdstest check-id-cache-slot-type ()
+  (let ((obj (make-instance 'parent)))
+    (setf (%id-cache obj) 22)
+    (is (eql 22 (%id-cache obj)))
+
+    (let ((slot (loop for slot in                       
+                               (closer-mop:class-slots (find-class 'parent))
+                      if (eql '%id-cache (closer-mop:slot-definition-name slot))
+                        return slot)))
+      (assert-that (type-of slot)
+                   (described-as "ha! it's not standard-slot-definition, deal with it."
+                     ;; ^ but Lispworks still seems to optimize the accessors
+                     (is-equal-to 'persistent-effective-slot-definition))))
+
+    (delete-object obj)
+    (is (eql 22 (%id-cache obj)))
+    (is (eql 22 (slot-value obj '%id-cache)))
+    (setf (%id-cache obj) 23)
+    (is (eql 23 (%id-cache obj)))
+    (setf (slot-value obj '%id-cache) 34)
+    (is (eql 34 (%id-cache obj)))))

@@ -319,6 +319,14 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 (defvar *indexed-class-override* nil)
 
+(defmethod allow-destroyed-access-p ((class indexed-class)
+                                     slot-name)
+  nil)
+
+(defmethod allow-destroyed-access-p ((class indexed-class)
+                                     (slot-name (eql 'object-destroyed-p-v2)))
+  t)
+
 (defmethod slot-value-using-class :before ((class indexed-class) object
                                            #-lispworks
                                            (slot index-effective-slot-definition)
@@ -328,7 +336,7 @@ also index subclasses of the class to which the slot belongs, default is T")
   (assert (symbolp slot-name))
   (let (#-lispworks (slot-name (slot-definition-name slot)))
     (when (and (not *indexed-class-override*)
-               (not (eql slot-name 'object-destroyed-p-v2))
+               (not (allow-destroyed-access-p class slot-name))
                (object-destroyed-p object))
      (error "Can not get slot ~A of destroyed object of class ~a."
 	        slot-name (class-name (class-of object))))))
@@ -341,7 +349,7 @@ also index subclasses of the class to which the slot belongs, default is T")
      (slot-name symbol))
   (declare (ignore newvalue))
   (let (#-lispworks (slot-name (slot-definition-name slot)))
-    (when (and (not (eql slot-name 'object-destroyed-p-v2))
+    (when (and (not (allow-destroyed-access-p class slot-name))
                (object-destroyed-p object)
                (not *indexed-class-override*))
      (error "Can not set slot ~A of destroyed object ~a."
@@ -349,10 +357,11 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 (defmethod slot-makunbound-using-class :before ((class indexed-class) object
                                                 (slot slot-definition))
-  (when (and (not (eql (if (symbolp slot)
-                           slot
-                           (slot-definition-name slot))
-                       'object-destroyed-p-v2))
+  (when (and (not (allow-destroyed-access-p
+                   class
+                   (if (symbolp slot)
+                       slot
+                       (slot-definition-name slot))))
              (object-destroyed-p object)
              (not *indexed-class-override*))
     (error "Can not MAKUNBOUND slot ~A of destroyed object ~a."
@@ -394,7 +403,7 @@ also index subclasses of the class to which the slot belongs, default is T")
     (newvalue (class indexed-class) object (slot index-effective-slot-definition))
   (declare (ignore newvalue))
 
-  (when (eql (slot-definition-name slot) 'object-destroyed-p-v2)
+  (when (allow-destroyed-access-p class (slot-definition-name slot))
     (return-from slot-value-using-class  (call-next-method)))
 
   (when *in-make-instance-p*
