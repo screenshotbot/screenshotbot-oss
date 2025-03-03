@@ -208,7 +208,12 @@ reads will return nil.")))
                    :index-superclasses t
                    :slots '(id))))
 
-(defclass store-object (base-indexed-object)
+(defclass base-store-object ()
+  ()
+  (:documentation "A regular class with optimized slot access, for storing fast slots."))
+
+(defclass store-object (base-indexed-object
+                        base-store-object)
   ((id :initarg :id
        :reader store-object-id
        :type integer
