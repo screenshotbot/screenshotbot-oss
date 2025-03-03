@@ -89,6 +89,7 @@
      (with-fixture datastore-test-class ()
        ,@body)))
 
+
 (defdstest store-setup ()
   (test-assert *store*))
 
@@ -96,6 +97,18 @@
   (let ((obj (make-instance 'store-object)))
     (test-assert obj)
     (test-equal (list obj) (all-store-objects))))
+
+(defdstest read-object-id ()
+  (let ((obj (make-instance 'store-object)))
+    (is (eql 0 (store-object-id obj))))
+  (let ((obj (make-instance 'store-object)))
+    (is (eql 1 (store-object-id obj)))))
+
+(defdstest find-by-object-id ()
+  (let ((obj1 (make-instance 'store-object))
+        (obj2 (make-instance 'store-object)))
+    (is (eql obj2 (store-object-with-id 1)))
+    (is (eql obj1 (store-object-with-id 0)))))
 
 (defdstest create-multiple-objects ()
   (let ((o1 (make-instance 'store-object))
@@ -193,6 +206,7 @@
 (defclass child-with-index (store-object)
   ((foo :initarg :foo
         :index-type unique-index
+        :accessor %foo
         :index-reader child-by-foo))
   (:metaclass persistent-class))
 
@@ -205,9 +219,25 @@
                 (all-store-objects))
         #'< :key #'cdr))
 
+(defdstest delete-indexed-object ()
+  (let ((obj (make-instance 'child-with-index
+                            :foo :bar)))
+    (is (eql obj (child-by-foo :bar)))
+    (delete-object obj)
+    (is (eql nil (child-by-foo :bar)))))
+
+(defdstest set-indexed-slot-in-object ()
+  (let ((obj (make-instance 'child-with-index
+                            :foo :bar)))
+    (is (eql obj (child-by-foo :bar)))
+    (setf (%foo obj) :car)
+    (is (eql nil (child-by-foo :bar)))
+    (is (eql obj (child-by-foo :car)))))
+
 (defdstest make-referenced-object-in-anon-tx ()
   (with-transaction (:make)
     (make-instance 'parent :child (make-instance 'child))))
+
 
 (defdstest circular-in-anon-txn-without-serialization ()
   (let ((parent (make-instance 'parent)))
