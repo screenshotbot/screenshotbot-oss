@@ -72,6 +72,8 @@
                 #:ensure-slot-constant-string
                 #:constant-string
                 #:constant-string-string)
+  (:import-from #:bknr.indices
+                #:hash-index)
   ;; classes
   (:export #:promotion-log
            #:recorder-run)
@@ -409,7 +411,8 @@ associated report is rendered.")
        (work recorder-run (next recorder-run))))))
 
 (defindex +unchanged-run-index+
-  'fset-set-index
+  'hash-index
+  :test #'equal
   :slot-name 'commit)
 
 (defmethod recorder-run-commit :around (run)
@@ -453,7 +456,11 @@ associated report is rendered.")
    (:documentation "Annotates that this commit should have identical screenshots to the other commit")))
 
 (defun unchanged-run-for-commit (channel commit)
-  (let ((runs (%unchanged-runs-for-commit commit)))
+  (let ((runs
+          ;; Backward compatibility for a migration from
+          ;; fset-set-index to hash-index.
+          (fset:convert 'fset:set
+                        (%unchanged-runs-for-commit commit))))
     (fset:do-set (ur runs)
       (when (eql channel (unchanged-run-channel ur))
         (return-from unchanged-run-for-commit ur))))
