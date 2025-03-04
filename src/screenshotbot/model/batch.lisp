@@ -16,6 +16,7 @@
                 #:fset-set-index
                 #:fset-unique-index)
   (:import-from #:bknr.indices
+                #:hash-index
                 #:index-get)
   (:import-from #:util/store/object-id
                 #:oid-array
@@ -114,7 +115,7 @@
   (batch-name batch))
 
 (defindex +batch-item-index+
-  'fset-set-index
+  'hash-index
   :slot-name 'batch)
 
 (with-class-validation
@@ -122,7 +123,7 @@
     ((batch :initarg :batch
             :reader batch
             :index +batch-item-index+
-            :index-reader batch-items)
+            :index-reader %batch-items)
      (%status :initarg :status
               :initform nil
               :accessor batch-item-status)
@@ -146,6 +147,17 @@
      (lock :transient t)
      (push-lock :transient t))
     (:metaclass persistent-class)))
+
+(defun batch-items (batch)
+  "In the previous version of the index, we used an fset-index.
+
+When reloading this code, the index isn't recreated. When rebooting,
+it will recreate with with a hash-index.
+
+This is for compatibility with the rest of the
+code."
+  (fset:convert 'fset:set
+                (%batch-items batch)))
 
 (defmethod bknr.datastore:make-object-snapshot ((self batch-item))
   (when (>= *snapshot-store-version* 23)
