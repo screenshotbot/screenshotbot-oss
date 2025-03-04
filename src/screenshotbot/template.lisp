@@ -57,14 +57,16 @@
   (:import-from #:util/misc
                 #:?.)
   (:import-from #:nibble
-                #:nibble))
+                #:nibble)
+  (:import-from #:util.cdn
+                #:make-cdn))
 
 (named-readtables:in-readtable markup:syntax)
 
 (defparameter *favicon* "/assets/images/logo-favicon.png")
 
-(defparameter *og-image*
-  "https://screenshotbot.io/assets/images/logo-dark.svg")
+(defun og-image ()
+  (make-cdn "/assets/images/logos/text-logo-with-vertical-space.png"))
 
 (defmethod render-extra-scripts ((installation installation))
   nil)
@@ -89,6 +91,11 @@
   (when (analyticsp (installation))
     <:script data-domain= (quri:uri-host (quri:uri (installation-domain (installation))))  data-api="/api/event" src="/js/script.js" defer ></:script>))
 
+(deftag og-details ()
+  <markup:merge-tag>
+    <meta name="image" property="og:image" content= (og-image) />
+  </markup:merge-tag>)
+
 (deftag dashboard-head (&key jquery-ui
                         (title "Screenshotbot")
                         codemirror)
@@ -99,6 +106,7 @@
         <!-- App favicon -->
         <link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
 
+        <og-details />
   ,(when jquery-ui
      <link rel= "stylesheet" href= "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />)
 
@@ -292,12 +300,12 @@
       <!-- App favicon -->
       <link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
 
-      <meta property="og:image"  content= *og-image* />
+      <meta name= "image" property="og:image"  content= (og-image) />
       <meta property= "og:description" content= "Build Pixel Perfect Apps with Screenshot Tests" />
       <meta property= "twitter:card" content= "summary" />
       <meta property= "twitter:site" content="@screenshotbotio" />
       <meta property= "twitter:title" content= "Build Pixel Perfect Apps with Screenshot Testing" />
-      <meta property="twitter:image"  content= *og-image* />
+      <meta property="twitter:image"  content= (og-image) />
       <meta property= "twitter:description" content= "Build Pixel Perfect Apps with Screenshot Tests" />
 
       <!-- App css -->
