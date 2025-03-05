@@ -142,20 +142,25 @@
          (do-perform tmpdir o m)))))
 
 (defun lw ()
-  (or
-   #+(and :x86-64 darwin)
-   "build/lw-console-8-0-0x86_64"
-   #+(or :linux (and :arm64 :darwin)) ;; TODO: we can do this on all platforms
-   (namestring
-    (asdf:system-relative-pathname
-     :build-utils
-     "../../build/lw-console-8-0-0"))
-   #+mswindows
-   ".\\build\\lw-console-8-0-0"
-   #+nil
-   (namestring (uiop:ensure-absolute-pathname
-                (pathname "build/lw-console-8-0-0.exe")))
-   (error "unsupported platform image")))
+  (let ((version (or
+                  #+lispworks8.1
+                  "8-1-0"
+                  #+lispworks8
+                  "8-0-0"
+                  (error "invalid version"))))
+    (format nil
+            (or
+             #+(and :x86-64 darwin)
+             "build/lw-console-~ax86_64"
+             #+(or :linux (and :arm64 :darwin)) ;; TODO: we can do this on all platforms
+             (namestring
+              (asdf:system-relative-pathname
+               :build-utils
+               "../../build/lw-console-~a"))
+             #+mswindows
+             ".\\build\\lw-console-~a"
+             (error "unsupported platform image"))
+            version)))
 
 (defmethod component-pathname ((m makeself-component))
   (call-next-method))
