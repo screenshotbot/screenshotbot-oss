@@ -306,3 +306,4 @@ need a better deletion model in the future."
       (unless (slot-boundp api-key '%permissions)
         (setf (api-key-permissions api-key)
               defaults)))))
+

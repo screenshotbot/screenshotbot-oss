@@ -9,6 +9,8 @@
   (:import-from #:screenshotbot/api/core
                 #:defapi)
   (:import-from #:screenshotbot/model/batch
+                #:batch-item-report
+                #:batch-items
                 #:batch-commit
                 #:batch-name
                 #:find-or-create-batch
@@ -17,6 +19,10 @@
                 #:store-object-id)
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run-repo-url)
+  (:import-from #:util/store/object-id
+                #:find-by-oid)
+  (:import-from #:screenshotbot/model/report
+                #:report-to-dto)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/batch)
 
@@ -65,3 +71,14 @@
                  :github-repo (recorder-run-repo-url batch)
                  :name (batch-name batch)
                  :commit (batch-commit batch)))
+
+(defapi (get-reports :uri "/api/batch/:oid/reports" :use-yason t :wrap-success nil) (oid)
+  (let ((batch (find-by-oid oid)))
+    (coerce
+     (loop for item in (fset:convert 'list (batch-items batch))
+           for report = (batch-item-report item)
+           collect
+           (progn
+             (auth:can-view! report)
+             (report-to-dto report)))
+     'vector)))
