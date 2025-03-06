@@ -132,7 +132,8 @@
                :accessor batch-item-channel)
      (%acceptable :initarg :acceptable
                   :initform nil
-                  :accessor acceptable)
+                  :accessor acceptable
+                  :documentation "This slot isn't actually being used (AFAICT)")
      (%title :initarg :title
              :initform ""
              :accessor batch-item-title)
