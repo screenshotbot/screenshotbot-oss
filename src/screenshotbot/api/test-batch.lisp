@@ -92,3 +92,18 @@
     (assert-that (coerce (get-reports :oid (oid batch)) 'list)
                  (contains
                   (has-typep 'dto:report)))))
+
+(test get-reports-when-some-reports-are-NIL
+  (with-fixture state ()
+    (is (equalp #()  (get-reports :oid (oid batch))))
+    (make-instance 'batch-item
+                   :batch batch
+                   :report (make-instance 'report
+                                          :run run
+                                          :previous-run nil))
+    (make-instance 'batch-item
+                   :batch batch
+                   :run run)
+    (assert-that (coerce (get-reports :oid (oid batch)) 'list)
+                 (contains
+                  (has-typep 'dto:report)))))

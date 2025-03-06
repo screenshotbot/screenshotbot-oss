@@ -77,8 +77,9 @@
     (coerce
      (loop for item in (fset:convert 'list (batch-items batch))
            for report = (batch-item-report item)
-           collect
-           (progn
-             (auth:can-view! report)
-             (report-to-dto report)))
+           if report
+             collect
+             (progn
+               (auth:can-view! report)
+               (report-to-dto report)))
      'vector)))
