@@ -175,6 +175,7 @@
            (not (str:emptyp (uiop:getenv "SCREENSHOTBOT_CLI_V2")))
            (str:s-member argv "dev")
            (str:s-member argv "ci")
+           (str:s-member argv "batch")
            (str:s-member argv "download-run")
            #+nil ;; References "ci record" which doesn't exit
            (str:s-member argv "help"))

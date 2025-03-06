@@ -77,7 +77,8 @@
              #:run-metadata
              #:metadata-key
              #:metadata-value
-             #:release-branch-p))
+             #:release-branch-p
+             #:report-id))
 
 (in-package :screenshotbot/api/model)
 
@@ -424,6 +425,7 @@ runs, but only for debugging.")
   ((id :initarg :id
        :json-key "id"
        :json-type :string
+       :reader report-id
        :documentation "The ID of this report"))
   (:metaclass ext-json-serializable-class))
 

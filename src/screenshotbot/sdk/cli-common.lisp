@@ -25,6 +25,8 @@
                 #:with-clingon-api-context)
   (:import-from #:screenshotbot/sdk/upload-commit-graph
                 #:upload-commit-graph/command)
+  (:import-from #:screenshotbot/sdk/batch
+                #:batch/command)
   (:export
    #:with-clingon-api-context
    #:common-run-options
@@ -134,7 +136,8 @@ as opposed to `recorder help`."
     (self-test/command)
     (ci/command)
     (dev/command)
-    (download-run/command))))
+    (download-run/command)
+    (batch/command))))
 
 
 (defun ci/command ()
