@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/model/report
+                #:base-acceptable
                 #:report-to-dto
                 #:company-promotion-reports
                 #:%report-company)
@@ -38,7 +39,8 @@
                 #:installation
                 #:multi-org-feature)
   (:import-from #:auth/viewer-context
-                #:normal-viewer-context))
+                #:normal-viewer-context)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/model/test-report)
 
 (util/fiveam:def-suite)
@@ -128,3 +130,25 @@
                    (make-instance 'normal-viewer-context
                                   :user user)
                    report)))))))
+
+
+(test review-state-encoding-without-acceptable
+  (with-fixture state ()
+    (let ((report (make-instance 'report :acceptable nil)))
+      (is (equal "na" (dto:report-acceptable-state
+                       (report-to-dto report)))))))
+
+(test review-state-encoding-with-acceptable
+  (with-fixture state ()
+    (let* ((acceptable (make-instance 'base-acceptable))
+           (report (make-instance 'report :acceptable acceptable)))
+      (is (equal "none" (dto:report-acceptable-state
+                         (report-to-dto report)))))))
+
+(test review-state-encoding-with-acceptable
+  (with-fixture state ()
+    (let* ((acceptable (make-instance 'base-acceptable
+                                      :state :accepted))
+           (report (make-instance 'report :acceptable acceptable)))
+      (is (equal "accepted" (dto:report-acceptable-state
+                         (report-to-dto report)))))))

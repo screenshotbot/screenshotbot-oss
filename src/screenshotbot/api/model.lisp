@@ -78,7 +78,8 @@
              #:metadata-key
              #:metadata-value
              #:release-branch-p
-             #:report-id))
+             #:report-id
+             #:report-acceptable-state))
 
 (in-package :screenshotbot/api/model)
 
@@ -426,7 +427,12 @@ runs, but only for debugging.")
        :json-key "id"
        :json-type :string
        :reader report-id
-       :documentation "The ID of this report"))
+       :documentation "The ID of this report")
+   (review-state :initarg :acceptable-state
+                 :json-key "reviewState"
+                 :json-type :string
+                 :reader report-acceptable-state
+                 :documentation "The review status of the report. One of 'accepted', 'rejected', 'none' or 'na'."))
   (:metaclass ext-json-serializable-class))
 
 (defmethod json-mop:json-to-clos ((items vector) (class (eql 'screenshot-list))

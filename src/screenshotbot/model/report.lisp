@@ -247,4 +247,12 @@
 
 (defun report-to-dto (report)
   (make-instance 'dto:report
-                 :id (oid report)))
+                 :id (oid report)
+                 :acceptable-state
+                 (or
+                  (when-let ((acceptable (report-acceptable report)))
+                    (string-downcase
+                     (or
+                      (acceptable-state acceptable)
+                      "none")))
+                  "na")))
