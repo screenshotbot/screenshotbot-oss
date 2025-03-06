@@ -52,12 +52,47 @@
               :key :batch-id
               :description "The Batch ID. Typically, if the URL that is linked to it will be /batch/<id>."))))
 
+(defun accept-report (api-context report)
+  (log:info "Accepting ~a" (dto:report-id report))
+  (multiple-value-bind (result code)
+      (sdk:request api-context
+                   (format nil "/api/report/~a/review/accept" (dto:report-id report))
+                   :method :post
+                   :decode-response nil)
+    (unless (eql 200 code)
+      (error "Could not accept report ~a, ~a" (dto:report-id report)
+             result))))
+
+(defun %accept-all (api-context &key batch-id)
+  (loop for report in (list-reports api-context :batch-id batch-id)
+        if (not (equal "accepted" (dto:report-acceptable-state report)))
+          do
+             (accept-report api-context report)
+        else
+          do
+        (log:info "Report ~a is already accepted" (dto:report-id report))))
+
+(defun accept-all/command ()
+  (clingon:make-command
+   :name "accept-all"
+   :description "Accept all reports under this batch"
+   :handler (lambda (cmd)
+              (with-clingon-api-context (api-context cmd)
+                (%accept-all api-context :batch-id (getopt cmd :batch-id))))
+   :options (list
+             (make-option
+              :string
+              :long-name "batch-id"
+              :key :batch-id
+              :description "The Batch ID. Typically, if the URL that is linked to it will be /batch/<id>."))))
+
 (defun batch/command ()
   (clingon:make-command
    :name "batch"
    :description "Commands operating on Batch objects"
    :sub-commands (list
-                  (reports/command))))
+                  (reports/command)
+                  (accept-all/command))))
 
 
 
