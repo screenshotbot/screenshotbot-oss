@@ -51,6 +51,7 @@
   (:import-from #:screenshotbot/cdn
                 #:make-image-cdn-url)
   (:import-from #:util/events
+                #:push-event
                 #:with-tracing)
   (:import-from #:util/throttler
                 #:throttler
@@ -138,7 +139,9 @@
                       :type :webp)))
            (let ((png (output-file "png")))
              (unless (uiop:file-exists-p png)
-               (warn "Requesting a png that does not exist")
+               (push-event :live-png-creation
+                           :name (oid image)
+                           :size-name size-name)
                (with-wand (wand :file webp)
                  (uiop:with-staging-pathname (png)
                    (save-wand-to-file
