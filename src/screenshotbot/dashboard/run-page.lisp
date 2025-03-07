@@ -297,6 +297,7 @@
              <div class="alert alert-info mt-3">,(progn alert)</div>)
 
           <ul>
+            <li>Organization: ,(?. company-name (recorder-run-company run))</li>
             <li>Repo url: ,(github-repo run)</li>
             <li>Commit: ,(commit :repo repo :hash (recorder-run-commit run)) </li>
             <li>Override Commit hash for Pull Requests: ,(commit :repo repo :hash (override-commit-hash run))</li>
