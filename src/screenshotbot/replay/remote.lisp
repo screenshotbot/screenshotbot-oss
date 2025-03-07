@@ -67,16 +67,6 @@
 (defvar *threads* (trivial-garbage:make-weak-hash-table
                    :weakness :value))
 
-(defun make-testing-run ()
-  (make-instance 'run
-                  :channel "test-channel-2"
-                  :sitemap "https://rollins-edu-cla-staging.netlify.app/sitemap.xml"
-                  :custom-css "body { background: red !important; padding-top: 10em;} "
-                  :api-key "OUZC6OX7RD1BTCWGB77W"
-                  :api-secret "8Fv6vuVzLOFU4RvUOgABUzAiyeJCuj2nQuyCaZQ0" :sleep 0 :host "https://staging.screenshotbot.io" :sampling 0.02 :browser-configs (list (make-instance 'browser-config:browser-config :type 'frontend::chrome :name "Chrome"))))
-
-
-
 (defparameter *timeout* (* 4 3600))
 (defvar *hash-lock* (make-instance 'hash-lock))
 
