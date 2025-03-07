@@ -566,9 +566,4 @@ accessing the urls or sitemap slot."
                            :run run)))
              (process-results run results))))))))
 
-#+nil
-(schedule-replay-job (make-instance 'run
-                                    :channel "test-channel"
-                                    :urls (list "https://staging.screenshotbot.io")
-                                    :api-key "FR7L47QK3YHMZ3Z8TEAX"
-                                    :api-secret "F70tzxRVRf2VgkCTZH0j7nb9HABchakx5LEbL9lm"))
+
