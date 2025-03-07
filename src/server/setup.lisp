@@ -89,6 +89,7 @@
                        hunchentoot-multi-acceptor:multi-acceptor)
   ()
   (:default-initargs
+   :listen-backlog 500
    :default-acceptor (make-instance 'my-default-acceptor
                                     :port 1
                                     :name 'hunchentoot-multi-acceptor:default-acceptor)))
