@@ -7,9 +7,6 @@
 (defpackage :screenshotbot/test-secret
   (:use #:cl
         #:fiveam)
-  (:import-from #:screenshotbot/secret
-                #:read-secrets
-                #:*secret-file*)
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
   (:import-from #:fiveam-matchers/has-length
@@ -21,10 +18,5 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let ((*secret-file* #.(asdf:system-relative-pathname :screenshotbot "fixture/secrets.xml")))
-    (&body)))
+  (&body))
 
-(test simple-reading
-  (with-fixture state ()
-    (assert-that (read-secrets)
-                 (has-length 2))))

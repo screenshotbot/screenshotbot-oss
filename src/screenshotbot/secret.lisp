@@ -10,6 +10,7 @@
     (:import-from #:bknr.impex
                   #:parse-xml-file)
     (:import-from #:bknr.indices
+                  #:indexed-class
                   #:base-indexed-object)
   (:export #:defsecret
            #:secret))
@@ -18,40 +19,22 @@
 (defvar *secret-list* nil)
 (defvar *secrets* nil)
 
-(eval-when (:compile-toplevel :load-toplevel :execute)
-  (defparameter *secret-dtd* (asdf:system-relative-pathname :screenshotbot "dtd/secret.dtd")))
-
-(defvar *secret-file* (asdf:system-relative-pathname :screenshotbot "../../.secrets/secrets.xml"))
-
 (defclass secret (base-indexed-object)
   ((name :initarg :name
-         :element "name"
          :reader secret-name)
    (value :initarg :value
-          :element "value"
           :reader secret-value)
    (public :initarg :public
            :initform nil
-           :element "public-id"
            :reader secret-public-id)
    (environment :initarg :environment
                 :initform "production"
-                :attribute "environment"
                 :reader secret-environment))
-  (:dtd-name *secret-dtd*)
-  (:element "secret")
-  (:metaclass bknr.impex:xml-class))
+  (:metaclass indexed-class))
 
 (defmethod print-object ((self secret) out)
   (format out "#<SECRET ~a [~a]>" (secret-name self)
           (secret-environment self)))
-
-(defun read-secrets ()
-  (let ((file *secret-file*))
-    (when (uiop:file-exists-p file)
-      (second
-       (parse-xml-file file
-                       (list (find-class 'secret)))))))
 
 (defmacro defsecret (name documentation)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
