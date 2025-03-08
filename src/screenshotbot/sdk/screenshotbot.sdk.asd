@@ -164,3 +164,11 @@
                #:screenshotbot
                #:screenshotbot.sdk)
   :components ((:file "integration-tests")))
+
+(defsystem :screenshotbot.sdk/sdk-integration-tests-impl
+  :depends-on (#:alexandria
+               #:screenshotbot.sdk/deliver
+               #:secure-random
+               #:tmpdir
+               #:cl-fad)
+  :components ((:file "sdk-integration-tests-impl")))
