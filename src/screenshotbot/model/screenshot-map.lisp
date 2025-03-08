@@ -89,7 +89,7 @@ will not consider it as a possibility.")
 (defmethod screenshot-map-to-list ((self screenshot-map))
   (slot-value self 'screenshots))
 
-(defun memoized-reduce (fn map initial-value slot &optional (callback #'identity))
+(defun memoized-reduce (fn map initial-value slot)
   "This is written in CPS form to avoid deep recursions."
   (labels ((%memoized-reduce (map &optional (callback #'identity))
              (cond
@@ -104,7 +104,7 @@ will not consider it as a possibility.")
                                        (funcall callback
                                                 (setf (slot-value map slot)
                                                       (funcall fn map previous-value)))))))))))
-    (%memoized-reduce map callback)))
+    (%memoized-reduce map #'identity)))
 
 (defun chain-cost (map)
   (memoized-reduce (lambda (this cost)
