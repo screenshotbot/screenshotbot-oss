@@ -8,7 +8,7 @@ LW=build/lw-console-$(LW_VERSION)$(ARCH)
 LW_CORE=lispworks-unknown-location
 
 LW_LIB_DIR=/opt/software/lispworks
-PRIVATE_PATCH_DIR=$(LW_LIB_DIR)/lib/8-0-0-0/private-patches/
+PRIVATE_PATCH_DIR=$(LW_LIB_DIR)/lib/$(LW_VERSION)-0/private-patches/
 PRIVATE_PATCHES=$(call FIND,$(PRIVATE_PATCH_DIR),*.lisp)
 
 ifeq ($(UNAME),Linux)
@@ -16,12 +16,12 @@ ifeq ($(UNAME),Linux)
 endif
 
 ifeq ($(UNAME),Darwin)
-	LW_CORE=/Applications/LispWorks\ 8.0\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-8-0-0-macos64-universal
+	LW_CORE=/Applications/LispWorks\ 8.0\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-$(LW_VERSION)-macos64-universal
 	LW_LIB_DIR=/Applications/LispWorks\ 8.0\ \(64-bit\)/Library
 endif
 
 ifeq ($(OS),Windows_NT)
-	LW_CORE="C:\Program Files\LispWorks\lispworks-8-0-0-x64-windows.exe"
+	LW_CORE="C:\Program Files\LispWorks\lispworks-$(LW_VERSION)-x64-windows.exe"
 endif
 
 
