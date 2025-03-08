@@ -1,5 +1,5 @@
 ;;; -*- mode: Lisp; Base: 10 ; Syntax: ANSI-Common-Lisp ; Package: CL-USER ; buffer-read-only: t; -*-
-;;; This is ASDF 3.3.5: Another System Definition Facility.
+;;; This is ASDF 3.3.7: Another System Definition Facility.
 ;;;
 ;;; Feedback, bug reports, and patches are all welcome:
 ;;; please mail to <asdf-devel@common-lisp.net>.
@@ -57,7 +57,7 @@
 			   (and (= is-major 3) (> is-minor 86)))))
 	(error "ASDF requires either System 453 or later or Intel Support 3.87 or later")))))
 ;;;; ---------------------------------------------------------------------------
-;;;; Handle ASDF package upgrade, including implementation-dependent magic.
+;;;; ASDF package upgrade, including implementation-dependent magic.
 ;;
 ;; See https://bugs.launchpad.net/asdf/+bug/485687
 ;;
@@ -147,12 +147,25 @@
 ;;;; General purpose package utilities
 
 (eval-when (:load-toplevel :compile-toplevel :execute)
-  (defun find-package* (package-designator &optional (error t))
+  (deftype package-designator () '(and (or package character string symbol) (satisfies find-package)))
+  (define-condition no-such-package-error (type-error)
+    ()
+    (:default-initargs :expected-type 'package-designator)
+    (:report (lambda (c s)
+              (format s "No package named ~a" (string (type-error-datum c))))))
+
+  (defmethod package-designator ((c no-such-package-error))
+    (type-error-datum c))
+
+  (defun find-package* (package-designator &optional (errorp t))
+    "Like CL:FIND-PACKAGE, but by default raises a UIOP:NO-SUCH-PACKAGE-ERROR if the
+  package is not found."
     (let ((package (find-package package-designator)))
       (cond
         (package package)
-        (error (error "No package named ~S" (string package-designator)))
+        (errorp (error 'no-such-package-error :datum package-designator))
         (t nil))))
+
   (defun find-symbol* (name package-designator &optional (error t))
     "Find a symbol in a package of given string'ified NAME;
 unlike CL:FIND-SYMBOL, work well with 'modern' case sensitive syntax
@@ -455,6 +468,11 @@ or when loading the package is optional."
 
 ;;; ensure-package, define-package
 (eval-when (:load-toplevel :compile-toplevel :execute)
+  ;; We already have UIOP:SIMPLE-STYLE-WARNING, but it comes from a later
+  ;; package.
+  (define-condition define-package-style-warning
+      #+sbcl (sb-int:simple-style-warning) #-sbcl (simple-condition style-warning)
+      ())
   (defun ensure-shadowing-import (name to-package from-package shadowed imported)
     (check-type name string)
     (check-type to-package package)
@@ -807,7 +825,15 @@ or when loading the package is optional."
               (do-external-symbols (sym pp) (ensure-mix (symbol-name sym) sym package pp shadowed imported inherited)))
       ;; handle import-from packages
       (loop :for (p . syms) :in import-from
-            :for pp = (find-package p) :do
+            ;; FOR NOW suppress errors in the case where the :import-from
+            ;; symbol list is empty (used only to establish a dependency by
+            ;; package-inferred-system users).
+            :for pp = (find-package* p syms) :do
+              (when (null pp)
+                ;; TODO: ASDF 3.4 Change to a full warning.
+                (warn 'define-package-style-warning
+                      :format-control "When defining package ~a, attempting to import-from non-existent package ~a. This is deprecated behavior and will be removed from UIOP in the future."
+                      :format-arguments (list name p)))
               (dolist (sym syms) (ensure-import (symbol-name sym) package pp shadowed imported)))
       ;; handle use-list and mix
       (dolist (p (append use mix))
@@ -867,14 +893,19 @@ or when loading the package is optional."
                          :import-from ',import-from :export ',export :intern ',intern
                          :recycle ',(if recycle-p recycle (cons package nicknames))
                          :mix ',mix :reexport ',reexport :unintern ',unintern
-                         :local-nicknames ',local-nicknames)))))
+                         ,@(when local-nicknames
+                             `(:local-nicknames ',local-nicknames)))))))
 
 (defmacro define-package (package &rest clauses)
   "DEFINE-PACKAGE takes a PACKAGE and a number of CLAUSES, of the form
 \(KEYWORD . ARGS\).
 DEFINE-PACKAGE supports the following keywords:
-USE, SHADOW, SHADOWING-IMPORT-FROM, IMPORT-FROM, EXPORT, INTERN, NICKNAMES,
+SHADOW, SHADOWING-IMPORT-FROM, IMPORT-FROM, EXPORT, INTERN, NICKNAMES,
 DOCUMENTATION -- as per CL:DEFPACKAGE.
+USE -- as per CL:DEFPACKAGE, but if neither USE, USE-REEXPORT, MIX,
+nor MIX-REEXPORT is supplied, then it is equivalent to specifying
+(:USE :COMMON-LISP). This is unlike CL:DEFPACKAGE for which the
+behavior of a form without USE is implementation-dependent.
 RECYCLE -- Recycle the package's exported symbols from the specified packages,
 in order.  For every symbol scheduled to be exported by the DEFINE-PACKAGE,
 either through an :EXPORT option or a :REEXPORT option, if the symbol exists in
@@ -892,7 +923,9 @@ an error if there is a conflict with an explicitly :IMPORT-FROM symbol.
 REEXPORT -- Takes a list of package designators.  For each package, p, in the list,
 export symbols with the same name as those exported from p.  Note that in the case
 of shadowing, etc. the symbols with the same name may not be the same symbols.
-UNINTERN -- Remove symbols here from PACKAGE.
+UNINTERN -- Remove symbols here from PACKAGE. Note that this is primarily useful
+when *redefining* a previously-existing package in the current image (e.g., when
+upgrading ASDF).  Most programmers will have no use for this option.
 LOCAL-NICKNAMES -- If the host implementation supports package local nicknames
 \(check for the :PACKAGE-LOCAL-NICKNAMES feature\), then this should be a list of
 nickname and package name pairs.  Using this option will cause an error if the
@@ -912,7 +945,14 @@ MIX directives, and reexport their contents as per the REEXPORT directive."
 ;; This package, unlike UIOP/PACKAGE, is allowed to evolve and acquire new symbols or drop old ones.
 (define-package :uiop/package*
   (:use-reexport :uiop/package
-                 #+package-local-nicknames :uiop/package-local-nicknames))
+                 #+package-local-nicknames :uiop/package-local-nicknames)
+  (:import-from :uiop/package
+                #:define-package-style-warning
+                #:no-such-package-error
+                #:package-designator)
+  (:export #:define-package-style-warning
+           #:no-such-package-error
+           #:package-designator))
 ;;;; -------------------------------------------------------------------------
 ;;;; Handle compatibility with multiple implementations.
 ;;; This file is for papering over the deficiencies and peculiarities
@@ -944,12 +984,13 @@ MIX directives, and reexport their contents as per the REEXPORT directive."
 
 ;;;; Early meta-level tweaks
 
-#+(or allegro clasp clisp clozure cmucl ecl lispworks mezzano mkcl sbcl)
+#+(or allegro clasp clisp clozure cmucl ecl lispworks mezzano mkcl sbcl abcl)
 (eval-when (:load-toplevel :compile-toplevel :execute)
   (when (and #+allegro (member :ics *features*)
              #+(or clasp clisp cmucl ecl lispworks mkcl) (member :unicode *features*)
              #+clozure (member :openmcl-unicode-strings *features*)
-             #+sbcl (member :sb-unicode *features*))
+             #+sbcl (member :sb-unicode *features*)
+             #+abcl t)
     ;; Check for unicode at runtime, so that a hypothetical FASL compiled with unicode
     ;; but loaded in a non-unicode setting (e.g. on Allegro) won't tell a lie.
     (pushnew :asdf-unicode *features*)))
@@ -1798,7 +1839,7 @@ form suitable for testing with #+."
   (:use :uiop/common-lisp :uiop/package :uiop/utility)
   (:export
    #:*uiop-version*
-   #:parse-version #:unparse-version #:version< #:version<= ;; version support, moved from uiop/utility
+   #:parse-version #:unparse-version #:version< #:version<= #:version= ;; version support, moved from uiop/utility
    #:next-version
    #:deprecated-function-condition #:deprecated-function-name ;; deprecation control
    #:deprecated-function-style-warning #:deprecated-function-warning
@@ -1807,7 +1848,7 @@ form suitable for testing with #+."
 (in-package :uiop/version)
 
 (with-upgradability ()
-  (defparameter *uiop-version* "3.3.5")
+  (defparameter *uiop-version* "3.3.7")
 
   (defun unparse-version (version-list)
     "From a parsed version (a list of natural numbers), compute the version string"
@@ -1857,6 +1898,12 @@ and return it as a string."
   (defun version<= (version1 version2)
     "Given two version strings, return T if the second is newer or the same"
     (not (version< version2 version1))))
+
+  (defun version= (version1 version2)
+    "Given two version strings, return T if the first is newer or the same and
+the second is also newer or the same."
+    (and (version<= version1 version2)
+         (version<= version2 version1)))
 
 
 (with-upgradability ()
@@ -2097,18 +2144,56 @@ use getenvp to return NIL in such a case."
 
   (defsetf getenv (x) (val)
     "Set an environment variable."
-    (declare (ignorable x val))
-    #+allegro `(setf (sys:getenv ,x) ,val)
-    #+clasp `(ext:setenv ,x ,val)
-    #+clisp `(system::setenv ,x ,val)
-    #+clozure `(ccl:setenv ,x ,val)
-    #+cmucl `(unix:unix-setenv ,x ,val 1)
-    #+(or ecl clasp) `(ext:setenv ,x ,val)
-    #+lispworks `(setf (lispworks:environment-variable ,x) ,val)
-    #+mkcl `(mkcl:setenv ,x ,val)
-    #+sbcl `(progn (require :sb-posix) (symbol-call :sb-posix :setenv ,x ,val 1))
-    #-(or allegro clasp clisp clozure cmucl ecl lispworks mkcl sbcl)
-    '(not-implemented-error '(setf getenv)))
+    (declare (ignorable x val))         ; for the not-implemented cases.
+    (if (constantp val)
+        (if val
+         #+allegro `(setf (sys:getenv ,x) ,val)
+         #+clasp `(ext:setenv ,x ,val)
+         #+clisp `(system::setenv ,x ,val)
+         #+clozure `(ccl:setenv ,x ,val)
+         #+cmucl `(unix:unix-setenv ,x ,val 1)
+         #+ecl `(ext:setenv ,x ,val)
+         #+lispworks `(setf (lispworks:environment-variable ,x) ,val)
+         #+mkcl `(mkcl:setenv ,x ,val)
+         #+sbcl `(progn (require :sb-posix) (symbol-call :sb-posix :setenv ,x ,val 1))
+         #-(or allegro clasp clisp clozure cmucl ecl lispworks mkcl sbcl)
+         '(not-implemented-error '(setf getenv))
+         ;; VAL is NIL, unset the variable
+         #+allegro `(symbol-call :excl.osi :unsetenv ,x)
+         ;; #+clasp `(ext:setenv ,x ,val) ; UNSETENV is not supported.
+         #+clisp `(system::setenv ,x ,val) ; need fix -- no idea if this works.
+         #+clozure `(ccl:unsetenv ,x)
+         #+cmucl `(unix:unix-unsetenv ,x)
+         #+ecl `(ext:setenv ,x ,val) ; Looked at source, don't see UNSETENV
+         #+lispworks `(setf (lispworks:environment-variable ,x) ,val) ; according to their docs, this should unset the variable
+         #+mkcl `(mkcl:setenv ,x ,val) ; like other ECL-family implementations, don't see UNSETENV
+         #+sbcl `(progn (require :sb-posix) (symbol-call :sb-posix :unsetenv ,x))
+         #-(or allegro clisp clozure cmucl ecl lispworks mkcl sbcl)
+         '(not-implemented-error 'unsetenv))
+        `(if ,val
+             #+allegro (setf (sys:getenv ,x) ,val)
+             #+clasp (ext:setenv ,x ,val)
+             #+clisp (system::setenv ,x ,val)
+             #+clozure (ccl:setenv ,x ,val)
+             #+cmucl (unix:unix-setenv ,x ,val 1)
+             #+ecl (ext:setenv ,x ,val)
+             #+lispworks (setf (lispworks:environment-variable ,x) ,val)
+             #+mkcl (mkcl:setenv ,x ,val)
+             #+sbcl (progn (require :sb-posix) (symbol-call :sb-posix :setenv ,x ,val 1))
+             #-(or allegro clasp clisp clozure cmucl ecl lispworks mkcl sbcl)
+             '(not-implemented-error '(setf getenv))
+             ;; VAL is NIL, unset the variable
+             #+allegro (symbol-call :excl.osi :unsetenv ,x)
+             ;; #+clasp (ext:setenv ,x ,val) ; UNSETENV not supported
+             #+clisp (system::setenv ,x ,val) ; need fix -- no idea if this works.
+             #+clozure (ccl:unsetenv ,x)
+             #+cmucl (unix:unix-unsetenv ,x)
+             #+ecl (ext:setenv ,x ,val) ; Looked at source, don't see UNSETENV
+             #+lispworks (setf (lispworks:environment-variable ,x) ,val) ; according to their docs, this should unset the variable
+             #+mkcl (mkcl:setenv ,x ,val) ; like other ECL-family implementations, don't see UNSETENV
+             #+sbcl (progn (require :sb-posix) (symbol-call :sb-posix :unsetenv ,x))
+             #-(or allegro clisp clozure cmucl ecl lispworks mkcl sbcl)
+             '(not-implemented-error 'unsetenv))))
 
   (defun getenvp (x)
     "Predicate that is true if the named variable is present in the libc environment,
@@ -2193,7 +2278,7 @@ then returning the non-empty string value of the variable"
                 ;; Note if not using International ACL
                 ;; see http://www.franz.com/support/documentation/8.1/doc/operators/excl/ics-target-case.htm
                 (excl:ics-target-case (:-ics "8"))
-                (and (member :smp *features*) "S"))
+                (and (member :smp *features*) "SBT"))
         #+armedbear (format nil "~a-fasl~a" s system::*fasl-version*)
         #+clisp
         (subseq s 0 (position #\space s)) ; strip build information (date, etc.)
@@ -2235,7 +2320,8 @@ suitable for use as a directory name to segregate Lisp FASLs, C dynamic librarie
              (or (implementation-type) (lisp-implementation-type))
              (lisp-version-string)
              (or (operating-system) (software-type))
-             (or (architecture) (machine-type))))))
+             (or (architecture) (machine-type))
+             #+sbcl (if (featurep :sb-thread) "S" "")))))
 
 
 ;;;; Other system information
@@ -2379,8 +2465,6 @@ the number having BYTES octets (defaulting to 4)."
         (end-of-file (c)
           (declare (ignore c))
           nil)))))
-
-
 ;;;; -------------------------------------------------------------------------
 ;;;; Portability layer around Common Lisp pathnames
 ;; This layer allows for portable manipulation of pathname objects themselves,
@@ -2856,12 +2940,27 @@ to throw an error if the pathname is absolute"
                (values filename type))
               (t
                (split-name-type filename)))
-          (apply 'ensure-pathname
-                 (make-pathname
-                  :directory (unless file-only (cons relative path))
-                  :name name :type type
-                  :defaults (or #-mcl defaults *nil-pathname*))
-                 (remove-plist-keys '(:type :dot-dot :defaults) keys))))))
+            (let* ((directory
+                    (unless file-only (cons relative path)))
+                   (pathname
+                    #-abcl
+                    (make-pathname
+                     :directory directory
+                     :name name :type type
+                     :defaults (or #-mcl defaults *nil-pathname*))
+                    #+abcl
+                    (if (and defaults
+                             (ext:pathname-jar-p defaults)
+                             (null directory))
+                        ;; When DEFAULTS is a jar, it will have the directory we want
+                        (make-pathname :name name :type type
+                                       :defaults (or defaults *nil-pathname*))
+                        (make-pathname :name name :type type
+                                       :defaults (or defaults *nil-pathname*)
+                                       :directory directory))))
+              (apply 'ensure-pathname
+                     pathname
+                     (remove-plist-keys '(:type :dot-dot :defaults) keys)))))))
 
   (defun unix-namestring (pathname)
     "Given a non-wild PATHNAME, return a Unix-style namestring for it.
@@ -4492,7 +4591,7 @@ Upon success, the KEEP form is evaluated and the file is is deleted unless it ev
                        ,@before)))
               ,@(when after
                   (assert pathnamep)
-                  `((,afterf (,pathname) ,@after))))
+                  `((,afterf (,pathname) (declare (ignorable ,pathname)) ,@after))))
          #-gcl (declare (dynamic-extent ,@(when before `(#',beforef)) ,@(when after `(#',afterf))))
          (call-with-temporary-file
           ,(when before `#',beforef)
@@ -4611,7 +4710,7 @@ when the image is restarted, but before the entry point is called.")
 before the image dump hooks are called and before the image is dumped.")
 
   (defvar *image-dump-hook* nil
-    "Functions to call (in order) when before an image is dumped"))
+    "Functions to call (in order) before an image is dumped"))
 
 (eval-when (#-lispworks :compile-toplevel :load-toplevel :execute)
   (deftype fatal-condition ()
@@ -4922,9 +5021,17 @@ or COMPRESSION on SBCL, and APPLICATION-TYPE on SBCL/Windows."
     #-(or clisp clozure (and cmucl executable) lispworks sbcl scl)
     (when executable
       (not-implemented-error 'dump-image "dumping an executable"))
-    #+allegro
+    #+allegro ;; revised with help from Franz
     (progn
-      (sys:resize-areas :global-gc t :pack-heap t :sift-old-areas t :tenure t) ; :new 5000000
+      #+(and allegro-version>= (version>= 11))
+      (sys:resize-areas
+       :old :no-change :old-code :no-change
+       :global-gc t
+       :tenure t)
+      #+(and allegro-version>= (version= 10 1))
+      (sys:resize-areas :old 10000000 :global-gc t :pack-heap t :sift-old-areas t :tenure t)
+      #+(and allegro-version>= (not (version>= 10 1)))
+      (sys:resize-areas :global-gc t :pack-heap t :sift-old-areas t :tenure t)
       (excl:dumplisp :name filename :suppress-allegro-cl-banner t))
     #+clisp
     (apply #'ext:saveinitmem filename
@@ -5060,7 +5167,8 @@ or COMPRESSION on SBCL, and APPLICATION-TYPE on SBCL/Windows."
    ;; Variables
    #:*compile-file-warnings-behaviour* #:*compile-file-failure-behaviour*
    #:*output-translation-function*
-   #:*optimization-settings* #:*previous-optimization-settings*
+   ;; the following dropped because unnecessary.
+   ;; #:*optimization-settings* #:*previous-optimization-settings*
    #:*base-build-directory*
    #:compile-condition #:compile-file-error #:compile-warned-error #:compile-failed-error
    #:compile-warned-warning #:compile-failed-warning
@@ -5070,7 +5178,10 @@ or COMPRESSION on SBCL, and APPLICATION-TYPE on SBCL/Windows."
    ;; Types
    #+sbcl #:sb-grovel-unknown-constant-condition
    ;; Functions & Macros
-   #:get-optimization-settings #:proclaim-optimization-settings #:with-optimization-settings
+   ;; the following three removed from UIOP because they have bugs, it's
+   ;; easier to remove tham than to fix them, and they could never have been
+   ;; used successfully in the wild. [2023/12/11:rpg]
+   ;; #:get-optimization-settings #:proclaim-optimization-settings #:with-optimization-settings
    #:call-with-muffled-compiler-conditions #:with-muffled-compiler-conditions
    #:call-with-muffled-loader-conditions #:with-muffled-loader-conditions
    #:reify-simple-sexp #:unreify-simple-sexp
@@ -5105,6 +5216,7 @@ what more while the input-file is shortened if possible to ENOUGH-PATHNAME relat
 This can help you produce more deterministic output for FASLs."))
 
 ;;; Optimization settings
+#+ignore
 (with-upgradability ()
   (defvar *optimization-settings* nil
     "Optimization settings to be used by PROCLAIM-OPTIMIZATION-SETTINGS")
@@ -5162,7 +5274,7 @@ This can help you produce more deterministic output for FASLs."))
            (proclaim `(optimize ,@,reset-settings)))))
     #-(or allegro clasp clisp)
     `(let ,(loop :for v :in +optimization-variables+ :collect `(,v ,v))
-       ,@(when settings `((proclaim `(optimize ,@,settings))))
+       ,@(when settings `((proclaim '(optimize ,@settings))))
        ,@body)))
 
 
@@ -5433,7 +5545,16 @@ Simple means made of symbols, numbers, characters, simple-strings, pathnames, co
 using READ within a WITH-SAFE-IO-SYNTAX, that represents the warnings currently deferred by
 WITH-COMPILATION-UNIT. One of three functions required for deferred-warnings support in ASDF."
     #+allegro
-    (list :functions-defined excl::.functions-defined.
+    (list :functions-defined
+          #+(and allegro-version>= (version>= 11))
+          (let (functions-defined)
+            (maphash #'(lambda (k v)
+                         (declare (ignore v))
+                         (push k functions-defined))
+                     excl::.functions-defined.)
+            functions-defined)
+          #+(and allegro-version>= (not (version>= 11)))
+          excl::.functions-defined.
           :functions-called excl::.functions-called.)
     #+clozure
     (mapcar 'reify-deferred-warning
@@ -5477,10 +5598,18 @@ One of three functions required for deferred-warnings support in ASDF."
     #+allegro
     (destructuring-bind (&key functions-defined functions-called)
         reified-deferred-warnings
-      (setf excl::.functions-defined.
+      (setf #+(and allegro-version>= (not (version>= 11)))
+            excl::.functions-defined.
+            #+(and allegro-version>= (not (version>= 11)))
             (append functions-defined excl::.functions-defined.)
             excl::.functions-called.
-            (append functions-called excl::.functions-called.)))
+            (append functions-called excl::.functions-called.))
+      #+(and allegro-version>= (version>= 11))
+      ;; in ACL >= 11, instead of adding defined functions to a list,
+      ;; we insert them into a no-values hash-table.
+      (mapc #'(lambda (fn)
+                (excl:puthash-key fn excl::.functions-defined.))
+            functions-defined))
     #+clozure
     (let ((dw (or ccl::*outstanding-deferred-warnings*
                   (setf ccl::*outstanding-deferred-warnings* (ccl::%defer-warnings t)))))
@@ -5543,7 +5672,11 @@ One of three functions required for deferred-warnings support in ASDF."
     "Reset the set of deferred warnings to be handled at the end of the current WITH-COMPILATION-UNIT.
 One of three functions required for deferred-warnings support in ASDF."
     #+allegro
-    (setf excl::.functions-defined. nil
+    (setf excl::.functions-defined.
+          #+(and allegro-version>= (not (version>= 11)))
+          nil
+          #+(and allegro-version>= (version>= 11))
+          (make-hash-table :test #'equal :values nil)
           excl::.functions-called. nil)
     #+clozure
     (if-let (dw ccl::*outstanding-deferred-warnings*)
@@ -5908,6 +6041,7 @@ it will filter them appropriately."
    ;;; launch-program
    #:launch-program
    #:close-streams #:process-alive-p #:terminate-process #:wait-process
+   #:process-info
    #:process-info-error-output #:process-info-input #:process-info-output #:process-info-pid))
 (in-package :uiop/launch-program)
 
@@ -6046,16 +6180,16 @@ argument to pass to the internal RUN-PROGRAM"
       ((eql :interactive)
        #+(or allegro lispworks) nil
        #+clisp :terminal
-       #+(or abcl clozure cmucl ecl mkcl sbcl scl) t
-       #-(or abcl clozure cmucl ecl mkcl sbcl scl allegro lispworks clisp)
+       #+(or abcl clasp clozure cmucl ecl mkcl sbcl scl) t
+       #-(or abcl clasp clozure cmucl ecl mkcl sbcl scl allegro lispworks clisp)
        (not-implemented-error :interactive-output
                               "On this lisp implementation, cannot interpret ~a value of ~a"
                               specifier role))
       ((eql :output)
        (cond ((eq role :error-output)
-              #+(or abcl allegro clozure cmucl ecl lispworks mkcl sbcl scl)
+              #+(or abcl allegro clasp clozure cmucl ecl lispworks mkcl sbcl scl)
               :output
-              #-(or abcl allegro clozure cmucl ecl lispworks mkcl sbcl scl)
+              #-(or abcl allegro clasp clozure cmucl ecl lispworks mkcl sbcl scl)
               (not-implemented-error :error-output-redirect
                                      "Can't send ~a to ~a on this lisp implementation."
                                      role specifier))
@@ -6114,7 +6248,10 @@ argument to pass to the internal RUN-PROGRAM"
      (exit-code :initform nil)
      ;; If the platform allows it, distinguish exiting with a code
      ;; >128 from exiting in response to a signal by setting this code
-     (signal-code :initform nil)))
+     (signal-code :initform nil))
+    (:documentation "This class should be treated as opaque by programmers, except for the
+exported PROCESS-INFO-* functions.  It should never be directly instantiated by
+MAKE-INSTANCE. Primarily, it is being made available to enable type-checking."))
 
 ;;;---------------------------------------------------------------------------
 ;;; The following two helper functions take care of handling the IF-EXISTS and
@@ -6153,6 +6290,9 @@ argument to pass to the internal RUN-PROGRAM"
       (declare (ignorable process))
       #+abcl (symbol-call :sys :process-pid process)
       #+allegro process
+      #+clasp (if (find-symbol* '#:external-process-pid :ext nil)
+                  (symbol-call :ext '#:external-process-pid process)
+                  (not-implemented-error 'process-info-pid))
       #+clozure (ccl:external-process-id process)
       #+ecl (ext:external-process-pid process)
       #+(or cmucl scl) (ext:process-pid process)
@@ -6160,7 +6300,7 @@ argument to pass to the internal RUN-PROGRAM"
       #+(and lispworks (not lispworks7+)) process
       #+mkcl (mkcl:process-id process)
       #+sbcl (sb-ext:process-pid process)
-      #-(or abcl allegro clozure cmucl ecl mkcl lispworks sbcl scl)
+      #-(or abcl allegro clasp clozure cmucl ecl mkcl lispworks sbcl scl)
       (not-implemented-error 'process-info-pid)))
 
   (defun %process-status (process-info)
@@ -6169,7 +6309,7 @@ argument to pass to the internal RUN-PROGRAM"
         (if-let (signal-code (slot-value process-info 'signal-code))
           (values :signaled signal-code)
           (values :exited exit-code))))
-    #-(or allegro clozure cmucl ecl lispworks mkcl sbcl scl)
+    #-(or allegro clasp clozure cmucl ecl lispworks mkcl sbcl scl)
     (not-implemented-error '%process-status)
     (if-let (process (slot-value process-info 'process))
       (multiple-value-bind (status code)
@@ -6178,6 +6318,9 @@ argument to pass to the internal RUN-PROGRAM"
                           (sys:reap-os-subprocess :pid process :wait nil)
                         (assert pid)
                         (%code-to-status exit-code signal-code))
+            #+clasp (if (find-symbol* '#:external-process-status :ext nil)
+                        (symbol-call :ext '#:external-process-status process)
+                        (not-implemented-error '%process-status))
             #+clozure (ccl:external-process-status process)
             #+(or cmucl scl) (let ((status (ext:process-status process)))
                                (if (member status '(:exited :signaled))
@@ -6244,7 +6387,7 @@ might otherwise be irrevocably lost."
         (values exit-code signal-code)
         exit-code)
       (let ((process (slot-value process-info 'process)))
-        #-(or abcl allegro clozure cmucl ecl lispworks mkcl sbcl scl)
+        #-(or abcl allegro clasp clozure cmucl ecl lispworks mkcl sbcl scl)
         (not-implemented-error 'wait-process)
         (when process
           ;; 1- wait
@@ -6259,6 +6402,13 @@ might otherwise be irrevocably lost."
                               (sys:reap-os-subprocess :pid process :wait t)
                             (assert pid)
                             (values exit-code signal))
+                #+clasp (if (find-symbol* '#:external-process-wait :ext nil)
+                            (multiple-value-bind (status code)
+                                (symbol-call :ext '#:external-process-wait process t)
+                              (if (eq status :signaled)
+                                  (values nil code)
+                                  code))
+                            (not-implemented-error 'wait-process))
                 #+clozure (multiple-value-bind (status code)
                               (ccl:external-process-status process)
                             (if (eq status :signaled)
@@ -6328,11 +6478,11 @@ race conditions."
     #+abcl (sys:process-kill (slot-value process-info 'process))
     ;; On ECL, this will only work on versions later than 2016-09-06,
     ;; but we still want to compile on earlier versions, so we use symbol-call
-    #+ecl (symbol-call :ext :terminate-process (slot-value process-info 'process) urgent)
+    #+(or clasp ecl) (symbol-call :ext :terminate-process (slot-value process-info 'process) urgent)
     #+lispworks7+ (sys:pipe-kill-process (slot-value process-info 'process))
     #+mkcl (mk-ext:terminate-process (slot-value process-info 'process)
                                      :force urgent)
-    #-(or abcl ecl lispworks7+ mkcl)
+    #-(or abcl clasp ecl lispworks7+ mkcl)
     (os-cond
      ((os-unix-p) (%posix-send-signal process-info (if urgent 9 15)))
      ((os-windows-p) (if-let (pid (process-info-pid process-info))
@@ -6416,7 +6566,7 @@ stream. Additionally, the implementations that support streams may have
 differing behavior on how those streams are filled with data. If data is not
 periodically read from the child process and sent to the stream, the child
 could block because its output buffers are full."
-    #-(or abcl allegro clozure cmucl ecl (and lispworks os-unix) mkcl sbcl scl)
+    #-(or abcl allegro clasp clozure cmucl ecl (and lispworks os-unix) mkcl sbcl scl)
     (progn command keys input output error-output directory element-type external-format
            if-input-does-not-exist if-output-exists if-error-output-exists ;; ignore
            (not-implemented-error 'launch-program))
@@ -6435,21 +6585,21 @@ could block because its output buffers are full."
     (unless (eq error-output :interactive)
       (parameter-error "~S: The only admissible value for ~S is ~S on this lisp"
                        'launch-program :error-output :interactive))
-    #+ecl
-    (when (and (version< (lisp-implementation-version) "20.4.24")
+    #+(or clasp ecl)
+    (when (and #+ecl (version< (lisp-implementation-version) "20.4.24")
                (some #'(lambda (stream)
                          (and (streamp stream)
                               (not (file-or-synonym-stream-p stream))))
                      (list input output error-output)))
       (parameter-error "~S: Streams passed as I/O parameters need to be (synonymous with) file streams on this lisp"
                        'launch-program))
-    #+(or abcl allegro clozure cmucl ecl (and lispworks os-unix) mkcl sbcl scl)
+    #+(or abcl allegro clasp clozure cmucl ecl (and lispworks os-unix) mkcl sbcl scl)
     (nest
      (progn ;; see comments for these functions
        (%handle-if-does-not-exist input if-input-does-not-exist)
        (%handle-if-exists output if-output-exists)
        (%handle-if-exists error-output if-error-output-exists))
-     #+ecl (let ((*standard-input* *stdin*)
+     #+(or clasp ecl) (let ((*standard-input* *stdin*)
                  (*standard-output* *stdout*)
                  (*error-output* *stderr*)))
      (let ((process-info (make-instance 'process-info))
@@ -6466,9 +6616,9 @@ could block because its output buffers are full."
                ;; NB: On other Windows implementations, this is utterly bogus
                ;; except in the most trivial cases where no quoting is needed.
                ;; Use at your own risk.
-               #-(or allegro clisp clozure ecl)
+               #-(or allegro clasp clisp clozure ecl)
                (nest
-                #+(or ecl sbcl) (unless (find-symbol* :escape-arguments #+ecl :ext #+sbcl :sb-impl nil))
+                #+(or clasp ecl sbcl) (unless (find-symbol* :escape-arguments #+(or clasp ecl) :ext #+sbcl :sb-impl nil))
                 (parameter-error "~S doesn't support string commands on Windows on this Lisp"
                                  'launch-program command))
                ;; NB: We add cmd /c here. Behavior without going through cmd is not well specified
@@ -6483,15 +6633,15 @@ could block because its output buffers are full."
                ;; so that bug 858 is fixed http://trac.clozure.com/ccl/ticket/858
                ;; On ECL, commit 2040629 https://gitlab.com/embeddable-common-lisp/ecl/issues/304
                ;; On SBCL, we assume the patch from fcae0fd (to be part of SBCL 1.3.13)
-               #+(or clozure ecl sbcl) (cons "cmd" (strcat "/c " command)))
+               #+(or clasp clozure ecl sbcl) (cons "cmd" (strcat "/c " command)))
               #+os-windows
               (list
                #+allegro (escape-windows-command command)
                #-allegro command)))))
-     #+(or abcl (and allegro os-unix) clozure cmucl ecl mkcl sbcl)
+     #+(or abcl (and allegro os-unix) clasp clozure cmucl ecl mkcl sbcl)
      (let ((program (car command))
            #-allegro (arguments (cdr command))))
-     #+(and (or ecl sbcl) os-windows)
+     #+(and (or clasp ecl sbcl) os-windows)
      (multiple-value-bind (arguments escape-arguments)
          (if (listp arguments)
              (values arguments t)
@@ -6500,7 +6650,7 @@ could block because its output buffers are full."
      (multiple-value-bind
        #+(or abcl clozure cmucl sbcl scl) (process)
        #+allegro (in-or-io out-or-err err-or-pid pid-or-nil)
-       #+ecl (stream code process)
+       #+(or clasp ecl) (stream code process)
        #+lispworks (io-or-pid err-or-nil #-lispworks7+ pid-or-nil)
        #+mkcl (stream process code)
        #.`(apply
@@ -6508,13 +6658,17 @@ could block because its output buffers are full."
            #+allegro ,@'('excl:run-shell-command
                          #+os-unix (coerce (cons program command) 'vector)
                          #+os-windows command)
+           #+clasp (if (find-symbol* '#:run-program :ext nil)
+                       (find-symbol* '#:run-program :ext nil)
+                       (not-implemented-error 'launch-program))
            #+clozure 'ccl:run-program
            #+(or cmucl ecl scl) 'ext:run-program
+           
            #+lispworks ,@'('system:run-shell-command `("/usr/bin/env" ,@command)) ; full path needed
            #+mkcl 'mk-ext:run-program
            #+sbcl 'sb-ext:run-program
-           #+(or abcl clozure cmucl ecl mkcl sbcl) ,@'(program arguments)
-           #+(and (or ecl sbcl) os-windows) ,@'(:escape-arguments escape-arguments)
+           #+(or abcl clasp clozure cmucl ecl mkcl sbcl) ,@'(program arguments)
+           #+(and (or clasp ecl sbcl) os-windows) ,@'(:escape-arguments escape-arguments)
            :input input :if-input-does-not-exist :error
            :output output :if-output-exists :append
            ,(or #+(or allegro lispworks) :error-output :error) error-output
@@ -6571,14 +6725,14 @@ could block because its output buffers are full."
             #+(or cmucl scl) (ext:process-error)
             #+sbcl (sb-ext:process-error)
             process)))
-       #+(or ecl mkcl)
+       #+(or clasp ecl mkcl)
        (let ((mode (+ (if (eq input :stream) 1 0) (if (eq output :stream) 2 0))))
          code ;; ignore
          (unless (zerop mode)
            (prop (case mode (1 'input-stream) (2 'output-stream) (3 'bidir-stream)) stream))
          (when (eq error-output :stream)
            (prop 'error-output-stream
-                 (if (version< (lisp-implementation-version) "16.0.0")
+                 (if (and #+clasp nil #-clasp t (version< (lisp-implementation-version) "16.0.0"))
                      (symbol-call :ext :external-process-error process)
                      (symbol-call :ext :external-process-error-stream process))))
          (prop 'process process))
@@ -7726,7 +7880,8 @@ DEPRECATED."
    #:*post-upgrade-cleanup-hook* #:cleanup-upgraded-asdf
    ;; There will be no symbol left behind!
    #:with-asdf-deprecation
-   #:intern*)
+   #:intern*
+   #:asdf-install-warning)
   (:import-from :uiop/package #:intern* #:find-symbol*))
 (in-package :asdf/upgrade)
 
@@ -7771,6 +7926,9 @@ You can compare this string with e.g.: (ASDF:VERSION-SATISFIES (ASDF:ASDF-VERSIO
     (when *verbose-out* (apply 'format *verbose-out* format-string format-args)))
   ;; Private hook for functions to run after ASDF has upgraded itself from an older variant:
   (defvar *post-upgrade-cleanup-hook* ())
+  ;; Private variable for post upgrade cleanup to communicate if an upgrade has
+  ;; actually occured.
+  (defvar *asdf-upgraded-p*)
   ;; Private function to detect whether the current upgrade counts as an incompatible
   ;; data schema upgrade implying the need to drop data.
   (defun upgrading-p (&optional (oldest-compatible-version *oldest-forward-compatible-asdf-version*))
@@ -7808,7 +7966,7 @@ previously-loaded version of ASDF."
          ;; "3.4.5.67" would be a development version in the official branch, on top of 3.4.5.
          ;; "3.4.5.0.8" would be your eighth local modification of official release 3.4.5
          ;; "3.4.5.67.8" would be your eighth local modification of development version 3.4.5.67
-         (asdf-version "3.3.5")
+         (asdf-version "3.3.7")
          (existing-version (asdf-version)))
     (setf *asdf-version* asdf-version)
     (when (and existing-version (not (equal asdf-version existing-version)))
@@ -7868,6 +8026,8 @@ previously-loaded version of ASDF."
     (let ((new-version (asdf-version)))
       (unless (equal old-version new-version)
         (push new-version *previous-asdf-versions*)
+        (when (boundp '*asdf-upgraded-p*)
+          (setf *asdf-upgraded-p* t))
         (when old-version
           (if (version<= new-version old-version)
               (error (compatfmt "~&~@<; ~@;Downgraded ASDF from version ~A to version ~A~@:>~%")
@@ -7882,13 +8042,28 @@ previously-loaded version of ASDF."
             (call-functions (reverse *post-upgrade-cleanup-hook*)))
           t))))
 
+  (define-condition asdf-install-warning (simple-condition warning)
+    ((format-control
+      :initarg :format-control)
+     (format-arguments
+      :initarg :format-arguments
+      :initform nil))
+    (:documentation "Warning class for issues related to upgrading or loading ASDF.")
+    (:report (lambda (c s)
+               (format s "WARNING: ~?"
+                       (slot-value c 'format-control)
+                       (slot-value c 'format-arguments)))))
+
+
   (defun upgrade-asdf ()
     "Try to upgrade of ASDF. If a different version was used, return T.
    We need do that before we operate on anything that may possibly depend on ASDF."
     (let ((*load-print* nil)
-          (*compile-print* nil))
+          (*compile-print* nil)
+          (*asdf-upgraded-p* nil))
       (handler-bind (((or style-warning) #'muffle-warning))
-        (symbol-call :asdf :load-system :asdf :verbose nil))))
+        (symbol-call :asdf :load-system :asdf :verbose nil))
+      *asdf-upgraded-p*))
 
   (defmacro with-asdf-deprecation ((&rest keys &key &allow-other-keys) &body body)
     `(with-upgradability ()
@@ -8032,7 +8207,8 @@ previously-loaded version of ASDF."
               (clear-configuration-and-retry ()
                 :report (lambda (s)
                           (format s (compatfmt "~@<Retry ASDF operation after resetting the configuration.~@:>")))
-                (clrhash (session-cache *asdf-session*))
+                (unless (null *asdf-session*)
+                  (clrhash (session-cache *asdf-session*)))
                 (clear-configuration)))))))
 
   ;; Syntactic sugar for call-with-asdf-session
@@ -8353,13 +8529,19 @@ typically but not necessarily representing the files in a subdirectory of the bu
     ;; We ought to be able to extract this from the component alone with FILE-TYPE.
     ;; TODO: track who uses it in Quicklisp, and have them not use it anymore;
     ;; maybe issue a WARNING (then eventually CERROR) if the two methods diverge?
-    (parse-unix-namestring
-     (or (and (slot-boundp component 'relative-pathname)
-              (slot-value component 'relative-pathname))
-         (component-name component))
-     :want-relative t
-     :type (source-file-type component (component-system component))
-     :defaults (component-parent-pathname component)))
+    (let (#+abcl
+          (parent
+            (component-parent-pathname component)))
+      (parse-unix-namestring
+       (or (and (slot-boundp component 'relative-pathname)
+                (slot-value component 'relative-pathname))
+           (component-name component))
+       :want-relative
+       #-abcl t
+       ;; JAR-PATHNAMES always have absolute directories
+       #+abcl (not (ext:pathname-jar-p parent))
+       :type (source-file-type component (component-system component))
+       :defaults (component-parent-pathname component))))
 
   (defmethod source-file-type ((component parent-component) (system parent-component))
     :directory)
@@ -9678,16 +9860,17 @@ Note that it will NOT be called around the performing of LOAD-OP."))
             (when warnings-file
               (unless (equal (pathname-type warnings-file) (warnings-file-type))
                 (setf warnings-file nil)))
-            (call-with-around-compile-hook
-             c #'(lambda (&rest flags)
-                   (apply 'compile-file* input-file
-                          :output-file output-file
-                          :external-format (component-external-format c)
-                          :warnings-file warnings-file
-                          (append
-                           #+clisp (list :lib-file lib-file)
-                           #+(or clasp ecl mkcl) (list :object-file object-file)
-                           flags)))))
+            (let ((*package* (find-package* '#:common-lisp-user)))
+             (call-with-around-compile-hook
+              c #'(lambda (&rest flags)
+                    (apply 'compile-file* input-file
+                           :output-file output-file
+                           :external-format (component-external-format c)
+                           :warnings-file warnings-file
+                           (append
+                            #+clisp (list :lib-file lib-file)
+                            #+(or clasp ecl mkcl) (list :object-file object-file)
+                            flags))))))
         (check-lisp-compile-results output warnings-p failure-p
                                     "~/asdf-action::format-action/" (list (cons o c))))))
   (defun report-file-p (f)
@@ -9771,7 +9954,8 @@ an OPERATION and a COMPONENT."
     "Perform the loading of a FASL associated to specified action (O . C),
 an OPERATION and a COMPONENT."
     (if-let (fasl (first (input-files o c)))
-      (load* fasl)))
+            (let ((*package* (find-package '#:common-lisp-user)))
+              (load* fasl))))
   (defmethod perform ((o load-op) (c cl-source-file))
     (perform-lisp-load-fasl o c))
   (defmethod perform ((o load-op) (c static-file))
@@ -12452,7 +12636,9 @@ into a single file"))
    #:package-inferred-system #:sysdef-package-inferred-system-search
    #:package-system ;; backward compatibility only. To be removed.
    #:register-system-packages
-   #:*defpackage-forms* #:*package-inferred-systems* #:package-inferred-system-missing-package-error))
+   #:*defpackage-forms* #:*package-inferred-systems*
+   #:package-inferred-system-missing-package-error
+   #:package-inferred-system-unknown-defpackage-option-error))
 (in-package :asdf/package-inferred-system)
 
 (with-upgradability ()
@@ -12503,15 +12689,34 @@ every such file"))
                                      trying to define package-inferred-system ~A from file ~A~>")
                        (error-system c) (error-pathname c)))))
 
-  (defun package-dependencies (defpackage-form)
+  (define-condition package-inferred-system-unknown-defpackage-option-error (system-definition-error)
+    ((system :initarg :system :reader error-system)
+     (pathname :initarg :pathname :reader error-pathname)
+     (option :initarg :clause-head :reader error-option)
+     (arguments :initarg :clause-rest :reader error-arguments))
+    (:report (lambda (c s)
+               (format s (compatfmt "~@<Don't know how to infer package dependencies ~
+                                     for non-standard option ~S ~
+                                     while trying to define package-inferred-system ~A ~
+                                     from file ~A~>")
+                       (cons (error-option c)
+                             (error-arguments c))
+                       (error-system c)
+                       (error-pathname c)))))
+
+  (defun package-dependencies (defpackage-form &optional system pathname)
     "Return a list of packages depended on by the package
 defined in DEFPACKAGE-FORM.  A package is depended upon if
-the DEFPACKAGE-FORM uses it or imports a symbol from it."
+the DEFPACKAGE-FORM uses it or imports a symbol from it.
+
+SYSTEM should be the name of the system being defined, and
+PATHNAME should be the file which contains the DEFPACKAGE-FORM.
+These will be used to report errors when encountering an unknown defpackage argument."
     (assert (defpackage-form-p defpackage-form))
     (remove-duplicates
      (while-collecting (dep)
        (loop :for (option . arguments) :in (cddr defpackage-form) :do
-         (ecase option
+         (case option
            ((:use :mix :reexport :use-reexport :mix-reexport)
             (dolist (p arguments) (dep (string p))))
            ((:import-from :shadowing-import-from)
@@ -12520,7 +12725,37 @@ the DEFPACKAGE-FORM uses it or imports a symbol from it."
            ((:local-nicknames)
             (loop :for (nil actual-package-name) :in arguments :do
               (dep (string actual-package-name))))
-           ((:nicknames :documentation :shadow :export :intern :unintern :recycle)))))
+           ((:nicknames :documentation :shadow :export :intern :unintern :recycle))
+
+           ;;; SBCL extensions to defpackage relating to package locks.
+           ;; See https://www.sbcl.org/manual/#Implementation-Packages .
+           #+(or sbcl ecl) ;; MKCL too?
+           ((:lock)
+            ;; A :LOCK clause introduces no dependencies.
+            nil)
+           #+sbcl
+           ((:implement)
+            ;; A :IMPLEMENT clause introduces dependencies on the listed packages,
+            ;; as it's not meaningful to :IMPLEMENT a package which hasn't yet been defined.
+            (dolist (p arguments) (dep (string p))))
+
+           #+lispworks
+           ((:add-use-defaults) nil)
+
+           #+allegro
+           ((:implementation-packages :alternate-name :flat) nil)
+
+           ;; When encountering an unknown OPTION, signal a continuable error.
+           ;; We cannot in general know whether the unknown clause should introduce any dependencies,
+           ;; so we cannot do anything other than signal an error here,
+           ;; but users may know that certain extensions do not introduce dependencies,
+           ;; and may wish to manually continue building.
+           (otherwise (cerror "Treat the unknown option as introducing no package dependencies"
+                              'package-inferred-system-unknown-defpackage-option-error
+                              :system system
+                              :pathname pathname
+                              :option option
+                              :arguments arguments)))))
      :from-end t :test 'equal))
 
   (defun package-designator-name (package)
@@ -13810,11 +14045,26 @@ system or its dependencies if it has already been loaded."
 
 ;;;; Register ASDF itself and all its subsystems as preloaded.
 (with-upgradability ()
-  (dolist (s '("asdf" "uiop" "asdf-package-system"))
+  (dolist (s '("asdf" "asdf-package-system"))
     ;; Don't bother with these system names, no one relies on them anymore:
     ;; "asdf-utils" "asdf-bundle" "asdf-driver" "asdf-defsystem"
-    (register-preloaded-system s :version *asdf-version*)))
+    (register-preloaded-system s :version *asdf-version*))
+  (register-preloaded-system "uiop" :version *uiop-version*))
 
+;;;; Ensure that the version slot on the registered preloaded systems are
+;;;; correct, by CLEARing the system. However, we do not CLEAR-SYSTEM
+;;;; unconditionally. This is because it's possible the user has upgraded the
+;;;; systems using ASDF itself, meaning that the registered systems have real
+;;;; data from the file system that we want to preserve instead of blasting
+;;;; away and replacing with a blank preloaded system.
+(with-upgradability ()
+  (unless (equal (system-version (registered-system "asdf")) (asdf-version))
+    (clear-system "asdf"))
+  ;; 3.1.2 is the last version where asdf-package-system was a separate system.
+  (when (version< "3.1.2" (system-version (registered-system "asdf-package-system")))
+    (clear-system "asdf-package-system"))
+  (unless (equal (system-version (registered-system "uiop")) *uiop-version*)
+    (clear-system "uiop")))
 
 ;;;; Hook ASDF into the implementation's REQUIRE and other entry points.
 #+(or abcl clasp clisp clozure cmucl ecl mezzano mkcl sbcl)
@@ -13859,6 +14109,13 @@ system or its dependencies if it has already been loaded."
   #+allegro ;; restore *w-o-n-r-c* setting as saved in uiop/common-lisp
   (when (boundp 'excl:*warn-on-nested-reader-conditionals*)
     (setf excl:*warn-on-nested-reader-conditionals* uiop/common-lisp::*acl-warn-save*))
+
+  #+(and allegro allegro-v10.1) ;; check for patch needed for upgradeability
+  (unless (assoc "ma040" (cdr (assoc :lisp sys:*patches*)) :test 'equal)
+    (warn 'asdf-install-warning
+          :format-control "On Allegro Common Lisp 10.1, patch pma040 is ~
+needed for correct ASDF upgrading. Please update your Allegro image ~
+using (SYS:UPDATE-ALLEGRO)."))
 
   ;; Advertise the features we provide.
   (dolist (f '(:asdf :asdf2 :asdf3 :asdf3.1 :asdf3.2 :asdf3.3)) (pushnew f *features*))
