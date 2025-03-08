@@ -65,6 +65,8 @@
            (str:join ","
             (bknr.cluster/server:list-peers bknr.datastore:*store*)))
       </li>
+
+      <li>Features: ,(progn *features*)</li>
     </ul>
 
     Helpful links:

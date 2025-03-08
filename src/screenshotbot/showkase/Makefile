@@ -3,7 +3,7 @@ include ../../../scripts/common.mk
 CHRONIC=cd ../../../ &&
 QEMUROOT=/opt/software/qemu
 LWANDROIDROOT=/opt/software/lw-android
-VERSION=8-1-0
+VERSION=8-0-0
 
 LISPOUT=instr
 MAIN=$(LISPOUT)/app/src/main
