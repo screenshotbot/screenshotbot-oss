@@ -90,21 +90,27 @@ will not consider it as a possibility.")
   (slot-value self 'screenshots))
 
 (defun memoized-reduce (fn map initial-value slot)
-  "This is written in CPS form to avoid deep recursions."
-  (labels ((%memoized-reduce (map &optional (callback #'identity))
-             (cond
-               ((null map) (funcall callback initial-value))
-               (t
-                (cond
-                  ((slot-value map slot)
-                   (funcall callback (slot-value map slot)))
-                  (t
-                   (%memoized-reduce (previous map)
-                                     (lambda (previous-value)
-                                       (funcall callback
-                                                (setf (slot-value map slot)
-                                                      (funcall fn map previous-value)))))))))))
-    (%memoized-reduce map #'identity)))
+  (let ((stack nil))
+    (labels ((walk-back (value)
+               "Once we reach the end start walking back the stack"
+               (loop while stack
+                     do
+                        (let ((map (pop stack)))
+                          (let ((next-value (funcall fn map value)))
+                            (setf (slot-value map slot) next-value)
+                            (setf value next-value))))
+               value))
+     (loop while t do
+       (cond
+         ((null map)
+          (return (walk-back initial-value)))
+         (t
+          (cond
+            ((slot-value map slot)
+             (return (walk-back (slot-value map slot))))
+            (t
+             (push map stack)
+             (setf map (previous map))))))))))
 
 (defun chain-cost (map)
   (memoized-reduce (lambda (this cost)

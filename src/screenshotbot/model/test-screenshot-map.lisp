@@ -494,3 +494,52 @@ delete this test in the future, it might be okay."
     (with-fixture state (:dir dir)
       (assert-that (class-instances 'screenshot-map)
                    (has-length 1)))))
+
+(def-fixture small-chain ()
+  (let* ((one (make-instance 'screenshot-map))
+         (two (make-instance 'screenshot-map :previous one))
+         (three (make-instance 'screenshot-map :previous two))
+         (four (make-instance 'screenshot-map :previous three)))
+    (&body)))
+
+(test memoized-reduce-on-simple-chain
+  (with-fixture state ()
+    (with-fixture small-chain ()
+      (is
+       (equal
+        (list four three two one)
+        (memoized-reduce #'list* four nil 'chain-cost)))
+      (is
+       (equal
+        (list two one)
+        (slot-value two 'chain-cost))))))
+
+(test memoized-reduce-on-null
+  (with-fixture state ()
+    (with-fixture small-chain ()
+      (is
+       (equal
+        :foobar
+        (memoized-reduce #'list* nil :foobar 'chain-cost))))))
+
+(test memoized-reduce-is-actually-cached
+  (with-fixture state ()
+    (with-fixture small-chain ()
+      (is
+       (equal
+        (list four three two one)
+        (memoized-reduce #'list* four nil 'chain-cost)))
+      (is
+       (equal
+        (list two one)
+        (slot-value two 'chain-cost)))
+      (is
+       (equal
+        (list four three two one)
+        (memoized-reduce #'list* four :will-cause-a-crash-if-used 'chain-cost)))
+      (setf (slot-value two 'chain-cost)
+            :will-cause-a-crash-if-used)
+      (is
+       (equal
+        (list four three two one)
+        (memoized-reduce #'list* four :will-cause-a-crash-if-used 'chain-cost))))))
