@@ -87,11 +87,11 @@ define ht_check_tests
 	TMP=$(TMPFILE) && $1 | tee  $$TMP &&  grep "all tests PASSED" $$TMP && rm $$TMP
 endef
 
+include scripts/lispworks-versions.mk
+
 ifneq ("$(wildcard scripts/common.mk)", "")
 	include scripts/common.mk
 endif
-
-include scripts/lispworks-versions.mk
 
 
 all:
