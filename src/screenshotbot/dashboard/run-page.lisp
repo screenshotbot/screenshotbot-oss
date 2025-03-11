@@ -287,7 +287,8 @@
 
 
 (deftag advanced-run-page (&key run alert)
-  (let ((repo (channel-repo (recorder-run-channel run))))
+  (let* ((channel (recorder-run-channel run))
+         (repo (channel-repo channel)))
     <simple-card-page max-width= "40rem" >
         <div class="card-header">
           <h3>Debug Run Information</h3>
@@ -298,6 +299,7 @@
 
           <ul>
             <li>Organization: ,(?. company-name (recorder-run-company run))</li>
+            <li>Channel: <a href= (format nil "/channels/~a" (store-object-id channel)) >,(channel-name channel)</a> </li>            
             <li>Repo url: ,(github-repo run)</li>
             <li>Commit: ,(commit :repo repo :hash (recorder-run-commit run)) </li>
             <li>Override Commit hash for Pull Requests: ,(commit :repo repo :hash (override-commit-hash run))</li>
