@@ -364,8 +364,6 @@ forms a subgraph. Now find all the source nodes of that subgraph."
        (let ((merge-bases (loop for commit being the hash-keys of intersection
                                 unless (gethash (sha commit) definitely-not-source-nodes)
                                   collect (sha commit))))
-         (when (> (length merge-bases) 1)
-           (warn "fun warning! we hit multiple merge-bases in production!"))
          merge-bases)))))
 
 (defmethod merge-base ((dag dag) commit-1 commit-2
@@ -407,6 +405,9 @@ that might've already merged."
                                  #'>
                                  :key (lambda (sha)
                                         (commit-timestamp (get-commit dag sha))))))
+          (when (> (length merge-bases) 1)
+            (with-extras (("result-merge-bases" merge-bases))
+             (warn "fun warning! we hit multiple merge-bases in production!")))
           (values (car merge-bases)
                   merge-bases)))))))
 
