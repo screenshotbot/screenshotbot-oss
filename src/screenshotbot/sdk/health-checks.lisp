@@ -44,3 +44,11 @@
           (let ((end-time (get-internal-real-time)))
             (when (> (- end-time start-time) 15000)
               (error "Upload took too long, probably a bug"))))))))
+
+(def-health-check ssl-hard-eof-T1797 ()
+  "See T1797"
+  (let ((res (drakma:http-request "https://api.screenshotbot.io/api/version"
+                                :method :put
+                                :want-stream t
+                                :content "foobar")))
+    (json:decode-json res)))
