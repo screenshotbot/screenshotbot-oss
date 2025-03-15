@@ -292,3 +292,9 @@
 (ql:register-local-projects)
 
 (setf *prepare-image-called-p* t)
+
+#+(and :lispworks :mswindows)
+(comm:set-ssl-library-path
+ (list
+  "C:/Program Files/OpenSSL-Win64/libcrypto-3-x64.dll"
+  "C:/Program Files/OpenSSL-Win64/libssl-3-x64.dll"))
