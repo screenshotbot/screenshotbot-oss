@@ -45,10 +45,22 @@
             (when (> (- end-time start-time) 15000)
               (error "Upload took too long, probably a bug"))))))))
 
+#+lispworks
 (def-health-check ssl-hard-eof-T1797 ()
   "See T1797"
-  (let ((res (drakma:http-request "https://api.screenshotbot.io/api/version"
-                                :method :put
-                                :want-stream t
-                                :content "foobar")))
-    (json:decode-json res)))
+  (let ((conn (comm:open-tcp-stream "api.screenshotbot.io" 443
+                                    :ssl-ctx t
+                                    :read-timeout 10)))
+    (write-string "PUT /api/version HTTP/1.1" conn)
+    (write-string *crlf* conn)
+    (write-string "Host: api.screenshotbot.io" conn)
+    (write-string *crlf* conn)
+    (write-string "Connection: close" conn)
+    (write-string *crlf* conn)
+    (write-string "Content-length: 6" conn)
+    (write-string *crlf* conn)
+    (write-string *crlf* conn)
+    (write-string "foobar" conn)
+    (finish-output conn)
+    (uiop:slurp-stream-string conn)
+    (close conn)))
