@@ -194,6 +194,7 @@ $(LW): build/.keep $(IMAGE_DEPS)
 	echo in here
 # $$PWD is workaround over LW issue #42471
 	$(ARCH_CMD) $(LW_CORE) -build scripts/build-image.lisp
+	test -f $(LW)
 
 $(sbcl): build/.keep $(IMAGE_DEPS) .PHONY Makefile
 	$(SBCL_CORE) --script scripts/build-image.lisp

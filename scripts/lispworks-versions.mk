@@ -2,7 +2,7 @@
 # dependency on this file, we can essentially add a dependency on the
 # Lispworks version.
 
-LW_VERSION=8-0-0
+LW_VERSION=8-1-0
 
 LW=build/lw-console-$(LW_VERSION)$(ARCH)
 LW_CORE=lispworks-unknown-location
@@ -16,8 +16,8 @@ ifeq ($(UNAME),Linux)
 endif
 
 ifeq ($(UNAME),Darwin)
-	LW_CORE=/Applications/LispWorks\ 8.0\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-$(LW_VERSION)-macos64-universal
-	LW_LIB_DIR=/Applications/LispWorks\ 8.0\ \(64-bit\)/Library
+	LW_CORE=/Applications/LispWorks\ 8.1\ \(64-bit\)/LispWorks\ \(64-bit\).app/Contents/MacOS/lispworks-$(LW_VERSION)-macos64-universal
+	LW_LIB_DIR=/Applications/LispWorks\ 8.1\ \(64-bit\)/Library
 endif
 
 ifeq ($(OS),Windows_NT)

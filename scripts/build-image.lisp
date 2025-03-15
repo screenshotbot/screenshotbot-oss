@@ -52,7 +52,7 @@
 
 #+lispworks
 (flet ((build ()
-         (let ((output "build/lw-console-8-0-0"))
+         (let ((output "build/lw-console-8-1-0"))
            (delete-file output)
            (save-image output
                        :console t
