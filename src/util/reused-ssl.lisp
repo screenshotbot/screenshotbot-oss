@@ -14,6 +14,9 @@
                 #:def-easy-macro)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:util/truncated-stream
+                #:delegate
+                #:truncated-stream)
   (:export
    #:with-reused-ssl)
   (:local-nicknames #-lispworks
@@ -83,17 +86,14 @@
 (defvar *default-reused-ssl-engine*
   (make-instance 'reused-ssl-engine))
 
-(defclass tracked-stream (stream:fundamental-input-stream)
-  ((delegate :initarg :delegate
-             :reader delegate)
-   (bytes-left :initarg :bytes-left
-               :accessor bytes-left)
-   (closedp :initform nil
-            :accessor closedp)
-   (reusable-stream :initarg :reusable-stream
+
+(defclass tracked-stream (truncated-stream)
+  ((reusable-stream :initarg :reusable-stream
                     :initform (error "must provide :reusable-stream")
                     :reader reuseable-stream
                     :documentation "The underlying stream that can be reused when closed, this might be different from the delegate!")
+   (closedp :initform nil
+            :accessor closedp)
    (domain :initarg :domain
            :reader domain)
    (reuse-context :initarg :reuse-context
@@ -111,7 +111,8 @@
       (%cleanup reuse-context))))
 
 (defmethod stream::stream-element-type ((self tracked-stream))
-  (stream::stream-element-type (delegate self)))
+  ;; Delete
+  (call-next-method))
 
 (defmethod stream:stream-read-sequence ((self tracked-stream)
                                         sequence
@@ -119,20 +120,8 @@
                                         end
                                         #-lispworks #-lispworks
                                                     &key &allow-other-keys)
-  (cond
-    ((closedp self)
-     (error "The stream is already closed"))
-    ((= 0 (bytes-left self))
-     start)
-    (t
-     (let ((result (stream:stream-read-sequence (delegate self) sequence
-                                                start
-                                                (min
-                                                 end
-                                                 (+ start (bytes-left self))))))
-       (decf (bytes-left self)
-             (- result start))
-       result))))
+  ;; Delete
+  (call-next-method))
 
 #+nil
 (defmethod stream:stream-check-eof-no-hang ((self tracked-stream))
@@ -145,6 +134,18 @@
 #+nil
 (defmethod stream:stream-read-char-no-hang ((self tracked-stream))
   (stream:stream-read-char-no-hang self))
+
+(defmethod stream:stream-read-sequence ((self tracked-stream)
+                                        sequence
+                                        start
+                                        end
+                                        #-lispworks #-lispworks
+                                                    &key &allow-other-keys)
+  (cond
+    ((closedp self)
+     (error "The stream is already closed"))
+    (t
+     (call-next-method))))
 
 (defmethod close ((self tracked-stream) &key abort)
   (declare (ignore abort))
@@ -162,12 +163,12 @@
      (log:debug "The tracked-stream is already closed"))))
 
 (defmethod stream:stream-finish-output ((self tracked-stream))
-  (log:debug "finishing output")
-  (stream:stream-finish-output (delegate self)))
+  ;; Delete
+  (call-next-method))
 
 (defmethod stream:stream-force-output ((self tracked-stream))
-  (log:debug "forcing output")
-  (stream:stream-force-output (delegate self)))
+  ;; Delete
+  (call-next-method))
 
 (defmethod low-level-request ((self reused-ssl-mixin)
                               url &rest args

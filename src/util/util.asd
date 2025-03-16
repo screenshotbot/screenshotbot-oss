@@ -248,6 +248,7 @@
                :easy-macros)
   :serial t
   :components ((:file "http-cache")
+               (:file "truncated-stream")
                (:file "request")
                (:file "engines")
                (:file "reused-ssl")))
@@ -379,6 +380,7 @@
                              (:file "test-hunchentoot-engine")
                              (:file "test-fset")
                              (:file "test-reused-ssl")
+                             (:file "test-truncated-stream")
                              (:file "test-asdf")
                              (:file "test-fake-clingon")
                              (:file "test-throttler")
