@@ -19,6 +19,8 @@
 (in-package :screenshotbot/api/version)
 
 (defhandler (api-version :uri "/api/version") ()
+  (setf (hunchentoot:content-type*)
+        "application/json; charset=utf-8")
   (encode-json
    (make-instance 'version
                   :version *api-version*

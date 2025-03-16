@@ -196,7 +196,7 @@ function fn for the purpose of tests."
                       (,name
                        ,@ (loop for name in param-names
                                 appending (list (intern (string name) "KEYWORD") name)))))))
-             (setf (hunchentoot:header-out :content-type) "application/json")
+             (setf (hunchentoot:header-out :content-type) "application/json; charset=utf-8")
              (,(cond
                  (use-yason
                   'json-mop-to-string)
