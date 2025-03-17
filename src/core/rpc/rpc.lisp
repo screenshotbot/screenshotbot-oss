@@ -105,7 +105,7 @@
     #+bknr.cluster
     (bknr.cluster/server::lisp-state-machine
      (loop for conf in (bknr.cluster/server:list-peers bknr.datastore:*store*)
-           collect (first (str:rsplit ":" conf :limit 3))))
+           collect (first (str:rsplit ":" conf :limit 4))))
     (t
      (list "127.0.0.1"))))
 
