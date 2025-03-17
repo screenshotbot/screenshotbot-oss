@@ -35,7 +35,10 @@
                    ,arg-val
                    ,@rest))))
 
-(local-time:reread-timezone-repository)
+(local-time:reread-timezone-repository
+ :timezone-repository (asdf:system-relative-pathname
+                       :local-time
+                       "zoneinfo/"))
 
 (defvar *lock* (bt:make-lock "or-setf"))
 
