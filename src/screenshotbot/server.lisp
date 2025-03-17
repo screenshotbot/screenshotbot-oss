@@ -212,7 +212,8 @@
 (defparameter *asset-regex*
   (cl-ppcre:create-scanner "[.](js|css|woff|otf|woff2|png|jpg|jpeg|webp|svg)$"))
 
-(defmethod hunchentoot:acceptor-dispatch-request ((acceptor acceptor) request)
+(defun maybe-redirect-to-leader (request)
+  (declare (ignore request))
   #+bknr.cluster
   (when (and
          (boundp 'bknr.datastore:*store*)
@@ -228,7 +229,10 @@
        (values))
       (t
        (setf (hunchentoot:return-code*) 502)
-       (hunchentoot:abort-request-handler))))
+       (hunchentoot:abort-request-handler)))))
+
+(defmethod hunchentoot:acceptor-dispatch-request ((acceptor acceptor) request)
+  (maybe-redirect-to-leader request)
   (with-installation-for-request (request)
     (with-tags (("hostname" (uiop:hostname)))
       (or
