@@ -79,7 +79,9 @@
              #:metadata-value
              #:release-branch-p
              #:report-id
-             #:report-acceptable-state))
+             #:report-acceptable-state
+             #:report-run-id
+             #:report-previous-run-id))
 
 (in-package :screenshotbot/api/model)
 
@@ -428,6 +430,15 @@ runs, but only for debugging.")
        :json-type :string
        :reader report-id
        :documentation "The ID of this report")
+   (run :initarg :run
+        :json-key "run"
+        :json-type :string
+        :reader report-run-id
+        :documentation "The ID of the run that generated this")
+   (previous-run :initarg :previous-run
+                 :json-key "previousRun"
+                 :json-type (or null :string)
+                 :reader report-previous-run-id)
    (review-state :initarg :acceptable-state
                  :json-key "reviewState"
                  :json-type :string

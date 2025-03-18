@@ -122,7 +122,10 @@
     (:metaclass has-created-at)
     (:class-indices (company-index
                      :index +report-company-index+
-                     :slots (%company promotion-report-p)))))
+                     :slots (%company promotion-report-p)))
+    (:default-initargs
+     :run nil
+     :previous-run nil)))
 
 (defun reports-for-run (run)
   (fset:convert 'list
@@ -248,6 +251,8 @@
 (defun report-to-dto (report)
   (make-instance 'dto:report
                  :id (oid report)
+                 :run (?. oid (report-run report))
+                 :previous-run (?. oid (report-previous-run report))
                  :acceptable-state
                  (or
                   (when-let ((acceptable (report-acceptable report)))
