@@ -1,6 +1,9 @@
 
 Version
 
+* Version unchanged
+  - Added /api/report/<id>/comparison
+  - Added fields changes,added,deleted to dto:comparison
 * 17: Added isReleaseBranch to run model. In older versions, prefer to set mainBranch to workBranch on the client side.
 * 16: Added metadata and run-metadata.
 * 15: shard-spec was added to the API

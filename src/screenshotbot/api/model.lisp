@@ -456,6 +456,20 @@ runs, but only for debugging.")
           :json-key "isSame"
           :json-type :boolean
           :reader comparison-samep)
+   (changes :initarg :changes
+            :json-key "changes"
+            :json-type (:list :string)
+            :reader comparison-changes
+            :documentation "List of names of all screenshots that were changed")
+   (added :initarg :added
+          :json-key "added"
+          :json-type (:list :string)
+          :reader comparison-added
+          :documentation "List of names of screenshots that were added")
+   (deleted :initarg :deleted
+            :json-key "deleted"
+            :json-type (:list :string)
+            :documentation "List of names of screenshots that were deleted")
    (title :initarg :title
           :json-key "title"
           :json-type (or null :string)

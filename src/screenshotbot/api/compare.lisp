@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/api/core
                 #:defapi)
   (:import-from #:screenshotbot/user-api
+                #:screenshot-name
                 #:current-company
                 #:can-view!)
   (:import-from #:util/store/object-id
@@ -25,13 +26,27 @@
                 #:installation-domain)
   (:import-from #:screenshotbot/installation
                 #:installation)
+  (:import-from #:screenshotbot/report-api
+                #:report-previous-run
+                #:report-run
+                #:report)
+  (:import-from #:util/misc
+                #:?.)
+  (:import-from #:util/throttler
+                #:throttle!
+                #:throttler)
   (:local-nicknames
-   (#:dto #:screenshotbot/api/model)))
+   (#:dto #:screenshotbot/api/model)
+   (#:diff-report #:screenshotbot/diff-report)))
 (in-package :screenshotbot/api/compare)
+
+(defvar *throttler*
+  (make-instance 'throttler :tokens 1000))
 
 (defun %api-compare-runs (run to)
   (assert-company run)
-  (assert-company to)
+  (?. assert-company to)
+  (throttle! *throttler* :key (auth:current-company))
   (let ((diff-report (make-diff-report run to)))
     (if (diff-report-empty-p diff-report)
         (make-instance 'dto:comparison
@@ -39,10 +54,23 @@
         (make-instance 'dto:comparison
                        :samep nil
                        :title (diff-report-title diff-report)
+                       :changes
+                       (or
+                        (loop for change in (diff-report:diff-report-changes diff-report)
+                              collect (screenshot-name (diff-report:after change)))
+                        #())
+                       :added
+                       (or
+                        (mapcar #'screenshot-name (diff-report:diff-report-added diff-report))
+                        #())
+                       :deleted
+                       (or
+                        (mapcar #'screenshot-name (diff-report:diff-report-deleted diff-report))
+                        #())                       
                        :url (format nil "~a/runs/~a/compare/~a"
                                     (installation-domain (installation))
                                     (oid run)
-                                    (oid to))))))
+                                    (?. oid to))))))
 
 (defun assert-company (run)
   "A site-admin key could technically read every run, and a key from one
@@ -61,3 +89,10 @@ part of the access check framework."
          (to (find-run to)))
      (can-view! run to)
      (%api-compare-runs run to))))
+
+(defapi (api-compare-report :uri "/api/report/:id/comparison" :wrap-success nil) (id)
+  (let ((report (find-by-oid id 'report)))
+    (can-view! report)
+    (%api-compare-runs
+     (report-run report)
+     (report-previous-run report))))
