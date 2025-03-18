@@ -23,6 +23,8 @@
                 #:find-by-oid)
   (:import-from #:screenshotbot/model/report
                 #:report-to-dto)
+  (:import-from #:screenshotbot/api/doc
+                #:def-api-doc)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/batch)
 
@@ -83,3 +85,5 @@
                (auth:can-view! report)
                (report-to-dto report)))
      'vector)))
+
+

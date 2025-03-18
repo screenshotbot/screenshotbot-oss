@@ -68,6 +68,7 @@
                :jose
                :util/digests
                :trivial-file-size
+               :remark
                :screenshotbot.js-assets
                :oidc
                :cl-isaac
@@ -243,7 +244,8 @@
                  (:file "all")))
    (:module "api"
     :serial t
-    :components ((:file "core")
+    :components ((:file "doc")
+                 (:file "core")
                  (:file "version")
                  (:file "analytics-event")
                  (:file "failed-run")
@@ -257,7 +259,9 @@
                  (:file "active-runs")
                  (:file "unchanged-run")
                  (:file "compare")
-                 (:file "commit-graph")))
+                 (:file "commit-graph")
+                 (:module "docs"
+                  :components ((:file "recorder-run")))))
    (:module "phabricator"
     :serial t
     :components ((:file "plugin")

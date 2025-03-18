@@ -573,3 +573,4 @@ promotion thread starts. Used by the API and by Replay"
   ;; try not to hold onto the DB for long periods of time
   (dolist (im (mapcar 'screenshot-image (recorder-run-screenshots recorder-run)))
     (verify-image im)))
+
