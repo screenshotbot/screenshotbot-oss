@@ -169,3 +169,9 @@
                    :key "foo"
                    :number 0
                    :count 10))))
+
+(test reviewer-can-be-NIL
+  (finishes
+    (encode-json
+     (make-instance 'dto:report
+                    :reviewer-name nil))))

@@ -251,17 +251,20 @@
        (acceptable-history acceptable))))
 
 (defun report-to-dto (report)
-  (make-instance 'dto:report
-                 :id (oid report)
-                 :run (?. oid (report-run report))
-                 :previous-run (?. oid (report-previous-run report))
-                 :channel (?. channel-name (report-channel report))
-                 :title (report-title report)
-                 :acceptable-state
-                 (or
-                  (when-let ((acceptable (report-acceptable report)))
-                    (string-downcase
-                     (or
-                      (acceptable-state acceptable)
-                      "none")))
-                  "na")))
+  (let ((acceptable (report-acceptable report)))
+    (make-instance 'dto:report
+                   :id (oid report)
+                   :run (?. oid (report-run report))
+                   :previous-run (?. oid (report-previous-run report))
+                   :channel (?. channel-name (report-channel report))
+                   :title (report-title report)
+                   :acceptable-state
+                   (or
+                    (when acceptable
+                      (string-downcase
+                       (or
+                        (acceptable-state acceptable)
+                        "none")))
+                    "na")
+                   :reviewer-name
+                   (?. auth:user-full-name (?. acceptable-reviewer acceptable)))))

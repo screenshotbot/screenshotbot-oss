@@ -453,7 +453,11 @@ runs, but only for debugging.")
                  :json-key "reviewState"
                  :json-type :string
                  :reader report-acceptable-state
-                 :documentation "The review status of the report. One of 'accepted', 'rejected', 'none' or 'na'."))
+                 :documentation "The review status of the report. One of 'accepted', 'rejected', 'none' or 'na'.")
+   (reviewer-name :initarg :reviewer-name
+                  :json-key "reviewerName"
+                  :json-type (or null :string)
+                  :documentation "If the review state 'accepted' or 'rejected', this will be the name of the reviewer"))
   (:metaclass ext-json-serializable-class))
 
 (defmethod json-mop:json-to-clos ((items vector) (class (eql 'screenshot-list))
