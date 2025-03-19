@@ -9,6 +9,8 @@
   (:import-from #:screenshotbot/api/core
                 #:defapi)
   (:import-from #:screenshotbot/user-api
+                #:channel-name
+                #:recorder-run-channel
                 #:screenshot-name
                 #:current-company
                 #:can-view!)
@@ -54,6 +56,7 @@
         (make-instance 'dto:comparison
                        :samep nil
                        :title (diff-report-title diff-report)
+                       :channel (?. channel-name (recorder-run-channel run))
                        :changes
                        (or
                         (loop for change in (diff-report:diff-report-changes diff-report)

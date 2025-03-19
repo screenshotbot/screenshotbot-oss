@@ -484,6 +484,10 @@ runs, but only for debugging.")
             :json-key "deleted"
             :json-type (:list :string)
             :documentation "List of names of screenshots that were deleted")
+   (channel :initarg :channel
+            :json-key "channel"
+            :json-type (or null :string)
+            :documentation "The channel name. If the runs being compared are from different channels then this field is undefined.")
    (title :initarg :title
           :json-key "title"
           :json-type (or null :string)
