@@ -81,7 +81,8 @@
              #:report-id
              #:report-acceptable-state
              #:report-run-id
-             #:report-previous-run-id))
+             #:report-previous-run-id
+             #:report-title))
 
 (in-package :screenshotbot/api/model)
 
@@ -435,6 +436,15 @@ runs, but only for debugging.")
         :json-type :string
         :reader report-run-id
         :documentation "The ID of the run that generated this")
+   (channel :initarg :channel
+            :json-key "channel"
+            :json-type (or null :string)
+            :documentation "The channel name")
+   (title :initarg :title
+          :json-key "title"
+          :json-type (or null :string)
+          :reader report-title
+          :documentation "The report title, something like `N changes, M added`")
    (previous-run :initarg :previous-run
                  :json-key "previousRun"
                  :json-type (or null :string)

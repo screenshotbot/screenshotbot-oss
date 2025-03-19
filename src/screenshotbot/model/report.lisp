@@ -11,6 +11,7 @@
         #:screenshotbot/report-api
         #:screenshotbot/model/view)
   (:import-from #:screenshotbot/user-api
+                #:channel-name
                 #:report-num-changes)
   (:import-from #:util #:object-with-oid)
   (:import-from #:screenshotbot/model/recorder-run
@@ -125,6 +126,7 @@
                      :slots (%company promotion-report-p)))
     (:default-initargs
      :run nil
+     :title nil
      :previous-run nil)))
 
 (defun reports-for-run (run)
@@ -253,6 +255,8 @@
                  :id (oid report)
                  :run (?. oid (report-run report))
                  :previous-run (?. oid (report-previous-run report))
+                 :channel (?. channel-name (report-channel report))
+                 :title (report-title report)
                  :acceptable-state
                  (or
                   (when-let ((acceptable (report-acceptable report)))
