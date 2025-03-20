@@ -114,15 +114,11 @@
     <hr />
 
     <ul class="nav nav-pills flex-column ps-3 pe-3">
-      <left-nav-item href= (documentation-url (installation)) image-class= "menu_book" target= "_blank"
-                     script-name=script-name >
-        Documentation
-  </left-nav-item>
 
       ,(when (and company (not (singletonp company)))
-         <left-nav-item href= "/invite" image-class= "person_add"
+         <left-nav-item href= "/team" image-class= "group"
                         script-name=script-name >
-           Invite Members
+           Team
          </left-nav-item>)
 
 
@@ -148,6 +144,11 @@
     <hr />
 
     <ul class="nav nav-pills flex-column mb-auto ps-3 pe-3">
+      <left-nav-item href= (documentation-url (installation)) image-class= "menu_book" target= "_blank"
+                     script-name=script-name >
+        Documentation
+  </left-nav-item>
+
       <li class= "nav-item github"  >
          <a href= "https://github.com/screenshotbot/screenshotbot-oss" class= (format nil "nav-link text-white" ) title= "Screenshotbot is Open-Source. Support our work on GitHub!"
            target= "_blank" >

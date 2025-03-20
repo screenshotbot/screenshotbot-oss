@@ -40,6 +40,10 @@
                 #:all-unused-invites)
   (:import-from #:screenshotbot/invite
                 #:invite-enabled-p)
+  (:import-from #:screenshotbot/server
+                #:defhandler)
+  (:import-from #:core/ui/mdi
+                #:mdi)
   (:local-nicknames (#:a #:alexandria)
                     (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/company/members)
@@ -48,6 +52,7 @@
 
 (defsettings members-page
   :name "members"
+  :staging-p t
   :section :organization
   :title "Members"
   :handler (lambda ()
@@ -175,7 +180,10 @@
   <markup:merge-tag>
     ,(taskie-page-title
       :title "Pending Invites"
-      <a href= "/invite" class= "btn btn-success btn-sm">Invite Member</a>)
+      <a href= "/invite" class= "btn btn-success btn-sm">
+        <mdi name= "person_add" />
+        Invite
+      </a>)
     ,(taskie-list
       :headers '("Name" "Email" "Status" "Actions")
       :items (all-unused-invites :company company)
@@ -185,15 +193,14 @@
                        (render-invite-row invite company)))
   </markup:merge-tag>)
 
-(defun members-page ()
-  (settings-template
-   (let ((company (current-company)))
+(markup:deftag %members-page ()
+  (let ((company (current-company)))
 
      <markup:merge-tag>
        ,(when (invite-enabled-p company)
           (invites-section company))
 
-       ,(taskie-page-title :title "Members" :class "pt-3")
+       ,(taskie-page-title :title "Team" :class "pt-3")
 
        ,(taskie-list
          :headers '("" "Name" "Email" "Status" "Actions")
@@ -210,5 +217,13 @@
                           (render-user-row user company)))
 
      </markup:merge-tag>
+))
 
-)))
+(defun members-page ()
+  (settings-template
+   (%members-page)))
+
+(defhandler (nil :uri "/team") ()
+  <app-template>
+    ,(%members-page)
+  </app-template>)
