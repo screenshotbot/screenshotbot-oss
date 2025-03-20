@@ -39,6 +39,7 @@
     :serial t
     :components ((:file "interrupts")
                  (:file "health-checks")
+                 (:file "acceptor-override" :if-feature :lispworks)
                  (:file "control-socket" :if-feature (:and :lispworks (:not :mswindows)))
                  (:file "setup")
                  (:file "util")))

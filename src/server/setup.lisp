@@ -86,6 +86,8 @@
   ())
 
 (defclass my-acceptor (#+lispworks acceptor-with-existing-socket
+                       #+lispworks
+                       server/acceptor-override:ipv6-acceptor
                        hunchentoot-multi-acceptor:multi-acceptor)
   ()
   (:default-initargs
