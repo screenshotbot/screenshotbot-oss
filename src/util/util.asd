@@ -417,7 +417,9 @@
                              (:file "test-memory")
                              (:file "test-make-instance-with-accessors")
                              (:file "test-digests")
-                             (:file "test-benchmark")))
+                             (:file "test-benchmark")
+                             #+lispworks
+                             (:file "test-lispworks")))
                (:module "phabricator"
                 :components ((:file "test-conduit")
                              (:file "test-harbormaster")))))
