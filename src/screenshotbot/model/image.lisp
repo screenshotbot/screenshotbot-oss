@@ -191,11 +191,16 @@
       :initform nil
       :initarg :verified-p
       :documentation "If we have verified that this image was uploaded")
+     (%size
+      :initarg :size
+      :accessor %image-size
+      :documentation "The size of the image in bytes")
      #+screenshotbot-oss
      (content-type :initarg :content-type
                    :reader image-content-type))
     (:metaclass persistent-class)
-    (:default-initargs :oid (%make-oid))))
+    (:default-initargs :oid (%make-oid)
+                       :size 0)))
 
 (defun imagep (image)
   (typep image 'abstract-image))
@@ -412,6 +417,8 @@
                :state (cond
                         (pathname
                          +image-state-filesystem+))
+               :size (when pathname
+                       (trivial-file-size:file-size-in-octets pathname))
                :hash (cond
                        (hash hash)
                        (pathname
@@ -438,6 +445,9 @@
         (warn 'image-reuploaded-warning))
       (uiop:with-staging-pathname (dest dest)
         (uiop:copy-file pathname dest))
+      (setf
+       (%image-size image)
+       (trivial-file-size:file-size-in-octets pathname))
       dest)))
 
 (with-class-validation

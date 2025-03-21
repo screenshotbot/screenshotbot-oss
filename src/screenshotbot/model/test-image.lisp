@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:%image-size
                 #:image-reuploaded-warning
                 #:no-image-uploaded-yet
                 #:base-image-comparer
@@ -287,3 +288,14 @@ uses the base-image-comparer."
        (bknr.datastore:snapshot)))
     (with-fixture state (:dir dir)
       (pass))))
+
+(test store-images-size
+  (with-fixture state ()
+    (let ((image (make-image :pathname file)))
+      (is (eql 1085 (%image-size image))))))
+
+(test store-images-size-on-update
+  (with-fixture state ()
+    (let ((image (make-image :hash "343431")))
+      (update-image image :pathname file)
+      (is (eql 1085 (%image-size image))))))
