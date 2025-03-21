@@ -705,16 +705,18 @@ recognized the file, we'll return nil."
   (make-instance 'simple-object-snapshot
                  :object self))
 
-(defun %fix-one-image-v33 (image)
-
-  (unless (%image-size image)
-    (setf
-     (%image-size image)
-     (handler-case
-         (with-local-image (file image)
-           (trivial-file-size:file-size-in-octets file))
-       (error (e)
-         (log:info "Error fixing: ~a, ~a" image e))))))
+(auto-restart:with-auto-restart ()
+  (defun %fix-one-image-v33 (image)
+    (when (eql 0 (random 1000))
+     (log:info "Doing: ~a" image))
+    (unless (%image-size image)
+      (setf
+       (%image-size image)
+       (handler-case
+           (with-local-image (file image)
+             (trivial-file-size:file-size-in-octets file))
+         (error (e)
+           (log:info "Error fixing: ~a, ~a" image e)))))))
 
 (def-store-migration ("populate image sizes" :version 33)
   (ensure-slot-boundp 'image '%size)
