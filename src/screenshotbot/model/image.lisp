@@ -91,6 +91,10 @@
                 #:simple-object-snapshot)
   (:import-from #:util/store/store
                 #:fast-ensure-directories-exist)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
+  (:import-from #:screenshotbot/model/core
+                #:ensure-slot-boundp)
   ;; classes
   (:export
    #:image
@@ -700,3 +704,20 @@ recognized the file, we'll return nil."
 (defmethod bknr.datastore:make-object-snapshot ((self image))
   (make-instance 'simple-object-snapshot
                  :object self))
+
+(defun %fix-one-image-v33 (image)
+
+  (unless (%image-size image)
+    (setf
+     (%image-size image)
+     (handler-case
+         (with-local-image (file image)
+           (trivial-file-size:file-size-in-octets file))
+       (error (e)
+         (log:info "Error fixing: ~a, ~a" image e))))))
+
+(def-store-migration ("populate image sizes" :version 33)
+  (ensure-slot-boundp 'image '%size)
+  (loop for image in (bknr.datastore:class-instances 'image)
+        do
+           (%fix-one-image-v33 image)))
