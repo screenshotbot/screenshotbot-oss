@@ -31,6 +31,8 @@
                 #:acceptor-with-existing-socket)
   #+ (and lispworks linux)
   (:import-from #:bknr.cluster/server
+                #:wait-for-leader
+                #:leader-id
                 #:leaderp)
   (:import-from #:util/throttler
                 #:throttled-error)
@@ -218,16 +220,25 @@
   (when (and
          (boundp 'bknr.datastore:*store*)
          (not (leaderp bknr.datastore:*store*)))
-    ;; If we're here, it's probably because the leader got transfered
-    ;; recently. The new leader might not be ready yet, so this hack
-    ;; slows down nginx before it retries the next backend.
-    (sleep 3)
+
+    (sleep 0.2)
+
     (cond
+      ((not (wait-for-leader bknr.datastore:*store* :timeout 6))
+       (warn "Did not get a leader in time, we're probably in a read-only state")
+       (log:warn "Did not get a leader in time, we're probably in a read-only state")
+       (values))
       ((leaderp bknr.datastore:*store*)
        ;; If we've become the leader while we were waiting then just
        ;; continue.
        (values))
       (t
+       ;; There's probably a leader, but we're not it. Respond with
+       ;; 502 so that nginx knows to forward it to next backend.  It's
+       ;; possible at this point there's no leader too
+       ;; (wait-for-leader can return non-NIL while an election is
+       ;; still happening).
+       (log:info "Forwarding request to next backend (leader: ~a)" (leader-id bknr.datastore:*store*))
        (setf (hunchentoot:return-code*) 502)
        (hunchentoot:abort-request-handler)))))
 
