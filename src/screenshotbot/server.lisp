@@ -31,8 +31,6 @@
                 #:acceptor-with-existing-socket)
   #+ (and lispworks linux)
   (:import-from #:bknr.cluster/server
-                #:wait-for-leader
-                #:leader-id
                 #:leaderp)
   (:import-from #:util/throttler
                 #:throttled-error)
@@ -223,13 +221,15 @@
     ;; If we're here, it's probably because the leader got transfered
     ;; recently. The new leader might not be ready yet, so this hack
     ;; slows down nginx before it retries the next backend.
-    (unless (wait-for-leader bknr.datastore:*store* :timeout 15)
-      (warn "Responding to request as read-only"))
-
-    ;; At this point, we're either a leader or a leader wasn't elected
-    ;; in 15s. If we're not a leader, we'll effectively be responding
-    ;; read-only.
-    (values)))
+    (sleep 3)
+    (cond
+      ((leaderp bknr.datastore:*store*)
+       ;; If we've become the leader while we were waiting then just
+       ;; continue.
+       (values))
+      (t
+       (setf (hunchentoot:return-code*) 502)
+       (hunchentoot:abort-request-handler)))))
 
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor acceptor) request)
   (maybe-redirect-to-leader request)
