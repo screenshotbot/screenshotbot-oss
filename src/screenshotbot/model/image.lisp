@@ -651,12 +651,25 @@ recognized the file, we'll return nil."
 
 (defun delete-image-blob (oid))
 
+(defun touch (file)
+  (ensure-directories-exist file)
+  (with-open-file (stream file :direction :output)
+    (declare (ignore stream))))
+
 (defun img-tmp-dir ()
-  (ensure-directories-exist
-   (path:catdir
-    (bknr.datastore::store-directory
-     bknr.datastore:*store*)
-    "screenshotbot-tmp/")))
+  (let* ((dir (path:catdir
+               (bknr.datastore::store-directory
+                bknr.datastore:*store*)
+               "screenshotbot-tmp/"))
+         (keep-file (path:catfile dir ".keep")))
+    (cond
+      ((path:-e keep-file)
+       dir)
+      (t
+       ;; Avoid leaving an empty directory around, otherwise we might
+       ;; delete it during migrations etc.
+       (touch keep-file)
+       dir))))
 
 (defmacro with-tmp-image-file (args &body body)
   "Just like uiop:with-temporary-file, but uses a directory which is

@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:img-tmp-dir
                 #:%image-size
                 #:image-reuploaded-warning
                 #:no-image-uploaded-yet
@@ -299,3 +300,7 @@ uses the base-image-comparer."
     (let ((image (make-image :hash "343431")))
       (update-image image :pathname file)
       (is (eql 1085 (%image-size image))))))
+
+(test img-tmp-dir-exists
+  (with-fixture state ()
+    (path:-d (img-tmp-dir))))
