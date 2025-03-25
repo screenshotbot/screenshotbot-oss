@@ -11,11 +11,16 @@
   (:import-from #:auth
                 #:oauth-user-avatar)
   (:import-from #:util/request
-                #:http-request))
+                #:http-request)
+  (:import-from #:encrypt/hmac
+                #:verify-hmac))
 (in-package :auth/avatar)
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/account/avatar") (id signature)
-  (declare (ignore signature))
+  (assert
+   (verify-hmac (format nil "avatar.~a" id)
+                (ironclad:hex-string-to-byte-array
+                 signature)))
   (let ((user (bknr.datastore:store-object-with-id (parse-integer id))))
     (hunchentoot:redirect
      (actual-public-url user))))

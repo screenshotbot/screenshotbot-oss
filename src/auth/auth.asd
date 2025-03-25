@@ -11,6 +11,7 @@
                "secure-random"
                "gravatar"
                "cl-intbytes"
+               "encrypt"
                "cl-fad"
                "cl-store"
                "hunchentoot")

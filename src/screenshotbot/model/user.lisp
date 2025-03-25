@@ -77,6 +77,8 @@
                 #:set-user-has-seen-invite)
   (:import-from #:util.cdn
                 #:make-cdn)
+  (:import-from #:encrypt/hmac
+                #:sign-hmac)
   (:local-nicknames (#:roles #:auth/model/roles))
   (:export
    #:adminp
@@ -338,10 +340,13 @@
       (setf (confirmed-p user) t))))
 
 (defmethod user-image-url (user &rest args)
-  (make-cdn
-   (hex:make-url
-    "/account/avatar"
-    :id (bknr.datastore:store-object-id user))))
+  (let ((id (bknr.datastore:store-object-id user)))
+   (make-cdn
+    (hex:make-url
+     "/account/avatar"
+     :id id
+     :signature (ironclad:byte-array-to-hex-string
+                 (sign-hmac (format nil "avatar.~a" id)))))))
 
 (defmethod default-company ((user user))
   (error "deprecated"))
