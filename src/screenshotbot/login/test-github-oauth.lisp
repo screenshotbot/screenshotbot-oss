@@ -32,7 +32,9 @@
                 #:user
                 #:user-image-url)
   (:import-from #:util/store/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:auth/avatar
+                #:actual-public-url))
 (in-package :screenshotbot/login/test-github-oauth)
 
 (util/fiveam:def-suite)
@@ -68,7 +70,7 @@
       (is (equal *test-email* (user-email user)))
       (is (equal "Arnold Noronha" (user-full-name user)))
       (is (equal "https://example.com/doofus.png"
-                 (user-image-url user))))))
+                 (actual-public-url user))))))
 
 (test second-time-with-the-same-user
   (with-fixture state ()
@@ -87,4 +89,4 @@
         (is (equal "sam@example.com" (user-email user)))
         (is (equal "Sam Currie" (user-full-name user)))
         (is (equal "https://oddflowerstudio.com/profilepic"
-                   (user-image-url user)))))))
+                   (actual-public-url user)))))))

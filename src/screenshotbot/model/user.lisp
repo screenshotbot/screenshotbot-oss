@@ -75,6 +75,8 @@
                 #:ensure-slot-boundp)
   (:import-from #:auth/model/invite
                 #:set-user-has-seen-invite)
+  (:import-from #:util.cdn
+                #:make-cdn)
   (:local-nicknames (#:roles #:auth/model/roles))
   (:export
    #:adminp
@@ -336,15 +338,10 @@
       (setf (confirmed-p user) t))))
 
 (defmethod user-image-url (user &rest args)
-  (let ((known-avatar
-          (?. oauth-user-avatar (car (auth:oauth-users user)))))
-    (cond
-      ((str:emptyp known-avatar)
-       (format nil "~a" (apply 'gravatar:image-url
-                               (user-email user)
-                               args)))
-      (t
-       known-avatar))))
+  (make-cdn
+   (hex:make-url
+    "/account/avatar"
+    :id (bknr.datastore:store-object-id user))))
 
 (defmethod default-company ((user user))
   (error "deprecated"))

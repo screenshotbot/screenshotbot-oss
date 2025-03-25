@@ -4,10 +4,12 @@
                "bknr.datastore"
                "util/misc"
                "core.installation"
+               "hunchentoot-extensions"
                "util.store"
                "log4cl"
                "util/cron"
                "secure-random"
+               "gravatar"
                "cl-intbytes"
                "cl-fad"
                "cl-store"
@@ -18,7 +20,8 @@
                (:file "request")
                (:file "view")
                (:file "company")
-               (:file "acceptor")))
+               (:file "acceptor")
+               (:file "avatar")))
 
 (defsystem "auth/tests"
   :serial t
@@ -29,4 +32,5 @@
                :fiveam-matchers
                :util/fiveam)
   :components ((:file "test-auth")
-               (:file "test-view")))
+               (:file "test-view")
+               (:file "test-avatar")))
