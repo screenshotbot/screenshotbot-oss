@@ -222,7 +222,10 @@
                :user-id (assoc-value user-info :sub)
                :email (assoc-value user-info :email)
                :full-name (assoc-value user-info :name)
-               :avatar (assoc-value user-info :picture))
+               :avatar (assoc-value user-info :picture)
+               ;; We don't save the token, but in some cases, we need
+               ;; the token to fetch the avatar.
+               :token token)
             (authentication-error (e)
               (error-authenticating (authentication-error-message e)))))))
      (t
