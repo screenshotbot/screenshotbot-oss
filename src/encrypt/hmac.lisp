@@ -10,6 +10,8 @@
                 #:key-from-disk)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:util/misc
+                #:or-setf)
   (:export
    #:sign-hmac
    #:verify-hmac))
@@ -18,7 +20,7 @@
 (defvar *hmac-key* nil)
 
 (defun hmac-key ()
-  (util:or-setf
+  (or-setf
    *hmac-key*
    (key-from-disk "sha256-hmac-key.bin" 64)
    :thread-safe t))
