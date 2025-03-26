@@ -71,7 +71,10 @@ for downloading the profile picture.")))
   (let ((known-avatar
           (?. oauth-user-avatar (car (auth:oauth-users user)))))
     (cond
-      ((str:emptyp known-avatar)
+      ((or
+        (str:emptyp known-avatar)
+        ;; T1828: temporary hack to use Gravatar for Entra
+        (equal "https://graph.microsoft.com/v1.0/me/photo/$value" known-avatar))
        (format nil "~a" (gravatar:image-url
                                (auth:user-email user))))
       (t

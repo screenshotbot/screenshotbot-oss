@@ -49,6 +49,14 @@
     (assert-redirects ("https://secure.gravatar.com/avatar/852438d026c018c4307b916406f98c62")
       (handle-avatar user))))
 
+(test gravatar-for-entra ()
+  (with-fixture state ()
+    (setf (auth:oauth-users user)
+          (list (make-instance 'oidc-user
+                               :avatar "https://graph.microsoft.com/v1.0/me/photo/$value")))
+    (assert-redirects ("https://secure.gravatar.com/avatar/852438d026c018c4307b916406f98c62")
+      (handle-avatar user))))
+
 (test with-avatar-from-oidc
   (with-fixture state ()
     (setf (auth:oauth-users user)
