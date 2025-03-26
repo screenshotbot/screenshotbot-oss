@@ -293,3 +293,9 @@
     (if-let ((default-auth-provider (default-oidc-provider *installation*)))
       (signout-from-oidc default-auth-provider)
       (hard-signout))))
+
+
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/account/is-logged-in") ()
+  (setf (hunchentoot:content-type*) "application/json")
+  (json:encode-json-to-string
+   `((:is-logged-in . ,(if (auth:current-user) t :false)))))
