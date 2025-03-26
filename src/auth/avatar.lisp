@@ -51,6 +51,8 @@ for downloading the profile picture.")))
                 (ironclad:hex-string-to-byte-array
                  signature)))
   (let ((user (bknr.datastore:store-object-with-id (parse-integer id))))
+    (assert user)
+    (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")  
     (handle-avatar user)))
 
 (defun handle-avatar (user)
@@ -58,6 +60,7 @@ for downloading the profile picture.")))
     (let ((overriden-avatar (overriden-avatar-for-user user)))
       (cond
         (overriden-avatar
+         (setf (hunchentoot:header-out "X-override-avatar") "1")           
          (hunchentoot:handle-static-file
           (blob-pathname overriden-avatar)
           (content-type overriden-avatar)))
