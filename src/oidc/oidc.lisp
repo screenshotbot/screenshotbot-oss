@@ -243,7 +243,8 @@
                                          user-id
                                          email
                                          full-name
-                                         avatar))
+                                         avatar
+                                         token))
 
 (defmethod oidc-callback :after ((auth oidc) code redirect &key &allow-other-keys)
   (declare (ignore code))
