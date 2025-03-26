@@ -10,8 +10,6 @@
                 #:?.)
   (:import-from #:auth
                 #:oauth-user-avatar)
-  (:import-from #:util/request
-                #:http-request)
   (:import-from #:encrypt/hmac
                 #:verify-hmac)
   (:import-from #:bknr.datastore
