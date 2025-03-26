@@ -198,7 +198,11 @@
    :subtitle "All API calls to Slack made by Screenshotbot in the last 30 days will be listed here"))
 
 (defmethod describe-audit-log ((self post-on-channel-audit-log))
-  <span>Posted on ,(slack-channel self)</span>)
+  (cond
+    ((equal "channel_not_found" (audit-log-error self))
+     <span>Could not post on slack. This could be because of a typo in the name <tt>,(slack-channel self)</tt>, or because the channel is a private channel. For private channels, add the Screenshotbot Slack app to the channel and try again</span>)
+    (t
+     <span>Posted on ,(slack-channel self)</span>)))
 
 
 (defsettings slack
