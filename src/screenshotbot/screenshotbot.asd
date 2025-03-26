@@ -281,6 +281,7 @@
                  (:file "github-oauth-ui")
                  (:file "google-oauth")
                  (:file "populate")
+                 (:file "microsoft-entra")
                  (:file "aws-cognito")
                  (:file "require-invite-sso-mixin")
                  (:file "template")))
