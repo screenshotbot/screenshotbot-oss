@@ -155,7 +155,8 @@
                                                        user-id
                                                        email
                                                        full-name
-                                                       avatar)
+                                                        avatar
+                                                        token)
   (log:debug "Got user info ~S" user-id)
   (let ((user (prepare-oidc-user
                auth
