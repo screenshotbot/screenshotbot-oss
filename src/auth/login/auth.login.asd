@@ -9,11 +9,13 @@
                :util/throttler
                :util/events
                :util/recaptcha
+               :util/request
                :util.store
                :clavier
                :oidc)
   :components ((:file "impersonation")
                (:file "roles-auth-provider")
+               (:file "cached-avatar")
                (:file "common")
                (:file "github")
                (:file "oidc")
@@ -31,4 +33,5 @@
                :util/fiveam)
   :components ((:file "test-roles-auth-provider")
                (:file "test-verify-email")
+               (:file "test-cached-avatar")
                (:file "test-sso")))

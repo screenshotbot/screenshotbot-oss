@@ -35,7 +35,7 @@ does it make sense to parallelize this in the future?")
 (with-class-validation
   (defclass overriden-avatar (blob)
     ((content-type :initarg :content-type
-                   :reader content-type)
+                   :accessor content-type)
      (%user :initarg :user
             :index +user-index-2+
             :index-reader overriden-avatar-for-user))
