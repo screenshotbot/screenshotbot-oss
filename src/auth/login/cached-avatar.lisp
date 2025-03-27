@@ -34,6 +34,9 @@
 
 (defvar *cv* (bt:make-condition-variable))
 
+(defvar *token-logs* nil
+  "For debugging T1832")
+
 (defmethod after-authentication :after ((self cached-avatar-provider)
                                         &key email
                                           token
@@ -48,6 +51,8 @@
 (auto-restart:with-auto-restart ()
   (defun download-avatar (user &key token avatar)
     (bt:with-lock-held (*overriden-avatar-lock*)
+      (atomics:atomic-push (list user token avatar)
+                           *token-logs*)
       (multiple-value-bind (res code headers)
           (http-request
            avatar

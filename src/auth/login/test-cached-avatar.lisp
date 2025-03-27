@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:auth/login/cached-avatar
+                #:download-avatar
                 #:write-avatar)
   (:import-from #:bknr.datastore
                 #:class-instances
@@ -20,15 +21,20 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/core
-                #:assert-that))
+                #:assert-that)
+  (:import-from #:util/request
+                #:http-request)
+  (:import-from #:oidc/oidc
+                #:oauth-access-token))
 (in-package :auth/login/test-cached-avatar)
 
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (&body)))
+  (cl-mock:with-mocks ()
+    (with-test-store ()
+      (&body))))
 
 (test write-new-avatar
   (with-fixture state ()
@@ -62,4 +68,14 @@
        (equal
         "image/png"
         (content-type oa))))))
+
+(test download-avatar-happy-path
+  (with-fixture state ()
+    (cl-mock:if-called 'http-request
+                       (lambda (url &key additional-headers ensure-success force-binary)
+                         (values #(65 66 67) 200 `((:content-type . "image/png")))))
+    (download-avatar 'user-1
+                     :token (make-instance 'oauth-access-token
+                                           :access-token "foo")
+                     :avatar "https://example.com/image.png")))
 
