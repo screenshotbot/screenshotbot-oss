@@ -44,6 +44,8 @@
                 #:defhandler)
   (:import-from #:core/ui/mdi
                 #:mdi)
+  (:import-from #:screenshotbot/login/common
+                #:with-login)
   (:local-nicknames (#:a #:alexandria)
                     (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/company/members)
@@ -224,6 +226,7 @@
    (%members-page)))
 
 (defhandler (nil :uri "/team") ()
-  <app-template>
-    ,(%members-page)
-  </app-template>)
+  (with-login ()
+    <app-template>
+      ,(%members-page)
+    </app-template>))
