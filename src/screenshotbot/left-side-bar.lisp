@@ -115,11 +115,10 @@
 
     <ul class="nav nav-pills flex-column ps-3 pe-3">
 
-      ,(when (and company (not (singletonp company)))
-         <left-nav-item href= "/team" image-class= "group"
-                        script-name=script-name >
-           Team
-         </left-nav-item>)
+      <left-nav-item href= "/team" image-class= "group"
+                     script-name=script-name >
+        Team
+      </left-nav-item>
 
 
       <left-nav-item href= "/api-keys" image-class= "vpn_key"
