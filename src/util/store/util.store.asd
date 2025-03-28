@@ -37,6 +37,7 @@
                (:file "export")
                (:file "fset")
                (:file "fset-index")
+               (:file "summing-index")
                (:file "permissive-persistent-class")
                (:file "store-migrations")
                (:file "validate")))
@@ -74,6 +75,7 @@
                (:file "test-sync")
                (:file "test-fset-index")
                (:file "test-encodable")
+               (:file "test-summing-index")
                (:file "test-permissive-persistent-class")))
 
 (defsystem :util.store/aws
