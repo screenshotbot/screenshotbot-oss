@@ -218,6 +218,7 @@
 
     (let* ((run (make-recorder-run
                  :commit-hash "abcd"
+                 :trunkp t
                  :channel channel))
            (retriever (make-instance 'run-retriever
                                      :sleep-time 0))

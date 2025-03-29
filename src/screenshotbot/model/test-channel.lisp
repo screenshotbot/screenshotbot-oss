@@ -70,15 +70,34 @@
   (with-fixture state ()
    (let* ((channel (make-instance 'channel))
           (foo-run (make-recorder-run :channel channel
-                                      :commit-hash "foo"))
+                                      :commit-hash "foo"
+                                      :trunkp t))
           (bar-run (make-recorder-run :channel channel
-                                      :commit-hash "bar")))
+                                      :commit-hash "bar"
+                                      :trunkp t)))
      (is (eql foo-run (production-run-for channel :commit "foo")))
      (is (eql bar-run (production-run-for channel :commit "bar")))
      (let ((another-bar-run (make-recorder-run
                              :channel channel
                              :commit-hash "bar")))
        (is (eql bar-run (production-run-for channel :commit "bar")))))))
+
+(test find-production-run-for-commit-does-not-pick-non-production-runs
+  (with-fixture state ()
+   (let* ((channel (make-instance 'channel))
+          (foo-run (make-recorder-run :channel channel
+                                      :commit-hash "foo"
+                                      :trunkp nil))
+          (bar-run (make-recorder-run :channel channel
+                                      :commit-hash "bar"
+                                      :trunkp nil)))
+     (is (eql nil (production-run-for channel :commit "foo")))
+     (is (eql nil (production-run-for channel :commit "bar")))
+     (let ((another-bar-run (make-recorder-run
+                             :channel channel
+                             :commit-hash "bar"
+                             :trunkp t)))
+       (is (eql another-bar-run (production-run-for channel :commit "bar")))))))
 
 (test find-production-run-unchanged-run
   (with-fixture state ()
@@ -88,7 +107,8 @@
                                   :commit "foo"
                                   :other-commit "bar"))
           (bar-run (make-recorder-run :channel channel
-                                      :commit-hash "bar")))
+                                      :commit-hash "bar"
+                                      :trunkp t)))
      (is (eql bar-run (production-run-for channel :commit "bar")))
      (is (eql bar-run (production-run-for channel :commit "foo")))
 

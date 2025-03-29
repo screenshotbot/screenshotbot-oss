@@ -106,7 +106,8 @@
     (let* ((channel (make-instance 'channel))
            (run (make-recorder-run
                  :commit-hash "bleh2"
-                 :channel channel)))
+                 :channel channel
+                 :trunkp t)))
       (assert-that (production-run-for channel :commit "car")
                    (has-length 0))
       (assert-that (fset:convert 'list (runs-for-channel channel))

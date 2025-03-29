@@ -27,6 +27,7 @@
   (:import-from #:screenshotbot/model/image
                 #:masks)
   (:import-from #:screenshotbot/model/recorder-run
+                #:trunkp
                 #:was-promoted-p
                 #:unchanged-run-other-commit
                 #:unchanged-run-for-commit
@@ -336,9 +337,11 @@
                    (if y (store-object-id y) large-int))
                 x
                 y))
-          (fset:lookup
-           (commit-to-run-map channel)
-           commit)
+          (fset:filter
+           #'trunkp
+           (fset:lookup
+            (commit-to-run-map channel)
+            commit))
           :initial-value nil))))))
 
 (defmethod channel-active-run ((channel channel))
