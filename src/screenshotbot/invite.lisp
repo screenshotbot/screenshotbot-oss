@@ -163,7 +163,7 @@
         (push
          <span>
            You have reached the limit of users and invites on this account.
-           You can <a href= "/settings/members">remove users or invites</a>,
+           You can <a href= "/team">remove users or invites</a>,
            or you can <a href= "/billing/dashboard">upgrade your plan from here</a>.
          </span>
          errors))
@@ -227,7 +227,7 @@
 
     <div class= "card-footer">
       <a href= (make-url 'invite-page) class= "btn btn-primary" >Invite More People</a>
-      <a href= "/settings/members" class= "ms-3" >Manage Invitations</a>
+      <a href= "/team" class= "ms-3" >Manage Invitations</a>
     </div>
   </simple-card-page>)
 

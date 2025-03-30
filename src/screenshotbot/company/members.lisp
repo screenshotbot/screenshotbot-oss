@@ -62,7 +62,7 @@
 (defun mailto (x)
   <a href= (format nil "mailto:~a" x)>,(progn x)</a>)
 
-(defun delete-user (user company &aux (back "/settings/members"))
+(defun delete-user (user company &aux (back "/team"))
   (assert (not (roles:has-role-p company user 'roles:admin)))
   (confirmation-page
    :yes (nibble ()
@@ -98,7 +98,7 @@
     (assert role)
     (setf (roles:user-role company user)
           role)
-    (hex:safe-redirect "/settings/members")))
+    (hex:safe-redirect "/team")))
 
 (defun %edit-role (&key user company)
   (assert (can-change-user-role-p company user))
@@ -123,7 +123,7 @@
 
       <div class= "card-footer">
         <input type= "submit" class= "btn btn-primary" value= "Change role" />
-        <a href= "/settings/members" class= "btn btn-secondary" >Cancel</a>
+        <a href= "/team" class= "btn btn-secondary" >Cancel</a>
       </div>
     </simple-card-page>))
 
@@ -159,8 +159,8 @@
    :yes (nibble ()
           (with-transaction ()
             (bknr.datastore:delete-object invite))
-          (hex:safe-redirect "/settings/members"))
-   :no "/settings/members"
+          (hex:safe-redirect "/team"))
+   :no "/team"
    <span>Delete invitation to ,(invite-email invite)?</span>))
 
 
@@ -230,3 +230,6 @@
     <app-template>
       ,(%members-page)
     </app-template>))
+
+(defhandler (nil :uri "/settings/members") ()
+  (hex:safe-redirect "/team"))
