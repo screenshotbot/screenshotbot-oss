@@ -41,7 +41,9 @@
                 #:nibble)
   (:import-from #:screenshotbot/dashboard/bisect
                 #:bisect-page
-                #:bisect-item))
+                #:bisect-item)
+  (:import-from #:screenshotbot/login/common
+                #:with-login))
 (in-package :screenshotbot/dashboard/history)
 
 (named-readtables:in-readtable markup:syntax)
@@ -216,10 +218,11 @@
             (channel screenshot-name branch)
   (when (equal "" branch)
     (setf branch nil))
-  (let ((channel (store-object-with-id (parse-integer channel))))
-    (can-view! channel)
-    (app-template
-     (render-history
-      :screenshot-name screenshot-name
-      :channel channel
-      :branch branch))))
+  (with-login ()
+   (let ((channel (store-object-with-id (parse-integer channel))))
+     (can-view! channel)
+     (app-template
+      (render-history
+       :screenshot-name screenshot-name
+       :channel channel
+       :branch branch)))))
