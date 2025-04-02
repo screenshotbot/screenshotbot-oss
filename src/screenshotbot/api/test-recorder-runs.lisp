@@ -18,6 +18,7 @@
   (:import-from #:screenshotbot/server
                 #:logged-in-p)
   (:import-from #:screenshotbot/api/recorder-run
+                #:%find-base-run
                 #:production-run-without-ci-permission
                 #:validation-error
                 #:validate-dto
@@ -64,11 +65,14 @@
                 #:make-recorder-run
                 #:recorder-run)
   (:import-from #:fiveam-matchers/core
+                #:error-with-string-matching
+                #:signals-error-matching
                 #:is-equal-to
                 #:has-typep
                 #:assert-that
                 #:equal-to)
   (:import-from #:fiveam-matchers/strings
+                #:matches-regex
                 #:starts-with)
   (:import-from #:fiveam-matchers/misc
                 #:is-null
@@ -89,6 +93,12 @@
                 #:contains)
   (:import-from #:bknr.datastore
                 #:class-instances)
+  (:import-from #:util/hunchentoot-engine
+                #:hunchentoot-engine)
+  (:import-from #:screenshotbot/api/core
+                #:api-error)
+  (:import-from #:screenshotbot/model/company
+                #:find-or-create-channel)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 
 (util/fiveam:def-suite)
@@ -112,7 +122,8 @@
               '(gk:disable))
              (:enable
               '(gk:enable))))
-    (let ((*installation* (make-instance 'my-installation)))
+    (let ((*installation* (make-instance 'my-installation))
+          (engine (make-instance 'hunchentoot-engine)))
       (with-test-store ()
         (gk:create :api-key-roles)
         (funcall api-key-roles :api-key-roles)
@@ -732,3 +743,31 @@ storing release-branch-p, we'll update this test."
 
 
 
+
+(test find-base-run-when-channel-is-invalid
+  (with-fixture state (:api-key-roles :disable)
+    (is-true (auth:current-company))
+    (let* ((channel (find-or-create-channel company "zoidberg"))
+           (run (make-recorder-run
+                 :company company
+                 :branch "carbar"
+                 :commit-hash "0011"
+                 :trunkp t
+                 :channel channel
+                 :screenshots (list
+                               (make-screenshot :image img1 :name "foo")))))
+      (signals-error-matching (api-error)
+                              (%find-base-run
+                               :channel "foobarcar" :commit "abcd")
+                              (error-with-string-matching
+                               (matches-regex ".*No such channel.*")))
+      (is
+       (eql nil
+        (%find-base-run
+         :channel "zoidberg"
+         :commit "abcd")))
+      (assert-that
+       (%find-base-run
+        :channel "zoidberg"
+        :commit "0011")
+       (has-typep 'dto:run)))))

@@ -18,6 +18,7 @@
   (:import-from #:screenshotbot/api/promote
                 #:default-promo)
   (:import-from #:screenshotbot/model/company
+                #:find-channel
                 #:company
                 #:find-or-create-channel
                 #:find-image-by-id
@@ -574,3 +575,19 @@ promotion thread starts. Used by the API and by Replay"
   (dolist (im (mapcar 'screenshot-image (recorder-run-screenshots recorder-run)))
     (verify-image im)))
 
+
+(defapi (%find-base-run :uri "/run/find-base-run") (channel commit)
+  "Find an appropriate base run for the given channel and commit.
+
+If we could not find an appropriate run, then we'll return nil"
+  (let* ((channel-name channel)
+         (channel (find-channel (auth:current-company) channel-name)))
+    (unless channel
+      (api-error "No such channel: ~a" channel-name))
+    (let ((run (production-run-for channel :commit commit)))
+      (cond
+        ((null run)
+         nil)
+        (t
+         (auth:can-view! run)
+         (run-to-dto run))))))

@@ -245,6 +245,10 @@ function fn for the purpose of tests."
   (:report (lambda (e out)
              (format out "~a" (api-error-msg e)))))
 
+(defun api-error (fmt &rest args)
+  (error 'api-error
+         :message (apply #'format nil fmt args)))
+
 (defmethod api-error-code (error)
   500)
 
