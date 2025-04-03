@@ -38,9 +38,9 @@ jobs:
     docker:
       - image: debian:bookworm
     steps:
-      - checkout
       - run:
           <<: *install_deps
+      - checkout
       - run:
           name: Launch Screenshotbot
           command: |
@@ -51,9 +51,9 @@ jobs:
     docker:
       - image: debian:bookworm
     steps:
-      - checkout
       - run:
           <<: *install_deps
+      - checkout
       - run:
           name: Build CLI
           command: |
