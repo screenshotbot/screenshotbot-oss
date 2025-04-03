@@ -524,7 +524,9 @@
 
 
 (defun render-run-page (run &key name)
+  (log:info "in here1")
   (can-view! run)
+  (log:info "in here")
   (let* ((channel (recorder-run-channel run))
          (screenshots (screenshot-map:to-map (run-screenshot-map run)))
          (filter (cond
@@ -534,6 +536,7 @@
                    (t
                     #'identity)))
          (filtered-screenshots (apply-map-filter screenshots filter)))
+    (log:info "nooooodfdfdfdf")
     <app-template body-class= "dashboard bg-white" >
       <div class= "page-title-box">
         <h4 class= "page-title" >Run from

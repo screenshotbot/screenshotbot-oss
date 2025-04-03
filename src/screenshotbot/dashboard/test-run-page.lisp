@@ -88,7 +88,9 @@
     (log:info "nidfd")
     (wrap-snapshot ()
       (log:info "oooh")
-      (render-run-page run))))
+      (prog1
+          (render-run-page run)
+        (log:info "nooo")))))
 
 (screenshot-test run-page-with-warnings
   (with-fixture state ()
