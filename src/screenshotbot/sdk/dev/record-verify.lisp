@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/sdk/dev
+(defpackage :screenshotbot/sdk/dev/record-verify
   (:use #:cl)
   (:import-from #:screenshotbot/sdk/run-context
                 #:with-flags-from-run-context
@@ -43,7 +43,7 @@
    #:dev/command)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
                     (#:dto #:screenshotbot/api/model)))
-(in-package :screenshotbot/sdk/dev)
+(in-package :screenshotbot/sdk/dev/record-verify)
 
 (defclass dev-run-context (run-context
                            env-reader-run-context)
@@ -191,3 +191,6 @@ extensions with a comma.")))
     (record/command)
     (verify/command)
     (install/command))))
+
+
+

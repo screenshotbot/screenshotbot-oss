@@ -62,7 +62,8 @@
                (:file "upload-commit-graph")
                (:file "batch")
                (:file "cli-common")
-               (:file "dev")
+               (:module "dev"
+                :components ((:file "record-verify")))
                (:file "failed-run")
                (:file "unchanged-run")
                (:file "finalized-commit")))
@@ -124,7 +125,8 @@
                (:file "test-git")
                (:file "test-fetch-run")
                (:file "test-env")
-               (:file "test-dev")
+               (:module "dev"
+                :components ((:file "test-record-verify")))
                (:file "test-sentry")
                (:file "test-cli-common")
                (:file "test-android")

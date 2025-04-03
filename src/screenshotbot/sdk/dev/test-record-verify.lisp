@@ -4,10 +4,10 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/sdk/test-dev
+(defpackage :screenshotbot/sdk/dev/test-record-verify
   (:use #:cl
         #:fiveam)
-  (:import-from #:screenshotbot/sdk/dev
+  (:import-from #:screenshotbot/sdk/dev/record-verify
                 #:record-run
                 #:homedir
                 #:%make-run-and-get-id
@@ -24,7 +24,7 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
-(in-package :screenshotbot/sdk/test-dev)
+(in-package :screenshotbot/sdk/dev/test-record-verify)
 
 (util/fiveam:def-suite)
 
