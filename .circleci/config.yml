@@ -36,7 +36,7 @@ jobs:
 
   launch:
     docker:
-      - image: cimg/base:2021.04
+      - image: debian:bookworm
     steps:
       - checkout
       - run:
@@ -49,7 +49,7 @@ jobs:
 
   build_cli:
     docker:
-      - image: cimg/base:2021.04
+      - image: debian:bookworm
     steps:
       - checkout
       - run:
