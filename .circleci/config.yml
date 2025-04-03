@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run: &install_deps
           name: Install Deps
-          command: apt-get update && apt-get install -y imagemagick build-essential openjdk-17-jdk-headless sbcl libmagickwand-dev libssh2-1-dev ssh git
+          command: apt-get update && apt-get install -y imagemagick build-essential openjdk-17-jdk-headless sbcl libmagickwand-dev libssh2-1-dev ssh git sudo
       - run:
           name: SBCL tests
           command: |
