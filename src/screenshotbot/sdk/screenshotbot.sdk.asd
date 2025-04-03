@@ -63,7 +63,8 @@
                (:file "batch")
                (:file "cli-common")
                (:module "dev"
-                :components ((:file "record-verify")))
+                :components ((:file "record-verify")
+                             (:file "commands")))
                (:file "failed-run")
                (:file "unchanged-run")
                (:file "finalized-commit")))

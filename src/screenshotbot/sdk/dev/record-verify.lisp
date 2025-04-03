@@ -180,17 +180,7 @@ extensions with a comma.")))
                         (log:info "See changes at ~a" (dto:comparison-url comparison))
                         (uiop:quit 1))))))))))
 
-(defun dev/command ()
-  (clingon:make-command
-   :name "dev"
-   :description "Tools that are run from a developer device (as opposed to CI)"
-   :handler (lambda (cmd)
-              (clingon:print-usage-and-exit cmd t))
-   :sub-commands
-   (list
-    (record/command)
-    (verify/command)
-    (install/command))))
+
 
 
 
