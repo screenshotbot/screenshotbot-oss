@@ -3,12 +3,19 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: cimg/base:2025.04
+      - image: debian:bookworm
     steps:
-      - checkout
       - run: &install_deps
           name: Install Deps
-          command: sudo apt-get update && sudo apt-get install -y imagemagick build-essential openjdk-11-jdk-headless sbcl libmagickwand-dev libssh2-1-dev
+          command: |
+            whoami
+            apt-get update
+            apt-get install -y build-essential sbcl  libssh2-1-dev ssh git sudo curl
+            curl https://screenshotbot-assets.s3.us-east-1.amazonaws.com/imagemagick7_7.1.1-39_amd64.deb -o /root/imagemagick7_7.1.1-39_amd64.deb
+            # apt-get install -y /root/imagemagick7_7.1.1-39_amd64.deb
+            apt-get install -y imagemagick libmagickwand-dev
+            apt-get install -y openjdk-17-jdk-headless 
+      - checkout
       - run:
           name: SBCL tests
           command: |
@@ -23,7 +30,6 @@ jobs:
           name: build-cli
           command: |
             sbcl --script scripts/build-cli.lisp
-
       - run:
           name: Upload assets for Screenshots
           command: |
@@ -31,11 +37,11 @@ jobs:
 
   launch:
     docker:
-      - image: cimg/base:2021.04
+      - image: debian:bookworm
     steps:
-      - checkout
       - run:
           <<: *install_deps
+      - checkout
       - run:
           name: Launch Screenshotbot
           command: |
@@ -44,11 +50,11 @@ jobs:
 
   build_cli:
     docker:
-      - image: cimg/base:2021.04
+      - image: debian:bookworm
     steps:
-      - checkout
       - run:
           <<: *install_deps
+      - checkout
       - run:
           name: Build CLI
           command: |
