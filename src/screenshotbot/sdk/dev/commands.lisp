@@ -12,7 +12,9 @@
                 #:verify/command
                 #:record/command)
   (:import-from #:screenshotbot/sdk/install
-                #:install/command))
+                #:install/command)
+  (:import-from #:screenshotbot/sdk/dev/verify-against-ci
+                #:verify-against-ci/command))
 (in-package :screenshotbot/sdk/dev/commands)
 
 (defun dev/command ()
@@ -25,5 +27,6 @@
    (list
     (record/command)
     (verify/command)
-    (install/command))))
+    (install/command)
+    (verify-against-ci/command))))
 

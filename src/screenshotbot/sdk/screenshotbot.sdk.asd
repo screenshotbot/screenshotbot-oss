@@ -64,6 +64,7 @@
                (:file "cli-common")
                (:module "dev"
                 :components ((:file "record-verify")
+                             (:file "verify-against-ci")
                              (:file "commands")))
                (:file "failed-run")
                (:file "unchanged-run")
