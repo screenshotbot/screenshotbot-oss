@@ -23,31 +23,49 @@
                 #:remote-version)
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:trunkp
+                #:recorder-run)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/dev/test-record-verify)
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (cl-mock:with-mocks ()
-    (if-called 'uiop:quit (lambda (code)
-                            (error "exiting with: ~a" code)))
-    (tmpdir:with-tmpdir (%homedir)
-      (if-called 'homedir (lambda ()
-                            %homedir))
-      (tmpdir:with-tmpdir (dir)
-        (with-open-file (stream (path:catfile dir "foo.png") :direction :output)
-          (write-string "dummy" stream))
-        (&body)))))
+  (with-sdk-integration (api-context)
+   (cl-mock:with-mocks ()
+     (if-called 'uiop:quit (lambda (code)
+                             (error "exiting with: ~a" code)))
+     (tmpdir:with-tmpdir (%homedir)
+       (if-called 'homedir (lambda ()
+                             %homedir))
+       (tmpdir:with-tmpdir (dir)
+         (with-open-file (stream (path:catfile dir "foo.png") :direction :output)
+           (write-string "dummy" stream))
+         (&body))))))
 
 (test record-happy-path
   (with-fixture state ()
-    (with-sdk-integration (api-context)
-     (finishes
-       (record-run
-        (%make-run-and-get-id
-         api-context
-         :directory dir
-         :channel "foo")
-        "foo")))
+    (finishes
+      (record-run
+       (%make-run-and-get-id
+        api-context
+        :directory dir
+        :channel "foo")
+       "foo"))
     (is (path:-e (path:catfile %homedir ".config/screenshotbot/recordings/foo.json")))))
+
+(test run-has-productionp-as-nil
+  "This is a critical test, because we don't want these to pollute the production runs"
+  (with-fixture state ()
+    (finishes
+      (record-run
+       (%make-run-and-get-id
+        api-context
+        :directory dir
+        :channel "foo")
+       "foo"))
+    (let ((run (first (bknr.datastore:class-instances 'recorder-run))))
+      (is-false (trunkp run)))))
+
+
