@@ -23,7 +23,6 @@ jobs:
           name: build-cli
           command: |
             sbcl --script scripts/build-cli.lisp
-
       - run:
           name: Upload assets for Screenshots
           command: |
