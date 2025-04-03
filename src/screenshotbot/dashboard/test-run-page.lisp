@@ -52,14 +52,17 @@
 
 (def-fixture state ()
   (with-test-store ()
+    (log:info "hello")
     (with-test-user (:company company
                      :user user
                      :logged-in-p t)
+      (log:info "workd")      
       (labels ((make-screenshot (img)
                       (let* ((image (make-image :pathname img :for-tests t)))
                         (make-instance 'screenshot
                                        :name "foobar"
                                        :image image))))
+        (log:info "car")
         (let* ((channel (make-instance 'channel
                                        :publicp t
                                        :company company
@@ -73,6 +76,7 @@
                      :screenshots (list (make-screenshot im1))))
                (another-run (make-recorder-run
                              :commit-hash "foo")))
+          (log:info "bar")
           (&body))))))
 
 (def-easy-macro wrap-snapshot (&fn fn)
@@ -81,8 +85,10 @@
 
 (screenshot-test simple-run-page-screenshots
   (with-fixture state ()
+    (log:info "nidfd")
     (wrap-snapshot ()
-     (render-run-page run))))
+      (log:info "oooh")
+      (render-run-page run))))
 
 (screenshot-test run-page-with-warnings
   (with-fixture state ()
