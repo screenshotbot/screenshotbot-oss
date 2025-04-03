@@ -128,7 +128,8 @@
                (:file "test-fetch-run")
                (:file "test-env")
                (:module "dev"
-                :components ((:file "test-record-verify")))
+                :components ((:file "test-record-verify")
+                             (:file "test-verify-against-ci")))
                (:file "test-sentry")
                (:file "test-cli-common")
                (:file "test-android")
