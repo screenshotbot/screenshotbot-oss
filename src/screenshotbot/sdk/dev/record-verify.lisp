@@ -14,6 +14,8 @@
   (:import-from #:clingon.options
                 #:make-option)
   (:import-from #:screenshotbot/sdk/sdk
+                #:put-run-with-run-context
+                #:upload-image-directory
                 #:request
                 #:make-directory-run)
   (:import-from #:screenshotbot/sdk/cli-common
@@ -89,19 +91,19 @@ extensions with a comma.")))
 
 (defun %make-run-and-get-id (api-ctx &key directory channel recursivep
                                        (file-types (list "png")))
-  (let ((ctx (make-instance 'dev-run-context
+  (let ((run-ctx (make-instance 'dev-run-context
                             :productionp nil
                             :channel channel
                             :main-branch "main")))
-    (with-flags-from-run-context (ctx)
-      (make-directory-run
+    (let* ((image-directory (make-instance 'image-directory
+                                           :directory directory
+                                           :recursivep recursivep
+                                           :file-types file-types))
+           (screenshots (upload-image-directory api-ctx image-directory)))
+      (put-run-with-run-context
        api-ctx
-       (make-instance 'image-directory
-                      :directory directory
-                      :recursivep recursivep
-                      :file-types file-types)
-       :channel channel
-       :repo (make-instance 'null-repo)))))
+       run-ctx
+       screenshots))))
 
 (defun make-run-and-get-id (cmd)
   (when (getopt cmd :verbose)
