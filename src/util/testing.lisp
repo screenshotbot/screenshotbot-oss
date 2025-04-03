@@ -113,8 +113,10 @@
      (asdf:system-relative-pathname project "static-web-output/"))))
 
 (defun screenshot-static-page (project name content)
+  (log:info "screenshot-static-page")
   (let ((output (static-web-output-dir project)))
     (let ((output-file (path:catfile output (format nil "~a/index.html" name))))
+      (log:info "ensure-directories")
       (ensure-directories-exist output-file)
       (funcall
        (assoc-value *screenshot-test-inits* project :test #'string-equal))
@@ -122,6 +124,7 @@
                             :direction :output
                             :external-format :utf-8
                             :if-exists :supersede)
+        (log:info "wrting content")
         (let ((content (typecase content
                          (string content)
                          (t
@@ -130,6 +133,7 @@
                                                                     "#"))
                             (markup:write-html content))))))
           (write-string content file))
+        (log:info "screenshot written")
         (fiveam:pass "Screenshot written")))))
 
 (defun clean-up-static-web-outputs ()
