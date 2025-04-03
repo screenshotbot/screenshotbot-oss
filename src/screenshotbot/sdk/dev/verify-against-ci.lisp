@@ -7,10 +7,24 @@
 (defpackage :screenshotbot/sdk/dev/verify-against-ci
   (:use #:cl)
   (:import-from #:screenshotbot/sdk/dev/record-verify
+                #:%make-run-and-get-id
                 #:default-options)
   (:import-from #:clingon.options
-                #:make-option))
+                #:make-option)
+  (:import-from #:screenshotbot/sdk/clingon-api-context
+                #:with-clingon-api-context)
+  (:import-from #:clingon.command
+                #:getopt))
 (in-package :screenshotbot/sdk/dev/verify-against-ci)
+
+(defun %verify-against-ci (api-ctx cmd)
+  (let ((run (%make-run-and-get-id
+              api-ctx
+              :channel (getopt cmd :channel)
+              :directory (getopt cmd :directory)
+              :recursivep (getopt cmd :recursivep)
+              :file-types (str:split "," (getopt cmd :image-file-types)))))
+   (error "Got run: ~a" run)))
 
 (defun verify-against-ci/command ()
   (clingon:make-command
@@ -25,6 +39,9 @@
               :key :threshold)
              (default-options))
    :handler (lambda (cmd)
-              (error "This command is unimplemented"))))
+              (with-clingon-api-context (api-ctx cmd)
+                (%verify-against-ci
+                 api-ctx
+                 cmd)))))
 
 
