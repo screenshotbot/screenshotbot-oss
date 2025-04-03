@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: cimg/base:2025.04
+      - image: debian:bookworm
     steps:
       - checkout
       - run: &install_deps
