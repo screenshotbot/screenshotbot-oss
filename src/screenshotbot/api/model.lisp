@@ -110,6 +110,15 @@
   (cond
     ((and
       (listp type)
+      (eql 'or (first type))
+      (eql 'null (second type)))
+     (cond
+       ((equal "null" json)
+        nil)
+       (t
+        (decode-json json (third type)))))
+    ((and
+      (listp type)
       (eql :list (car type)))
      (loop for item across (yason:parse (make-string-input-stream json)
                                         :object-as :hash-table

@@ -56,6 +56,17 @@
     (is (typep ret 'version))
     (is (equal 2 (slot-value ret 'version)))))
 
+(test decode-json-for-optional-root-value
+  (let ((ret
+          (decode-json (str:trim " {\"foo\": \"car\", \"version\": 2, \"bleh\": \"ten\"} ")
+                       '(or null version))))
+    (is (typep ret 'version))
+    (is (equal 2 (slot-value ret 'version)))
+    (is (eql
+         nil
+         (decode-json "null"
+                       '(or null version))))))
+
 (test missing-fields-is-initformed
   (let ((ret
          (decode-json (str:trim " {\"foo\": \"car\"} ")
