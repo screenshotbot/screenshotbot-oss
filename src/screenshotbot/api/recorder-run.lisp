@@ -576,7 +576,7 @@ promotion thread starts. Used by the API and by Replay"
     (verify-image im)))
 
 
-(defapi (%find-base-run :uri "/run/find-base-run") (channel commit)
+(defapi (%find-base-run :uri "/api/find-base-run" :wrap-success nil) (channel commit)
   "Find an appropriate base run for the given channel and commit.
 
 If we could not find an appropriate run, then we'll return nil"

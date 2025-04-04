@@ -162,6 +162,18 @@ extensions with a comma.")))
                    :title (assoc-value body :title)
                    :url (assoc-value body :url))))
 
+(defun compare-and-log (api-ctx run recorded-run)
+  (let ((comparison (compare-runs api-ctx run recorded-run)))
+    (cond
+      ((dto:comparison-samep comparison)
+       (log:info "Nothing's changed.")
+       (uiop:quit 0))
+      (t
+       (log:info "~a" (dto:comparison-title comparison))
+       (log:info "See changes at ~a" (dto:comparison-url comparison))
+       (uiop:quit 1)))))
+
+
 (defun verify/command ()
   (clingon:make-command
    :name "verify"
@@ -171,16 +183,8 @@ extensions with a comma.")))
               (with-sentry ()
                 (let ((recorded-run (read-recorded-run (getopt cmd :channel))))
                   (with-clingon-api-context (api-ctx cmd)
-                   (let* ((run (make-run-and-get-id cmd))
-                          (comparison (compare-runs api-ctx run recorded-run)))
-                     (cond
-                       ((dto:comparison-samep comparison)
-                        (log:info "Nothing's changed.")
-                        (uiop:quit 0))
-                       (t
-                        (log:info "~a" (dto:comparison-title comparison))
-                        (log:info "See changes at ~a" (dto:comparison-url comparison))
-                        (uiop:quit 1))))))))))
+                   (let* ((run (make-run-and-get-id cmd)))
+                     (compare-and-log api-ctx run recorded-run))))))))
 
 
 

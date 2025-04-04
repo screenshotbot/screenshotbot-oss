@@ -36,7 +36,7 @@
                                             :acceptor *acceptor*)))
 
 
-(def-easy-macro with-sdk-integration (&binding api-context &fn fn)
+(def-easy-macro with-sdk-integration (&binding api-context &key &binding company &fn fn)
   (with-installation ()
    (with-test-store ()
      (let* ((company (make-instance 'company))
@@ -49,7 +49,7 @@
                                         :hostname "localhost"
                                         :secret (api-key:api-key-secret-key api-key))))
        (let ((*wrap-internal-errors* nil))
-        (fn api-context))))))
+        (fn api-context company))))))
 
 
 
