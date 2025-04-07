@@ -1,3 +1,4 @@
+;; -*- coding: utf-8 -*-
 ;;;; Copyright 2018-Present Modern Interpreters Inc.
 ;;;;
 ;;;; This Source Code Form is subject to the terms of the Mozilla Public
@@ -12,6 +13,7 @@
         #:screenshotbot/model/company
         #:fiveam)
   (:import-from #:screenshotbot/model/channel
+                #:shortened-channel-name
                 #:channel-active-commits
                 #:repos-for-company
                 #:channels-for-company
@@ -268,3 +270,47 @@
       (setf (active-run channel "car") run)
       (assert-that (channel-active-commits channel)
                    (contains-in-any-order "abcd" )))))
+
+(test shortened-channel-name
+  (is (equal "foobar" (shortened-channel-name "foobar")))
+  (is (equal "foo/bar" (shortened-channel-name "foo/bar")))
+  (is (equal "foo/.../la/car"
+             (shortened-channel-name
+              "foo/bar/dar/blah/la/car"
+              :length 14)))
+  (is (equal "foo/.../la/c:ar"
+             (shortened-channel-name
+              "foo/bar/dar/blah/la/c:ar"
+              :length 15)))
+  (is (equal "foo/...ah/la/car"
+             (shortened-channel-name
+              "foo/bar/dar/blah/la/car"
+              :length 16)))
+  (is (equal "...ar"
+             (shortened-channel-name "foobar" :length 5)))
+  (is (equal "...la/car"
+             (shortened-channel-name
+              "foobar/bar/dar/blah/la/car"
+              :length 9))))
+
+(test shortened-channel-name-for-gradle
+  (is (equal "foobar" (shortened-channel-name "foobar")))
+  (is (equal "foo:bar" (shortened-channel-name "foo:bar")))
+  (is (equal "foo:...:la:car"
+             (shortened-channel-name
+              "foo:bar:dar:blah:la:car"
+              :length 14)))
+  (is (equal "foo:...:la:c/ar"
+             (shortened-channel-name
+              "foo:bar:dar:blah:la:c/ar"
+              :length 15)))
+  (is (equal "foo:...ah:la:car"
+             (shortened-channel-name
+              "foo:bar:dar:blah:la:car"
+              :length 16)))
+  (is (equal "...ar"
+             (shortened-channel-name "foobar" :length 5)))
+  (is (equal "...la:car"
+             (shortened-channel-name
+              "foobar:bar:dar:blah:la:car"
+              :length 9))))

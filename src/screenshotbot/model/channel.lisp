@@ -396,3 +396,44 @@
     (loop for (branch . run) in (all-active-runs channel)
           collect (recorder-run-commit run)))
    :test #'equal))
+
+
+(defun rshorten (count str)
+  (reverse
+   (str:shorten count (reverse str))))
+
+(defun %guess-separator (name)
+  (cond
+    ((< (count #\/ name)
+        (count #\: name))
+     ":")
+    (t
+     "/")))
+
+(defun shortened-channel-name (name &key (length 30))
+  "Get a short version of a channel name, appropriate to use in UI where
+a long name might be awkward."
+
+  (let ((sep (%guess-separator name)))
+    (let* ((part (str:split sep name))
+           (first (first part))
+           (last (car (last part))))
+      (block nil
+        (cond
+          ((<= (length part) 2)
+           ;; We don't have any shortening behavior for now
+           (rshorten length name))
+          ((<= (+ 2 (length first) (length last)) length)
+           (let ()
+             ;; / + first + / + ... + / + last is less than length?
+             (let* ((right (second (str:split sep name :limit 2)))
+                    (center (first (str:rsplit sep right :limit 2))))
+               (format nil
+                       "~a~a~a~a~a"
+                       first
+                       sep
+                       (rshorten (- length 2 (length first) (length last)) center)
+                       sep
+                       last))))
+          (t
+           (rshorten length name)))))))
