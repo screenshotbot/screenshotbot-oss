@@ -122,6 +122,7 @@
   (:import-from #:screenshotbot/model/review-policy
                 #:can-review?)
   (:import-from #:screenshotbot/model/channel
+                #:shortened-channel-name
                 #:review-policy)
   (:import-from #:screenshotbot/model/report
                 #:report-channel)
@@ -1051,7 +1052,8 @@ additional actions in the More dropdown menu.
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">,(channel-name (recorder-run-channel run)) </h5>
+          <h5 class="modal-title"
+              title= (channel-name (recorder-run-channel run)) >,(shortened-channel-name (channel-name (recorder-run-channel run)) :length 40) </h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">

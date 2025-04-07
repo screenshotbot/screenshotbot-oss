@@ -78,7 +78,8 @@
    #:commit-to-run-map
    #:channel-slack-channels
    #:review-policy-name
-   #:channel-deleted-p)
+   #:channel-deleted-p
+   #:shortened-channel-name)
 
   ;; forward decls
   (:export
