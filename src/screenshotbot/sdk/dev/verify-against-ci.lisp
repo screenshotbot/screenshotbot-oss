@@ -44,6 +44,7 @@
          (base-run (find-base-run api-ctx channel commit))
          (run (%make-run-and-get-id
                api-ctx
+               :compare-threshold (parse-threshold (getopt cmd :threshold))
                :channel channel
                :directory (getopt cmd :directory)
                :recursivep (getopt cmd :recursivep)
@@ -57,7 +58,7 @@
    (make-option
     :string
     :long-name "threshold"
-    :initial-value "0"
+    :initial-value nil
     :description "The threshold to use to compare"
     :key :threshold)
    (make-option

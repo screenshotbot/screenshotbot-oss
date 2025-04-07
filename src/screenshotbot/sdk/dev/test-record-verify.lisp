@@ -24,8 +24,13 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/model/recorder-run
+                #:compare-threshold
                 #:trunkp
                 #:recorder-run)
+  (:import-from #:fiveam-matchers/numbers
+                #:is-number-close-to)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/dev/test-record-verify)
 
@@ -67,5 +72,36 @@
        "foo"))
     (let ((run (first (bknr.datastore:class-instances 'recorder-run))))
       (is-false (trunkp run)))))
+
+(test run-has-theshold
+  "This is a critical test, because we don't want these to pollute the production runs"
+  (with-fixture state ()
+    (finishes
+      (record-run
+       (%make-run-and-get-id
+        api-context
+        :compare-threshold 0.77
+        :directory dir
+        :channel "foo")
+       "foo"))
+    (let ((run (first (bknr.datastore:class-instances 'recorder-run))))
+      (assert-that
+       (compare-threshold run)
+       (is-number-close-to 0.77)))))
+
+(test 0-threshold-is-always-zero
+  "This is a critical test, because we don't want these to pollute the production runs"
+  (with-fixture state ()
+    (finishes
+      (record-run
+       (%make-run-and-get-id
+        api-context
+        :compare-threshold 0.0
+        :directory dir
+        :channel "foo")
+       "foo"))
+    (let ((run (first (bknr.datastore:class-instances 'recorder-run))))
+      (is (eql 0.0D0
+               (compare-threshold run))))))
 
 

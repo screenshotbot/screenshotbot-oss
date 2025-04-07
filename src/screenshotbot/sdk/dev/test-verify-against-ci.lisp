@@ -30,6 +30,8 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex)
+  (:import-from #:auto-restart
+                #:*global-enable-auto-retries-p*)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
                     (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/dev/test-verify-against-ci)
@@ -38,17 +40,18 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (cl-mock:with-mocks ()
-    (cl-mock:if-called 'uiop:quit (lambda (err)))
-    (with-sdk-integration (api-context :company company)
-      (let* ((channel (find-or-create-channel company "foobar"))
-             (run (make-recorder-run
-                   :company company
-                   :commit-hash "abcd"
-                   :channel channel
-                   :trunkp t
-                   :screenshots nil)))
-        (&body)))))
+  (let ((*global-enable-auto-retries-p* nil))
+   (cl-mock:with-mocks ()
+     (cl-mock:if-called 'uiop:quit (lambda (err)))
+     (with-sdk-integration (api-context :company company)
+       (let* ((channel (find-or-create-channel company "foobar"))
+              (run (make-recorder-run
+                    :company company
+                    :commit-hash "abcd"
+                    :channel channel
+                    :trunkp t
+                    :screenshots nil)))
+         (&body))))))
 
 (test find-base-run-test
   (with-fixture state ()

@@ -90,10 +90,12 @@ extensions with a comma.")))
   nil)
 
 (defun %make-run-and-get-id (api-ctx &key directory channel recursivep
+                                       compare-threshold
                                        (file-types (list "png")))
   (let ((run-ctx (make-instance 'dev-run-context
                             :productionp nil
                             :channel channel
+                            :compare-threshold compare-threshold
                             :main-branch "main")))
     (let* ((image-directory (make-instance 'image-directory
                                            :directory directory
