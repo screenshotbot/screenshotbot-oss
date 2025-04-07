@@ -19,6 +19,7 @@
   (:import-from #:util/fake-clingon
                 #:make-fake-clingon)
   (:import-from #:screenshotbot/sdk/dev/verify-against-ci
+                #:parse-threshold
                 #:find-base-run
                 #:%verify-against-ci
                 #:%options)
@@ -85,3 +86,15 @@
                               cmd)
           (error-with-string-matching
            (matches-regex ".*Could not find run for commit.*"))))))
+
+(test parse-threshold
+  (eql 0.111 (parse-threshold "0.111"))
+  (eql 1 (parse-threshold "1"))
+  (signals-error-matching ()
+                          (parse-threshold "sdfdsfds")
+                          (error-with-string-matching
+                           (matches-regex ".*Threshold must be a floating point number between 0 and 1: got ")))
+  (signals-error-matching ()
+                          (parse-threshold "2.0")
+                          (error-with-string-matching
+                           (matches-regex ".*Threshold must be a floating point number between 0 and 1: got "))))

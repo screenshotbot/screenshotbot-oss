@@ -22,6 +22,8 @@
                 #:decode-json)
   (:import-from #:util/misc
                 #:not-null!)
+  (:import-from #:parse-float
+                #:parse-float)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
                     (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/dev/verify-against-ci)
@@ -65,6 +67,18 @@
     :key :base-commit-hash
     :required t)
    (default-options)))
+
+(defun parse-threshold (str)
+  (flet ((threshold-error ()
+           (error "Threshold must be a floating point number between 0 and 1: got ~a" str)))
+    (let ((res (handler-case
+                   (parse-float str)
+                 (alexandria:simple-parse-error (e)
+                   (threshold-error)))))
+      (unless (<= 0 res 1)
+        (threshold-error))
+      res)))
+
 
 (defun verify-against-ci/command ()
   (clingon:make-command
