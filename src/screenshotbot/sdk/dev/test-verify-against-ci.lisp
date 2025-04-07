@@ -90,6 +90,8 @@
 (test parse-threshold
   (eql 0.111 (parse-threshold "0.111"))
   (eql 1 (parse-threshold "1"))
+  (eql nil (parse-threshold nil))
+  (eql nil (parse-threshold ""))  
   (signals-error-matching ()
                           (parse-threshold "sdfdsfds")
                           (error-with-string-matching

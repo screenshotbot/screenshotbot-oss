@@ -69,15 +69,16 @@
    (default-options)))
 
 (defun parse-threshold (str)
-  (flet ((threshold-error ()
-           (error "Threshold must be a floating point number between 0 and 1: got ~a" str)))
-    (let ((res (handler-case
-                   (parse-float str)
-                 (alexandria:simple-parse-error (e)
-                   (threshold-error)))))
-      (unless (<= 0 res 1)
-        (threshold-error))
-      res)))
+  (when (str:non-empty-string-p str)
+   (flet ((threshold-error ()
+            (error "Threshold must be a floating point number between 0 and 1: got ~a" str)))
+     (let ((res (handler-case
+                    (parse-float str)
+                  (alexandria:simple-parse-error (e)
+                    (threshold-error)))))
+       (unless (<= 0 res 1)
+         (threshold-error))
+       res))))
 
 
 (defun verify-against-ci/command ()
