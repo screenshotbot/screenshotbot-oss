@@ -193,13 +193,16 @@
 (defmethod %sign-oid ((oid string) &key ts)
   (ironclad:byte-array-to-hex-string (sign-hmac (format nil "~a.~a" oid ts))))
 
+(define-condition timestamp-is-too-old (error)
+  ())
+
 (defun %decode-oid (oid &key ts signature)
   (cond
     ((not (str:emptyp signature))
      (let ((ts (parse-integer ts)))
        (when (< (+ ts *signature-expiry*)
                 (get-universal-time))
-         (error "timestamp is too old"))
+         (error 'timestamp-is-too-old))
        (let ((actual-signature (%sign-oid oid :ts ts)))
          (unless (equal signature actual-signature)
            (error "signature does not match")))
@@ -216,6 +219,8 @@
         (assert oid)
         (let* ((image (find-image-by-oid oid)))
           (fn image)))
+    (timestamp-is-too-old ()
+      (send-404 "Timestamp is too old"))
     (no-image-uploaded-yet ()
       (send-404 "No image uploaded yet for this image"))))
 

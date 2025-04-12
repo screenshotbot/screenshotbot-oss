@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/image
+                #:timestamp-is-too-old
                 #:*signature-expiry*
                 #:quantized-timestamp
                 #:%sign-oid
@@ -160,13 +161,11 @@
   (with-fixture state ()
    (let ((oid (mongoid:oid)))
      (is (equalp oid (%decode-oid (encrypt:encrypt-mongoid oid))))
-     (signals-error-matching ()
+     (signals-error-matching (timestamp-is-too-old)
        (%decode-oid
         (mongoid:oid-str oid)
         :ts "22"
-        :signature "bar")
-       (error-with-string-matching
-        (contains-string "timestamp is too old")))
+        :signature "bar"))
      (signals-error-matching ()
        (%decode-oid
         (mongoid:oid-str oid)
