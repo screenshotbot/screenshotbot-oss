@@ -18,6 +18,7 @@
   (:import-from #:util/threading
                 #:make-thread)
   (:import-from #:util/request
+                #:http-success-response?
                 #:http-request)
   (:import-from #:oidc/oidc
                 #:access-token-str
@@ -58,9 +59,11 @@
            avatar
            :additional-headers `(("Authorization" . ,(format nil "Bearer ~a"
                                                              (access-token-str token))))
-           :ensure-success t
            :force-binary t)
-        (write-avatar user :res res :headers headers)))))
+        (unless (eql 404 code)
+          (unless (http-success-response? code)
+            (error  "Got response ~a when downloading avatar ~a" code avatar))
+          (write-avatar user :res res :headers headers))))))
 
 (defun write-avatar (user &key res headers)
   (let ((obj (or

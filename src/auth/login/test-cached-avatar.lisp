@@ -79,3 +79,26 @@
                                            :access-token "foo")
                      :avatar "https://example.com/image.png")))
 
+(Test 403-crashes-and-logs
+  (With-fixture state ()
+    (cl-mock:if-called 'http-request
+                       (lambda (url &key additional-headers ensure-success force-binary)
+                         (values #(65 66 67) 403 `((:content-type . "image/png")))))
+    (signals simple-error
+     (download-avatar 'user-1
+                      :token (make-instance 'oauth-access-token
+                                            :access-token "foo")
+                      :avatar "https://example.com/image.png"))))
+
+(Test 404-does-not-crash
+  (With-fixture state ()
+    (cl-mock:if-called 'http-request
+                       (lambda (url &key additional-headers ensure-success force-binary)
+                         (values #(65 66 67) 404 `((:content-type . "image/png")))))
+    (finishes
+      (download-avatar 'user-1
+                       :token (make-instance 'oauth-access-token
+                                             :access-token "foo")
+                       :avatar "https://example.com/image.png"))
+    (Assert-that (bknr.datastore:class-instances 'overriden-avatar)
+                 (has-length 0))))
