@@ -20,7 +20,7 @@
                 #:%log-crash)
   (:import-from #:bknr.indices
                 #:base-indexed-object)
-  (:import-from #:fiveam-matchers/core
+  (:import-from #:fiveam-matchers
                 #:error-with-string-matching
                 #:signals-error-matching)
   (:import-from #:fiveam-matchers/strings

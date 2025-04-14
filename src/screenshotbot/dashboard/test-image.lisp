@@ -55,10 +55,11 @@
                 #:with-wand
                 #:magick-get-image-width
                 #:magick-get-image-height)
+  (:import-from #:fiveam-matchers/errors
+                #:signals-error-matching
+                #:error-with-string-matching)  
   (:import-from #:fiveam-matchers/core
-                #:assert-that
-                #:error-with-string-matching
-                #:signals-error-matching)
+                #:assert-that)
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex
                 #:contains-string)

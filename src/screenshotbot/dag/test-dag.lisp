@@ -31,8 +31,9 @@
                 #:add-commit)
   (:import-from #:flexi-streams
                 #:with-output-to-sequence)
+  (:import-from #:fiveam-matchers/errors
+                #:error-with-string-matching)
   (:import-from #:fiveam-matchers/core
-                #:error-with-string-matching
                 #:does-not
                 #:has-typep
                 #:has-any

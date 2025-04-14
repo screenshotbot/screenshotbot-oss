@@ -18,10 +18,11 @@
                 #:base-indexed-object
                 #:object-destroyed-p
                 #:hash-index)
+  (:import-from #:fiveam-matchers/errors
+                #:signals-error-matching
+                #:error-with-string-matching)
   (:import-from #:fiveam-matchers/core
-                #:assert-that
-                #:error-with-string-matching
-                #:signals-error-matching)
+                #:assert-that)
   (:import-from #:it.bese.fiveam
                 #:def-fixture
                 #:fail

@@ -13,9 +13,10 @@
   (:import-from #:cl-mock
                 #:answer
                 #:if-called)
-  (:import-from #:fiveam-matchers/core
-                #:error-with-string-matching
+  (:import-from #:fiveam-matchers/errors
                 #:signals-error-matching
+                #:error-with-string-matching)
+  (:import-from #:fiveam-matchers/core
                 #:assert-that
                 #:is-equal-to)
   (:import-from #:fiveam-matchers/has-length

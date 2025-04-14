@@ -24,9 +24,10 @@
                 #:make-env-reader)
   (:import-from #:cl-mock
                 #:if-called)
-  (:import-from #:fiveam-matchers/core
-                #:error-with-string-matching
+  (:import-from #:fiveam-matchers/errors
                 #:signals-error-matching
+                #:error-with-string-matching)
+  (:import-from #:fiveam-matchers/core
                 #:assert-that)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)

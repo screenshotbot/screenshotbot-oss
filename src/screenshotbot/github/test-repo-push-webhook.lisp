@@ -43,4 +43,13 @@
      :content "{}"
      :additional-headers `((:x-hub-signature-256 . "sha256=004835e2ffdb07054a2a5fa4137321ce04474fc9ef48d75a7de6711dd5820fc5")))))
 
+(test validation-failure
+  (with-fixture state ()
+    (is (eql 0 (store-object-id company)))
+    (http-request
+     "https://localhost/github/0/push/tdrhq/fast-example"
+     :method :post
+     :content "{}"
+     :additional-headers `((:x-hub-signature-256 . "sha256=004835e2ffdb07054a2a5fa4137321ce04474fc9ef48d75a7de6711dd5820fc5")))))
+
 
