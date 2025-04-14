@@ -21,7 +21,9 @@
   (:import-from #:screenshotbot/server
                 #:*acceptor*)
   (:import-from #:screenshotbot/testing
-                #:with-installation))
+                #:with-installation)
+  (:import-from #:fiveam-matchers/errors
+                #:signals-error-matching))
 (in-package :screenshotbot/github/test-repo-push-webhook)
 
 (util/fiveam:def-suite)
@@ -46,10 +48,12 @@
 (test validation-failure
   (with-fixture state ()
     (is (eql 0 (store-object-id company)))
-    (http-request
-     "https://localhost/github/0/push/tdrhq/fast-example"
-     :method :post
-     :content "{}"
-     :additional-headers `((:x-hub-signature-256 . "sha256=004835e2ffdb07054a2a5fa4137321ce04474fc9ef48d75a7de6711dd5820fc5")))))
+    (signals-error-matching ()
+      (http-request
+       "https://localhost/github/0/push/tdrhq/fast-example"
+       :method :post
+       :content "{\"foo\":\"bar\"}"
+       :additional-headers `((:x-hub-signature-256 . "sha256=004835e2ffdb07054a2a5fa4137321ce04474fc9ef48d75a7de6711dd5820fc5")))
+      ".*invalid hmac.*")))
 
 
