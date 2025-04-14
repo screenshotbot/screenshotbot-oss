@@ -82,9 +82,10 @@
 
 (test safe-ensure-directories-exist-when-actually-cant-write-dir
   #-windows
-  (signals
-      file-error
-    (safe-ensure-directories-exist "/foo/car/bar.txt")))
+  (unless (equal "root" (uiop:getenv "USER"))
+    (signals
+        file-error
+      (safe-ensure-directories-exist "/foo/car/bar.txt"))))
 
 (defun pathname-equal (a b)
   (string= (namestring a) (namestring b)))
