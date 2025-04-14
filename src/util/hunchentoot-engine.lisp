@@ -18,17 +18,19 @@
              :reader acceptor))
   (:documentation "A request engine that dispatches to a hunchentoot acceptor instead."))
 
-(defun compute-headers-in (&key basic-authorization content)
-  (remove-if
-   #'null
-   `(,(when (stringp content)
-        `(:content-length . ,(format nil "~a" (length content))))
-     ,(when basic-authorization
-        `(:authorization . ,(format nil "Basic ~a"
-                                    (base64:string-to-base64-string
-                                     (format nil "~a:~a"
-                                             (first basic-authorization)
-                                             (second basic-authorization)))))))))
+(defun compute-headers-in (&key basic-authorization content additional-headers)
+  (append
+   additional-headers
+   (remove-if
+    #'null
+    `(,(when (stringp content)
+         `(:content-length . ,(format nil "~a" (length content))))
+      ,(when basic-authorization
+         `(:authorization . ,(format nil "Basic ~a"
+                                     (base64:string-to-base64-string
+                                      (format nil "~a:~a"
+                                              (first basic-authorization)
+                                              (second basic-authorization))))))))))
 
 (defun %make-uri (uri &key parameters)
   (let* ((uri (quri:uri uri))
@@ -44,6 +46,7 @@
                                     parameters
                                     content
                                     force-binary
+                                    additional-headers
                               &allow-other-keys)
   (let* ((acceptor (acceptor self))
          (hunchentoot:*acceptor* acceptor)
@@ -70,7 +73,8 @@
                                  :remote-port 9998
                                  :headers-in (compute-headers-in
                                               :content content
-                                              :basic-authorization basic-authorization)
+                                              :basic-authorization basic-authorization
+                                              :additional-headers additional-headers)
                                  :content-stream content-stream
                                  :uri (%make-uri
                                        url
