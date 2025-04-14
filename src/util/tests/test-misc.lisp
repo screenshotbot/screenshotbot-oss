@@ -80,6 +80,7 @@
         errors
         (has-length 0))))))
 
+#-screenshotbot-oss
 (test safe-ensure-directories-exist-when-actually-cant-write-dir
   #-windows
   (unless (equal "root" (uiop:getenv "USER"))
