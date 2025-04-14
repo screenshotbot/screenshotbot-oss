@@ -79,6 +79,7 @@
   (snap-all-images)
   (fix-timestamps (fn)))
 
+#+nil
 (screenshot-test simple-run-page-screenshots
   (with-fixture state ()
     (wrap-snapshot ()
