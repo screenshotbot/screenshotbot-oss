@@ -159,6 +159,7 @@ upload blobs that haven't been uploaded before."
                                  :snapshot snapshot
                                  :channel-name channel
                                  :pull-request pull-request
+                                 :work-branch w
                                  :main-branch main-branch
                                  :repo-url repo-url
                                  :browser-configs (read-browser-configs browser-configs)

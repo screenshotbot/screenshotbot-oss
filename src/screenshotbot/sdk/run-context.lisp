@@ -11,11 +11,14 @@
                 #:current-commit
                 #:rev-parse)
   (:import-from #:alexandria
+                #:remove-from-plist
                 #:when-let)
   (:import-from #:util/misc
                 #:?.)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:util/json-mop
+                #:ext-json-serializable-class)
   (:export
    #:run-context
    #:flags-run-context
@@ -51,75 +54,133 @@
                     (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/run-context)
 
-(defclass run-context ()
-  ((main-branch :initarg :main-branch
-                :initform nil
-                :reader main-branch)
-   (main-branch-hash :initarg :main-branch-hash
-                     :initform nil
-                     :reader main-branch-hash)
-   (release-branch-regex :initarg :release-branch-regex
-                         :initform nil
-                         :reader release-branch-regex)
-   (pull-request-url :initarg :pull-request-url
-                     :initform nil
-                     :reader pull-request-url)
-   (create-github-issue-p :initarg :create-github-issue-p
-                          :initform nil
-                          :reader create-github-issue-p)
-   (repo-url :initarg :repo-url
-             :initform nil
-             :reader repo-url)
-   (author :initarg :author
-           :initform nil
-           :reader author)
-   (productionp :initarg :productionp
-                :initform nil
-                :reader productionp)
-   (work-branch :initarg :work-branch
-                :initform nil
-                :reader work-branch)
-   (build-url :initarg :build-url
-              :initform nil
-              :reader build-url)
-   (gitlab-merge-request-iid :initarg :gitlab-merge-request-iid
-                             :initform nil
-                             :reader gitlab-merge-request-iid)
-   (phabricator-diff-id :initarg :phabricator-diff-id
-                        :initform nil
-                        :reader phabricator-diff-id)
-   (channel :initarg :channel
-            :initform nil
-            :reader channel)
-   (override-commit-hash :initarg :override-commit-hash
-                         :initform nil
-                         :reader override-commit-hash)
-   (commit-hash :initarg :commit-hash
-                :initform nil
-                :reader commit-hash)
-   (merge-base :initarg :merge-base
-               :initform nil
-               :reader merge-base)
-   (repo-clean-p :initarg :repo-clean-p
-                 :reader repo-clean-p
-                 :documentation "No initform!")
-   (compare-threshold :initarg :compare-threshold
+(defmacro wrap-dto ((def klass empty slots))
+  (declare (ignore def empty))
+  `(progn
+     (defclass ,klass ()
+       ,(loop for slot in slots
+              collect
+              (list*
+               (car slot)
+               (remove-from-plist (cdr slot) :json-type :json-key))))
+     (defclass run-context-dto ()
+       ,slots
+       (:metaclass ext-json-serializable-class))))
+
+(wrap-dto
+ (defclass run-context ()
+   ((main-branch :initarg :main-branch
+                 :initform nil
+                 :reader main-branch
+                 :json-type (or null :string)
+                 :json-key "mainBranch")
+    (main-branch-hash :initarg :main-branch-hash
                       :initform nil
-                      :reader compare-threshold)
-   (batch :initarg :batch
-          :initform nil
-          :reader batch)
-   (shard-spec :initarg :shard-spec
+                      :reader main-branch-hash
+                      :json-type (or null :string)
+                      :json-key "mainBranchCommit")
+    (release-branch-regex :initarg :release-branch-regex
+                          :initform nil
+                          :reader release-branch-regex
+                          :json-type (or null :string)
+                          :json-key "releaseBranchRegex")
+    (pull-request-url :initarg :pull-request-url
+                      :initform nil
+                      :reader pull-request-url
+                      :json-type (or null :string)
+                      :json-key "pullRequestUrl")
+    (create-github-issue-p :initarg :create-github-issue-p
+                           :initform nil
+                           :reader create-github-issue-p
+                           :json-type (or null :string)
+                           :json-key "shouldCreateGithubIssue")
+    (repo-url :initarg :repo-url
+              :initform nil
+              :reader repo-url
+              :json-type (or null :string)
+              :json-key "repo")
+    (author :initarg :author
+            :initform nil
+            :reader author
+            :json-type (or null :string)
+            :json-key "author")
+    (productionp :initarg :productionp
+                 :initform nil
+                 :reader productionp
+                 :json-type (or null :string)
+                 :json-key "isTrunk")
+    (work-branch :initarg :work-branch
+                 :initform nil
+                 :reader work-branch
+                 :json-type (or null :string)
+                 :json-key "workBranch")
+    (build-url :initarg :build-url
                :initform nil
-               :reader shard-spec
-               :documentation "A dto:shard-spec object indicating the shard")
-   (metadata :initarg :metadata
+               :reader build-url
+               :json-type (or null :string)
+               :json-key "buildUrl")
+    (gitlab-merge-request-iid :initarg :gitlab-merge-request-iid
+                              :initform nil
+                              :reader gitlab-merge-request-iid
+                              :json-type (or null :string)
+                              :json-key "gitlabMergeRequestIID")
+    (phabricator-diff-id :initarg :phabricator-diff-id
+                         :initform nil
+                         :reader phabricator-diff-id
+                         :json-type (or null :string)
+                         :json-key "phabricatorDiff")
+    (channel :initarg :channel
              :initform nil
-             :reader run-context-metadata
-             :documentation "A list of dto:metadata objects")
-   (tags :initarg :tags
-         :initform nil
-         :reader tags)))
+             :reader channel
+             :json-type (or null :string)
+             :json-key "channel")
+    (override-commit-hash :initarg :override-commit-hash
+                          :initform nil
+                          :reader override-commit-hash
+                          :json-type (or null :string)
+                          :json-key "overrideCommitHash")
+    (commit-hash :initarg :commit-hash
+                 :initform nil
+                 :reader commit-hash
+                 :json-type (or null :string)
+                 :json-key "commit")
+    (merge-base :initarg :merge-base
+                :initform nil
+                :reader merge-base
+                :json-type (or null :string)
+                :json-key "mergeBase")
+    (repo-clean-p :initarg :repo-clean-p
+                  :reader repo-clean-p
+                  :documentation "No initform!"
+                  :json-type :boolean
+                  :json-key "isClean")
+    (compare-threshold :initarg :compare-threshold
+                       :initform nil
+                       :reader compare-threshold
+                       :json-type :number
+                       :json-key "compareThreshold")
+    (batch :initarg :batch
+           :initform nil
+           :reader batch
+           :json-type (or null :string)
+           :json-key "batch")
+    (shard-spec :initarg :shard-spec
+                :initform nil
+                :reader shard-spec
+                :documentation "A dto:shard-spec object indicating the shard"
+                :json-type (or null :string)
+                :json-key "shardSpec")
+    (metadata :initarg :metadata
+              :initform nil
+              :reader run-context-metadata
+              :documentation "A list of dto:metadata objects"
+              :json-type (:list dto:metadata)
+              :json-key "metadata")
+    (tags :initarg :tags
+          :initform nil
+          :reader tags
+          :json-type (:list :string)
+          :json-key "tags"))))
 
 (defclass env-reader-run-context ()
   ((env :initarg :env
