@@ -63,9 +63,18 @@
               (list*
                (car slot)
                (remove-from-plist (cdr slot) :json-type :json-key))))
-     (defclass run-context-dto ()
+     (defclass run-context-dto (,klass)
        ,slots
-       (:metaclass ext-json-serializable-class))))
+       (:metaclass ext-json-serializable-class))
+
+     (defmethod run-context-to-dto (run-context)
+       (make-instance 'run-context-dto
+                      ,@ (loop for slot in slots
+                               for slot-args = (cdr slot)
+                               appending
+                               `(,(getf slot-args :initarg)
+                                 (,(getf slot-args :reader)
+                                  run-context)))))))
 
 (wrap-dto
  (defclass run-context ()

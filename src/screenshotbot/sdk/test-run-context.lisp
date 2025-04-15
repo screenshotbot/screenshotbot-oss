@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/run-context
+                #:run-context-dto
+                #:run-context-to-dto
                 #:work-branch-is-release-branch-p
                 #:run-context-metadata
                 #:parse-shard-spec
@@ -273,5 +275,11 @@ making sure that the doc is giving a good example."
       (is-false (work-branch-is-release-branch-p run-context)))))
 
 
-
-
+(test simple-dto-conversion
+  (let ((dto
+          (run-context-to-dto
+           (make-instance 'test-run-context
+                          :work-branch "foo"
+                          :env (make-env-reader)))))
+    (is (typep dto 'run-context-dto))
+    (is (equal "foo" (run-context:work-branch dto)))))
