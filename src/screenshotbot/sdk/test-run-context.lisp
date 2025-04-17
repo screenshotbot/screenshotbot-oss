@@ -183,14 +183,14 @@
       #-windows
       (assert-that
        metadata
-       (has-length 1))
+       (has-length 2))
       #+linux
       (assert-that
-       (dto:metadata-value (first metadata))
+       (dto:metadata-value (second metadata))
        (contains-string "Linux"))
       #+darwin
       (assert-that
-       (dto:metadata-value (first metadata))
+       (dto:metadata-value (second metadata))
        (contains-string "Darwin")))))
 
 (test uname-should-not-crash
@@ -201,7 +201,7 @@
                    (error "uname crashed!")))
       (assert-that
        (run-context-metadata run-context)
-       (has-length 1)))))
+       (has-length 2)))))
 
 (test release-branch-regex-should-fix-main-branch--old-test!
   ;; There was a time before T1667, when we were converting the

@@ -232,6 +232,11 @@
   (append
    (call-next-method)
    (list
+    (make-instance 'dto:metadata
+                   :key "pull-request-base-branch"
+                   :value (or
+                           (e:pull-request-base-branch (env self))
+                           "NA"))
     #+ (or linux darwin)
     (make-instance 'dto:metadata
                    :key "uname"
