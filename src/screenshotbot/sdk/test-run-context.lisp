@@ -25,6 +25,7 @@
                 #:env-reader
                 #:make-env-reader)
   (:import-from #:cl-mock
+                #:answer
                 #:if-called)
   (:import-from #:fiveam-matchers/errors
                 #:signals-error-matching
@@ -283,3 +284,21 @@ making sure that the doc is giving a good example."
                           :env (make-env-reader)))))
     (is (typep dto 'run-context-dto))
     (is (equal "foo" (run-context:work-branch dto)))))
+
+(test merge-base-handles-subprocess-error
+  (with-fixture state ()
+    (let ((run-context (make-instance 'my-run-context
+                                      :merge-base nil
+                                      :main-branch-hash "abcd"
+                                      :env (make-env-reader)))
+          (repo (make-instance 'git:null-repo))
+          (calledp nil))
+      (answer (run-context:git-repo run-context)
+        repo)
+      (if-called 'git:merge-base
+                 (lambda (git one two)
+                   (setf calledp t)
+                   (error 'uiop:subprocess-error)))
+      (finishes
+        (run-context:merge-base run-context))
+      (is-true calledp))))

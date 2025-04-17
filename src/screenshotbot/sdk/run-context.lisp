@@ -320,7 +320,11 @@ pull-request looks incorrect."
    (call-next-method)
    (when-let ((repo (git-repo self))
               (main-branch-hash (main-branch-hash self)))
-     (git:merge-base repo main-branch-hash (commit-hash self)))))
+     (handler-case
+         (git:merge-base repo main-branch-hash (commit-hash self))
+       (uiop:subprocess-error (e)
+         (warn "merge-base computation failed: ~a" e)
+         nil)))))
 
 (defmethod repo-clean-p :around ((self env-reader-run-context))
   (cond
