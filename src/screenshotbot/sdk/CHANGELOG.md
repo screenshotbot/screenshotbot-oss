@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.13.1 - 2025-04-17
+
+### Changed
+
+- Avoid crash when `git merge-base` fails, warn instead. This is
+  technically not being used by the server anymore.
+
+
 ## 2.13.0 - 2025-04-07
 
 ### Added
