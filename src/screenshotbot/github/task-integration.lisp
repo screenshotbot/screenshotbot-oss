@@ -27,20 +27,7 @@
   t)
 
 (defmethod send-task ((inst github-task-integration) report)
-  (assert (enabledp inst))
-  (restart-case
-      (when (create-github-issue-p (report-run report))
-       (let* ((channel (report-channel report))
-              (task-url
-                (funcall
-                 *create-issue-fn*
-                 (fix-github-link (github-repo channel))
-                 "Screenshots have changed"
-                 (get-issue-content inst report))))
-         (log:info "Got task: ~a" task-url)
-         (with-transaction ()
-           (setf (github-task report) (or task-url "unknown")))))
-    (retry-send-task ()
-      (send-task inst report))))
+  (when (create-github-issue-p (report-run report))
+    (warn "GitHub task-integration has been deprecated")))
 
 (register-task-integration 'github-task-integration)
