@@ -172,10 +172,6 @@
   (new-instance #,org.eclipse.egit.github.core.service.OrganizationService
                 (github-client)))
 
-(defun github-repo-service (&optional (client (github-client)))
-  (new-instance #,org.eclipse.egit.github.core.service.RepositoryService
-                client))
-
 (defun get-repo-stars (org repo)
   (with-throttler (*github-throttler*)
     (let ((res (github-api-request
