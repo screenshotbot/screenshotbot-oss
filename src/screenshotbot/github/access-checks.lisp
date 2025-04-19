@@ -35,7 +35,6 @@
                 #:github-get-canonical-repo)
   (:export
    #:github-repo
-   #:github-user-service
    #:github-repos-for-user
    #:github-org-service
    #:github-repo-id
@@ -155,10 +154,6 @@
 (defun github-issue-service ()
   (new-instance #,org.eclipse.egit.github.core.service.IssueService
                 (github-client)))
-
-(defun github-user-service (&optional (github-client (github-client)))
-  (new-instance #,org.eclipse.egit.github.core.service.UserService
-                github-client))
 
 (defun github-repos-for-user (user)
   (let ((res (github-api-request
