@@ -91,7 +91,7 @@ By default we don't scan recursively, see the `--recursive` flag for that.")
   :selector "create-github-issue"
   :default-value nil
   :type boolean
-  :help "Create a Github issue if enabled on your account")
+  :help "[OBSOLETE] If you need to use this, please contact support.")
 
 
 (define-flag *gitlab-merge-request-iid*
