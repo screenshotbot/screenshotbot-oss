@@ -36,7 +36,6 @@
   (:export
    #:github-repo
    #:github-repos-for-user
-   #:github-org-service
    #:github-client
    #:get-repo-id
    #:with-throttler
@@ -156,10 +155,6 @@
     (loop for repo in res
           collect (assoc-value repo :html--url))))
 
-
-(defun github-org-service ()
-  (new-instance #,org.eclipse.egit.github.core.service.OrganizationService
-                (github-client)))
 
 (defun get-repo-stars (org repo)
   (with-throttler (*github-throttler*)
