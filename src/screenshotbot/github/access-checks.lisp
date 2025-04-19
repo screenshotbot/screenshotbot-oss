@@ -170,15 +170,6 @@
        (alexandria:assoc-value res :stargazers--count)
        (alexandria:assoc-value res :forks--count)))))
 
-(defun make-users-csv (users output)
-  (with-open-file (s output :direction :output :if-exists :supersede
-                            :element-type 'character
-                            :external-format :utf-8)
-    (dolist (u users)
-      (loop for stream in (list s) do
-        (format stream "~a,~a,~a~%" (#_getLogin u) (#_getEmail u) (#_getCompany u))))))
-
-
 (defun remove-trailing-/ (url)
   (cl-ppcre:regex-replace-all
    "/$" url ""))
