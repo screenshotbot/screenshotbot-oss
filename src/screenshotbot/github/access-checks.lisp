@@ -152,10 +152,6 @@
          hash-val
          (setf hash-val (body)))))))
 
-(defun github-commit-service (&optional (github-client (github-client)))
-  (new-instance #,com.tdrhq.CustomCommitService
-                github-client))
-
 (defun github-issue-service ()
   (new-instance #,org.eclipse.egit.github.core.service.IssueService
                 (github-client)))
