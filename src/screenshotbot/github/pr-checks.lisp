@@ -23,23 +23,11 @@
   (:import-from #:screenshotbot/events
                 #:with-event)
   (:export
-   #:github-service
    #:github-update-pull-request))
 (in-package :screenshotbot/github/pr-checks)
 
 
 (named-readtables:in-readtable java-syntax)
-
-(defclass github-service ()
-  ((client :initarg github-client)))
-
-(defclass github-checks-service (github-service)
-  ())
-
-
-(defun github-get-credentials (client)
-  (read-java-field client "credentials"))
-
 
 ;; (github-get-access-token-for-installation 16121814)
 
