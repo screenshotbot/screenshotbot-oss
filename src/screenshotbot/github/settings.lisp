@@ -52,8 +52,7 @@
                 #:with-form-errors)
   (:import-from #:screenshotbot/github/access-checks
                 #:get-repo-id
-                #:repo-string-identifier
-                #:github-repo-id)
+                #:repo-string-identifier)
   (:import-from #:screenshotbot/github/app-installation
                 #:*repo-added-hook*
                 #:github-get-access-token-for-installation
