@@ -11,14 +11,12 @@
         #:screenshotbot/model/recorder-run
         #:screenshotbot/task-integration-api)
   (:import-from #:bknr.datastore
-                #:with-transaction
-                #:*create-issue-fn*)
+                #:with-transaction)
   (:import-from #:screenshotbot/github/access-checks
                 #:github-create-issue
                 #:fix-github-link))
 (in-package :screenshotbot/github/task-integration)
 
-(defvar *create-issue-fn* 'github-create-issue)
 
 (defclass github-task-integration (task-integration)
   ())

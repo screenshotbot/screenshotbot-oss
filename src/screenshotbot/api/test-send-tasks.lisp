@@ -19,7 +19,6 @@
         #:screenshotbot/model/company
         #:fiveam)
   (:import-from #:screenshotbot/github/task-integration
-                #:*create-issue-fn*
                 #:github-create-issue)
   (:import-from #:screenshotbot/tasks/common
                 #:noop-task-integration
@@ -89,10 +88,7 @@
                          :previous-run run1
                          :trunkp t
                          :company company)))
-             (is (eql 'github-create-issue *create-issue-fn*))
-             (let ((*create-issue-fn* (lambda (repo title body)
-                                        "http://foo/1")))
-               (&body)))))))))
+             (&body))))))))
 
 (test happy-path
   (with-fixture state ()
