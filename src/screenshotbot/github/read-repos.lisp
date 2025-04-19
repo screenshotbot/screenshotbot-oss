@@ -9,7 +9,6 @@
   (:import-from #:screenshotbot/github/access-checks
                 #:github-api-request
                 #:get-repo-id
-                #:github-repo-id
                 #:github-client)
   (:import-from #:oidc/oidc
                 #:access-token-str)
