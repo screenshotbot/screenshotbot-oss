@@ -298,3 +298,15 @@
  (list
   "C:/Program Files/OpenSSL-Win64/libcrypto-3-x64.dll"
   "C:/Program Files/OpenSSL-Win64/libssl-3-x64.dll"))
+
+(defun assert-patch (name)
+  #+ (and :lispworks (not :screenshotbot-oss))
+  (assert
+   (search name
+           (with-output-to-string (s)
+             (dbg:output-backtrace :bug-form s)))))
+
+;; These patches also ensure that it will cause the image to be rebuild
+(assert-patch "check-ssl-error")
+(assert-patch "ipv6-contraction")
+

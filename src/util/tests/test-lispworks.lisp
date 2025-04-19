@@ -21,8 +21,7 @@
    (equal
     (comm:ip-address-string (comm:parse-ipv6-address
                              "2600:1f18:153:1805:cbf0:efd:1758:b510"))
-    ;; TODO: I expect this to change with the patch
-    "::"))
+    "2600:1f18:153:1805:cbf0:efd:1758:b510"))
   (is
    (equal
     (comm:ip-address-string (comm:parse-ipv6-address
@@ -32,8 +31,7 @@
    (equal
     (comm:ip-address-string (comm:parse-ipv6-address
                              "2600:1f18:153:1805:cbf0:efd:1758:b500"))
-    ;; TODO: I expect this to change with the patch
-    "::"))
+    "2600:1f18:153:1805:cbf0:efd:1758:b500"))
   (is
    (equal
     (comm:ip-address-string (comm:parse-ipv6-address
