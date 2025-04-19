@@ -36,7 +36,6 @@
   (:export
    #:github-repo
    #:github-repos-for-user
-   #:github-client
    #:get-repo-id
    #:with-throttler
    #:throttler
@@ -122,22 +121,6 @@
         (json:decode-json-from-string
          response)))
      code)))
-
-(defun github-client (&key
-                        oauth-token
-                        installation-id)
-  (declare (ignore repo))
-  (push-event :github.github-client-requested)
-  (let ((client (new-instance #,org.eclipse.egit.github.core.client.GitHubClient
-                              ))
-        (token (or oauth-token installation-id)))
-    (cond
-      (token
-       (#_setOAuth2Token client token))
-      (t
-       (#_setCredentials client (secret :github-user)
-                         (secret :github-api-secret))))
-    client))
 
 (defmacro with-cache ((place args) &body body)
   `(flet ((body () ,@body))

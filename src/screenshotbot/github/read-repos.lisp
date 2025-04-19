@@ -8,8 +8,7 @@
   (:use #:cl)
   (:import-from #:screenshotbot/github/access-checks
                 #:github-api-request
-                #:get-repo-id
-                #:github-client)
+                #:get-repo-id)
   (:import-from #:oidc/oidc
                 #:access-token-str)
   (:import-from #:screenshotbot/audit-log

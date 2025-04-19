@@ -32,11 +32,6 @@
        (&body)
     (clrhash *public-repo-p-cache*)))
 
-(test simple-creation
-  (when (jvm:jvm-supported-p)
-   (finishes
-     (github-client))))
-
 
 (test github-repo-commit-link
   (is (equal
