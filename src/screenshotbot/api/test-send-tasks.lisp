@@ -18,8 +18,6 @@
         #:screenshotbot/model/channel
         #:screenshotbot/model/company
         #:fiveam)
-  (:import-from #:screenshotbot/github/task-integration
-                #:github-create-issue)
   (:import-from #:screenshotbot/tasks/common
                 #:noop-task-integration
                 #:get-enabled-task-integrations)

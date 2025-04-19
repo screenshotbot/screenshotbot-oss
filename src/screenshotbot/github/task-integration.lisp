@@ -13,7 +13,6 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:screenshotbot/github/access-checks
-                #:github-create-issue
                 #:fix-github-link))
 (in-package :screenshotbot/github/task-integration)
 

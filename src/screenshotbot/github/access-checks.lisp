@@ -151,10 +151,6 @@
          hash-val
          (setf hash-val (body)))))))
 
-(defun github-issue-service ()
-  (new-instance #,org.eclipse.egit.github.core.service.IssueService
-                (github-client)))
-
 (defun github-repos-for-user (user)
   (let ((res (github-api-request
               (format nil "/users/~a/repos" user)
@@ -179,20 +175,6 @@
 (defun github-star-service ()
   (new-instance #,org.eclipse.egit.github.core.service.StargazerService
                 (github-client)))
-
-;; (#_getStargazers (github-star-service) (github-repo-id "https://github.com/facebook/screenshot-tests-for-android"))
-
-(defun github-create-issue (repo title body)
-  (let* ((issue-service (github-issue-service))
-         (issue (new-instance #,org.eclipse.egit.github.core.Issue)))
-    (#_setTitle issue title)
-    (#_setBody issue body)
-    (#_getUrl
-     (with-throttler (*github-throttler*)
-       (#_createIssue issue-service
-                      (github-repo-id repo)
-                      issue)))))
-
 
 (defun make-users-csv (users output)
   (with-open-file (s output :direction :output :if-exists :supersede
