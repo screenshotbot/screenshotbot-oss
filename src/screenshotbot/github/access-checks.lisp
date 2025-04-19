@@ -161,10 +161,12 @@
                 github-client))
 
 (defun github-repos-for-user (user)
-  (mapcar #_getCloneUrl
-          (java-list->list
-           (with-throttler (*github-throttler*)
-             (#_getRepositories (github-repo-service) user)))))
+  (let ((res (github-api-request
+              (format nil "/users/~a/repos" user)
+              :access-token (secret :github-api-secret))))
+    (loop for repo in res
+          collect (assoc-value repo :html--url))))
+
 
 (defun github-org-service ()
   (new-instance #,org.eclipse.egit.github.core.service.OrganizationService
