@@ -202,10 +202,6 @@
                   :limit 3)
     (format nil "~a/~a" org name)))
 
-(defun can-access-github-repo (github-link)
-  (let ((repo-id (github-repo-id github-link)))
-    (#_getIssues repo-id
-                 (new-instance #,java.util.HashMap))))
 
 (defvar *public-repo-p-cache* (make-hash-table :test #'equal))
 
