@@ -37,7 +37,6 @@
    #:github-repo
    #:github-repos-for-user
    #:github-org-service
-   #:github-repo-id
    #:github-client
    #:get-repo-id
    #:with-throttler
@@ -179,14 +178,6 @@
       (loop for stream in (list s) do
         (format stream "~a,~a,~a~%" (#_getLogin u) (#_getEmail u) (#_getCompany u))))))
 
-(defmethod github-repo-id (repo)
-  (assert (not (str:emptyp (fix-github-link repo))))
-  (#_createFromUrl
-   #,org.eclipse.egit.github.core.RepositoryId
-   (fix-github-link repo)))
-
-(defmethod github-repo-id ((repo github-repo))
-  (github-repo-id (repo-link repo)))
 
 (defun remove-trailing-/ (url)
   (cl-ppcre:regex-replace-all
