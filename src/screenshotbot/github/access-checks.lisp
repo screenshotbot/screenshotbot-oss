@@ -38,7 +38,6 @@
    #:github-repos-for-user
    #:github-org-service
    #:github-repo-id
-   #:github-star-service
    #:github-client
    #:get-repo-id
    #:with-throttler
@@ -171,10 +170,6 @@
       (values
        (alexandria:assoc-value res :stargazers--count)
        (alexandria:assoc-value res :forks--count)))))
-
-(defun github-star-service ()
-  (new-instance #,org.eclipse.egit.github.core.service.StargazerService
-                (github-client)))
 
 (defun make-users-csv (users output)
   (with-open-file (s output :direction :output :if-exists :supersede
