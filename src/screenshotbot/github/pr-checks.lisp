@@ -7,7 +7,6 @@
 (uiop:define-package :screenshotbot/github/pr-checks
   (:use #:cl #:alexandria)
   (:import-from #:util/java
-                #:java-syntax
                 #:read-java-field
                 #:new-instance)
   (:import-from #:screenshotbot/server
@@ -26,8 +25,6 @@
    #:github-update-pull-request))
 (in-package :screenshotbot/github/pr-checks)
 
-
-(named-readtables:in-readtable java-syntax)
 
 ;; (github-get-access-token-for-installation 16121814)
 

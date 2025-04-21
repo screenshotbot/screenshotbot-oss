@@ -79,8 +79,6 @@
 (in-package :screenshotbot/gitlab/merge-request-promoter)
 
 
-(named-readtables:in-readtable java-syntax)
-
 (defclass merge-request-promoter (abstract-pr-promoter)
   ((comments :initform nil
              :accessor comments)

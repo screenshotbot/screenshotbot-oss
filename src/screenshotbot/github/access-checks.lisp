@@ -8,7 +8,6 @@
   (:use #:cl
         #:alexandria)
   (:import-from #:util/java
-                #:java-syntax
                 #:read-java-field
                 #:java-list->list
                 #:new-instance)
@@ -45,8 +44,6 @@
 (in-package :screenshotbot/github/access-checks)
 
 (import 'repo-name)
-
-(named-readtables:in-readtable java-syntax)
 
 ;; TODO: security
 
