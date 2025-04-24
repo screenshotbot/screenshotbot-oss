@@ -142,7 +142,13 @@
   (let ((stream (%stream packfile)))
     (multiple-value-bind (type length) (read-entry-header stream)
       (log:info "Got type: ~a" type)
-      (assert (not (member type '( 6 7 )))) ;; not supported yet
+      (assert (not (member type '( 6 )))) ;; not supported yet
+
+      (when (eql 7 type #| OBJ_REF_DELTA |#)
+        (let ((arr (make-array 20)))
+          ;; Read the name of the base object
+          (read-sequence arr stream)))
+
       (let ((body (flex:make-in-memory-output-stream))
             (dstate (chipz:make-dstate :zlib)))
         (chipz:decompress
