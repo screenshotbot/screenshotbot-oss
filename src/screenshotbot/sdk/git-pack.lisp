@@ -40,7 +40,7 @@
 (defun read-length (self)
   (let ((len (make-array 4)))
     (assert (= 4 (read-sequence len (%stream self))))
-    (log:info "Got length: ~a" len)
+    (log:trace "Got length: ~a" len)
     (parse-integer (flex:octets-to-string len)
                    :radix 16)))
 
@@ -70,7 +70,7 @@
 
 
 (defmethod write-packet (self fmt &rest content)
-  (log:info "Writing packet ~a" (apply #'format nil fmt content))
+  (log:trace "Writing packet ~a" (apply #'format nil fmt content))
   (let ((bytes (flex:string-to-octets (apply #'format nil fmt content))))
     (let ((len (+ 5 (length bytes))))
       (write-length self len)
@@ -106,7 +106,7 @@
   (decode-uint32 stream))
 
 (defun p (x)
-  (log:info "Got value: ~a" x)
+  (log:trace "Got value: ~a" x)
   x)
 
 (defun read-entry-header (stream)
@@ -115,7 +115,7 @@
         (size 0)
         (type))
     ;; https://github.com/git/git/blob/master/packfile.c#L111-header3
-    (log:info "First byte: ~a" byte)
+    (log:trace "First byte: ~a" byte)
     (setf type (logand 7 (ash byte -4)))
     (setf size (logand byte #b1111))
 
@@ -123,11 +123,11 @@
      (loop while (> (logand byte 128) 0)
            do
               (setf byte (read-byte stream))
-              (log:info "Read another byte: " byte)
+              (log:trace "Read another byte: " byte)
               (incf size (p (ash (p (logand (1- #x80) byte)) mult)))
               (incf mult 7)))
 
-    (log:info "final size: ~a" size)
+    (log:trace "final size: ~a" size)
     (values type size)))
 
 (defun simulate ()
@@ -162,10 +162,10 @@
 (defun read-packfile-entry (packfile)
   "Returns type and the contents of the entry"
   ;; https://github.com/git/git/blob/master/Documentation/gitprotocol-pack.adoc
-  (log:info "Reading packfile entry")
+  (log:trace "Reading packfile entry")
   (let ((stream (%stream packfile)))
     (multiple-value-bind (type length) (read-entry-header stream)
-      (log:info "Got type: ~a" type)
+      (log:trace "Got type: ~a" type)
       (assert (not (member type '( 6 )))) ;; not supported yet
 
       (when (eql 7 type #| OBJ_REF_DELTA |#)
@@ -239,6 +239,7 @@
 ;; (log:config :warn)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
 ;; (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master")
+;; (read-commits "git@github.com:tdrhq/braft.git" :branch "refs/heads/master")
 
 
 
