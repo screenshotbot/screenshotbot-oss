@@ -78,6 +78,8 @@
   (want *p* "7f2ca96d151b02e5a4e966a00584d79c9ff439f6 filter")
   ;; This requires something like git config --global --add  uploadpack.allowFilter 1
   ;; Unclear if this is always available.
+  ;; https://github.com/git/git/blob/master/Documentation/gitprotocol-capabilities.adoc#filter
+  ;; We should check if the capability is available before attempting it.
   ;; (write-packet *p* "filter object:type=commit")
   (write-flush *p*)
   (write-packet *p* "done")
