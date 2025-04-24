@@ -120,9 +120,9 @@
 (defun simulate ()
 
   ;; https://github.com/git/git/blob/master/Documentation/gitprotocol-pack.adoc
-  (setf *p* (local-upload-pack "/home/arnold/builds/fast-example/.git/"))
+  (setf *p* (local-upload-pack "/home/arnold/builds/web/.git/"))
   (read-headers *p*)
-  (want *p* "7f2ca96d151b02e5a4e966a00584d79c9ff439f6 filter")
+  (want *p* "ff6dbd2b1e3db2d5a89b30fe8d5eacc2a1874de3 filter")
   ;; This requires something like git config --global --add  uploadpack.allowFilter 1
   ;; Unclear if this is always available.
   ;; https://github.com/git/git/blob/master/Documentation/gitprotocol-capabilities.adoc#filter
@@ -134,6 +134,16 @@
   (read-protocol-line *p*)
   ;; From here on the rest is the packfile
   )
+
+(defmethod safe-make-concatenated-stream (stream1 stream2)
+  (make-concatenated-stream
+   stream1
+   stream2))
+
+(defmethod safe-make-concatenated-stream (stream1 (stream2 concatenated-stream))
+  (apply #'make-concatenated-stream
+         stream1
+         (concatenated-stream-streams stream2)))
 
 (defun read-packfile-entry (packfile)
   "Returns type and the contents of the entry"
@@ -160,7 +170,7 @@
           (setf
            (%stream packfile)
            ;; TODO: we could potentially optimize this.. but do we care?
-           (make-concatenated-stream
+           (safe-make-concatenated-stream
             (flex:make-in-memory-input-stream
              (chipz::inflate-state-input dstate)
              :start (chipz::inflate-state-input-index dstate)
@@ -175,11 +185,12 @@
 (defun packfile-test ()
   (simulate)
   (setf *arr* (make-array 4))
-  (read-packfile-header (%stream *p*))
-  ;;(read-sequence *arr* (%stream *p*))
-  ;;(flex:octets-to-string *arr*)
-  (multiple-value-list
-   (read-packfile-entry *p*))
+  (let ((num (read-packfile-header (%stream *p*))))
+    (loop for i below num
+          collect
+             (multiple-value-list
+              (read-packfile-entry *p*))))
+
   
   (close-upload-pack *p*))
 
