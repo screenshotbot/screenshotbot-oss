@@ -170,6 +170,9 @@
          stream1
          (concatenated-stream-streams stream2)))
 
+(defconstant +obj-ref-delta+ 7)
+(defconstant +obj-obs-delta+ 6)
+
 
 (defun read-packfile-entry (packfile)
   "Returns type and the contents of the entry"
@@ -178,12 +181,20 @@
   (let ((stream (%stream packfile)))
     (multiple-value-bind (type length) (read-entry-header stream)
       (log:trace "Got type: ~a" type)
-      (assert (not (member type '( 6 )))) ;; not supported yet
 
-      (when (eql 7 type #| OBJ_REF_DELTA |#)
+      (when (eql +obj-ref-delta+ type)
         (let ((arr (make-array 20)))
           ;; Read the name of the base object
           (read-sequence arr stream)))
+
+      (when (eql +obj-obs-delta+ type)
+        ;; I haven't encountered this in testing. It looks like this
+        ;; is going to be a variable length integer. For my purposes,
+        ;; I don't care what the actual value of this integer is. In
+        ;; theory read-packfile-header reads the exact number of
+        ;; bytes, so I'll just use that here to ignore the bytes.
+        (warn "Untested code for obj-obs-delta")
+        (read-entry-header (%stream packfile)))
 
       (let ((body (flex:make-in-memory-output-stream))
             (dstate (chipz:make-dstate :zlib)))
@@ -220,7 +231,7 @@
   
   (close-upload-pack *p*))
 
-(defun read-commits (repo &key branch)
+(defun read-commits (repo &key branch (filter-blobs t))
   (let* ((p (local-upload-pack repo)))
     (multiple-value-bind (headers features)
         (read-headers p)
@@ -236,7 +247,9 @@
         (dolist (want (cdr wants))
           (want p want))
 
-        (when (str:s-member features "filter")
+        (when (and
+               filter-blobs
+               (str:s-member features "filter"))
           (log:debug "filter is enabled, sending filter")
           (write-packet p "filter blob:none"))
         (write-flush p)
