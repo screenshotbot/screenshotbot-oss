@@ -34,6 +34,7 @@
                :util/threading
                :tmpdir
                :chipz
+               :serapeum
                :imago
                :imago/pngload
                :md5

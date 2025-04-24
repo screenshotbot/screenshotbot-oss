@@ -145,6 +145,7 @@
          stream1
          (concatenated-stream-streams stream2)))
 
+
 (defun read-packfile-entry (packfile)
   "Returns type and the contents of the entry"
   ;; https://github.com/git/git/blob/master/Documentation/gitprotocol-pack.adoc
@@ -194,6 +195,35 @@
   
   (close-upload-pack *p*))
 
+(defun read-commits (repo &key branch)
+  (let* ((p (local-upload-pack repo))
+         (headers (read-headers p)))
+    (let ((wants
+            (loop for this-branch in headers
+                  if (equal branch (second this-branch))
+                    collect (first this-branch))))
+      (unless wants
+        (warn "Could not find branch in ~a" headers))
+      (when wants
+        (want p (format nil "~a filter" (car wants))))
+      (dolist (want (cdr wants))
+        (want p want))
+      (write-flush p)
+      (write-packet p "done")
+      (finish-output (%stream p))
+
+      (read-protocol-line p)
+
+      ;; Now we get the packfile
+      (let ((num (read-packfile-header (%stream p))))
+        (serapeum:collecting
+          (loop for i below num
+                do
+                   (multiple-value-bind (type body) (read-packfile-entry p)
+                     (when (eql 1 type)
+                       (collect (flex:octets-to-string body))))))))))
+
+;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
 
 
 
