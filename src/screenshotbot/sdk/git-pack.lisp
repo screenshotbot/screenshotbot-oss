@@ -23,7 +23,8 @@
               (elt parts 2)
               (elt parts 3)))
      (t
-      "git upload-pack ~a 2>/dev/null"))))
+      (format nil "git upload-pack ~a 2>/dev/null"
+              repo)))))
 
 (defun local-upload-pack (repo)
   (make-instance 'upload-pack
@@ -63,10 +64,21 @@
   ;;  () - Got line:829e9b346306604777c9dcc2c09b61aa30511446 HEAD ... multi_ack thin-pack side-band side-band-64k ofs-delta shallow deepen-since deepen-not deepen-relative no-progress include-tag multi_ack_detailed symref=HEAD:refs/heads/new-pr filter object-format=sha1 agent=git/2.39.5
   ;; In particular we care about the filter capability in the future.
 
-  (read-protocol-line self)
-  (loop for line = (read-protocol-line self)
-        while line
-        collect (str:split " " (str:trim line))))
+  (let ((features))
+    (let ((refs
+           (loop for line = (read-protocol-line self)
+                 while line
+                 collect
+                 (destructuring-bind (ref rest)
+                     (str:split " " (str:trim line) :limit 2)
+                   (cond
+                     (features
+                      (list ref rest))
+                     (t
+                      (let ((parts (str:split #\Null rest)))
+                        (setf features (str:split " " (second parts)))
+                        (list ref (first parts)))))))))
+      (values refs features))))
 
 
 (defmethod write-packet (self fmt &rest content)
@@ -209,32 +221,34 @@
   (close-upload-pack *p*))
 
 (defun read-commits (repo &key branch)
-  (let* ((p (local-upload-pack repo))
-         (headers (read-headers p)))
-    (let ((wants
-            (loop for this-branch in headers
-                  if (equal branch (second this-branch))
-                    collect (first this-branch))))
-      (unless wants
-        (warn "Could not find branch in ~a" headers))
-      (when wants
-        (want p (format nil "~a filter" (car wants))))
-      (dolist (want (cdr wants))
-        (want p want))
-      (write-flush p)
-      (write-packet p "done")
-      (finish-output (%stream p))
+  (let* ((p (local-upload-pack repo)))
+    (multiple-value-bind (headers features)
+        (read-headers p)
+      (log:debug "Got features: ~a" features)
+      (let ((wants
+              (loop for this-branch in headers
+                    if (equal branch (second this-branch))
+                      collect (first this-branch))))
+        (unless wants
+          (warn "Could not find branch in ~a" headers))
+        (when wants
+          (want p (format nil "~a filter" (car wants))))
+        (dolist (want (cdr wants))
+          (want p want))
+        (write-flush p)
+        (write-packet p "done")
+        (finish-output (%stream p))
 
-      (read-protocol-line p)
+        (read-protocol-line p)
 
-      ;; Now we get the packfile
-      (let ((num (read-packfile-header (%stream p))))
-        (serapeum:collecting
-          (loop for i below num
-                do
-                   (multiple-value-bind (type body) (read-packfile-entry p)
-                     (when (eql 1 type)
-                       (collect (flex:octets-to-string body))))))))))
+        ;; Now we get the packfile
+        (let ((num (read-packfile-header (%stream p))))
+          (serapeum:collecting
+            (loop for i below num
+                  do
+                     (multiple-value-bind (type body) (read-packfile-entry p)
+                       (when (eql 1 type)
+                         (collect (flex:octets-to-string body)))))))))))
 
 ;; (log:config :warn)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
