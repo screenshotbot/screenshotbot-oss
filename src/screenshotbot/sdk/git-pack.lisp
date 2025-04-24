@@ -242,6 +242,7 @@
       body))))
 
 (defun read-commits (repo &key branch (filter-blobs t)
+                          (depth 1000)
                             (haves nil))
   (let* ((p (local-upload-pack repo)))
     (multiple-value-bind (headers features)
@@ -258,6 +259,9 @@
         (dolist (want (cdr wants))
           (want p want))
 
+        (when depth
+          (write-packet p "deepen ~a" depth))
+
         (when (and
                filter-blobs
                (str:s-member features "filter"))
@@ -265,6 +269,13 @@
           (write-packet p "filter blob:none"))
         (write-flush p)
 
+        (when depth
+          ;; These should be "shallow ~a" or "unshallow ~a" lines
+          ;; We don't care for them really
+          (loop for line = (read-protocol-line p)
+                while line
+                do (log:trace "Ignoring: ~a" line)))
+        
         (dolist (have haves)
           (write-packet p "have ~a" have))
         (when haves
@@ -294,7 +305,7 @@
 ;; (log:config :warn)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b")))
-;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master"))
+;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "refs/heads/master" :haves (list "36ab3cfac58d436583f181503a798f8e37976adc")))
 
 
