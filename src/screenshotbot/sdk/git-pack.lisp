@@ -92,6 +92,25 @@
 
   (decode-uint32 stream))
 
+(defun read-entry-header (stream)
+  "Returns two values, the type and length"
+  (let ((byte (read-byte stream))
+        (size 0)
+        (type))
+    ;; https://github.com/git/git/blob/master/packfile.c#L1113
+    (setf type (logand 7 (ash byte -4)))
+    (setf size (logand byte 15))
+
+    (let ((mult 4))
+     (loop while (> (logand byte 128) 0)
+           do
+              (setf byte (read-byte stream))
+              (log:info "Read another byte: " byte)
+              (incf size (ash (logand (1- #x80) byte) mult))
+              (incf mult 7)))
+    
+    (values type size)))
+
 
 (defun simulate ()
 
@@ -116,8 +135,9 @@
   (simulate)
   (setf *arr* (make-array 4))
   (read-packfile-header (%stream *p*))
-  (read-sequence *arr* (%stream *p*))
-  (flex:octets-to-string *arr*)
+  ;;(read-sequence *arr* (%stream *p*))
+  ;;(flex:octets-to-string *arr*)
+  (read-entry-header (%stream *p*))
   
   (close-upload-pack *p*))
 
