@@ -92,25 +92,30 @@
 
   (decode-uint32 stream))
 
+(defun p (x)
+  (log:info "Got value: ~a" x)
+  x)
+
 (defun read-entry-header (stream)
   "Returns two values, the type and length"
   (let ((byte (read-byte stream))
         (size 0)
         (type))
-    ;; https://github.com/git/git/blob/master/packfile.c#L1113
+    ;; https://github.com/git/git/blob/master/packfile.c#L111-header3
+    (log:info "First byte: ~a" byte)
     (setf type (logand 7 (ash byte -4)))
-    (setf size (logand byte 15))
+    (setf size (logand byte #b1111))
 
     (let ((mult 4))
      (loop while (> (logand byte 128) 0)
            do
               (setf byte (read-byte stream))
               (log:info "Read another byte: " byte)
-              (incf size (ash (logand (1- #x80) byte) mult))
+              (incf size (p (ash (p (logand (1- #x80) byte)) mult)))
               (incf mult 7)))
-    
-    (values type size)))
 
+    (log:info "final size: ~a" size)
+    (values type size)))
 
 (defun simulate ()
 
@@ -130,6 +135,22 @@
   ;; From here on the rest is the packfile
   )
 
+(defun read-packfile-entry (stream)
+  "Returns type and the contents of the entry"
+  ;; https://github.com/git/git/blob/master/Documentation/gitprotocol-pack.adoc
+  (log:info "Reading packfile entry")
+  (multiple-value-bind (type length) (read-entry-header stream)
+    (let ((body (flex:make-in-memory-output-stream)))
+      (chipz:decompress
+       body
+       (chipz:make-dstate :zlib)
+       stream)
+      
+      (let ((body (flex:get-output-stream-sequence body)))
+        (values type
+                body
+                length
+                (length body))))))
 
 (defun packfile-test ()
   (simulate)
@@ -137,7 +158,7 @@
   (read-packfile-header (%stream *p*))
   ;;(read-sequence *arr* (%stream *p*))
   ;;(flex:octets-to-string *arr*)
-  (read-entry-header (%stream *p*))
+  (read-packfile-entry (%stream *p*))
   
   (close-upload-pack *p*))
 

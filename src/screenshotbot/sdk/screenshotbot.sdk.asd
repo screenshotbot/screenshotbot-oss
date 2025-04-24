@@ -33,6 +33,7 @@
                :trivial-features
                :util/threading
                :tmpdir
+               :chipz
                :imago
                :imago/pngload
                :md5
