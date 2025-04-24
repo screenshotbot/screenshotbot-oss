@@ -50,6 +50,8 @@
                (:file "firebase")
                (:file "android")
                (:file "git")
+               #+lispworks
+               (:file "git-pack")
                (:file "env")
                (:file "run-context")
                (:file "sdk")
