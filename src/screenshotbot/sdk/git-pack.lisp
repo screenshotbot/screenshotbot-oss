@@ -231,6 +231,16 @@
   
   (close-upload-pack *p*))
 
+(defun compute-sha1-from-commit (body)
+  (let ((digest (ironclad:make-digest :sha1)))
+    (ironclad:digest-sequence
+     digest
+     (flex:string-to-octets (format nil "commit ~a~a" (length body) #\Null)))
+    (ironclad:byte-array-to-hex-string
+     (ironclad:digest-sequence
+      digest
+      body))))
+
 (defun read-commits (repo &key branch (filter-blobs t))
   (let* ((p (local-upload-pack repo)))
     (multiple-value-bind (headers features)
@@ -268,11 +278,14 @@
                   do
                      (multiple-value-bind (type body) (read-packfile-entry p)
                        (when (eql 1 type)
-                         (collect (flex:octets-to-string body)))))))))))
+                         (collect
+                             (cons
+                              (compute-sha1-from-commit body)
+                              (flex:octets-to-string body))))))))))))
 
 ;; (log:config :warn)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
-;; (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master")
+;; (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master") 
 ;; (read-commits "git@github.com:tdrhq/braft.git" :branch "refs/heads/master")
 
 
