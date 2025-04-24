@@ -12,11 +12,24 @@
   ((stream :initarg :stream
            :accessor %stream)))
 
+(defun make-upload-pack-command (repo)
+  (multiple-value-bind (match parts)
+      (cl-ppcre:scan-to-strings "^(ssh://)?([a-zA-Z0-9]*)@([a-zA-Z0-9.]*):(.*)$"
+                                repo)
+   (cond
+     (match
+      (format nil "ssh ~a@~a git upload-pack ~a 2>/dev/null"
+              (elt parts 1)
+              (elt parts 2)
+              (elt parts 3)))
+     (t
+      "git upload-pack ~a 2>/dev/null"))))
+
 (defun local-upload-pack (repo)
   (make-instance 'upload-pack
                  :stream
                  (sys:open-pipe
-                  (format nil "bash -c \"git upload-pack ~a\" 2>/tmp/bar.txt | tee /tmp/foo.txt " repo)
+                  (format nil (make-upload-pack-command repo))
                   ;;(list "/usr/bin/env" "git" "upload-pack" repo)
                                 :direction :io
                                 :element-type '(unsigned-byte 8))))
@@ -223,8 +236,9 @@
                      (when (eql 1 type)
                        (collect (flex:octets-to-string body))))))))))
 
+;; (log:config :warn)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
-
+;; (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master")
 
 
 

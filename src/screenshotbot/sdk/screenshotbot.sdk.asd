@@ -124,6 +124,8 @@
                (:file "test-unchanged-run")
                (:file "test-clingon-api-context")
                (:file "test-version-check")
+               #+lispworks
+               (:file "test-git-pack")
                (:file "test-main")
                (:file "test-active-run")
                (:file "test-run-context")
