@@ -241,7 +241,8 @@
       digest
       body))))
 
-(defun read-commits (repo &key branch (filter-blobs t))
+(defun read-commits (repo &key branch (filter-blobs t)
+                            (haves nil))
   (let* ((p (local-upload-pack repo)))
     (multiple-value-bind (headers features)
         (read-headers p)
@@ -263,6 +264,13 @@
           (log:debug "filter is enabled, sending filter")
           (write-packet p "filter blob:none"))
         (write-flush p)
+
+        (dolist (have haves)
+          (write-packet p "have ~a" have))
+        (when haves
+          (write-flush p))
+
+        
         (write-packet p "done")
         (finish-output (%stream p))
 
@@ -285,8 +293,9 @@
 
 ;; (log:config :warn)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
-;; (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master") 
-;; (read-commits "git@github.com:tdrhq/braft.git" :branch "refs/heads/master")
+;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b")))
+;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master"))
+;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "refs/heads/master" :haves (list "36ab3cfac58d436583f181503a798f8e37976adc")))
 
 
 
