@@ -10,7 +10,7 @@
 
 (defclass upload-pack ()
   ((stream :initarg :stream
-           :reader %stream)))
+           :accessor %stream)))
 
 (defun local-upload-pack (repo)
   (make-instance 'upload-pack
@@ -135,22 +135,36 @@
   ;; From here on the rest is the packfile
   )
 
-(defun read-packfile-entry (stream)
+(defun read-packfile-entry (packfile)
   "Returns type and the contents of the entry"
   ;; https://github.com/git/git/blob/master/Documentation/gitprotocol-pack.adoc
   (log:info "Reading packfile entry")
-  (multiple-value-bind (type length) (read-entry-header stream)
-    (let ((body (flex:make-in-memory-output-stream)))
-      (chipz:decompress
-       body
-       (chipz:make-dstate :zlib)
-       stream)
-      
-      (let ((body (flex:get-output-stream-sequence body)))
-        (values type
-                body
-                length
-                (length body))))))
+  (let ((stream (%stream packfile)))
+    (multiple-value-bind (type length) (read-entry-header stream)
+      (log:info "Got type: ~a" type)
+      (assert (not (member type '( 6 7 )))) ;; not supported yet
+      (let ((body (flex:make-in-memory-output-stream))
+            (dstate (chipz:make-dstate :zlib)))
+        (chipz:decompress
+         body
+         dstate
+         stream)
+
+        (let ((body (flex:get-output-stream-sequence body)))
+          (setf
+           (%stream packfile)
+           ;; TODO: we could potentially optimize this.. but do we care?
+           (make-concatenated-stream
+            (flex:make-in-memory-input-stream
+             (chipz::inflate-state-input dstate)
+             :start (chipz::inflate-state-input-index dstate)
+             :end (chipz::inflate-state-input-end dstate))
+            (%stream packfile)))
+          (assert (= length (length body)))
+          (values type
+                  body
+                  length
+                  dstate))))))
 
 (defun packfile-test ()
   (simulate)
@@ -158,7 +172,8 @@
   (read-packfile-header (%stream *p*))
   ;;(read-sequence *arr* (%stream *p*))
   ;;(flex:octets-to-string *arr*)
-  (read-packfile-entry (%stream *p*))
+  (multiple-value-list
+   (read-packfile-entry *p*))
   
   (close-upload-pack *p*))
 
