@@ -108,11 +108,11 @@
   "Reads the header and returns the number of entries"
   ;; https://github.com/git/git/blob/master/Documentation/gitformat-pack.adoc
   (let ((magick (make-array 4)))
-    (read-sequence magick stream)
+    (assert (= 4 (read-sequence magick stream)))
     (assert (equal "PACK" (flex:octets-to-string magick))))
 
   (let ((version (make-array 4)))
-    (read-sequence version stream)
+    (assert (= 4 (read-sequence version stream)))
     (assert (equalp #(0 0 0 2) version)))
 
   (decode-uint32 stream))
@@ -235,14 +235,21 @@
           (want p (format nil "~a filter" (car wants))))
         (dolist (want (cdr wants))
           (want p want))
+
+        (when (str:s-member features "filter")
+          (log:debug "filter is enabled, sending filter")
+          (write-packet p "filter blob:none"))
         (write-flush p)
         (write-packet p "done")
         (finish-output (%stream p))
 
+        (log:debug "Waiting for response")
         (read-protocol-line p)
 
+        (log:debug "reading packfile")        
         ;; Now we get the packfile
         (let ((num (read-packfile-header (%stream p))))
+          (log:debug "Packfile entries: ~a" num)
           (serapeum:collecting
             (loop for i below num
                   do
