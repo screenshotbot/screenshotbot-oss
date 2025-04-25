@@ -257,80 +257,83 @@
           if (equal "parent" (first parts))
             collect (second parts))))
 
-(defun read-commits (repo &key branch (filter-blobs t)
+(defun read-commits (repo &key refs (filter-blobs t)
                             (depth 1000)
                             (haves nil)
                             (parse-parents nil))
-  (let* ((p (local-upload-pack repo)))
-    (multiple-value-bind (headers features)
-        (read-headers p)
-      (log:debug "Got features: ~a" features)
-      (let ((wants
-              (loop for this-branch in headers
-                    if (equal branch (second this-branch))
-                      collect (first this-branch))))
-        (unless wants
-          (warn "Could not find branch in ~a" headers))
-        (when wants
-          (want p (format nil "~a filter" (car wants))))
-        (dolist (want (cdr wants))
-          (want p want))
+  (let ((refs-set (fset:convert 'fset:set
+                                (loop for ref in refs
+                                      collect (str:ensure-prefix "refs/heads/" ref)))))
+    (let* ((p (local-upload-pack repo)))
+      (multiple-value-bind (headers features)
+          (read-headers p)
+        (log:debug "Got features: ~a" features)
+        (let ((wants
+                (loop for this-branch in headers
+                      if (fset:lookup refs-set (second this-branch))
+                        collect (first this-branch))))
+          (unless wants
+            (error "Could not find ref in ~a" headers))
+          (when wants
+            (want p (format nil "~a filter" (car wants))))
+          (dolist (want (cdr wants))
+            (want p want))
 
-        (when depth
-          (write-packet p "deepen ~a" depth))
+          (when depth
+            (write-packet p "deepen ~a" depth))
 
-        (when (and
-               filter-blobs
-               (str:s-member features "filter"))
-          (log:debug "filter is enabled, sending filter")
-          (write-packet p "filter blob:none"))
-        (write-flush p)
+          (when (and
+                 filter-blobs
+                 (str:s-member features "filter"))
+            (log:debug "filter is enabled, sending filter")
+            (write-packet p "filter blob:none"))
+          (write-flush p)
 
-        (when depth
-          ;; These should be "shallow ~a" or "unshallow ~a" lines
-          ;; We don't care for them really
-          (loop for line = (read-protocol-line p)
-                while line
-                do (log:trace "Ignoring: ~a" line)))
+          (when depth
+            ;; These should be "shallow ~a" or "unshallow ~a" lines
+            ;; We don't care for them really
+            (loop for line = (read-protocol-line p)
+                  while line
+                  do (log:trace "Ignoring: ~a" line)))
         
-        (dolist (have haves)
-          (write-packet p "have ~a" have))
-        (when haves
-          (write-flush p))
+          (dolist (have haves)
+            (write-packet p "have ~a" have))
+          (when haves
+            (write-flush p))
 
         
-        (write-packet p "done")
-        (finish-output (%stream p))
+          (write-packet p "done")
+          (finish-output (%stream p))
 
-        (log:debug "Waiting for response")
+          (log:debug "Waiting for response")
 
-        ;; This should either be a NAK (nothing common found), or ACK
-        ;; <commit> signalling that that was a common commit.
-        (read-protocol-line p)
+          ;; This should either be a NAK (nothing common found), or ACK
+          ;; <commit> signalling that that was a common commit.
+          (read-protocol-line p)
 
-        (log:debug "reading packfile")        
-        ;; Now we get the packfile
-        (let ((num (read-packfile-header (%stream p))))
-          (log:debug "Packfile entries: ~a" num)
-          (serapeum:collecting
-            (loop for i below num
-                  do
-                     (multiple-value-bind (type body) (read-packfile-entry p)
-                       (when (eql 1 type)
-                         (collect
-                             (cons
-                              (compute-sha1-from-commit body)
-                              (cond
-                                (parse-parents
-                                 (parse-parents (flex:octets-to-string body)))
-                                (t
-                                 (flex:octets-to-string body))))))))))))))
+          (log:debug "reading packfile")        
+          ;; Now we get the packfile
+          (let ((num (read-packfile-header (%stream p))))
+            (log:debug "Packfile entries: ~a" num)
+            (serapeum:collecting
+              (loop for i below num
+                    do
+                       (multiple-value-bind (type body) (read-packfile-entry p)
+                         (when (eql 1 type)
+                           (collect
+                               (cons
+                                (compute-sha1-from-commit body)
+                                (cond
+                                  (parse-parents
+                                   (parse-parents (flex:octets-to-string body)))
+                                  (t
+                                   (flex:octets-to-string body)))))))))))))))
 
 ;; (log:config :warn)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b")))
-;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :depth 30))
-;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "refs/heads/master" :parse-parents t))
+;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :refs (list "refs/heads/master") :depth 30))
+;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "master" :parse-parents t))
 
 
 

@@ -63,13 +63,12 @@ Merge pull request #401 from nanblpc/set-idle-when-block-timeout
 
 set st to idle when block timeout"))))
 
-#-darwin ;; TODO: This is important to fix
 (test simple-repo-get-commits-integration
   (test-git:with-git-repo (repo :dir dir)
     (test-git:make-commit repo "foo")
     (test-git:make-commit repo "bar")
     (let ((commits
-            (read-commits (namestring dir) :branch "refs/heads/master")))
+            (read-commits (namestring dir) :refs (list "main" "master"))))
       (assert-that
        commits
        (has-length 2)))))
