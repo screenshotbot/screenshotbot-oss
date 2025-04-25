@@ -241,9 +241,18 @@
       digest
       body))))
 
+(defun parse-parents (commit)
+  (let ((stream (make-string-input-stream commit)))
+    (loop for line = (read-line stream)
+          until (str:emptyp (str:trim line))
+          for parts = (str:split " " line)
+          if (equal "parent" (first parts))
+            collect (second parts))))
+
 (defun read-commits (repo &key branch (filter-blobs t)
-                          (depth 1000)
-                            (haves nil))
+                            (depth 1000)
+                            (haves nil)
+                            (parse-parents nil))
   (let* ((p (local-upload-pack repo)))
     (multiple-value-bind (headers features)
         (read-headers p)
@@ -300,13 +309,17 @@
                          (collect
                              (cons
                               (compute-sha1-from-commit body)
-                              (flex:octets-to-string body))))))))))))
+                              (cond
+                                (parse-parents
+                                 (parse-parents (flex:octets-to-string body)))
+                                (t
+                                 (flex:octets-to-string body))))))))))))))
 
 ;; (log:config :warn)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b")))
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :depth 30))
-;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "refs/heads/master" :haves (list "36ab3cfac58d436583f181503a798f8e37976adc")))
+;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "refs/heads/master" :parse-parents t))
 
 
 
