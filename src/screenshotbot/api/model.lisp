@@ -82,7 +82,8 @@
              #:report-acceptable-state
              #:report-run-id
              #:report-previous-run-id
-             #:report-title))
+             #:report-title
+             #:commit-graph))
 
 (in-package :screenshotbot/api/model)
 
@@ -525,3 +526,32 @@ runs, but only for debugging.")
 it's just being constructed in the SDK. This will be used to send a
 response back from /api/screenshot."))
 
+(defclass commit ()
+  ((sha :initarg :sha
+        :json-key "sha"
+        :json-type :string)
+   (parents :initarg :parents
+            :json-key "parents"
+            :json-type (:list :string)))
+  (:metaclass ext-json-serializable-class))
+
+(defclass git-ref ()
+  ((name :initarg :name
+         :json-key "name"
+         :json-type :string)
+   (sha :initarg :sha
+        :json-key "sha"
+        :json-type :string))
+  (:metaclass ext-json-serializable-class))
+
+(defclass commit-graph ()
+  ((commits :initarg :commits
+            :json-key "commits"
+            :json-type (:list commit))
+   (repo :initarg :repo
+         :json-key "repo"
+         :json-type :string)
+   (refs :initarg :refs
+         :json-key "refs"
+         :json-type (:list git-ref)))
+  (:metaclass ext-json-serializable-class))
