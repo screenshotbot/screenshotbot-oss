@@ -33,7 +33,10 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:easy-macros
-                #:def-easy-macro))
+                #:def-easy-macro)
+  (:export
+   #:with-git-repo
+   #:make-commit))
 (in-package :screenshotbot/sdk/test-git)
 
 (util/fiveam:def-suite)
@@ -66,13 +69,17 @@
          (fn dir)
       (make-directory-deletable dir))))
 
-(def-fixture git-repo ()
-  #-screenshotbot-oss
+(def-easy-macro with-git-repo (&binding repo &key &binding dir &fn fn)
   (with-tmpdir (dir)
     (progn
       (uiop:run-program (list "git" "init" (namestring dir)))
       (let ((repo (make-instance 'git-repo :dir dir)))
-        (&body)))))
+        (fn repo dir)))))
+
+(def-fixture git-repo ()
+  #-screenshotbot-oss
+  (with-git-repo (repo :dir dir)
+    (&body)))
 
 (test get-current-commit
   (with-fixture git-repo ()

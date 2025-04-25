@@ -18,22 +18,26 @@
                                 repo)
    (cond
      (match
-      (format nil "ssh ~a@~a git upload-pack ~a 2>/dev/null"
+      (format nil "ssh ~a@~a git upload-pack ~a"
               (elt parts 1)
               (elt parts 2)
               (elt parts 3)))
      (t
-      (format nil "git upload-pack ~a 2>/dev/null"
-              repo)))))
+      (list
+       "/usr/bin/env"
+       "git"
+       "upload-pack"
+       repo)))))
 
 (defun local-upload-pack (repo)
   (make-instance 'upload-pack
                  :stream
                  (sys:open-pipe
-                  (format nil (make-upload-pack-command repo))
-                  ;;(list "/usr/bin/env" "git" "upload-pack" repo)
-                                :direction :io
-                                :element-type '(unsigned-byte 8))))
+                  (make-upload-pack-command repo)
+                  :direction :io
+                  ;; See Lisp Support Call #43536
+                  :error-output nil
+                  :element-type '(unsigned-byte 8))))
 
 (defmethod close-upload-pack (self)
   (close (%stream self)))

@@ -12,16 +12,20 @@
   (:import-from #:fiveam-matchers/strings
                 #:starts-with)
   (:import-from #:screenshotbot/sdk/git-pack
+                #:read-commits
                 #:parse-parents
-                #:make-upload-pack-command))
+                #:make-upload-pack-command)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:local-nicknames (#:test-git #:screenshotbot/sdk/test-git)))
 (in-package :screenshotbot/sdk/test-git-pack)
 
 (util/fiveam:def-suite)
 
 (test parse-remote-git-pack
   (assert-that
-   (make-upload-pack-command "/tmp/foo/bar.git")
-   (starts-with "git upload-pack"))
+   (str:join " " (make-upload-pack-command "/tmp/foo/bar.git"))
+   (starts-with "/usr/bin/env git upload-pack"))
   (assert-that
    (make-upload-pack-command "ssh://user@host:/tmp/foo.git")
    (starts-with "ssh user@host git upload-pack "))
@@ -59,4 +63,13 @@ Merge pull request #401 from nanblpc/set-idle-when-block-timeout
 
 set st to idle when block timeout"))))
 
-
+#-darwin ;; TODO: This is important to fix
+(test simple-repo-get-commits-integration
+  (test-git:with-git-repo (repo :dir dir)
+    (test-git:make-commit repo "foo")
+    (test-git:make-commit repo "bar")
+    (let ((commits
+            (read-commits (namestring dir) :branch "refs/heads/master")))
+      (assert-that
+       commits
+       (has-length 2)))))
