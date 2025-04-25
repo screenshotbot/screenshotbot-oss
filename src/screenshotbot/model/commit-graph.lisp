@@ -90,6 +90,13 @@ can delete this code. T1739"
      (dag :initform nil
           :transient t
           :accessor %commit-graph-dag)
+     (refs :initform nil
+           :accessor commit-graph-refs
+           :documentation "An alist, with the last known refs. These refs
+are force updated, so it might move `backwards`! The main purpose of these
+refs is just to allow incremental updates, and for potential garbage
+collection. For now, if you need a source of truth of refs, you might want to
+use the refs in promoted runs.")
      (dag-v2 :accessor %persisted-dag
              :initarg :dag
              :documentation "Move from DAG from DAG-V2 to keep the DAG persisted.")
