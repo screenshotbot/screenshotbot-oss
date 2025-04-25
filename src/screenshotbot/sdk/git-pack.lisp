@@ -30,14 +30,18 @@
        repo)))))
 
 (defun local-upload-pack (repo)
-  (make-instance 'upload-pack
-                 :stream
-                 (sys:open-pipe
-                  (make-upload-pack-command repo)
-                  :direction :io
-                  ;; See Lisp Support Call #43536
-                  :error-output nil
-                  :element-type '(unsigned-byte 8))))
+  (multiple-value-bind (stream)
+      (sys:run-shell-command
+       (make-upload-pack-command repo)
+       :output :stream
+       :input :stream
+       :wait nil
+       :element-type '(unsigned-byte 8))
+    (assert stream)
+
+    
+   (make-instance 'upload-pack
+                  :stream stream)))
 
 (defmethod close-upload-pack (self)
   (close (%stream self)))
