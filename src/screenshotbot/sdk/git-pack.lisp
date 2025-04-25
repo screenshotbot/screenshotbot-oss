@@ -295,6 +295,9 @@
         (finish-output (%stream p))
 
         (log:debug "Waiting for response")
+
+        ;; This should either be a NAK (nothing common found), or ACK
+        ;; <commit> signalling that that was a common commit.
         (read-protocol-line p)
 
         (log:debug "reading packfile")        
