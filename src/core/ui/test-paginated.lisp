@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:core/ui/paginated
+                #:paginated
                 #:pagination-helper)
   (:shadowing-import-from #:new-let
                           #:let)
@@ -129,3 +130,8 @@ the next list of objects and the start-index"
       (let ((items more (funcall more)))
         (assert-that items (contains "6"))
         (is (null more))))))
+
+(test happy-path-with-infinite-scroll
+  (paginated (lambda (x))
+             :items (list 1 2 3)
+             :infinite-scroll t))

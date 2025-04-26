@@ -133,4 +133,4 @@ empty message."
                                  >Load More</button>
                          </div>)
                       </div>)
-          (remove-from-plist args :pass-index-p))))
+          (remove-from-plist args :pass-index-p :infinite-scroll))))

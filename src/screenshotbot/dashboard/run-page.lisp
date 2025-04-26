@@ -760,6 +760,7 @@
 
             </div>)))
        :pass-index-p t
+       :infinite-scroll t
        :items screenshot-map
        :filter filter
        :empty-view  <p class= "text-muted" >No screenshots found</p>)
