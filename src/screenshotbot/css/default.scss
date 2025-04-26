@@ -909,6 +909,30 @@ a {
     margin-top: 1em;
 }
 
+.load-more-button.spinner:disabled {
+  position: relative;
+  color: transparent; /* Hide button text while loading */
+}
+
+.load-more-button.spinner:disabled::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #fff;
+  border-top-color: lighten($primary, 10%);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .card-page-container {
     max-width: 50em;

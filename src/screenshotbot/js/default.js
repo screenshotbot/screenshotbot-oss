@@ -262,6 +262,11 @@ $(".async-fetch").map(function (idx, elm) {
 
 
 setupLiveOnAttach(".load-more-button", function () {
+    var isInfinite = $(this).data("infinite");
+
+    var disabled = false;
+
+    
     $(this).click(function (e) {
         var button = $(this);
         var link = $(button).data("load-more");
@@ -269,6 +274,13 @@ setupLiveOnAttach(".load-more-button", function () {
 
         function setDisabled(val) {
             $(button).prop("disabled", val);
+            disabled = val;
+
+            setTimeout(() => {
+                // We don't want the spinner to show up if it's less
+                // than a certain amount of time since it's distracting.
+                $(button).addClass("spinner");
+            }, 250);
         }
 
         setDisabled(true);
@@ -298,6 +310,30 @@ setupLiveOnAttach(".load-more-button", function () {
 
         e.preventDefault();
     });
+
+    if (isInfinite) {
+        console.log("Setting up infinite scroll");
+        var button = $(this);
+        var called = false;
+        var callback = () => {
+            if (disabled) {
+                return;
+            }
+
+            const scrollTop = window.scrollY; // How much we've scrolled from the top
+            const windowHeight = window.innerHeight; // The height of the visible window
+            const documentHeight = document.documentElement.scrollHeight; // Total height of the page
+            
+            const scrollPercentage = (scrollTop + windowHeight) / documentHeight;
+            
+            if (scrollPercentage >= 0.8) {
+                console.log("Hit target for infinite scroll ", this);
+                button.click();
+            }
+        }
+
+        $(window).on("scroll", callback);
+    }
 });
 
 

@@ -101,7 +101,7 @@ The pagination-helper doesn't handle rendering on its own, for testability purpo
       (t
        empty-view))))
 
-(defun paginated (fn &rest args &key pass-index-p &allow-other-keys)
+(defun paginated (fn &rest args &key pass-index-p (infinite-scroll nil) &allow-other-keys)
   "Creates a paginated view. If no element matches, then we return
 NIL, which can be used as a way of determining whether to render an
 empty message."
@@ -124,7 +124,9 @@ empty message."
 
                       ,(when load-more
                          <div class= "col-12 d-flex justify-content-center">
-                         <button class= "btn btn-primary load-more-button" data-load-more= (nibble (:name :load-more) (funcall load-more)) >Load More</button>
+                         <button class= "btn btn-primary load-more-button" data-load-more= (nibble (:name :load-more) (funcall load-more))
+                                 data-infinite= (if infinite-scroll "true")
+                                 >Load More</button>
                          </div>)
                       </div>)
           (remove-from-plist args :pass-index-p))))
