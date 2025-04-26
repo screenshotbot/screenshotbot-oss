@@ -39,7 +39,8 @@
                 (make-string-input-stream data)
                 :format :text)))
 
-(defapi (update-commit-graph :uri "/api/commit-graph" :method :post) (repo-url graph-json format)
+(defapi (update-commit-graph :uri "/api/commit-graph" :method :post) (repo-url graph-json format
+                                                                               refs)
   ;; do nothing with this for the moment
   (cond
     ((string-equal "text" format)
@@ -47,7 +48,11 @@
                                    (hunchentoot:raw-post-data :want-stream nil
                                                               :force-text t)))
     (t
-     (%update-commit-graph-v2 repo-url graph-json))))
+     (%update-commit-graph-v2 repo-url graph-json)
+     (when (str:non-empty-string-p refs)
+       (update-refs :repo-url repo-url
+                    :refs refs))
+     "OK")))
 
 (defapi (get-refs :uri "/api/commit-graph/refs" :method :get) (repo-url)
   (let ((commit-graph (find-or-create-commit-graph (current-company) repo-url)))

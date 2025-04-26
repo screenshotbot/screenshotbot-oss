@@ -63,6 +63,15 @@
       :graph-json "{}"
       :format "json"))))
 
+(test update-commit-graph-with-refs
+  (with-fixture state ()
+    (finishes
+     (update-commit-graph
+      :repo-url ""
+      :graph-json "{}"
+      :format "json"
+      :refs "[]"))))
+
 (defvar *repo* "https://github.com/tdrhq/fast-example.git")
 
 (test update-refs
