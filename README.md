@@ -18,6 +18,11 @@ Screenshotbot-oss powers our own commercial platform
 [screenshotbot.io](https://screenshotbot.io).
 
 
+<p align="center">
+   <img src="https://cdn.screenshotbot.io/assets/images/new-landing/landing-hero.webp" width="40%" />
+</p>
+
+
 ## Quick installation with Docker
 
 ```
