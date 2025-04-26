@@ -19,7 +19,7 @@ Screenshotbot-oss powers our own commercial platform
 
 
 <p align="center">
-   <img src="https://cdn.screenshotbot.io/assets/images/new-landing/landing-hero.webp" width="40%" />
+   <img src="https://cdn.screenshotbot.io/assets/images/new-landing/landing-hero.png" width="60%" />
 </p>
 
 
