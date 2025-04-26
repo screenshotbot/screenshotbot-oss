@@ -91,6 +91,7 @@ can delete this code. T1739"
           :transient t
           :accessor %commit-graph-dag)
      (refs :initform nil
+           :initarg :refs
            :accessor commit-graph-refs
            :documentation "An alist, with the last known refs. These refs
 are force updated, so it might move `backwards`! The main purpose of these

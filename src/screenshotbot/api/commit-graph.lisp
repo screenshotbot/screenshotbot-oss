@@ -54,12 +54,14 @@
                     :refs refs))
      "OK")))
 
-(defapi (get-refs :uri "/api/commit-graph/refs" :method :get) (repo-url)
+(defapi (get-refs :uri "/api/commit-graph/refs" :method :get :wrap-success nil) (repo-url)
   (let ((commit-graph (find-or-create-commit-graph (current-company) repo-url)))
-    (loop for (key . value) in (commit-graph-refs commit-graph)
-          collect (make-instance 'dto:git-ref
-                                 :name key
-                                 :sha value))))
+    (or
+     (loop for (key . value) in (commit-graph-refs commit-graph)
+           collect (make-instance 'dto:git-ref
+                                  :name key
+                                  :sha value))
+     #())))
 
 (defapi (update-refs :uri "/api/commit-graph/refs" :method :post) (repo-url refs)
   "This isn't intended to be used in prod at the moment, it's mostly a convenience for testing"
