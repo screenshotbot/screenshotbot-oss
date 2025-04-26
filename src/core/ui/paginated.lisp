@@ -124,7 +124,11 @@ empty message."
 
                       ,(when load-more
                          <div class= "col-12 d-flex justify-content-center">
-                         <button class= "btn btn-primary load-more-button" data-load-more= (nibble (:name :load-more) (funcall load-more))
+                         <button class= "btn btn-primary load-more-button"
+                                 data-load-more= (nibble (:name (if infinite-scroll
+                                                                 :load-more-inf
+                                                                 :load-more))
+                                                    (funcall load-more))
                                  data-infinite= (if infinite-scroll "true")
                                  >Load More</button>
                          </div>)
