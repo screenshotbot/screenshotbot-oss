@@ -12,9 +12,22 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/api/commit-graph
+                #:get-refs
+                #:update-refs
                 #:update-commit-graph
                 #:%update-commit-graph-v2)
-  (:local-nicknames (#:a #:alexandria)))
+  (:import-from #:screenshotbot/git-repo
+                #:find-or-create-commit-graph)
+  (:import-from #:screenshotbot/model/commit-graph
+                #:commit-graph-refs)
+  (:import-from #:fiveam-matchers/core
+                #:has-typep
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains-in-any-order
+                #:contains)
+  (:local-nicknames (#:a #:alexandria)
+                    (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/test-commit-graph)
 
 
@@ -49,3 +62,32 @@
       :repo-url nil
       :graph-json "{}"
       :format "json"))))
+
+(defvar *repo* "https://github.com/tdrhq/fast-example.git")
+
+(test update-refs
+  (with-fixture state ()
+   (finishes
+     (update-refs :repo-url *repo*
+                  :refs "[{\"name\":\"master\",\"sha\":\"abcd\"}]"))
+    (let ((cg (find-or-create-commit-graph (auth:current-company) *repo*)))
+      (assert-that
+       (commit-graph-refs cg)
+       (contains
+        '("master" . "abcd")))
+      (update-refs :repo-url *repo*
+                   :refs "[{\"name\":\"master\",\"sha\":\"0011\"},{\"name\":\"feature\",\"sha\":\"abcd\"}]")
+      (assert-that
+       (commit-graph-refs cg)
+       (contains-in-any-order
+        '("master" . "0011")
+        '("feature" . "abcd"))))))
+
+(test get-refs
+  (with-fixture state ()
+    (finishes
+      (update-refs :repo-url *repo*
+                   :refs "[{\"name\":\"master\",\"sha\":\"abcd\"}]"))
+    (assert-that (get-refs :repo-url *repo*)
+                 (contains
+                  (has-typep 'dto:git-ref)))))

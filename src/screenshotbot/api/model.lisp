@@ -83,7 +83,11 @@
              #:report-run-id
              #:report-previous-run-id
              #:report-title
-             #:commit-graph))
+             #:commit-graph
+             #:decode-json
+             #:git-ref
+             #:git-ref-name
+             #:git-ref-sha))
 
 (in-package :screenshotbot/api/model)
 
@@ -538,10 +542,12 @@ response back from /api/screenshot."))
 (defclass git-ref ()
   ((name :initarg :name
          :json-key "name"
-         :json-type :string)
+         :json-type :string
+         :reader git-ref-name)
    (sha :initarg :sha
         :json-key "sha"
-        :json-type :string))
+        :json-type :string
+        :reader git-ref-sha))
   (:metaclass ext-json-serializable-class))
 
 (defclass commit-graph ()

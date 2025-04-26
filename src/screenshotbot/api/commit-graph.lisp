@@ -13,7 +13,10 @@
   (:import-from #:util/events
                 #:with-tracing)
   (:import-from #:screenshotbot/model/commit-graph
-                #:merge-dag-into-commit-graph))
+                #:commit-graph-refs
+                #:commit-graph-set-ref
+                #:merge-dag-into-commit-graph)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/commit-graph)
 
 (defun %merge-dags (repo-url new-dag)
@@ -45,3 +48,18 @@
                                                               :force-text t)))
     (t
      (%update-commit-graph-v2 repo-url graph-json))))
+
+(defapi (get-refs :uri "/api/commit-graph/refs" :method :get) (repo-url)
+  (let ((commit-graph (find-or-create-commit-graph (current-company) repo-url)))
+    (loop for (key . value) in (commit-graph-refs commit-graph)
+          collect (make-instance 'dto:git-ref
+                                 :name key
+                                 :sha value))))
+
+(defapi (update-refs :uri "/api/commit-graph/refs" :method :post) (repo-url refs)
+  "This isn't intended to be used in prod at the moment, it's mostly a convenience for testing"
+  (let ((commit-graph (find-or-create-commit-graph (current-company) repo-url))
+        (refs (dto:decode-json refs '(:list dto:git-ref))))
+    (loop for ref in refs
+          do (commit-graph-set-ref commit-graph (dto:git-ref-name ref)
+                                   (dto:git-ref-sha ref)))))

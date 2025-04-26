@@ -259,3 +259,13 @@ to the same repo, the graph will still be the same."
 (def-store-migration ("Import dag to dag-v2" :version 32)
   (loop for cg in (class-instances 'commit-graph)
         do (merge-dag-into-commit-graph cg (commit-graph-dag cg))))
+
+(deftransaction tx-commit-graph-set-ref (commit-graph name sha)
+  (setf (assoc-value (commit-graph-refs commit-graph) name :test #'equal)
+        sha))
+
+(defmethod commit-graph-set-ref ((commit-graph commit-graph)
+                                 (name string)
+                                 (sha string))
+  (unless (equal sha (assoc-value (commit-graph-refs commit-graph) name))
+   (tx-commit-graph-set-ref commit-graph name sha)))
