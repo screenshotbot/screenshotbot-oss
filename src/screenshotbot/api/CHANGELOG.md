@@ -1,6 +1,10 @@
 
 Version
 
+* 18: Added api support for commit refs
+  - New model git-ref
+  - POST /api/commit-graph/refs
+  - Added support for `refs` param in POST /api/commit-graph 
 * Version unchanged
   - Added /api/report/<id>/comparison
   - Added fields changes,added,deleted to dto:comparison
