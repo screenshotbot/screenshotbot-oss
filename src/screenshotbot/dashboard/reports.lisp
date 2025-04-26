@@ -463,6 +463,7 @@
                                                           :actual-item change)))
                     (report-run report)
                     (format nil "/report/:oid" (oid report)))))
+                :infinite-scroll t
                 :pass-index-p t
                 :items changes)
            </sorted-template>)

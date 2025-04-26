@@ -1107,6 +1107,7 @@ additional actions in the More dropdown menu.
              :filter (lambda (group)
                        (group-matches-p group search))
              :items changes-groups
+             :infinite-scroll t
              :empty-view (no-screenshots))
        </div>))))
 
@@ -1168,6 +1169,7 @@ additional actions in the More dropdown menu.
           </div>)
         :num 12
         :filter filter
+        :infinite-scroll t
         :items groups
         :pass-index-p t
         :empty-view (no-screenshots))
