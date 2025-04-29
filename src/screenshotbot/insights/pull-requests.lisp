@@ -100,6 +100,7 @@
     (sort
      (loop for user being the hash-keys of result
              using (hash-value count)
+           if user ;; temp fix for T1872
            collect (list user count))
      #'>
      :key #'second)))
