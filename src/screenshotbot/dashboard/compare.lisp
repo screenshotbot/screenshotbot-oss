@@ -133,6 +133,8 @@
   (:import-from #:screenshotbot/git-repo
                 #:commit-graph-dag
                 #:commit-graph)
+  (:import-from #:screenshotbot/login/common
+                #:with-login)
   (:export
    #:render-acceptable
    #:render-diff-report
@@ -158,18 +160,19 @@
 (defhandler (acceptable-review-url :uri "/acceptable/:id/review" :method :post)
             (id action redirect csrf)
   (assert (equal csrf (auth:csrf-token)))
-  (let ((acceptable (bknr.datastore:store-object-with-id (parse-integer id))))
-    (can-edit! acceptable)
-    (let ((state (cond
-                   ((string-equal "accept" action)
-                    :accepted)
-                   ((string-equal "reject" action)
-                    :rejected)
-                   (t
-                    (error "Unknown acceptable review action: ~a" action)))))
-      (setf (acceptable-state acceptable :user (current-user))
-            state)
-      (hex:safe-redirect redirect))))
+  (with-login ()
+   (let ((acceptable (bknr.datastore:store-object-with-id (parse-integer id))))
+     (can-edit! acceptable)
+     (let ((state (cond
+                    ((string-equal "accept" action)
+                     :accepted)
+                    ((string-equal "reject" action)
+                     :rejected)
+                    (t
+                     (error "Unknown acceptable review action: ~a" action)))))
+       (setf (acceptable-state acceptable :user (current-user))
+             state)
+       (hex:safe-redirect redirect)))))
 
 (deftag render-acceptable (&key acceptable)
   (let ((review-url (hex:make-url 'acceptable-review-url :id (bknr.datastore:store-object-id
