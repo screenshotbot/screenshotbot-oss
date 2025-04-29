@@ -718,7 +718,9 @@ company as a way of deleting."
             (bknr.datastore:class-instances 'recorder-run)
             slot)))
 
-(def-store-migration ("Add new slot for metadata" :version 28)
+(def-store-migration ("Add new slot for metadata" :version 34)
+  "This migration was supposed to be for version 29, but because of a
+typo it wasn't being run. I've updated the version."
   (ensure-slot-boundp 'recorder-run '%metadata))
 
 (def-store-migration ("Add new slot for release-branch-p" :version 30)
