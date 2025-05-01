@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/batch-promoter
   (:use #:cl)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:+nothing-to-review+
                 #:check-title
                 #:check-status
                 #:check-user
@@ -135,7 +136,16 @@
        (:action-required "Some screenshots need review")
        (:pending "Waiting for a previous run")
        (:accepted "All screenshots accepted")
-       (:success "No screenshots changed")))))
+       (:success
+        (cond
+         ((and
+           (not (fset:empty? items))
+           (fset:every (lambda (item)
+                         (equal +nothing-to-review+ (batch-item-title item)))
+                       items))
+          +nothing-to-review+)
+         (t
+          "No screenshots changed")))))))
 
 (defmethod compute-check ((batch batch)
                           &key user)

@@ -125,7 +125,8 @@
    #:make-promoter-for-acceptable
    #:promoter-pull-id
    #:check-sha
-   #:push-remote-check-via-batching))
+   #:push-remote-check-via-batching
+   #:+nothing-to-review+))
 
 (in-package :screenshotbot/abstract-pr-promoter)
 
@@ -364,6 +365,9 @@ reviewable.)"
 (defmethod unreviewable-run-p ((promoter t) (run unchanged-run))
   t)
 
+(defparameter +nothing-to-review+ "Nothing to review"
+  "This is used by batch-promoter to change the final output by a bit.")
+
 (defmethod maybe-promote ((promoter abstract-pr-promoter)
                           run)
   (let* ((repo (channel-repo (recorder-run-channel run)))
@@ -385,7 +389,7 @@ reviewable.)"
         promoter
         run
         (make-run-check run :status :success
-                            :title "Nothing to review"
+                            :title +nothing-to-review+
                             :summary "NA")))
       ((not (pr-merge-base promoter run))
        (format-log run :info "No merge base on run, this is probably a bug on the CI job (Usually missing a `git fetch origin main`"))

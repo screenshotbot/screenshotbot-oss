@@ -200,3 +200,33 @@
     (let ((summary (build-check-summary batch)))
       (assert-that (mapcar #'str:trim (str:lines summary))
                    (is-not (has-item "" ))))))
+
+(test if-everything-is-nothing-to-review-then-say-nothing-to-review
+  (with-fixture state ()
+    (dotimes (i 5)
+      (make-instance 'batch-item
+                     :batch batch
+                     :run run
+                     :channel channel
+                     :title "Nothing to review"
+                     :status :success))
+    (let ((check (compute-check batch :user :my-user)))
+      (is (equal "Nothing to review" (check-title check))))))
+
+(test some-nothing-to-review-but-some-reviews
+  (with-fixture state ()
+    (dotimes (i 5)
+      (make-instance 'batch-item
+                     :batch batch
+                     :run run
+                     :channel channel
+                     :title "Nothing to review"
+                     :status :success))
+    (make-instance 'batch-item
+                   :batch batch
+                   :run run
+                   :channel channel
+                   :title "No screenshots changed"
+                   :status :success)
+    (let ((check (compute-check batch :user :my-user)))
+      (is (equal "No screenshots changed" (check-title check))))))
