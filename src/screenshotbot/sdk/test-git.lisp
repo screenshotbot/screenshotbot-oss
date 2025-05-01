@@ -69,11 +69,11 @@
          (fn dir)
       (make-directory-deletable dir))))
 
-(def-easy-macro with-git-repo (&binding repo &key &binding dir &fn fn)
+(def-easy-macro with-git-repo (&binding repo &key link &binding dir &fn fn)
   (with-tmpdir (dir)
     (progn
       (uiop:run-program (list "git" "init" (namestring dir)))
-      (let ((repo (make-instance 'git-repo :dir dir)))
+      (let ((repo (make-instance 'git-repo :dir dir :link link)))
         (fn repo dir)))))
 
 (def-fixture git-repo ()

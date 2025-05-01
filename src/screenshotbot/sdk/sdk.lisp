@@ -67,6 +67,8 @@
   (:import-from #:screenshotbot/sdk/request
                 #:request
                 #:%make-basic-auth)
+  (:import-from #:screenshotbot/sdk/commit-graph
+                #:update-commit-graph)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model)
                     (#:e #:screenshotbot/sdk/env)
@@ -559,24 +561,6 @@ pull-request looks incorrect."
       (log:debug "Relative path parts: ~S" (pathname-directory res))
       (log:debug "Relative path is: ~S" res)
       res)))
-
-(defmethod update-commit-graph (api-context repo branch)
-  (fetch-remote-branch repo branch)
-  (log:info "Updating commit graph")
-  (let* ((dag (read-graph repo))
-         (json (with-output-to-string (s)
-                 (dag:write-to-stream dag s))))
-    (request
-     api-context
-     "/api/commit-graph"
-     :method :post
-     :parameters (list
-                  (cons "repo-url" (repo-link repo))
-                  (cons "branch" branch)
-                  (cons "graph-json" json)))))
-
-(defmethod update-commit-graph (api-context (repo null-repo) branch)
-  (log:info "Not updating the commit graph, since there's no repo"))
 
 (defun git-repo ()
   (let ((root (ignore-errors (git-root))))

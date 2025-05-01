@@ -10,6 +10,7 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/commit-graph
+                #:update-commit-graph
                 #:get-commit-graph-refs)
   (:import-from #:screenshotbot/git-repo
                 #:commit-graph)
@@ -18,15 +19,21 @@
   (:import-from #:fiveam-matchers/core
                 #:has-typep
                 #:assert-that)
-  (:local-nicknames (#:dto #:screenshotbot/api/model)))
+  (:import-from #:screenshotbot/sdk/git
+                #:fetch-remote-branch)
+  (:import-from #:cl-mock
+                #:if-called)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)
+                    (#:test-git #:screenshotbot/sdk/test-git)))
 (in-package :screenshotbot/sdk/test-commit-graph)
 
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-sdk-integration (api-context :company company)
-    (&body)))
+  (cl-mock:with-mocks ()
+   (with-sdk-integration (api-context :company company)
+     (&body))))
 
 (defvar *repo* "https://github.com/tdrhq/fast-example.git")
 
@@ -48,4 +55,17 @@
       *repo*)
      (contains
       (has-typep 'dto:git-ref)))))
+
+(test update-commit-graph-happy-path
+  (with-fixture state ()
+   (if-called 'fetch-remote-branch
+              (lambda (repo branch)
+                (values)))
+    (test-git:with-git-repo (repo :dir dir)
+      (test-git:make-commit repo "foo")
+      (test-git:make-commit repo "bar")
+      (finishes
+       (update-commit-graph api-context
+                            repo
+                            "main")))))
 
