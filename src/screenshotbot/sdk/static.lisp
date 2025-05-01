@@ -8,8 +8,7 @@
                 #:context)
   (:import-from #:screenshotbot/sdk/sdk
                 #:guess-master-branch
-                #:request
-                #:ensure-api-success)
+                #:request)
   (:import-from #:util/digests
                 #:sha256-file)
   (:import-from #:util/lru-cache

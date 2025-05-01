@@ -56,7 +56,6 @@
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/sdk
                 #:put-run-with-run-context
-                #:%request
                 #:empty-run-error
                 #:find-existing-images
                 #:get-relative-path
@@ -95,6 +94,8 @@
                 #:recorder-run)
   (:import-from #:screenshotbot/user-api
                 #:recorder-run-commit)
+  (:import-from #:screenshotbot/sdk/request
+                #:%request)
   (:local-nicknames (#:a #:alexandria)
                     (#:api-key #:core/api/model/api-key)
                     (#:dto #:screenshotbot/api/model)
@@ -379,71 +380,6 @@
                              :hostname "foo.screenshotbot.io")
               "/api/version"))))
 
-(test retries-%request
-  (with-fixture state ()
-    (let ((auto-restart:*global-enable-auto-retries-p* t))
-     (let ((count 0))
-       (cl-mock:if-called 'http-request
-                          (lambda (url &rest args)
-                            (incf count)
-                            (cond
-                              ((<= count 3)
-                               (values (make-string-input-stream "Bad") 502))
-                              (t
-                               (values (make-string-input-stream "Good") 200)))))
-       (is
-        (equal "Good"
-               (%request (make-instance 'api-context
-                                        :remote-version *api-version*
-                                        :key "foo"
-                                        :secret "bar"
-                                        :hostname "https://example.com")
-                         "/api/test"
-                         :backoff 0)))))))
-
-(test retries-%request-for-error
-  (with-fixture state ()
-    (let ((auto-restart:*global-enable-auto-retries-p* t))
-     (let ((count 0))
-       (cl-mock:if-called 'http-request
-                          (lambda (url &rest args)
-                            (incf count)
-                            (cond
-                              ((<= count 3)
-                               (error "some error happened"))
-                              (t
-                               (values (make-string-input-stream "Good") 200)))))
-       (is
-        (equal "Good"
-               (%request (make-instance 'api-context
-                                        :remote-version *api-version*
-                                        :key "foo"
-                                        :secret "bar"
-                                        :hostname "https://example.com")
-                         "/api/test"
-                         :backoff 0)))))))
-
-(test retries-%request-will-finally-fail
-  (with-fixture state ()
-    (let ((auto-restart:*global-enable-auto-retries-p* t))
-     (let ((count 0))
-       (cl-mock:if-called 'http-request
-                          (lambda (url &rest args)
-                            (incf count)
-                            (cond
-                              ((<= count 10)
-                               (error "some error happened"))
-                              (t
-                               (values (make-string-input-stream "Good") 200)))))
-       (signals-error-matching ()
-            (%request (make-instance 'api-context
-                                     :remote-version *api-version*
-                                     :key "foo"
-                                     :secret "bar"
-                                     :hostname "https://example.com")
-                      "/api/test"
-                      :backoff 0)
-          (error-with-string-matching "some error happened"))))))
 
 (test warn-if-not-recent-file
   (uiop:with-temporary-file (:stream s)
