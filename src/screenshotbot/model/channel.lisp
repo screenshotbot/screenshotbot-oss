@@ -198,7 +198,8 @@
 (defmethod github-repo ((channel channel))
   (or
    (assoc-value *channel-repo-overrides* channel)
-   (%%github-repo channel)))
+   (ignore-errors
+    (%%github-repo channel))))
 
 #-lispworks
 (defvar *updatef-lock* (bt:make-lock))
