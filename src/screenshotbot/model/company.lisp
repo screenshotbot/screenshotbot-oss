@@ -476,7 +476,7 @@ URL for the company, if there is one."
       ((eql :roles owner)
        (roles:company-owner self))
       (t
-       (warn "Using old company-owner schema")
+       (warn "Using old company-owner schema for ~a" self)
        owner))))
 
 (def-store-migration ("Ensure company-admins is using roles" :version 14)
