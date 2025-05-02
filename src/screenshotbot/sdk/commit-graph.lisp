@@ -13,7 +13,13 @@
                 #:read-graph
                 #:fetch-remote-branch
                 #:repo-link)
-  (:local-nicknames (#:dto #:screenshotbot/api/model)))
+  #+lispworks
+  (:import-from #:screenshotbot/sdk/git-pack
+                #:supported-remote-repo-p)
+  (:import-from #:util/misc
+                #:?.)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)
+                    (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/commit-graph)
 
 (defmethod get-commit-graph-refs (api-context
@@ -27,6 +33,12 @@
     :parameters (list
                  (cons "repo-url" repo)))
    '(:list dto:git-ref)))
+
+(defun new-flow-enabled-p (repo)
+  #+lispworks
+  (?. supported-remote-repo-p (git:get-remote-url repo))
+  #-lispworks
+  nil)
 
 (defmethod update-commit-graph (api-context repo branch)
   (fetch-remote-branch repo branch)

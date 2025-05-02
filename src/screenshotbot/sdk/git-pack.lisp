@@ -12,9 +12,14 @@
   ((stream :initarg :stream
            :accessor %stream)))
 
+(defparameter +repo-regex+ "^(ssh://)?([a-zA-Z0-9]*)@([a-zA-Z0-9.]*):(.*)$")
+
+(defun supported-remote-repo-p (repo)
+  (cl-ppcre:scan-to-strings +repo-regex+ repo))
+
 (defun make-upload-pack-command (repo)
   (multiple-value-bind (match parts)
-      (cl-ppcre:scan-to-strings "^(ssh://)?([a-zA-Z0-9]*)@([a-zA-Z0-9.]*):(.*)$"
+      (cl-ppcre:scan-to-strings +repo-regex+
                                 repo)
    (cond
      (match

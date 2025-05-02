@@ -10,6 +10,7 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/commit-graph
+                #:new-flow-enabled-p
                 #:update-commit-graph
                 #:get-commit-graph-refs)
   (:import-from #:screenshotbot/git-repo
@@ -20,11 +21,13 @@
                 #:has-typep
                 #:assert-that)
   (:import-from #:screenshotbot/sdk/git
+                #:git-command
                 #:fetch-remote-branch)
   (:import-from #:cl-mock
                 #:if-called)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
-                    (#:test-git #:screenshotbot/sdk/test-git)))
+                    (#:test-git #:screenshotbot/sdk/test-git)
+                    (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/test-commit-graph)
 
 
@@ -69,3 +72,10 @@
                             repo
                             "main")))))
 
+
+(test new-flow-enabled-p-happy-path
+  (with-fixture state ()
+    (test-git:with-git-repo (repo :dir dir)
+      (is-false (new-flow-enabled-p repo))
+      (git::$ (git-command repo) "remote" "add" "origin" "git@github.com:tdrhq/fast-example.git")
+      (#+lispworks is-true #-lispworks is-false (new-flow-enabled-p repo)))))

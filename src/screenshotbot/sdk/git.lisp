@@ -173,3 +173,4 @@
     ;; fail
     #+windows
     (uiop:run-program (list "attrib" "-r" (format nil "~a\\*.*" (namestring dir)) "/s"))))
+
