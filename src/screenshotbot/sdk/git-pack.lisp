@@ -52,7 +52,7 @@
   (close (%stream self)))
 
 (defun read-length (self)
-  (let ((len (make-array 4)))
+  (let ((len (make-array 4 :element-type '(unsigned-byte 8))))
     (assert (= 4 (read-sequence len (%stream self))))
     (log:trace "Got length: ~a" len)
     (parse-integer (flex:octets-to-string len)
@@ -68,7 +68,7 @@
       ((eql 0 len)
        nil)
       (t
-       (let ((content (make-array (- len 4))))
+       (let ((content (make-array (- len 4) :element-type '(unsigned-byte 8))))
          (read-sequence content (%stream self))
          (prog1
              (flex:octets-to-string content)))))))
@@ -120,11 +120,11 @@
 (defun read-packfile-header (stream)
   "Reads the header and returns the number of entries"
   ;; https://github.com/git/git/blob/master/Documentation/gitformat-pack.adoc
-  (let ((magick (make-array 4)))
+  (let ((magick (make-array 4 :element-type '(unsigned-byte 8))))
     (assert (= 4 (read-sequence magick stream)))
     (assert (equal "PACK" (flex:octets-to-string magick))))
 
-  (let ((version (make-array 4)))
+  (let ((version (make-array 4 :element-type '(unsigned-byte 8))))
     (assert (= 4 (read-sequence version stream)))
     (assert (equalp #(0 0 0 2) version)))
 
@@ -196,7 +196,7 @@
       (log:trace "Got type: ~a" type)
 
       (when (eql +obj-ref-delta+ type)
-        (let ((arr (make-array 20)))
+        (let ((arr (make-array 20 :element-type '(unsigned-byte 8))))
           ;; Read the name of the base object
           (read-sequence arr stream)))
 
@@ -234,7 +234,7 @@
 
 (defun packfile-test ()
   (simulate)
-  (setf *arr* (make-array 4))
+  (setf *arr* (make-array 4 :element-type '(unsigned-byte 8)))
   (let ((num (read-packfile-header (%stream *p*))))
     (loop for i below num
           collect
