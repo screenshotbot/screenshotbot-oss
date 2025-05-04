@@ -15,6 +15,9 @@
                 #:repo-link)
   #+lispworks
   (:import-from #:screenshotbot/sdk/git-pack
+                #:read-commits
+                #:make-remote-upload-pack
+                #:upload-pack
                 #:supported-remote-repo-p)
   (:import-from #:util/misc
                 #:?.)
@@ -36,11 +39,15 @@
 
 (defun new-flow-enabled-p (repo)
   #+lispworks
-  (?. supported-remote-repo-p (git:get-remote-url repo))
+  (and
+   (?. supported-remote-repo-p (git:get-remote-url repo))
+   (str:non-empty-string-p (uiop:getenv "SCREENSHOTBOT_ENABLE_UPLOAD_PACK")))
   #-lispworks
   nil)
 
-(defmethod update-commit-graph (api-context repo branch)
+(defmethod update-commit-graph-old-style (api-context repo branch)
+  "Update commit-graph by pulling, and then always push the top 1000 or
+so changes."
   (fetch-remote-branch repo branch)
   (log:info "Updating commit graph")
   (let* ((dag (read-graph repo))
@@ -54,6 +61,35 @@
                   (cons "repo-url" (repo-link repo))
                   (cons "branch" branch)
                   (cons "graph-json" json)))))
+
+#+lispworks
+(defun update-commit-graph-new-style (api-context repo branch)
+  (let ((upload-pack (make-remote-upload-pack repo)))
+    (update-from-pack
+     api-context
+     upload-pack
+     (git:get-remote-url repo)
+     branch)))
+
+#+lispworks
+(defmethod update-from-pack (api-context
+                             (upload-pack upload-pack)
+                             (repo-url string)
+                             branch)
+  (let ((commands (read-commits
+                   upload-pack
+                   :wants (lambda (ref)
+                            ;; We need to get main branch and release branches here.
+                            (declare (ignore ref))
+                            t))))))
+
+
+(defmethod update-commit-graph (api-context repo branch)
+  (cond
+    ((new-flow-enabled-p repo)
+     (update-commit-graph-new-style api-context repo branch))
+    (t
+     (update-commit-graph-old-style api-context repo branch))))
 
 (defmethod update-commit-graph (api-context (repo null-repo) branch)
   (log:info "Not updating the commit graph, since there's no repo"))

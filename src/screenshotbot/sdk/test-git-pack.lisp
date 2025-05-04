@@ -68,7 +68,7 @@ set st to idle when block timeout"))))
     (test-git:make-commit repo "foo")
     (test-git:make-commit repo "bar")
     (let ((commits
-            (read-commits (namestring dir) :refs (list "main" "master"))))
+            (read-commits (namestring dir) :wants (list "main" "master"))))
       (assert-that
        commits
        (has-length 2)))))

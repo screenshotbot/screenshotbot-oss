@@ -10,6 +10,8 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/commit-graph
+                #+lispworks
+                #:update-from-pack
                 #:new-flow-enabled-p
                 #:update-commit-graph
                 #:get-commit-graph-refs)
@@ -24,7 +26,11 @@
                 #:git-command
                 #:fetch-remote-branch)
   (:import-from #:cl-mock
+                #:answer
                 #:if-called)
+  #+lispworks
+  (:import-from #:screenshotbot/sdk/git-pack
+                #:local-upload-pack)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
                     (#:test-git #:screenshotbot/sdk/test-git)
                     (#:git #:screenshotbot/sdk/git)))
@@ -75,7 +81,20 @@
 
 (test new-flow-enabled-p-happy-path
   (with-fixture state ()
+    (answer (uiop:getenv "SCREENSHOTBOT_ENABLE_UPLOAD_PACK") "true")
     (test-git:with-git-repo (repo :dir dir)
       (is-false (new-flow-enabled-p repo))
       (git::$ (git-command repo) "remote" "add" "origin" "git@github.com:tdrhq/fast-example.git")
       (#+lispworks is-true #-lispworks is-false (new-flow-enabled-p repo)))))
+
+#+lispworks
+(test update-from-pack
+  (with-fixture state ()
+    (test-git:with-git-repo (repo :dir dir)
+      (test-git:make-commit repo "foo")
+      (let ((upload-pack (local-upload-pack repo)))
+        (update-from-pack
+         api-context
+         upload-pack
+         "git@github.com:tdrhq/fast-example.git"
+         (git:current-branch repo))))))

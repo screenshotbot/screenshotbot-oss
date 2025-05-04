@@ -22,7 +22,8 @@
    #:git-message
    #:fetch-remote-branch
    #:author
-   #:get-remote-url)
+   #:get-remote-url
+   #:repo-dir)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
