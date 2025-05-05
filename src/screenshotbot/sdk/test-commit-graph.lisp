@@ -11,6 +11,8 @@
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/commit-graph
                 #+lispworks
+                #:want-remote-ref
+                #+lispworks
                 #:update-from-pack
                 #:new-flow-enabled-p
                 #:update-commit-graph
@@ -98,3 +100,31 @@
          upload-pack
          "git@github.com:tdrhq/fast-example.git"
          (list (git:current-branch repo)))))))
+
+#+lispworks
+(test want-remote-ref
+  (is-true (want-remote-ref nil (list "master")
+                            "abcd"
+                            "refs/heads/master"))
+  (is-false (want-remote-ref nil (list "master")
+                             "abcd"
+                             "refs/heads/boo"))
+  (is-false
+   (want-remote-ref
+    (list
+     (make-instance 'dto:git-ref
+                    :sha "abcd"
+                    :name "master"))
+    (list "master")
+    "abcd"
+    "refs/heads/master"))
+
+  (is-true
+   (want-remote-ref
+    (list
+     (make-instance 'dto:git-ref
+                    :sha "0011"
+                    :name "master"))
+    (list "master")
+    "abcd"
+    "refs/heads/master")))

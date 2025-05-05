@@ -15,6 +15,7 @@
                 #:repo-link)
   #+lispworks
   (:import-from #:screenshotbot/sdk/git-pack
+                #:remote-ref-equals
                 #:read-commits
                 #:make-remote-upload-pack
                 #:upload-pack
@@ -72,15 +73,34 @@ so changes."
      (list branch
            (git:current-branch repo)))))
 
+(defun ref-in-sync-p (known-refs sha ref)
+  "At this point, we know we're interested in this ref. What we need to know is if this is in sync with the server"
+  (declare (ignore ref))
+  (loop for known-ref in known-refs
+        ;; Weird, note that we actually don't care about ref here,
+        ;; since if this commit was seen on the server, then that's
+        ;; good enough.
+        if (equal (dto:git-ref-sha known-ref) sha)
+          return t))
+
+#+lispworks
+(defun want-remote-ref (known-refs branches sha ref)
+  (check-type known-refs list)
+  (loop for branch in branches
+        if (remote-ref-equals branch ref)
+          return (not (ref-in-sync-p known-refs sha ref))))
+
 #+lispworks
 (defmethod update-from-pack (api-context
                              (upload-pack upload-pack)
                              (repo-url string)
                              branches)
-  (let ((commands (read-commits
-                   upload-pack
-                   ;; TODO: also do release branches, but that will need a regex here
-                   :wants branches)))))
+  (let ((known-refs (get-commit-graph-refs api-context repo-url)))
+    (check-type known-refs list)
+    (let ((commands (read-commits
+                     upload-pack
+                     ;; TODO: also do release branches, but that will need a regex here
+                     :wants (alexandria:curry #'want-remote-ref known-refs branches)))))))
 
 
 (defmethod update-commit-graph (api-context repo branch)
@@ -92,6 +112,7 @@ so changes."
 
 (defmethod update-commit-graph (api-context (repo null-repo) branch)
   (log:info "Not updating the commit graph, since there's no repo"))
+
 
 
 
