@@ -95,11 +95,32 @@
     (test-git:with-git-repo (repo :dir dir)
       (test-git:make-commit repo "foo")
       (let ((upload-pack (local-upload-pack repo)))
+        (finishes
+         (update-from-pack
+          api-context
+          upload-pack
+          "git@github.com:tdrhq/fast-example.git"
+          (list (git:current-branch repo))))))))
+
+#+lispworks
+(test update-from-pack-twice
+  (with-fixture state ()
+    (test-git:with-git-repo (repo :dir dir)
+      (test-git:make-commit repo "foo")
+      (let ((upload-pack (local-upload-pack repo)))
         (update-from-pack
          api-context
          upload-pack
          "git@github.com:tdrhq/fast-example.git"
-         (list (git:current-branch repo)))))))
+         (list (git:current-branch repo))))
+      (test-git:make-commit repo "bar")
+      (let ((upload-pack (local-upload-pack repo)))
+        (finishes
+         (update-from-pack
+          api-context
+          upload-pack
+          "git@github.com:tdrhq/fast-example.git"
+          (list (git:current-branch repo))))))))
 
 #+lispworks
 (test want-remote-ref

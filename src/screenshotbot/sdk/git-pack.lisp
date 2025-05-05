@@ -283,6 +283,9 @@
                            (parse-parents nil))
   "WANTS is a function that take a sha and a ref-name see if we want it. WANTS can
 also be a list, in which case we check if the name matches.
+
+Returns two values: An alist of commit hashes to commit bodys, and as
+a second value the headers that were initially provided (sha and refs)
 "
   (let ((wants
           (cond

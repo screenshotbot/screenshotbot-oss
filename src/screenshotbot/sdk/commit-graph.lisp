@@ -100,7 +100,9 @@ so changes."
     (let ((commands (read-commits
                      upload-pack
                      ;; TODO: also do release branches, but that will need a regex here
-                     :wants (alexandria:curry #'want-remote-ref known-refs branches)))))))
+                     :wants (alexandria:curry #'want-remote-ref known-refs branches)
+                     :haves (loop for known-ref in known-refs
+                                  collect (error "Unimpl"))))))))
 
 
 (defmethod update-commit-graph (api-context repo branch)
