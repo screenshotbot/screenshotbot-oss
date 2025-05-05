@@ -97,4 +97,4 @@
          api-context
          upload-pack
          "git@github.com:tdrhq/fast-example.git"
-         (git:current-branch repo))))))
+         (list (git:current-branch repo)))))))

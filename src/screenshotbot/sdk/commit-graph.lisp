@@ -69,19 +69,18 @@ so changes."
      api-context
      upload-pack
      (git:get-remote-url repo)
-     branch)))
+     (list branch
+           (git:current-branch repo)))))
 
 #+lispworks
 (defmethod update-from-pack (api-context
                              (upload-pack upload-pack)
                              (repo-url string)
-                             branch)
+                             branches)
   (let ((commands (read-commits
                    upload-pack
-                   :wants (lambda (ref)
-                            ;; We need to get main branch and release branches here.
-                            (declare (ignore ref))
-                            t))))))
+                   ;; TODO: also do release branches, but that will need a regex here
+                   :wants branches)))))
 
 
 (defmethod update-commit-graph (api-context repo branch)

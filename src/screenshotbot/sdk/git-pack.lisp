@@ -293,6 +293,7 @@ also be a list, in which case we check if the name matches.
              wants))))
     (multiple-value-bind (headers features)
         (read-headers p)
+      (log:trace "Got headers: ~a" headers)
       (log:debug "Got features: ~a" features)
       (let ((wants
               (loop for this-branch in headers
@@ -362,7 +363,7 @@ also be a list, in which case we check if the name matches.
 ;; (log:config :warn)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b")))
-;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :refs (list "refs/heads/master") :depth 30))
+;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "master" :parse-parents t))
 
 
