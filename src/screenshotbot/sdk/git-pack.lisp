@@ -269,26 +269,29 @@
           if (equal "parent" (first parts))
             collect (second parts))))
 
+(defun remote-ref-equals (local-ref ref)
+  (let ((parts (str:split "/" ref :limit 3)))
+    (and
+     (eql 3 (length parts))
+     (equal local-ref (elt parts 2)))))
+
 (defmethod read-commits ((p upload-pack)
                          &key (filter-blobs t)
                            (depth 1000)
                            wants
                            (haves nil)
                            (parse-parents nil))
-  "WANTS is a function that take a ref name see if we want it. WANTS can
+  "WANTS is a function that take a sha and a ref-name see if we want it. WANTS can
 also be a list, in which case we check if the name matches.
 "
   (let ((wants
           (cond
             ((listp wants)
-             (let ((ref-set (fset:convert 'fset:set
-                                          (loop for ref in wants
-                                                collect ref))))
-               (lambda (ref)
-                 (let ((parts (str:split "/" ref :limit 3)))
-                   (and
-                    (eql 3 (length parts))
-                    (fset:lookup ref-set (elt parts 2)))))))
+             (lambda (sha remote-ref)
+               (declare (ignore sha))
+               (loop for local-ref in wants
+                     if (remote-ref-equals local-ref remote-ref)
+                       return t)))
             (t
              wants))))
     (multiple-value-bind (headers features)
@@ -297,7 +300,7 @@ also be a list, in which case we check if the name matches.
       (log:debug "Got features: ~a" features)
       (let ((wants
               (loop for this-branch in headers
-                    if (funcall wants (second this-branch))
+                    if (funcall wants (first this-branch) (second this-branch))
                       collect (first this-branch))))
         (unless wants
           (error "Could not find ref in ~a" headers))
