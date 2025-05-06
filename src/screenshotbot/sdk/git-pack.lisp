@@ -6,6 +6,8 @@
 
 (defpackage :screenshotbot/sdk/git-pack
   (:use #:cl)
+  (:import-from #:alexandria
+                #:when-let)
   (:local-nicknames (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/git-pack)
 
@@ -305,62 +307,65 @@ a second value the headers that were initially provided (sha and refs)
               (loop for this-branch in headers
                     if (funcall wants (first this-branch) (second this-branch))
                       collect (first this-branch))))
-        (unless wants
-          (error "Could not find ref in ~a" headers))
-        (when wants
-          (want p (format nil "~a filter" (car wants))))
-        (dolist (want (cdr wants))
-          (want p want))
+        (cond
+          ((not wants)
+           (write-flush p))
+          (t
+           (want p (format nil "~a filter" (car wants)))
+           (dolist (want (cdr wants))
+             (want p want))
 
-        (when depth
-          (write-packet p "deepen ~a" depth))
+           (when depth
+             (write-packet p "deepen ~a" depth))
 
-        (when (and
-               filter-blobs
-               (str:s-member features "filter"))
-          (log:debug "filter is enabled, sending filter")
-          (write-packet p "filter blob:none"))
-        (write-flush p)
+           (when (and
+                  filter-blobs
+                  (str:s-member features "filter"))
+             (log:debug "filter is enabled, sending filter")
+             (write-packet p "filter blob:none"))
+           (write-flush p)
 
-        (when depth
-          ;; These should be "shallow ~a" or "unshallow ~a" lines
-          ;; We don't care for them really
-          (loop for line = (read-protocol-line p)
-                while line
-                do (log:trace "Ignoring: ~a" line)))
+           (when depth
+             ;; These should be "shallow ~a" or "unshallow ~a" lines
+             ;; We don't care for them really
+             (loop for line = (read-protocol-line p)
+                   while line
+                   do (log:trace "Ignoring: ~a" line)))
         
-        (dolist (have haves)
-          (write-packet p "have ~a" have))
-        (when haves
-          (write-flush p))
+           (dolist (have haves)
+             (write-packet p "have ~a" have))
+           (when haves
+             (write-flush p))
 
         
-        (write-packet p "done")
-        (finish-output (%stream p))
+           (write-packet p "done")
+           (finish-output (%stream p))
 
-        (log:debug "Waiting for response")
+           (log:debug "Waiting for response")
 
-        ;; This should either be a NAK (nothing common found), or ACK
-        ;; <commit> signalling that that was a common commit.
-        (read-protocol-line p)
+           ;; This should either be a NAK (nothing common found), or ACK
+           ;; <commit> signalling that that was a common commit.
+           (read-protocol-line p)
 
-        (log:debug "reading packfile")        
-        ;; Now we get the packfile
-        (let ((num (read-packfile-header (%stream p))))
-          (log:debug "Packfile entries: ~a" num)
-          (serapeum:collecting
-            (loop for i below num
-                  do
-                     (multiple-value-bind (type body) (read-packfile-entry p)
-                       (when (eql 1 type)
-                         (collect
-                             (cons
-                              (compute-sha1-from-commit body)
-                              (cond
-                                (parse-parents
-                                 (parse-parents (flex:octets-to-string body)))
-                                (t
-                                 (flex:octets-to-string body))))))))))))))
+           (log:debug "reading packfile")        
+           ;; Now we get the packfile
+           (let ((num (read-packfile-header (%stream p))))
+             (log:debug "Packfile entries: ~a" num)
+             (serapeum:collecting
+               (loop for i below num
+                     do
+                        (multiple-value-bind (type body) (read-packfile-entry p)
+                          (when (eql 1 type)
+                            (collect
+                                (cons
+                                 (compute-sha1-from-commit body)
+                                 (cond
+                                   (parse-parents
+                                    (parse-parents (flex:octets-to-string body)))
+                                   (t
+                                    (flex:octets-to-string body))))))))))))
+
+))))
 
 (defmethod read-commits ((repo string) &rest args &key &allow-other-keys)
   (let* ((p (local-upload-pack repo)))
