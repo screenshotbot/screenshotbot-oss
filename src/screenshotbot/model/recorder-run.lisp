@@ -212,7 +212,8 @@
       :initform nil
       :accessor recorder-run-company
       :index +run-company-index+
-      :index-reader runs-for-company)
+      :index-reader runs-for-company
+      :documentation "Heads up! This can be NIL for deleted runs, which might be referenced from non-deleted reports (T1876)")
      (commit-hash
       :initarg :commit-hash
       :initform nil
