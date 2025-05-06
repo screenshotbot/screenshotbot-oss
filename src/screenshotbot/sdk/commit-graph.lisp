@@ -95,14 +95,35 @@ so changes."
                              (upload-pack upload-pack)
                              (repo-url string)
                              branches)
-  (let ((known-refs (get-commit-graph-refs api-context repo-url)))
+  (let ((known-refs (get-commit-graph-refs api-context repo-url))
+        (refs nil))
     (check-type known-refs list)
-    (let ((commands (read-commits
-                     upload-pack
-                     ;; TODO: also do release branches, but that will need a regex here
-                     :wants (alexandria:curry #'want-remote-ref known-refs branches)
-                     :haves (loop for known-ref in known-refs
-                                  collect (error "Unimpl"))))))))
+    (let ((commits (read-commits
+                    upload-pack
+                    ;; TODO: also do release branches, but that will need a regex here
+                    :wants (lambda (sha ref)
+                             (when (str:starts-with-p "refs/heads/" ref)
+                               (push (make-instance 'dto:git-ref
+                                                    :name (str:substring (length "refs/heads/") nil ref)
+                                                    :sha sha)
+                                     refs))
+                             (want-remote-ref known-refs branches
+                                              sha ref))
+                    :haves (loop for known-ref in known-refs
+                                 collect (dto:git-ref-sha known-ref))
+                    :parse-parents t)))
+      (let ((commits (loop for (sha . parents) in commits
+                           collect (make-instance 'dto:commit
+                                                  :sha sha
+                                                  :parents parents))))
+        (request
+         api-context
+         "/api/commit-graph"
+         :method :post
+         :parameters (list
+                      (cons "repo-url" repo-url)
+                      (cons "graph-json" (dto:encode-json (or commits #())))
+                      (cons "refs" (dto:encode-json (or refs #())))))))))
 
 
 (defmethod update-commit-graph (api-context repo branch)

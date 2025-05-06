@@ -269,4 +269,5 @@ to the same repo, the graph will still be the same."
                                  (name string)
                                  (sha string))
   (unless (equal sha (assoc-value (commit-graph-refs commit-graph) name))
-   (tx-commit-graph-set-ref commit-graph name sha)))
+
+    (tx-commit-graph-set-ref commit-graph name sha)))
