@@ -11,6 +11,7 @@
         #:screenshotbot/model/commit-graph
         #:screenshotbot/user-api)
   (:import-from #:util/events
+                #:push-event
                 #:with-tracing)
   (:import-from #:screenshotbot/model/commit-graph
                 #:commit-graph-refs
@@ -50,6 +51,7 @@
     (t
      (%update-commit-graph-v2 repo-url graph-json)
      (when (str:non-empty-string-p refs)
+       (push-event :commit-graph-api-with-refs)
        (update-refs :repo-url repo-url
                     :refs refs))
      "OK")))
