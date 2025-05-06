@@ -8,6 +8,8 @@
   (:use #:cl)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:local-nicknames (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/git-pack)
 
@@ -277,6 +279,14 @@
      (eql 3 (length parts))
      (equal local-ref (elt parts 2)))))
 
+(def-easy-macro with-opened-upload-pack (upload-pack &key &binding headers &binding features &fn fn)
+  (multiple-value-bind (headers features)
+      (read-headers upload-pack)
+    (unwind-protect
+         (fn headers features)
+      #+nil
+      (close-upload-pack upload-pack))))
+
 (defmethod read-commits ((p upload-pack)
                          &key (filter-blobs t)
                            (depth 1000)
@@ -299,8 +309,7 @@ a second value the headers that were initially provided (sha and refs)
                        return t)))
             (t
              wants))))
-    (multiple-value-bind (headers features)
-        (read-headers p)
+    (with-opened-upload-pack (p :headers headers :features features)
       (log:trace "Got headers: ~a" headers)
       (log:debug "Got features: ~a" features)
       (let ((wants
@@ -375,6 +384,7 @@ a second value the headers that were initially provided (sha and refs)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b")))
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
+;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants nil :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "master" :parse-parents t))
 
 
