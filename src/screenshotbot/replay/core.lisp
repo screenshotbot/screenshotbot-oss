@@ -23,6 +23,7 @@
   (:import-from #:util/http-cache
                 #:parse-max-age)
   (:import-from #:alexandria
+                #:when-let
                 #:assoc-value)
   (:import-from #:util/request
                 #:proxy-engine
@@ -858,6 +859,12 @@ shipped by the time you're reading this.)"))
        ((? "body")
         (let ((old-class (or (plump:attribute node "class") "")))
           (setf (plump:attribute node "class") (format nil "~a screenshotbot" old-class)))))))
+
+  ;; Fix any style attributes
+  (when-let ((style (plump:attribute node "style")))
+    (setf (plump:attribute node "style")
+          (rewrite-css context snapshot root-url style)))
+
   (call-next-method))
 
 

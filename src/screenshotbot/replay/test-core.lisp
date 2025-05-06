@@ -46,6 +46,7 @@
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex)
   (:import-from #:fiveam-matchers/core
+                #:does-not
                 #:is-equal-to
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
@@ -479,3 +480,54 @@ background: url(shttps://google.com?f=1)
 (test validate-url-happy-path
   (validate-url (quri:uri "https://example.com"))
   (validate-url (puri:uri "https://example.com")))
+
+(test url-unescaped
+  (let ((found nil))
+    (is
+     (equal
+      "background-image:url('foobar');"
+      (rewrite-css-urls "background-image:url(/assets/img/img_ynab_most_important_money_video.a35777e6.png);"
+                        (lambda (url)
+                          (setf found url)
+                          "'foobar'"))))
+    (is
+     (equal "/assets/img/img_ynab_most_important_money_video.a35777e6.png"
+            found))))
+
+(test style-attributes-are-getting-parsed
+  (with-fixture state ()
+    (cl-mock:if-called 'util/request:http-request
+                       (lambda (url &rest args)
+                         (values
+                          (flexi-streams:make-in-memory-input-stream
+                           (flexi-streams:string-to-octets
+                            "fake-image"
+                            :external-format :utf-8))
+                          200
+                          `((:content-type . "image/png")))))
+    (let ((html (plump:parse "<html><body><div style=\"background-image:url(/assets/img/img_ynab_most_important_money_video.a35777e6.png);\" >hello</div></body></html>")))
+      (process-node (make-instance 'context)
+                    html
+                    (make-instance 'snapshot :tmpdir tmpdir)
+                    "https://www.google.com")
+      (assert-that
+       (with-output-to-string (s)
+         (plump:serialize html s))
+       (does-not
+        (matches-regex
+         "<html><body class=\" screenshotbot\"><div style=\"background-image:url(.*ynab.*)\">hello</div></body></html>"))))))
+
+(test style-attributes-are-unchanged-in-the-good-case
+  (with-fixture state ()
+    (let ((html (plump:parse "<html><body><div style=\"background-image:none;\" >hello</div></body></html>")))
+      (process-node (make-instance 'context)
+                    html
+                    (make-instance 'snapshot :tmpdir tmpdir)
+                    "https://www.google.com")
+      (assert-that
+       (with-output-to-string (s)
+         (plump:serialize html s))
+       (matches-regex
+        "<html><body class=\" screenshotbot\"><div style=\"background-image:none;\">hello</div></body></html>")))))
+
+
