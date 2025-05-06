@@ -17,43 +17,66 @@
   ((stream :initarg :stream
            :accessor %stream)))
 
-(defparameter +repo-regex+ "^(ssh://)?([a-zA-Z0-9]*)@([a-zA-Z0-9.]*):(.*)$")
+(defparameter +git@-regex+ "^([a-zA-Z0-9]*)@([a-zA-Z0-9.]*):(.*)$")
+(defparameter +ssh//-regex+ "^ssh://([a-zA-Z0-9]*)@([a-zA-Z0-9.]*)(:([0-9]+))?(/.*)$")
 
 (defun supported-remote-repo-p (repo)
-  (cl-ppcre:scan-to-strings +repo-regex+ repo))
+  (or
+   (cl-ppcre:scan-to-strings +git@-regex+ repo)
+   (cl-ppcre:scan-to-strings +ssh//-regex+ repo)))
+
+(defun get-ssh-parts (url)
+  "Returns four arguments: the user, the host, the directory and finally the port"
+  (multiple-value-bind (match parts)
+      (cl-ppcre:scan-to-strings +git@-regex+ url)
+    (when match
+      (return-from get-ssh-parts (values
+                                  (elt parts 0)
+                                  (elt parts 1)
+                                  (elt parts 2)))))
+  (multiple-value-bind (match parts)
+      (cl-ppcre:scan-to-strings +ssh//-regex+ url)
+    (when match
+      (return-from get-ssh-parts
+        (values
+         (elt parts 0)
+         (elt parts 1)
+         (elt parts 4)
+         (elt parts 3))))))
 
 (defmethod make-upload-pack-command ((repo string))
-  (multiple-value-bind (match parts)
-      (cl-ppcre:scan-to-strings +repo-regex+
-                                repo)
+  (multiple-value-bind (user host directory port)
+      (get-ssh-parts repo)
    (cond
-     (match
-      (format nil "ssh ~a@~a git upload-pack ~a"
-              (elt parts 1)
-              (elt parts 2)
-              (elt parts 3)))
+     ((and user host)
+      (format nil "ssh ~a@~a~a git-upload-pack ~a"
+              user
+              host
+              (if port (format nil " -p ~a" port) "")
+              directory))
      (t
       (list
        "/usr/bin/env"
-       "git"
-       "upload-pack"
+       "git-upload-pack"
        repo)))))
 
 (defmethod make-upload-pack-command ((repo git:git-repo))
   (make-upload-pack-command (namestring (git:repo-dir repo))))
 
 (defun local-upload-pack (repo)
-  (multiple-value-bind (stream)
-      (sys:run-shell-command
-       (make-upload-pack-command repo)
-       :output :stream
-       :input :stream
-       :wait nil
-       :element-type '(unsigned-byte 8))
-    (assert stream)
-
-   (make-instance 'upload-pack
-                  :stream stream)))
+  (let ((cmd (make-upload-pack-command repo)))
+    (log:debug "Upload pack command is: ~a" cmd)
+    (multiple-value-bind (stream)
+        (sys:run-shell-command
+         cmd
+         :output :stream
+         :input :stream
+         :wait nil
+         :element-type '(unsigned-byte 8))
+      (assert stream)
+      
+      (make-instance 'upload-pack
+                     :stream stream))))
 
 (defmethod make-remote-upload-pack ((repo git:git-repo))
   (local-upload-pack
@@ -386,7 +409,7 @@ a second value the headers that were initially provided (sha and refs)
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants nil :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "master" :parse-parents t))
-
+;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master"))
 
 
 
