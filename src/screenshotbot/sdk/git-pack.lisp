@@ -51,7 +51,7 @@
       (get-ssh-parts repo)
    (cond
      ((and user host)
-      (format nil "ssh ~a@~a~a git-upload-pack ~a"
+      (format nil "ssh ~a@~a~a git-upload-pack \"'~a'\""
               user
               host
               (if port (format nil " -p ~a" port) "")
@@ -411,7 +411,7 @@ a second value the headers that were initially provided (sha and refs)
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants nil :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "master" :parse-parents t))
-;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master"))
+;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master") :depth 2)
 
 
 

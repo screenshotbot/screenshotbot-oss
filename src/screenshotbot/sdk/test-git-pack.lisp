@@ -40,10 +40,10 @@
    (starts-with "ssh user@foo.host.com git-upload-pack "))
   (assert-that
    (make-upload-pack-command "ssh://user@foo.host.com/tmp/foo.git")
-   (starts-with "ssh user@foo.host.com git-upload-pack /tmp/foo.git"))
+   (starts-with "ssh user@foo.host.com git-upload-pack \"'/tmp/foo.git'\""))
   (assert-that
    (make-upload-pack-command "ssh://git@phabricator.tdrhq.com:2222/source/web.git")
-   (starts-with "ssh git@phabricator.tdrhq.com -p 2222 git-upload-pack /source/web.git")))
+   (starts-with "ssh git@phabricator.tdrhq.com -p 2222 git-upload-pack \"'/source/web.git'\"")))
 
 (test parse-parents
   (is (equal
