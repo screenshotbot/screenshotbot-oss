@@ -27,23 +27,23 @@
    (str:join " " (make-upload-pack-command "/tmp/foo/bar.git"))
    (starts-with "/usr/bin/env git-upload-pack"))
   (assert-that
-   (make-upload-pack-command "user@host:tmp/foo.git")
-   (starts-with "ssh user@host git-upload-pack "))  
+   (str:join " " (make-upload-pack-command "user@host:tmp/foo.git"))
+   (starts-with "/usr/bin/env ssh user@host git-upload-pack "))  
   (assert-that
-   (make-upload-pack-command "ssh://user@host/tmp/foo.git")
-   (starts-with "ssh user@host git-upload-pack "))
+   (str:join " " (make-upload-pack-command "ssh://user@host/tmp/foo.git"))
+   (starts-with "/usr/bin/env ssh user@host git-upload-pack "))
   (assert-that
-   (make-upload-pack-command "user@foo.host.com:tmp/foo.git")
-   (starts-with "ssh user@foo.host.com git-upload-pack "))  
+   (str:join " "(make-upload-pack-command "user@foo.host.com:tmp/foo.git"))
+   (starts-with "/usr/bin/env ssh user@foo.host.com git-upload-pack "))  
   (assert-that
-   (make-upload-pack-command "ssh://user@foo.host.com/tmp/foo.git")
-   (starts-with "ssh user@foo.host.com git-upload-pack "))
+   (str:join " " (make-upload-pack-command "ssh://user@foo.host.com/tmp/foo.git"))
+   (starts-with "/usr/bin/env ssh user@foo.host.com git-upload-pack "))
   (assert-that
-   (make-upload-pack-command "ssh://user@foo.host.com/tmp/foo.git")
-   (starts-with "ssh user@foo.host.com git-upload-pack \"'/tmp/foo.git'\""))
+   (str:join " " (make-upload-pack-command "ssh://user@foo.host.com/tmp/foo.git"))
+   (starts-with "/usr/bin/env ssh user@foo.host.com git-upload-pack '/tmp/foo.git'"))
   (assert-that
-   (make-upload-pack-command "ssh://git@phabricator.tdrhq.com:2222/source/web.git")
-   (starts-with "ssh git@phabricator.tdrhq.com -p 2222 git-upload-pack \"'/source/web.git'\"")))
+   (str:join " " (make-upload-pack-command "ssh://git@phabricator.tdrhq.com:2222/source/web.git"))
+   (starts-with "/usr/bin/env ssh git@phabricator.tdrhq.com -p 2222 git-upload-pack '/source/web.git'")))
 
 (test parse-parents
   (is (equal
