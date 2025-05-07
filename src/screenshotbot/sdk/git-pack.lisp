@@ -10,6 +10,8 @@
                 #:when-let)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:util/misc
+                #:?.)
   (:local-nicknames (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/git-pack)
 
@@ -243,14 +245,14 @@
         (warn "Untested code for obj-obs-delta")
         (read-entry-header (%stream packfile)))
 
-      (let ((body (flex:make-in-memory-output-stream))
+      (let ((body (if (= type 1) (flex:make-in-memory-output-stream) nil))
             (dstate (chipz:make-dstate :zlib)))
         (chipz:decompress
          body
          dstate
          stream)
 
-        (let ((body (flex:get-output-stream-sequence body)))
+        (let ((body (?. flex:get-output-stream-sequence body)))
           (setf
            (%stream packfile)
            ;; TODO: we could potentially optimize this.. but do we care?
@@ -260,7 +262,7 @@
              :start (chipz::inflate-state-input-index dstate)
              :end (chipz::inflate-state-input-end dstate))
             (%stream packfile)))
-          (assert (= length (length body)))
+          ;;(assert (= length (length body)))
           (values type
                   body
                   length
