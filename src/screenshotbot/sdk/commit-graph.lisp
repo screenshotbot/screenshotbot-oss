@@ -139,8 +139,10 @@ so changes."
         (trivial-timeout:with-timeout (600)
           (update-commit-graph-new-style api-context repo branch))
         (log:debug "New commit graph uploaded successfully")
-        t))
-     (update-commit-graph-old-style api-context repo branch))
+        t)
+      (progn
+        (warn "Reverting to old commit-graph flow")
+        (update-commit-graph-old-style api-context repo branch))))
     (t
      (log:info "Using old flow for commit-graph")
      (update-commit-graph-old-style api-context repo branch))))
