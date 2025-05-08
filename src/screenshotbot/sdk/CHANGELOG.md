@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.15.1 - 2025-05-08
+
+### Removed
+
+- Disabled the new commit graph api
+
+
 ## 2.15.0 - 2025-05-08
 
 ### Added
