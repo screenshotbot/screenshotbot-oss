@@ -22,6 +22,8 @@
                 #:supported-remote-repo-p)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
                     (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/commit-graph)
@@ -129,7 +131,12 @@ so changes."
 (defmethod update-commit-graph (api-context repo branch)
   (cond
     ((new-flow-enabled-p repo)
-     (update-commit-graph-new-style api-context repo branch))
+     (or
+      (ignore-and-log-errors ()
+        (trivial-timeout:with-timeout (600)
+          (update-commit-graph-new-style api-context repo branch))
+        t)
+      (update-commit-graph-old-style api-context repo branch)))
     (t
      (update-commit-graph-old-style api-context repo branch))))
 
