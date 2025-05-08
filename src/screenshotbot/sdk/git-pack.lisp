@@ -400,4 +400,3 @@ a second value the headers that were initially provided (sha and refs)
   (assert (equal "e502bf251eaf300073dde00c0a39bd1061fb04de" (compute-sha1-from-commit
                                                              (flex:string-to-octets "hello world")))))
 
-(util/health-check:run-health-checks)
