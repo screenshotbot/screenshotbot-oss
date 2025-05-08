@@ -34,6 +34,7 @@
                :util/threading
                :tmpdir
                :semz.decompress
+               :ironclad/digests
                :trivial-timeout
                :serapeum
                :imago

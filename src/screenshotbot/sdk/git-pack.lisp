@@ -12,6 +12,8 @@
                 #:def-easy-macro)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:util/health-check
+                #:def-health-check)
   (:local-nicknames (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/git-pack)
 
@@ -259,7 +261,7 @@
   (close-upload-pack *p*))
 
 (defun compute-sha1-from-commit (body)
-  (let ((digest (ironclad:make-digest :sha1)))
+  (let ((digest (ironclad:make-digest 'ironclad:sha1)))
     (ironclad:digest-sequence
      digest
      (flex:string-to-octets (format nil "commit ~a~a" (length body) #\Null)))
@@ -393,4 +395,9 @@ a second value the headers that were initially provided (sha and refs)
 ;; (read-commits "/home/arnold/builds/web/.git" :wants (list "master") :depth 2)
 
 
+(def-health-check can-compute-sha1 ()
+  "The first time we tried to do this, sha1 was removed out of the delivered image"
+  (assert (equal "e502bf251eaf300073dde00c0a39bd1061fb04de" (compute-sha1-from-commit
+                                                             (flex:string-to-octets "hello world")))))
 
+(util/health-check:run-health-checks)

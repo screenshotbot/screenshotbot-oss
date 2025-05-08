@@ -19,7 +19,9 @@
               :packages-to-keep-symbol-names :all
               :keep-clos-object-printing t
               :keep-symbols `(system:pipe-exit-status
+                              ironclad:sha1
                               simple-test)
               :multiprocessing t)))
 
 (deliver-main)
+

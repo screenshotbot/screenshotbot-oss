@@ -131,15 +131,18 @@ so changes."
 
 
 (defmethod update-commit-graph (api-context repo branch)
+  (log:info "Updating commit graph")
   (cond
     ((new-flow-enabled-p repo)
      (or
       (ignore-and-log-errors ()
         (trivial-timeout:with-timeout (600)
           (update-commit-graph-new-style api-context repo branch))
-        t)
-      (update-commit-graph-old-style api-context repo branch)))
+        (log:debug "New commit graph uploaded successfully")
+        t))
+     (update-commit-graph-old-style api-context repo branch))
     (t
+     (log:info "Using old flow for commit-graph")
      (update-commit-graph-old-style api-context repo branch))))
 
 (defmethod update-commit-graph (api-context (repo null-repo) branch)
