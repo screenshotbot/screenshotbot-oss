@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.14.0 - 2025-05-08
+
+### Added
+
+- Use the `git-upload-pack` protocol to support shallow clones
+
 ## 2.13.1 - 2025-04-17
 
 ### Changed

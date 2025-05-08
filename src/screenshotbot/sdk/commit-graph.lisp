@@ -43,8 +43,7 @@
 (defun new-flow-enabled-p (repo)
   #+lispworks
   (and
-   (?. supported-remote-repo-p (git:get-remote-url repo))
-   (str:non-empty-string-p (uiop:getenv "SCREENSHOTBOT_ENABLE_UPLOAD_PACK")))
+   (?. supported-remote-repo-p (git:get-remote-url repo)))
   #-lispworks
   nil)
 
