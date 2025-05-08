@@ -87,7 +87,7 @@
     (test-git:with-git-repo (repo :dir dir)
       (is-false (new-flow-enabled-p repo))
       (git::$ (git-command repo) "remote" "add" "origin" "git@github.com:tdrhq/fast-example.git")
-      (#+lispworks is-true #-lispworks is-false (new-flow-enabled-p repo)))))
+      (#+lispworks is-false #-lispworks is-false (new-flow-enabled-p repo)))))
 
 #+lispworks
 (test update-from-pack
