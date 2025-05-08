@@ -33,7 +33,7 @@
                :trivial-features
                :util/threading
                :tmpdir
-               :chipz
+               :semz.decompress
                :serapeum
                :imago
                :imago/pngload

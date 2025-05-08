@@ -17,7 +17,7 @@
 
 (defclass upload-pack ()
   ((stream :initarg :stream
-           :accessor %stream)))
+           :reader %stream)))
 
 (defparameter +git@-regex+ "^([a-zA-Z0-9]*)@([a-zA-Z0-9.]*):(.*)$")
 (defparameter +ssh//-regex+ "^ssh://([a-zA-Z0-9]*)@([a-zA-Z0-9.]*)(:([0-9]+))?(/.*)$")
@@ -213,19 +213,8 @@
   ;; From here on the rest is the packfile
   )
 
-(defmethod safe-make-concatenated-stream (stream1 stream2)
-  (make-concatenated-stream
-   stream1
-   stream2))
-
-(defmethod safe-make-concatenated-stream (stream1 (stream2 concatenated-stream))
-  (apply #'make-concatenated-stream
-         stream1
-         (concatenated-stream-streams stream2)))
-
 (defconstant +obj-ref-delta+ 7)
 (defconstant +obj-obs-delta+ 6)
-
 
 (defun read-packfile-entry (packfile)
   "Returns type and the contents of the entry"
@@ -249,28 +238,13 @@
         (warn "Untested code for obj-obs-delta")
         (read-entry-header (%stream packfile)))
 
-      (let ((body (if (= type 1) (flex:make-in-memory-output-stream) nil))
-            (dstate (chipz:make-dstate :zlib)))
-        (chipz:decompress
-         body
-         dstate
-         stream)
+      (let ((body (semz.decompress:decompress :zlib stream
+                                              :allow-overreads-p nil
+                                              :output-size length)))
 
-        (let ((body (?. flex:get-output-stream-sequence body)))
-          (setf
-           (%stream packfile)
-           ;; TODO: we could potentially optimize this.. but do we care?
-           (safe-make-concatenated-stream
-            (flex:make-in-memory-input-stream
-             (chipz::inflate-state-input dstate)
-             :start (chipz::inflate-state-input-index dstate)
-             :end (chipz::inflate-state-input-end dstate))
-            (%stream packfile)))
-          ;;(assert (= length (length body)))
-          (values type
-                  body
-                  length
-                  dstate))))))
+        (values type
+                body
+                length)))))
 
 (defun packfile-test ()
   (simulate)
@@ -415,7 +389,7 @@ a second value the headers that were initially provided (sha and refs)
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants nil :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "master" :parse-parents t))
-;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master") :depth 2)
+;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master") :depth 100)
 ;; (read-commits "/home/arnold/builds/web/.git" :wants (list "master") :depth 2)
 
 
