@@ -97,9 +97,11 @@ so changes."
                              (upload-pack upload-pack)
                              (repo-url string)
                              branches)
+  (log:info "Getting known refs from Screenshotbot server")
   (let ((known-refs (get-commit-graph-refs api-context repo-url))
         (refs nil))
     (check-type known-refs list)
+    (log:info "Getting git graph via git-upload-pack")
     (let ((commits (read-commits
                     upload-pack
                     ;; TODO: also do release branches, but that will need a regex here
@@ -118,6 +120,7 @@ so changes."
                            collect (make-instance 'dto:commit
                                                   :sha sha
                                                   :parents parents))))
+        (log:info "Updating git commit-graph")
         (request
          api-context
          "/api/commit-graph"
