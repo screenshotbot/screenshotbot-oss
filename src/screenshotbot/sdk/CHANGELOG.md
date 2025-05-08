@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.15.0 - 2025-05-08
+
+### Added
+
+- It turns out we weren't really deploying the older versions because
+  of a bug in 2.12.1. So this includes all the changes from 2.12.1
+  onward to 2.14.1. Sorry about this.
+
 ## 2.14.1 - 2025-05-08
 
 ### Changed
