@@ -1,6 +1,15 @@
 # Changelog
 
+## 2.14.1 - 2025-05-08
+
+### Changed
+
+- Fixed bug in 2.14.0 that made the commit-graph always be uploaded
+  twice, even when the first one succeeded.
+
 ## 2.14.0 - 2025-05-08
+
+This release was not deployed because of a bug
 
 ### Added
 
