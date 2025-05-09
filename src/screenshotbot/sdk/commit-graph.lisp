@@ -68,6 +68,19 @@ so changes."
                   (cons "branch" branch)
                   (cons "graph-json" json)))))
 
+(defmethod filter-wanted-commits (api-context repo-url commits)
+  "Check if the server needs these commits, and returns the list of
+commits that are needed."
+  (let ((commits (remove-duplicates commits :test #'equal)))
+    (json:decode-json-from-string
+     (request
+      api-context
+      "/api/commit-graph/check-wants"
+      :decode-response nil
+      :method :get
+      :parameters `(("repo-url" . ,repo-url)
+                    ("shas" . ,(json:encode-json-to-string commits)))))))
+
 #+lispworks
 (defun update-commit-graph-new-style (api-context repo branch)
   (let ((upload-pack (make-remote-upload-pack repo)))
@@ -78,6 +91,7 @@ so changes."
      (list branch
            (git:current-branch repo))
      :current-commit (git:current-commit repo))))
+
 
 (defun ref-in-sync-p (known-refs sha ref)
   "At this point, we know we're interested in this ref. What we need to know is if this is in sync with the server"
@@ -117,16 +131,19 @@ so changes."
                      upload-pack
                      ;; TODO: also do release branches, but that will need a regex here
                      :wants (lambda (list)
-                              (remove-if
-                               #'null
-                               (list*
-                                current-commit
-                                (loop for (sha . ref) in list
-                                      if (want-remote-ref known-refs branches
-                                                          sha ref)
-                                        collect (progn
-                                                  (maybe-push-ref sha ref)
-                                                  sha)))))
+                              (filter-wanted-commits
+                               api-context
+                               repo-url
+                               (remove-if
+                                #'null
+                                (list*
+                                 current-commit
+                                 (loop for (sha . ref) in list
+                                       if (want-remote-ref known-refs branches
+                                                           sha ref)
+                                         collect (progn
+                                                   (maybe-push-ref sha ref)
+                                                   sha))))))
                      :haves (loop for known-ref in known-refs
                                   collect (dto:git-ref-sha known-ref))
                      :parse-parents t)))

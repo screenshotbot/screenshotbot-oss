@@ -61,7 +61,7 @@
                                 (with-output-to-string (out)
                                   (dag:write-to-stream dag out))))
      (assert-that
-      (%check-shas :repo-url "https://github.com/foo/bar" :shas (list "abcd" "0011"))
+      (%check-shas :repo-url "https://github.com/foo/bar" :shas (json:encode-json-to-string (list "abcd" "0011")))
       (contains "0011")))))
 
 

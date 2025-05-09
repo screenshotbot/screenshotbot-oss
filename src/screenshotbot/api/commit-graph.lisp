@@ -83,6 +83,6 @@
 in the repo. The `want` is a reference to the git-upload-pack API."
   (let* ((commit-graph (find-or-create-commit-graph (current-company) repo-url))
          (dag (commit-graph-dag commit-graph)))
-    (loop for sha in shas
+    (loop for sha in (json:decode-json-from-string shas)
           unless (dag:get-commit dag sha)
             collect sha)))
