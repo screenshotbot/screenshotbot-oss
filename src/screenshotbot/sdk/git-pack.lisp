@@ -25,9 +25,13 @@
 (defparameter +ssh//-regex+ "^ssh://([a-zA-Z0-9]*)@([a-zA-Z0-9.]*)(:([0-9]+))?(/.*)$")
 
 (defun supported-remote-repo-p (repo)
-  (or
-   (cl-ppcre:scan-to-strings +git@-regex+ repo)
-   (cl-ppcre:scan-to-strings +ssh//-regex+ repo)))
+  (and
+   (or
+    (cl-ppcre:scan-to-strings +git@-regex+ repo)
+    (cl-ppcre:scan-to-strings +ssh//-regex+ repo))
+   (not
+    ;; T1892
+    (str:containsp "ssh.dev.azure.com" repo))))
 
 (defun get-ssh-parts (url)
   "Returns four arguments: the user, the host, the directory and finally the port"
@@ -405,4 +409,5 @@ a second value the headers that were initially provided (sha and refs)
   "The first time we tried to do this, sha1 was removed out of the delivered image"
   (assert (equal "e502bf251eaf300073dde00c0a39bd1061fb04de" (compute-sha1-from-commit
                                                              (flex:string-to-octets "hello world")))))
+
 

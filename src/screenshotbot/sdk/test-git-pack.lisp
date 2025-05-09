@@ -12,6 +12,7 @@
   (:import-from #:fiveam-matchers/strings
                 #:starts-with)
   (:import-from #:screenshotbot/sdk/git-pack
+                #:supported-remote-repo-p
                 #:read-commits
                 #:parse-parents
                 #:make-upload-pack-command)
@@ -81,3 +82,7 @@ set st to idle when block timeout"))))
       (assert-that
        commits
        (has-length 2)))))
+
+(test azure-is-not-supported
+  (is-false (supported-remote-repo-p "git@ssh.dev.azure.com:v3/testsbot/fast-example/fast-example"))
+  (is-true (supported-remote-repo-p "git@github.com:fast-example/fast-example")))
