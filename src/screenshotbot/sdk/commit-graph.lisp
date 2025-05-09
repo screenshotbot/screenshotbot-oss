@@ -24,6 +24,8 @@
                 #:?.)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
+  (:import-from #:screenshotbot/api/model
+                #:*api-version*)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
                     (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/commit-graph)
@@ -43,6 +45,7 @@
 (defun new-flow-enabled-p (repo)
   #+lispworks
   (and
+   (>= *api-version* 19)
    (?. supported-remote-repo-p (git:get-remote-url repo))
    (str:non-empty-string-p (uiop:getenv "SCREENSHOTBOT_ENABLE_NEW_CG_API")))
   #-lispworks
