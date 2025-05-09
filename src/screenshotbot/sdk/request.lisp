@@ -133,37 +133,29 @@
                           (decode-response t)
                           content)
   (log:debug "Making API request: ~S" api)
-  (let ((api (cond
-               ((and (eql method :get) parameters)
-                (quri:render-uri
-                 (quri:merge-uris
-                  (quri:make-uri
-                   :query parameters)
-                  (quri:uri api))))
-               (t
-                api))))
-   (multiple-value-bind (json code)
-       (%request api-context
-                 api :method method
-                 :parameters parameters
-                 :content (cond
-                            ((or
-                              (eql :put method)
-                              (typep (class-of content)
-                                     'ext-json-serializable-class))
-                             (json-mop-to-string
-                              content))
-                            ((and (eql method :post)
-                                  content)
-                             content)))
-     (cond
-       (decode-response
-        (handler-case
-            (let ((result (json:decode-json-from-string json)))
-              (ensure-api-success result))
-          (json:json-syntax-error (e)
-            (error "Could not parse json:"
-                   json))))
-       (t
-        (values json code))))))
+  (multiple-value-bind (json code)
+      (%request api-context
+                api :method method
+                :parameters parameters
+                :content (cond
+                           ((or
+                             (eql :put method)
+                             (typep (class-of content)
+                                    'ext-json-serializable-class))
+                            (json-mop-to-string
+                             content))
+                           ((and (eql method :post)
+                                 content)
+                            content)))
+    (cond
+      (decode-response
+       (handler-case
+           (let ((result (json:decode-json-from-string json)))
+             (ensure-api-success result))
+         (json:json-syntax-error (e)
+           (error "Could not parse json:"
+                  json))))
+      (t
+       (values json code)))))
+
 
