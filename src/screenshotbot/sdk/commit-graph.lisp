@@ -46,8 +46,7 @@
   #+lispworks
   (and
    (>= *api-version* 19)
-   (?. supported-remote-repo-p (git:get-remote-url repo))
-   (str:non-empty-string-p (uiop:getenv "SCREENSHOTBOT_ENABLE_NEW_CG_API")))
+   (?. supported-remote-repo-p (git:get-remote-url repo)))
   #-lispworks
   nil)
 
