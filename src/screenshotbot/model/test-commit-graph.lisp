@@ -12,6 +12,8 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/commit-graph
+                #:%commit-graph-refs
+                #:commit-graph-refs
                 #:normalization-override
                 #:merge-dag-into-commit-graph
                 #:dag-v2
@@ -159,3 +161,23 @@
         (is-true (dag:get-commit (%persisted-dag cg) "bb"))))))
 
 
+(test commit-graph-refs-when-refs-is-nil
+  (with-fixture state ()
+    (let ((cg (find-or-create-commit-graph company "foo")))
+      (is (fset:equal?
+           (fset:empty-map)
+           (commit-graph-refs cg))))))
+
+(test commit-graph-refs-when-refs-from-old-model
+  (with-fixture state ()
+    (let ((cg (find-or-create-commit-graph company "foo")))
+      (setf (%commit-graph-refs cg)
+            `(("foo" . "bar")
+              ("car" . "dar")))
+      (is (fset:equal?
+           (fset:with
+            (fset:with
+             (fset:empty-map)
+             "foo" "bar")
+            "car" "dar")
+           (commit-graph-refs cg))))))

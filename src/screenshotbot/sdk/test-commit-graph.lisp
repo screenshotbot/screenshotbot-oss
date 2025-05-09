@@ -33,6 +33,8 @@
   #+lispworks
   (:import-from #:screenshotbot/sdk/git-pack
                 #:local-upload-pack)
+  (:import-from #:screenshotbot/api/core
+                #:*wrap-internal-errors*)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
                     (#:test-git #:screenshotbot/sdk/test-git)
                     (#:git #:screenshotbot/sdk/git)))
@@ -43,8 +45,10 @@
 
 (def-fixture state ()
   (cl-mock:with-mocks ()
-   (with-sdk-integration (api-context :company company)
-     (&body))))
+    (let ((*wrap-internal-errors* nil)
+          (auto-restart:*global-enable-auto-retries-p* nil))
+     (with-sdk-integration (api-context :company company)
+       (&body)))))
 
 (defvar *repo* "https://github.com/tdrhq/fast-example.git")
 

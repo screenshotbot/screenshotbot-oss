@@ -90,10 +90,11 @@ can delete this code. T1739"
      (dag :initform nil
           :transient t
           :accessor %commit-graph-dag)
-     (refs :initform nil
+     (refs :initform nil 
            :initarg :refs
-           :accessor commit-graph-refs
-           :documentation "An alist, with the last known refs. These refs
+           :accessor %commit-graph-refs
+           :writer (setf commit-graph-refs)
+           :documentation "An fset:map, with the last known refs. These refs
 are force updated, so it might move `backwards`! The main purpose of these
 refs is just to allow incremental updates, and for potential garbage
 collection. For now, if you need a source of truth of refs, you might want to
@@ -106,6 +107,14 @@ use the refs in promoted runs.")
                     :accessor needs-flush-p))
     (:metaclass persistent-class)
     (:default-initargs :dag nil)))
+
+(defmethod commit-graph-refs ((self commit-graph))
+  (let ((refs (%commit-graph-refs self)))
+    (when (listp refs) #| or nil |#
+      (setf refs
+            (setf (%commit-graph-refs self)
+                  (fset:convert 'fset:map refs))))
+    refs))
 
 (defindex +normalization-override-from+
   'unique-index
@@ -262,12 +271,14 @@ to the same repo, the graph will still be the same."
         do (merge-dag-into-commit-graph cg (commit-graph-dag cg))))
 
 (deftransaction tx-commit-graph-set-ref (commit-graph name sha)
-  (setf (assoc-value (commit-graph-refs commit-graph) name :test #'equal)
-        sha))
+  (setf
+   (commit-graph-refs commit-graph)
+   (fset:with
+    (commit-graph-refs commit-graph)
+    name sha)))
 
 (defmethod commit-graph-set-ref ((commit-graph commit-graph)
                                  (name string)
                                  (sha string))
-  (unless (equal sha (assoc-value (commit-graph-refs commit-graph) name))
-
+  (unless (equal sha (fset:lookup (commit-graph-refs commit-graph) name))
     (tx-commit-graph-set-ref commit-graph name sha)))

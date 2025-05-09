@@ -81,13 +81,13 @@
                   :refs "[{\"name\":\"master\",\"sha\":\"abcd\"}]"))
     (let ((cg (find-or-create-commit-graph (auth:current-company) *repo*)))
       (assert-that
-       (commit-graph-refs cg)
+       (fset:convert 'list (commit-graph-refs cg))
        (contains
         '("master" . "abcd")))
       (update-refs :repo-url *repo*
                    :refs "[{\"name\":\"master\",\"sha\":\"0011\"},{\"name\":\"feature\",\"sha\":\"abcd\"}]")
       (assert-that
-       (commit-graph-refs cg)
+       (fset:convert 'list (commit-graph-refs cg))
        (contains-in-any-order
         '("master" . "0011")
         '("feature" . "abcd"))))))
