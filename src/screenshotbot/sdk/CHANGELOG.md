@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.15.4 - 2025-05-09
+
+### Changed
+
+- Fixed a bug in URL encoding of parameter of new commit graph API
+
 ## 2.15.3 - 2025-05-09
 
 ### Added
