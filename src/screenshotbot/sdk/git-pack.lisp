@@ -389,6 +389,12 @@ a second value the headers that were initially provided (sha and refs)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b")))
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
+;; (read-commits "git@gitlab.com:tdrhq/fast-example.git" :wants (list "master") :depth 30)
+;; (read-commits "git@bitbucket.org:tdrhq/fast-example.git" :wants (list "master") :depth 30)
+
+;; Azure features: ( multi_ack thin-pack side-band side-band-64k no-progress multi_ack_detailed no-done shallow allow-tip-sha1-in-want filter symref=HEAD:refs/heads/master)
+;; Azure also requires clients to support multi-ack :/
+;; (read-commits "git@ssh.dev.azure.com:v3/testsbot/fast-example/fast-example" :wants (list "master") :depth 30)
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants nil :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "master" :parse-parents t))
 ;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master") :depth 100)
