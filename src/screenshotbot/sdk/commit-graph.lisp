@@ -76,7 +76,8 @@ so changes."
      upload-pack
      (git:get-remote-url repo)
      (list branch
-           (git:current-branch repo)))))
+           (git:current-branch repo))
+     :current-commit (git:current-commit repo))))
 
 (defun ref-in-sync-p (known-refs sha ref)
   "At this point, we know we're interested in this ref. What we need to know is if this is in sync with the server"
@@ -99,43 +100,49 @@ so changes."
 (defmethod update-from-pack (api-context
                              (upload-pack upload-pack)
                              (repo-url string)
-                             branches)
+                             branches
+                             &key current-commit)
   (log:info "Getting known refs from Screenshotbot server")
   (let ((known-refs (get-commit-graph-refs api-context repo-url))
         (refs nil))
     (check-type known-refs list)
     (log:info "Getting git graph via git-upload-pack")
-    (let ((commits (read-commits
-                    upload-pack
-                    ;; TODO: also do release branches, but that will need a regex here
-                    :wants (lambda (list)
-                             (loop for (sha . ref) in list
-                                   do
-                                      (when (str:starts-with-p "refs/heads/" ref)
-                                        (push (make-instance 'dto:git-ref
-                                                             :name (str:substring (length "refs/heads/") nil ref)
-                                                             :sha sha)
-                                              refs)))
-                             (loop for (sha . ref) in list
-                                   if (want-remote-ref known-refs branches
-                                                       sha ref)
-                                     collect sha))
-                    :haves (loop for known-ref in known-refs
-                                 collect (dto:git-ref-sha known-ref))
-                    :parse-parents t)))
-      (let ((commits (loop for (sha . parents) in commits
-                           collect (make-instance 'dto:commit
-                                                  :sha sha
-                                                  :parents parents))))
-        (log:info "Updating git commit-graph")
-        (request
-         api-context
-         "/api/commit-graph"
-         :method :post
-         :parameters (list
-                      (cons "repo-url" repo-url)
-                      (cons "graph-json" (dto:encode-json (or commits #())))
-                      (cons "refs" (dto:encode-json (or refs #())))))))))
+    (flet ((maybe-push-ref (sha ref)
+             (when (str:starts-with-p "refs/heads/" ref)
+               (push (make-instance 'dto:git-ref
+                                    :name (str:substring (length "refs/heads/") nil ref)
+                                    :sha sha)
+                     refs))))
+     (let ((commits (read-commits
+                     upload-pack
+                     ;; TODO: also do release branches, but that will need a regex here
+                     :wants (lambda (list)
+                              (remove-if
+                               #'null
+                               (list*
+                                current-commit
+                                (loop for (sha . ref) in list
+                                      if (want-remote-ref known-refs branches
+                                                          sha ref)
+                                        collect (progn
+                                                  (maybe-push-ref sha ref)
+                                                  sha)))))
+                     :haves (loop for known-ref in known-refs
+                                  collect (dto:git-ref-sha known-ref))
+                     :parse-parents t)))
+       (let ((commits (loop for (sha . parents) in commits
+                            collect (make-instance 'dto:commit
+                                                   :sha sha
+                                                   :parents parents))))
+         (log:info "Updating git commit-graph")
+         (request
+          api-context
+          "/api/commit-graph"
+          :method :post
+          :parameters (list
+                       (cons "repo-url" repo-url)
+                       (cons "graph-json" (dto:encode-json (or commits #())))
+                       (cons "refs" (dto:encode-json (or refs #()))))))))))
 
 
 (defmethod update-commit-graph (api-context repo branch)
