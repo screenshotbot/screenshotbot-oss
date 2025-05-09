@@ -12,6 +12,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/api/commit-graph
+                #:%check-shas
                 #:get-refs
                 #:update-refs
                 #:update-commit-graph
@@ -48,6 +49,20 @@
        (%update-commit-graph-v2 "https://github.com/foo/bar"
                                 (with-output-to-string (out)
                                   (dag:write-to-stream dag out)))))))
+
+(test check-shas ()
+  (with-fixture state ()
+   (let ((dag (make-instance 'dag:dag)))
+     (dag:add-commit dag (make-instance 'dag:commit
+                                        :sha "abcd"
+                                        :author "zoidberg") )
+     (finishes
+       (%update-commit-graph-v2 "https://github.com/foo/bar"
+                                (with-output-to-string (out)
+                                  (dag:write-to-stream dag out))))
+     (assert-that
+      (%check-shas :repo-url "https://github.com/foo/bar" :shas (list "abcd" "0011"))
+      (contains "0011")))))
 
 
 (test cannot-update-commit-graph-with-empty-repo

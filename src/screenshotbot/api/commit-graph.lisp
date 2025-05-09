@@ -77,3 +77,12 @@
     (loop for ref in refs
           do (commit-graph-set-ref commit-graph (dto:git-ref-name ref)
                                    (dto:git-ref-sha ref)))))
+
+(defapi (%check-shas :uri "/api/commit-graph/check-wants" :method :get :wrap-success nil) (repo-url shas)
+  "Given a set of SHAs, return a list of all SHAs that are not available
+in the repo. The `want` is a reference to the git-upload-pack API."
+  (let* ((commit-graph (find-or-create-commit-graph (current-company) repo-url))
+         (dag (commit-graph-dag commit-graph)))
+    (loop for sha in shas
+          unless (dag:get-commit dag sha)
+            collect sha)))
