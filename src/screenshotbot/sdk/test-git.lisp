@@ -36,7 +36,8 @@
                 #:def-easy-macro)
   (:export
    #:with-git-repo
-   #:make-commit))
+   #:make-commit
+   #:enable-server-features))
 (in-package :screenshotbot/sdk/test-git)
 
 (util/fiveam:def-suite)
@@ -47,6 +48,13 @@
               "git -c user.name=FooBar -c user.email=foo@example.com ")))
     (apply #'uiop:run-program (format nil "cd ~a && ~a" (namestring (repo-dir repo)) cmd)
            args)))
+
+(defun enable-server-features (repo)
+  (loop for feature in (list "filter"
+                             "allowTipSHA1InWant"
+                             "allowReachableSHA1InWant")
+        do
+        (run-in-dir repo (format nil "git config uploadpack.~a true" feature))))
 
 (defun make-commit (repo content)
   (let ((file (path:catfile (repo-dir repo) "file.txt")))

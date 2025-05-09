@@ -77,6 +77,7 @@ set st to idle when block timeout"))))
   (test-git:with-git-repo (repo :dir dir)
     (test-git:make-commit repo "foo")
     (test-git:make-commit repo "bar")
+    (test-git:enable-server-features repo)
     (let ((commits
             (read-commits (namestring dir) :wants (list "main" "master"))))
       (assert-that

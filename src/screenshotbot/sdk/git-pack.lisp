@@ -300,10 +300,13 @@
                          &key (filter-blobs t)
                            (depth 1000)
                            wants
+                           extra-wants
                            (haves nil)
                            (parse-parents nil))
   "WANTS is a function that take a sha and a ref-name see if we want it. WANTS can
 also be a list, in which case we check if the name matches.
+
+EXTRA-WANTS are an explicit list of WANTS that are added to WANTS.
 
 Returns two values: An alist of commit hashes to commit bodys, and as
 a second value the headers that were initially provided (sha and refs)
@@ -319,17 +322,23 @@ a second value the headers that were initially provided (sha and refs)
             (t
              wants))))
     (with-opened-upload-pack (p :headers headers :features features)
-      (log:trace "Got headers: ~a" headers)
+      ;;(log:trace "Got headers: ~S" headers)
       (log:debug "Got features: ~a" features)
+      (unless (or
+               (str:s-member features "allow-tip-sha1-in-want")
+               (str:s-member features "allow-reachable-sha1-in-want"))
+        (error "This git server doesn't support allow-{tip|reachable}-sha1-in-want"))
       (let ((wants
-              (loop for this-branch in headers
-                    if (funcall wants (first this-branch) (second this-branch))
-                      collect (first this-branch))))
+              (union
+               extra-wants
+               (loop for this-branch in headers
+                     if (funcall wants (first this-branch) (second this-branch))
+                       collect (first this-branch)))))
         (cond
           ((not wants)
            (write-flush p))
           (t
-           (want p (format nil "~a filter" (car wants)))
+           (want p (format nil "~a filter allow-tip-sha1-in-wants allow-reachable-sha1-in-want" (car wants)))
            (dolist (want (cdr wants))
              (want p want))
 
@@ -399,9 +408,9 @@ a second value the headers that were initially provided (sha and refs)
 ;; Azure features: ( multi_ack thin-pack side-band side-band-64k no-progress multi_ack_detailed no-done shallow allow-tip-sha1-in-want filter symref=HEAD:refs/heads/master)
 ;; Azure also requires clients to support multi-ack :/
 ;; (read-commits "git@ssh.dev.azure.com:v3/testsbot/fast-example/fast-example" :wants (list "master") :depth 30)
-;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants nil :depth 30))
+;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
 ;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "master" :parse-parents t))
-;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master") :depth 100)
+;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master") :extra-wants (list "4ec592fc02c8bf200e4e2b9902e9a71fd8de3aec") :depth 100)
 ;; (read-commits "/home/arnold/builds/web/.git" :wants (list "master") :depth 2)
 
 

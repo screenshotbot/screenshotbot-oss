@@ -98,6 +98,7 @@
   (with-fixture state ()
     (test-git:with-git-repo (repo :dir dir)
       (test-git:make-commit repo "foo")
+      (test-git:enable-server-features repo)
       (let ((upload-pack (local-upload-pack repo)))
         (finishes
          (update-from-pack
@@ -111,6 +112,7 @@
   (with-fixture state ()
     (test-git:with-git-repo (repo :dir dir)
       (test-git:make-commit repo "foo")
+      (test-git:enable-server-features repo)
       (let ((upload-pack (local-upload-pack repo)))
         (update-from-pack
          api-context
@@ -132,6 +134,7 @@
     (test-git:with-git-repo (repo :dir dir)
       (test-git:make-commit repo "foo")
       (test-git:make-commit repo "bar")
+      (test-git:enable-server-features repo)
       (let ((upload-pack (local-upload-pack repo)))
         (update-from-pack
          api-context
