@@ -300,13 +300,11 @@
                          &key (filter-blobs t)
                            (depth 1000)
                            wants
-                           extra-wants
                            (haves nil)
                            (parse-parents nil))
-  "WANTS is a function that take a sha and a ref-name see if we want it. WANTS can
-also be a list, in which case we check if the name matches.
-
-EXTRA-WANTS are an explicit list of WANTS that are added to WANTS.
+  "WANTS is a function that take an alist of (sha -> ref-name) and
+returns all the SHAs it wants. If this function is called, we can
+assume that the server has allow-{tip|reachable}-sha1-in-want enabled.
 
 Returns two values: An alist of commit hashes to commit bodys, and as
 a second value the headers that were initially provided (sha and refs)
@@ -314,11 +312,12 @@ a second value the headers that were initially provided (sha and refs)
   (let ((wants
           (cond
             ((listp wants)
-             (lambda (sha remote-ref)
-               (declare (ignore sha))
-               (loop for local-ref in wants
-                     if (remote-ref-equals local-ref remote-ref)
-                       return t)))
+             (lambda (list)
+               (loop for (sha . remote-ref) in list
+                     if (loop for local-ref in wants
+                              if (remote-ref-equals local-ref remote-ref)
+                                return t)
+                       collect sha)))
             (t
              wants))))
     (with-opened-upload-pack (p :headers headers :features features)
@@ -329,11 +328,11 @@ a second value the headers that were initially provided (sha and refs)
                (str:s-member features "allow-reachable-sha1-in-want"))
         (error "This git server doesn't support allow-{tip|reachable}-sha1-in-want"))
       (let ((wants
-              (union
-               extra-wants
+              (funcall
+               wants
                (loop for this-branch in headers
-                     if (funcall wants (first this-branch) (second this-branch))
-                       collect (first this-branch)))))
+                     collect (cons
+                              (first this-branch) (second this-branch))))))
         (cond
           ((not wants)
            (write-flush p))

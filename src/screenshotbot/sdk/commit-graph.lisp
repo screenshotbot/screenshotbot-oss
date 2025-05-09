@@ -105,14 +105,18 @@ so changes."
     (let ((commits (read-commits
                     upload-pack
                     ;; TODO: also do release branches, but that will need a regex here
-                    :wants (lambda (sha ref)
-                             (when (str:starts-with-p "refs/heads/" ref)
-                               (push (make-instance 'dto:git-ref
-                                                    :name (str:substring (length "refs/heads/") nil ref)
-                                                    :sha sha)
-                                     refs))
-                             (want-remote-ref known-refs branches
-                                              sha ref))
+                    :wants (lambda (list)
+                             (loop for (sha . ref) in list
+                                   do
+                                      (when (str:starts-with-p "refs/heads/" ref)
+                                        (push (make-instance 'dto:git-ref
+                                                             :name (str:substring (length "refs/heads/") nil ref)
+                                                             :sha sha)
+                                              refs)))
+                             (loop for (sha . ref) in list
+                                   if (want-remote-ref known-refs branches
+                                                       sha ref)
+                                     collect sha))
                     :haves (loop for known-ref in known-refs
                                  collect (dto:git-ref-sha known-ref))
                     :parse-parents t)))
