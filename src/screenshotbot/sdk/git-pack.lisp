@@ -308,6 +308,11 @@
       #+nil
       (close-upload-pack upload-pack))))
 
+(defun assert-content-type (http-headers expected-content-type)
+  (let ((content-type (assoc-value http-headers :content-type)))
+    (unless (equal expected-content-type content-type)
+      (error "Got bad content-type: ~a" content-type))))
+
 (auto-restart:with-auto-restart ()
   (defmethod read-commits ((p http-upload-pack)
                            &key (filter-blobs t)
@@ -322,9 +327,8 @@
                       :want-stream t
                       :ensure-success t
                       :force-binary t)
-      (let ((content-type (assoc-value http-headers :content-type)))
-        (unless (equal "application/x-git-upload-pack-advertisement" content-type)
-          (error "Got bad content-type: ~a" content-type)))
+      (declare (ignore code))
+      (assert-content-type http-headers "application/x-git-upload-pack-advertisement")
       (setf (%stream p) stream)
       (let ((service-headers (read-headers p)))
         ;; This is typically a single line header ... but I'm mostly
@@ -334,7 +338,28 @@
           (read-headers p)
         (close (%stream p))
         (let ((wants (calculate-wants headers features wants)))
-          (error "unimpl ~a ~a ~a" headers features http-headers))))))
+          (cond
+            ((not wants)
+             ;; We're done
+             nil)
+            (t
+             (let ((body-builder (flex:make-in-memory-output-stream)))
+               (setf (%stream p) body-builder)
+               (write-wants-and-haves
+                p
+                wants
+                haves :depth depth :filter-blobs filter-blobs :features features
+                      :http? t)
+               (multiple-value-bind (stream code http-headers)
+                   (http-request (format nil "~agit-upload-pack"
+                                         (str:ensure-suffix "/" (http-url p)))
+                                 :method :post
+                                 :content (flex:get-output-stream-sequence body-builder)
+                                 :ensure-success t
+                                 :want-stream t
+                                 :force-binary t)
+                 (assert-content-type http-headers "application/x-git-upload-pack-result")
+                 (error "unimpl ~a" http-headers ))))))))))
 
 (defmethod read-commits :around ((p abstract-upload-pack)
                                  &rest args
@@ -365,6 +390,37 @@
          collect (cons
                   (first this-branch) (second this-branch)))))
 
+(defun write-wants-and-haves (p wants haves &key depth filter-blobs features http?)
+  (want p (format nil "~a filter allow-tip-sha1-in-wants allow-reachable-sha1-in-want" (car wants)))
+  (dolist (want (cdr wants))
+    (want p want))
+
+  (when depth
+    (write-packet p "deepen ~a" depth))
+
+  (when (and
+         filter-blobs
+         (str:s-member features "filter"))
+    (log:debug "filter is enabled, sending filter")
+    (write-packet p "filter blob:none"))
+  (write-flush p)
+
+  (when (and depth (not http?))
+    ;; These should be "shallow ~a" or "unshallow ~a" lines
+    ;; We don't care for them really
+    (loop for line = (read-protocol-line p)
+          while line
+          do (log:trace "Ignoring: ~a" line)))
+         
+  (dolist (have haves)
+    (write-packet p "have ~a" have))
+  (when haves
+    (write-flush p))
+
+         
+  (write-packet p "done")
+  (finish-output (%stream p)))
+
 (defmethod read-commits ((p upload-pack)
                          &key (filter-blobs t)
                            (depth 1000)
@@ -386,35 +442,10 @@ a second value the headers that were initially provided (sha and refs)
         ((not wants)
          (write-flush p))
         (t
-         (want p (format nil "~a filter allow-tip-sha1-in-wants allow-reachable-sha1-in-want" (car wants)))
-         (dolist (want (cdr wants))
-           (want p want))
-
-         (when depth
-           (write-packet p "deepen ~a" depth))
-
-         (when (and
-                filter-blobs
-                (str:s-member features "filter"))
-           (log:debug "filter is enabled, sending filter")
-           (write-packet p "filter blob:none"))
-         (write-flush p)
-
-         (when depth
-           ;; These should be "shallow ~a" or "unshallow ~a" lines
-           ;; We don't care for them really
-           (loop for line = (read-protocol-line p)
-                 while line
-                 do (log:trace "Ignoring: ~a" line)))
-         
-         (dolist (have haves)
-           (write-packet p "have ~a" have))
-         (when haves
-           (write-flush p))
-
-         
-         (write-packet p "done")
-         (finish-output (%stream p))
+         (write-wants-and-haves
+          p
+          wants
+          haves :depth depth :filter-blobs filter-blobs :features features)
 
          (log:debug "Waiting for response")
 
