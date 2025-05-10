@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.15.7 - 2025-05-10
+
+### Changed
+
+- Bug fix in the HTTP upload-pack protocol
+
 ## 2.15.6 - 2025-05-10
 
 ### Changed
