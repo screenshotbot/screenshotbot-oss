@@ -359,7 +359,10 @@
                                  :want-stream t
                                  :force-binary t)
                  (assert-content-type http-headers "application/x-git-upload-pack-result")
-                 (error "unimpl ~a" http-headers ))))))))))
+                 (setf (%stream p) stream)
+                 (when depth
+                   (read-shallow-lines p))
+                 (read-response-and-packfile p :parse-parents parse-parents))))))))))
 
 (defmethod read-commits :around ((p abstract-upload-pack)
                                  &rest args
@@ -390,6 +393,12 @@
          collect (cons
                   (first this-branch) (second this-branch)))))
 
+(defun read-shallow-lines (p)
+  "In SSH this happens after wants/deepen and before haves. In HTTP this happens after wants/deepen/haves."
+  (loop for line = (read-protocol-line p)
+        while line
+        do (log:trace "Ignoring: ~a" line)))
+
 (defun write-wants-and-haves (p wants haves &key depth filter-blobs features http?)
   (want p (format nil "~a filter allow-tip-sha1-in-wants allow-reachable-sha1-in-want" (car wants)))
   (dolist (want (cdr wants))
@@ -408,9 +417,7 @@
   (when (and depth (not http?))
     ;; These should be "shallow ~a" or "unshallow ~a" lines
     ;; We don't care for them really
-    (loop for line = (read-protocol-line p)
-          while line
-          do (log:trace "Ignoring: ~a" line)))
+    (read-shallow-lines p))
          
   (dolist (have haves)
     (write-packet p "have ~a" have))
@@ -448,30 +455,32 @@ a second value the headers that were initially provided (sha and refs)
           haves :depth depth :filter-blobs filter-blobs :features features)
 
          (log:debug "Waiting for response")
+         (read-response-and-packfile
+          p :parse-parents parse-parents))))))
 
-         ;; This should either be a NAK (nothing common found), or ACK
-         ;; <commit> signalling that that was a common commit.
-         (read-protocol-line p)
+(defun read-response-and-packfile (p &key parse-parents)
+  ;; This should either be a NAK (nothing common found), or ACK
+  ;; <commit> signalling that that was a common commit.
+  (let ((line (read-protocol-line p)))
+    (log:debug "Got ACK/NAK: ~a" line))
 
-         (log:debug "reading packfile")        
-         ;; Now we get the packfile
-         (let ((num (read-packfile-header (%stream p))))
-           (log:debug "Packfile entries: ~a" num)
-           (serapeum:collecting
-             (loop for i below num
-                   do
-                      (multiple-value-bind (type body) (read-packfile-entry p)
-                        (when (eql 1 type)
-                          (collect
-                              (cons
-                               (compute-sha1-from-commit body)
-                               (cond
-                                 (parse-parents
-                                  (parse-parents (flex:octets-to-string body)))
-                                 (t
-                                  (flex:octets-to-string body))))))))))))
-
-      )))
+  (log:debug "reading packfile")        
+  ;; Now we get the packfile
+  (let ((num (read-packfile-header (%stream p))))
+    (log:debug "Packfile entries: ~a" num)
+    (serapeum:collecting
+      (loop for i below num
+            do
+               (multiple-value-bind (type body) (read-packfile-entry p)
+                 (when (eql 1 type)
+                   (collect
+                       (cons
+                        (compute-sha1-from-commit body)
+                        (cond
+                          (parse-parents
+                           (parse-parents (flex:octets-to-string body)))
+                          (t
+                           (flex:octets-to-string body)))))))))))
 
 (defmethod read-commits ((repo string) &rest args &key &allow-other-keys)
   (cond
