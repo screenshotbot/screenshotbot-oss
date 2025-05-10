@@ -12,6 +12,7 @@
   (:import-from #:fiveam-matchers/strings
                 #:starts-with)
   (:import-from #:screenshotbot/sdk/git-pack
+                #:read-netrc
                 #:supported-remote-repo-p
                 #:read-commits
                 #:parse-parents
@@ -87,3 +88,28 @@ set st to idle when block timeout"))))
 (test azure-is-not-supported
   (is-false (supported-remote-repo-p "git@ssh.dev.azure.com:v3/testsbot/fast-example/fast-example"))
   (is-true (supported-remote-repo-p "git@github.com:fast-example/fast-example")))
+
+(test netrc
+  (uiop:with-temporary-file (:pathname p :stream s :direction :output)
+    (format s "machine github.com~%login foo  ~%  password bar_car~%~%")
+    (finish-output s)
+    (is (equal
+         (list "foo" "bar_car")
+         (read-netrc "github.com" :pathname p))))
+
+  (uiop:with-temporary-file (:pathname p :stream s :direction :output)
+    (format s "  #hello ~%machine github.com~%login foo  ~%  password bar_car~%~%")
+    (finish-output s)
+    (is (equal
+         (list "foo" "bar_car")
+         (read-netrc "github.com" :pathname p))))
+
+  (uiop:with-temporary-file (:pathname p :stream s :direction :output)
+    (format s "machine github.com~%login foo  ~%# login bar~%  password bar_car~%~%")
+    (finish-output s)
+    (is (equal
+         (list "foo" "bar_car")
+         (read-netrc "github.com" :pathname p))))
+
+  (tmpdir:with-tmpdir (dir)
+    (read-netrc "github.com" :pathname (path:catfile dir ".netrc"))))

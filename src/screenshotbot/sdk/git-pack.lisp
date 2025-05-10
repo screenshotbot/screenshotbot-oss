@@ -20,6 +20,7 @@
   (:local-nicknames (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/git-pack)
 
+
 (defclass abstract-upload-pack ()
   ())
 
@@ -481,6 +482,56 @@ a second value the headers that were initially provided (sha and refs)
                            (parse-parents (flex:octets-to-string body)))
                           (t
                            (flex:octets-to-string body)))))))))))
+
+(defun read-netrc-line (stream)
+  (let ((line (str:trim (read-line stream))))
+    (cond
+      ((str:starts-with-p "#" line)
+       ;; Technically this might not really be needed
+       (read-netrc-line stream))
+      (t
+       (let ((parts (str:split " " line)))
+         (mapcar
+          #'str:trim
+          (list
+           (first parts)
+           (car (last parts)))))))))
+
+(defun read-netrc (host &key (pathname "~/.netrc"))
+  (when (path:-e pathname)
+   (let (login
+         password
+         found)
+     (block nil
+       (flet ((maybe-return ()
+                (when (and found login password)
+                  (return-from read-netrc (list login password)))))
+         (with-open-file (s pathname :direction :input)
+           (dotimes (i 10000) ;; avoid bugs
+             (destructuring-bind (key value) (read-netrc-line s)
+               (cond
+                 ((not key)
+                  (return nil))
+                 ((and
+                   (not found)
+                   (equal "machine" key)
+                   (equal host value))
+                  (setf found t))
+                 ((and
+                   found
+                   (equal "machine" key))
+                  (return nil))
+                 ((and
+                   found
+                   (equal "login" key))
+                  (setf login value)
+                  (maybe-return))
+                 ((and
+                   found
+                   (equal "password" key))
+                  (setf password value)
+                  (maybe-return)))))))))))
+
 
 (defmethod read-commits ((repo string) &rest args &key &allow-other-keys)
   (cond
