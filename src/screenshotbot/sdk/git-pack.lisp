@@ -324,6 +324,9 @@
     (multiple-value-bind (stream code http-headers)
         (http-request (format nil "~ainfo/refs?service=git-upload-pack"
                               (str:ensure-suffix "/" (http-url p)))
+                      :basic-authorization (read-netrc
+                                            (quri:uri-host
+                                             (quri:uri (http-url p))))
                       :method :get
                       :want-stream t
                       :ensure-success t
@@ -355,6 +358,9 @@
                    (http-request (format nil "~agit-upload-pack"
                                          (str:ensure-suffix "/" (http-url p)))
                                  :method :post
+                                 :basic-authorization (read-netrc
+                                                       (quri:uri-host
+                                                        (quri:uri (http-url p))))                                 
                                  :content (flex:get-output-stream-sequence body-builder)
                                  :ensure-success t
                                  :want-stream t
@@ -550,6 +556,7 @@ a second value the headers that were initially provided (sha and refs)
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b")))
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
 ;; (read-commits "https://github.com/tdrhq/fast-example.git" :wants (list "master") :depth 30)
+;; (read-commits "https://github.com/tdrhq/alisp.git" :wants (list "master") :depth 30)
 ;; (read-commits "git@gitlab.com:tdrhq/fast-example.git" :wants (list "master") :depth 30)
 ;; (read-commits "git@bitbucket.org:tdrhq/fast-example.git" :wants (list "master") :depth 30)
 
