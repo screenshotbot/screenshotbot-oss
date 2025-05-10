@@ -1,6 +1,12 @@
 # Changelog
 
-## 2.15.5 - 2025-05-09
+## 2.15.6 - 2025-05-10
+
+### Changed
+
+- Enable using upload-pack via HTTP protocol too
+
+## 2.15.5 - 2025-05-10
 
 ### Changed
 
