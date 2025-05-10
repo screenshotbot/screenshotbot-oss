@@ -41,7 +41,9 @@
   (and
    (or
     (cl-ppcre:scan-to-strings +git@-regex+ repo)
-    (cl-ppcre:scan-to-strings +ssh//-regex+ repo))
+    (cl-ppcre:scan-to-strings +ssh//-regex+ repo)
+    (str:starts-with-p "https:" repo)
+    (str:starts-with-p "http:" repo))
    (not
     ;; T1892
     (str:containsp "ssh.dev.azure.com" repo))))
@@ -104,8 +106,16 @@
                      :stream stream))))
 
 (defmethod make-remote-upload-pack ((repo git:git-repo))
-  (local-upload-pack
-   (git:get-remote-url repo)))
+  (let ((repo-url (git:get-remote-url repo)))
+    (cond
+     ((or
+       (str:starts-with-p "http://" repo-url)
+       (str:starts-with-p "https://" repo-url))
+      (make-instance 'http-upload-pack
+                     :repo repo-url))
+     (t
+      (local-upload-pack
+       repo-url)))))
 
 (defmethod close-upload-pack (self)
   (close (%stream self)))

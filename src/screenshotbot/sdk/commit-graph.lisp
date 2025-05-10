@@ -15,6 +15,7 @@
                 #:repo-link)
   #+lispworks
   (:import-from #:screenshotbot/sdk/git-pack
+                #:abstract-upload-pack
                 #:remote-ref-equals
                 #:read-commits
                 #:make-remote-upload-pack
@@ -111,7 +112,7 @@ commits that are needed."
 
 #+lispworks
 (defmethod update-from-pack (api-context
-                             (upload-pack upload-pack)
+                             (upload-pack abstract-upload-pack)
                              (repo-url string)
                              branches
                              &key current-commit)
