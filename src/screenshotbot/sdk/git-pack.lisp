@@ -20,6 +20,14 @@
   (:local-nicknames (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/git-pack)
 
+(defmacro assert-equal (one two)
+  `(let ((one ,one)
+         (two ,two))
+     (unless (equal one two)
+       (error "Expected ~a to be equal to ~a, but got ~a"
+              ',two
+              one
+              two))))
 
 (defclass abstract-upload-pack ()
   ())
@@ -190,8 +198,8 @@
   "Reads the header and returns the number of entries"
   ;; https://github.com/git/git/blob/master/Documentation/gitformat-pack.adoc
   (let ((magick (make-array 4 :element-type '(unsigned-byte 8))))
-    (assert (= 4 (read-sequence magick stream)))
-    (assert (equal "PACK" (flex:octets-to-string magick))))
+    (assert-equal 4 (read-sequence magick stream))
+    (assert-equal "PACK" (flex:octets-to-string magick)))
 
   (let ((version (make-array 4 :element-type '(unsigned-byte 8))))
     (assert (= 4 (read-sequence version stream)))
@@ -357,6 +365,7 @@
              ;; We're done
              nil)
             (t
+             (log:debug "Wanting: ~s" wants)
              (let ((body-builder (flex:make-in-memory-output-stream)))
                (setf (%stream p) body-builder)
                (write-wants-and-haves
@@ -364,22 +373,23 @@
                 wants
                 haves :depth depth :filter-blobs filter-blobs :features features
                       :http? t)
-               (multiple-value-bind (stream code http-headers)
-                   (http-request (format nil "~agit-upload-pack"
-                                         (str:ensure-suffix "/" (http-url p)))
-                                 :method :post
-                                 :basic-authorization (read-netrc
-                                                       (quri:uri-host
-                                                        (quri:uri (http-url p))))                                 
-                                 :content (flex:get-output-stream-sequence body-builder)
-                                 :ensure-success t
-                                 :want-stream t
-                                 :force-binary t)
-                 (assert-content-type http-headers "application/x-git-upload-pack-result")
-                 (setf (%stream p) stream)
-                 (when depth
-                   (read-shallow-lines p))
-                 (read-response-and-packfile p :parse-parents parse-parents))))))))))
+               (let ((bytes (flex:get-output-stream-sequence body-builder)))
+                (multiple-value-bind (stream code http-headers)
+                    (http-request (format nil "~agit-upload-pack"
+                                          (str:ensure-suffix "/" (http-url p)))
+                                  :method :post
+                                  :basic-authorization (read-netrc
+                                                        (quri:uri-host
+                                                         (quri:uri (http-url p))))                                 
+                                  :content bytes 
+                                  :ensure-success t
+                                  :want-stream t
+                                  :force-binary t)
+                  (assert-content-type http-headers "application/x-git-upload-pack-result")
+                  (setf (%stream p) stream)
+                  (when depth
+                    (read-shallow-lines p))
+                  (read-response-and-packfile p :parse-parents parse-parents)))))))))))
 
 (defmethod read-commits :around ((p abstract-upload-pack)
                                  &rest args
@@ -412,9 +422,10 @@
 
 (defun read-shallow-lines (p)
   "In SSH this happens after wants/deepen and before haves. In HTTP this happens after wants/deepen/haves."
+  (log:debug "Reading shallow lines")
   (loop for line = (read-protocol-line p)
         while line
-        do (log:trace "Ignoring: ~a" line)))
+        do (log:debug "Ignoring: ~a" line)))
 
 (defun write-wants-and-haves (p wants haves &key depth filter-blobs features http?)
   (want p (format nil "~a filter allow-tip-sha1-in-wants allow-reachable-sha1-in-want" (car wants)))
@@ -438,7 +449,7 @@
          
   (dolist (have haves)
     (write-packet p "have ~a" have))
-  (when haves
+  (when (and haves (not http?))
     (write-flush p))
 
          
@@ -565,8 +576,8 @@ a second value the headers that were initially provided (sha and refs)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b")))
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
-;; (read-commits "https://github.com/tdrhq/fast-example.git" :wants (list "master") :depth 30)
-;; (read-commits "https://github.com/tdrhq/alisp.git" :wants (list "master") :depth 30)
+;; (read-commits "https://github.com/tdrhq/fast-example.git" :wants (list "master") :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b") :depth 300)
+;; (read-commits "https://github.com/tdrhq/alisp.git" :wants (list "master") :depth nil)
 ;; (read-commits "git@gitlab.com:tdrhq/fast-example.git" :wants (list "master") :depth 30)
 ;; (read-commits "git@bitbucket.org:tdrhq/fast-example.git" :wants (list "master") :depth 30)
 
