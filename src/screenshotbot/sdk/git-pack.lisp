@@ -332,7 +332,38 @@
         (log:debug "Got service headers: ~a" service-headers))
       (multiple-value-bind (headers features)
           (read-headers p)
-       (error "unimpl ~a ~a ~a" headers features http-headers)))))
+        (close (%stream p))
+        (let ((wants (calculate-wants headers features wants)))
+          (error "unimpl ~a ~a ~a" headers features http-headers))))))
+
+(defmethod read-commits :around ((p abstract-upload-pack)
+                                 &rest args
+                                 &key wants
+                                 &allow-other-keys)
+  (let ((wants
+          (cond
+            ((listp wants)
+             (lambda (list)
+               (loop for (sha . remote-ref) in list
+                     if (loop for local-ref in wants
+                              if (remote-ref-equals local-ref remote-ref)
+                                return t)
+                       collect sha)))
+            (t
+             wants))))
+    (apply #'call-next-method p :wants wants args)))
+
+(defun calculate-wants (headers features wants)
+  (log:debug "Got features: ~a" features)
+  (unless (or
+           (str:s-member features "allow-tip-sha1-in-want")
+           (str:s-member features "allow-reachable-sha1-in-want"))
+    (error "This git server doesn't support allow-{tip|reachable}-sha1-in-want"))
+  (funcall
+   wants
+   (loop for this-branch in headers
+         collect (cons
+                  (first this-branch) (second this-branch)))))
 
 (defmethod read-commits ((p upload-pack)
                          &key (filter-blobs t)
@@ -347,89 +378,69 @@ assume that the server has allow-{tip|reachable}-sha1-in-want enabled.
 Returns two values: An alist of commit hashes to commit bodys, and as
 a second value the headers that were initially provided (sha and refs)
 "
-  (let ((wants
-          (cond
-            ((listp wants)
-             (lambda (list)
-               (loop for (sha . remote-ref) in list
-                     if (loop for local-ref in wants
-                              if (remote-ref-equals local-ref remote-ref)
-                                return t)
-                       collect sha)))
-            (t
-             wants))))
-    (with-opened-upload-pack (p :headers headers :features features)
-      ;;(log:trace "Got headers: ~S" headers)
-      (log:debug "Got features: ~a" features)
-      (unless (or
-               (str:s-member features "allow-tip-sha1-in-want")
-               (str:s-member features "allow-reachable-sha1-in-want"))
-        (error "This git server doesn't support allow-{tip|reachable}-sha1-in-want"))
-      (let ((wants
-              (funcall
-               wants
-               (loop for this-branch in headers
-                     collect (cons
-                              (first this-branch) (second this-branch))))))
-        (cond
-          ((not wants)
+  (with-opened-upload-pack (p :headers headers :features features)
+    ;;(log:trace "Got headers: ~S" headers)
+    (let ((wants
+            (calculate-wants headers features wants)))
+      (cond
+        ((not wants)
+         (write-flush p))
+        (t
+         (want p (format nil "~a filter allow-tip-sha1-in-wants allow-reachable-sha1-in-want" (car wants)))
+         (dolist (want (cdr wants))
+           (want p want))
+
+         (when depth
+           (write-packet p "deepen ~a" depth))
+
+         (when (and
+                filter-blobs
+                (str:s-member features "filter"))
+           (log:debug "filter is enabled, sending filter")
+           (write-packet p "filter blob:none"))
+         (write-flush p)
+
+         (when depth
+           ;; These should be "shallow ~a" or "unshallow ~a" lines
+           ;; We don't care for them really
+           (loop for line = (read-protocol-line p)
+                 while line
+                 do (log:trace "Ignoring: ~a" line)))
+         
+         (dolist (have haves)
+           (write-packet p "have ~a" have))
+         (when haves
            (write-flush p))
-          (t
-           (want p (format nil "~a filter allow-tip-sha1-in-wants allow-reachable-sha1-in-want" (car wants)))
-           (dolist (want (cdr wants))
-             (want p want))
 
-           (when depth
-             (write-packet p "deepen ~a" depth))
+         
+         (write-packet p "done")
+         (finish-output (%stream p))
 
-           (when (and
-                  filter-blobs
-                  (str:s-member features "filter"))
-             (log:debug "filter is enabled, sending filter")
-             (write-packet p "filter blob:none"))
-           (write-flush p)
+         (log:debug "Waiting for response")
 
-           (when depth
-             ;; These should be "shallow ~a" or "unshallow ~a" lines
-             ;; We don't care for them really
-             (loop for line = (read-protocol-line p)
-                   while line
-                   do (log:trace "Ignoring: ~a" line)))
-        
-           (dolist (have haves)
-             (write-packet p "have ~a" have))
-           (when haves
-             (write-flush p))
+         ;; This should either be a NAK (nothing common found), or ACK
+         ;; <commit> signalling that that was a common commit.
+         (read-protocol-line p)
 
-        
-           (write-packet p "done")
-           (finish-output (%stream p))
+         (log:debug "reading packfile")        
+         ;; Now we get the packfile
+         (let ((num (read-packfile-header (%stream p))))
+           (log:debug "Packfile entries: ~a" num)
+           (serapeum:collecting
+             (loop for i below num
+                   do
+                      (multiple-value-bind (type body) (read-packfile-entry p)
+                        (when (eql 1 type)
+                          (collect
+                              (cons
+                               (compute-sha1-from-commit body)
+                               (cond
+                                 (parse-parents
+                                  (parse-parents (flex:octets-to-string body)))
+                                 (t
+                                  (flex:octets-to-string body))))))))))))
 
-           (log:debug "Waiting for response")
-
-           ;; This should either be a NAK (nothing common found), or ACK
-           ;; <commit> signalling that that was a common commit.
-           (read-protocol-line p)
-
-           (log:debug "reading packfile")        
-           ;; Now we get the packfile
-           (let ((num (read-packfile-header (%stream p))))
-             (log:debug "Packfile entries: ~a" num)
-             (serapeum:collecting
-               (loop for i below num
-                     do
-                        (multiple-value-bind (type body) (read-packfile-entry p)
-                          (when (eql 1 type)
-                            (collect
-                                (cons
-                                 (compute-sha1-from-commit body)
-                                 (cond
-                                   (parse-parents
-                                    (parse-parents (flex:octets-to-string body)))
-                                   (t
-                                    (flex:octets-to-string body))))))))))))
-
-))))
+      )))
 
 (defmethod read-commits ((repo string) &rest args &key &allow-other-keys)
   (cond
