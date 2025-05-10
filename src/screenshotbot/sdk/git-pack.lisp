@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/sdk/git-pack
   (:use #:cl)
   (:import-from #:alexandria
+                #:assoc-value
                 #:when-let)
   (:import-from #:easy-macros
                 #:def-easy-macro)
@@ -14,12 +15,23 @@
                 #:?.)
   (:import-from #:util/health-check
                 #:def-health-check)
+  (:import-from #:util/request
+                #:http-request)
   (:local-nicknames (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/git-pack)
 
-(defclass upload-pack ()
+(defclass abstract-upload-pack ()
+  ())
+
+(defclass upload-pack (abstract-upload-pack)
   ((stream :initarg :stream
            :reader %stream)))
+
+(defclass http-upload-pack (abstract-upload-pack)
+  ((repo :initarg :repo
+         :reader http-url)
+   (stream :initarg :stream
+           :accessor %stream)))
 
 (defparameter +git@-regex+ "^([a-zA-Z0-9]*)@([a-zA-Z0-9.]*):(.*)$")
 (defparameter +ssh//-regex+ "^ssh://([a-zA-Z0-9]*)@([a-zA-Z0-9.]*)(:([0-9]+))?(/.*)$")
@@ -108,7 +120,7 @@
   (let ((len (str:downcase (format nil "~4,'0x" len))))
     (write-sequence (flex:string-to-octets len) (%stream self))))
 
-(defmethod read-protocol-line ((self upload-pack))
+(defmethod read-protocol-line ((self abstract-upload-pack))
   (let ((len (read-length self)))
     (cond
       ((eql 0 len)
@@ -296,6 +308,32 @@
       #+nil
       (close-upload-pack upload-pack))))
 
+(auto-restart:with-auto-restart ()
+  (defmethod read-commits ((p http-upload-pack)
+                           &key (filter-blobs t)
+                             (depth 1000)
+                             wants
+                             (haves nil)
+                             (parse-parents nil))
+    (multiple-value-bind (stream code http-headers)
+        (http-request (format nil "~ainfo/refs?service=git-upload-pack"
+                              (str:ensure-suffix "/" (http-url p)))
+                      :method :get
+                      :want-stream t
+                      :ensure-success t
+                      :force-binary t)
+      (let ((content-type (assoc-value http-headers :content-type)))
+        (unless (equal "application/x-git-upload-pack-advertisement" content-type)
+          (error "Got bad content-type: ~a" content-type)))
+      (setf (%stream p) stream)
+      (let ((service-headers (read-headers p)))
+        ;; This is typically a single line header ... but I'm mostly
+        ;; just discarding this for now.
+        (log:debug "Got service headers: ~a" service-headers))
+      (multiple-value-bind (headers features)
+          (read-headers p)
+       (error "unimpl ~a ~a ~a" headers features http-headers)))))
+
 (defmethod read-commits ((p upload-pack)
                          &key (filter-blobs t)
                            (depth 1000)
@@ -394,13 +432,22 @@ a second value the headers that were initially provided (sha and refs)
 ))))
 
 (defmethod read-commits ((repo string) &rest args &key &allow-other-keys)
-  (let* ((p (local-upload-pack repo)))
-    (apply #'read-commits p args)))
+  (cond
+    ((or
+      (str:starts-with-p "http:" repo)
+      (str:starts-with-p "https://" repo))
+     (apply #'read-commits (make-instance 'http-upload-pack
+                                          :repo repo)
+            args))
+    (t
+     (let* ((p (local-upload-pack repo)))
+       (apply #'read-commits p args)))))
 
 ;; (log:config :warn)
 ;; (read-commits "/home/arnold/builds/fast-example/.git" :branch "refs/heads/master")
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :branch "refs/heads/master" :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b")))
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
+;; (read-commits "https://github.com/tdrhq/fast-example.git" :wants (list "master") :depth 30)
 ;; (read-commits "git@gitlab.com:tdrhq/fast-example.git" :wants (list "master") :depth 30)
 ;; (read-commits "git@bitbucket.org:tdrhq/fast-example.git" :wants (list "master") :depth 30)
 
