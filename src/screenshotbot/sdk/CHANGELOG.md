@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.15.5 - 2025-05-09
+
+### Changed
+
+- Added some additional logging, no behavioral changes
+
 ## 2.15.4 - 2025-05-09
 
 ### Changed
