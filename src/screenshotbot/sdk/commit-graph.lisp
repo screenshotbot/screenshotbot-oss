@@ -176,6 +176,7 @@ commits that are needed."
         (update-commit-graph-old-style api-context repo branch))))
     (t
      (log:info "Using old flow for commit-graph")
+     (warn "Using the old commit-graph flow for ~a" (git:get-remote-url repo))
      (update-commit-graph-old-style api-context repo branch))))
 
 (defmethod update-commit-graph (api-context (repo null-repo) branch)
