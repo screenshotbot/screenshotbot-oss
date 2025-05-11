@@ -332,21 +332,34 @@
     (unless (equal expected-content-type content-type)
       (error "Got bad content-type: ~a" content-type))))
 
+(defun remove-auth-from-uri (uri)
+  (let* ((uri (quri:uri uri))
+         (user (quri:uri-userinfo uri)))
+    (setf (quri:uri-userinfo uri) nil)
+    (values
+     (quri:render-uri uri)
+     (when user
+      (str:split ":" user :limit 2)))))
+
 (auto-restart:with-auto-restart (:retries 2)
  (defmethod git-http-request ((p http-upload-pack)
                               url &rest args)
-   (apply #'http-request (format nil "~a~a"
-                                 (str:ensure-suffix "/" (http-url p))
-                                 url)
-          :basic-authorization (read-netrc
-                                (quri:uri-host
-                                 (quri:uri (http-url p))))
-          :want-stream t
-          :ensure-success t
-          :read-timeout 45
-          :connection-timeout 15
-          :force-binary t
-          args)))
+   (multiple-value-bind (git-url auth)
+       (remove-auth-from-uri (http-url p))
+    (apply #'http-request (format nil "~a~a"
+                                  (str:ensure-suffix "/" git-url)
+                                  url)
+           :basic-authorization (or
+                                 auth
+                                 (read-netrc
+                                  (quri:uri-host
+                                   (quri:uri (http-url p)))))
+           :want-stream t
+           :ensure-success t
+           :read-timeout 45
+           :connection-timeout 15
+           :force-binary t
+           args))))
 
 (auto-restart:with-auto-restart ()
   (defmethod read-commits ((p http-upload-pack)

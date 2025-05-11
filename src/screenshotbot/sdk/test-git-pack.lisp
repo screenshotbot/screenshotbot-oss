@@ -12,6 +12,7 @@
   (:import-from #:fiveam-matchers/strings
                 #:starts-with)
   (:import-from #:screenshotbot/sdk/git-pack
+                #:remove-auth-from-uri
                 #:read-netrc
                 #:supported-remote-repo-p
                 #:read-commits
@@ -120,3 +121,19 @@ set st to idle when block timeout"))))
 
   (tmpdir:with-tmpdir (dir)
     (read-netrc "github.com" :pathname (path:catfile dir ".netrc"))))
+
+(test remove-auth-from-uri
+  (is
+   (equal
+    (list "https://gitlab.com/my-group/my-repo.git"
+          (list "gitlab-ci-token" "foo"))
+    (multiple-value-list
+     (remove-auth-from-uri "https://gitlab-ci-token:foo@gitlab.com/my-group/my-repo.git")))))
+
+(test remove-auth-from-uri-when-theres-no-auth
+  (is
+   (equal
+    (list "https://gitlab.com/my-group/my-repo.git"
+          nil)
+    (multiple-value-list
+     (remove-auth-from-uri "https://gitlab.com/my-group/my-repo.git")))))
