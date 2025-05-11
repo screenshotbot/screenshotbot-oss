@@ -332,18 +332,21 @@
     (unless (equal expected-content-type content-type)
       (error "Got bad content-type: ~a" content-type))))
 
-(defmethod git-http-request ((p http-upload-pack)
-                             url &rest args)
-  (apply #'http-request (format nil "~a~a"
-                                (str:ensure-suffix "/" (http-url p))
-                                url)
-         :basic-authorization (read-netrc
-                               (quri:uri-host
-                                (quri:uri (http-url p))))
-         :want-stream t
-         :ensure-success t
-         :force-binary t
-         args))
+(auto-restart:with-auto-restart (:retries 2)
+ (defmethod git-http-request ((p http-upload-pack)
+                              url &rest args)
+   (apply #'http-request (format nil "~a~a"
+                                 (str:ensure-suffix "/" (http-url p))
+                                 url)
+          :basic-authorization (read-netrc
+                                (quri:uri-host
+                                 (quri:uri (http-url p))))
+          :want-stream t
+          :ensure-success t
+          :read-timeout 45
+          :connection-timeout 15
+          :force-binary t
+          args)))
 
 (auto-restart:with-auto-restart ()
   (defmethod read-commits ((p http-upload-pack)
