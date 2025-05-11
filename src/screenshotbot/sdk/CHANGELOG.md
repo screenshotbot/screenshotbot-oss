@@ -1,5 +1,11 @@
 # Changelog
 
+## xxxxx
+
+- Fixed netrc parsing in certain case
+
+
+
 ## 2.15.7 - 2025-05-10
 
 ### Changed

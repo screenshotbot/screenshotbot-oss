@@ -111,5 +111,12 @@ set st to idle when block timeout"))))
          (list "foo" "bar_car")
          (read-netrc "github.com" :pathname p))))
 
+  (uiop:with-temporary-file (:pathname p :stream s :direction :output)
+    (format s "machine github.comx~%login foo  ~%# login bar~%  password bar_car~%~%")
+    (finish-output s)
+    (is (equal
+         nil
+         (read-netrc "github.com" :pathname p))))
+
   (tmpdir:with-tmpdir (dir)
     (read-netrc "github.com" :pathname (path:catfile dir ".netrc"))))

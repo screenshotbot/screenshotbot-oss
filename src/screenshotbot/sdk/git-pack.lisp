@@ -516,18 +516,17 @@ a second value the headers that were initially provided (sha and refs)
                            (flex:octets-to-string body)))))))))))
 
 (defun read-netrc-line (stream)
-  (let ((line (str:trim (read-line stream))))
-    (cond
-      ((str:starts-with-p "#" line)
-       ;; Technically this might not really be needed
-       (read-netrc-line stream))
-      (t
-       (let ((parts (str:split " " line)))
-         (mapcar
-          #'str:trim
-          (list
-           (first parts)
-           (car (last parts)))))))))
+  (when-let ((line (read-line stream nil nil)))
+   (let ((line (str:trim line)))
+     (cond
+       ((str:starts-with-p "#" line)
+        ;; Technically this might not really be needed
+        (read-netrc-line stream))
+       (t
+        (let ((parts (str:split " " line)))
+          (values
+           (str:trim (first parts))
+           (str:trim (car (last parts))))))))))
 
 (defun read-netrc (host &key (pathname "~/.netrc"))
   (when (path:-e pathname)
@@ -540,7 +539,7 @@ a second value the headers that were initially provided (sha and refs)
                   (return-from read-netrc (list login password)))))
          (with-open-file (s pathname :direction :input)
            (dotimes (i 10000) ;; avoid bugs
-             (destructuring-bind (key value) (read-netrc-line s)
+             (multiple-value-bind (key value) (read-netrc-line s)
                (cond
                  ((not key)
                   (return nil))
