@@ -94,52 +94,53 @@ for which we're allowed to auto-restart. It defaults to `'(ERROR)`.
         (uiop:parse-body decls-onwards :documentation t)
       `(let ((,sleep-var ,sleep)
              (,retries-var ,retries))
-        (,@before-args
-         ,@(when doc (list doc))
-         ,@decls
-         (flet ((top-level-body ()
-                  (flet ((body (,attempt)
-                           (declare (ignorable ,attempt))
-                           ,@body))
-                    (let ((attempt (frame-attempt *frame*)))
-                      (setf (frame-error-handler *frame*)
-                            (lambda (e)
-                              (cond
-                                ((and *global-enable-auto-retries-p* (< attempt ,retries)
-                                      (%is-error-of-type e ',(eval auto-restartable-errors)))
-                                 (let ((sleep-time (%add-noise (funcall ,sleep-var attempt)
-                                                               :noise ,sleep-noise)))
-                                   (unless (= 0 sleep-time)
-                                     (sleep sleep-time)))
-                                 (invoke-restart ',restart-name)))))
-                      (setf (frame-restart-handler *frame*)
-                            (lambda ()
-                              (apply #',fn-name ,@ (fix-args-for-funcall var-names))))
-                      ;; If we make a call to another auto-restart
-                      ;; it should not see the same frame
-                      (let ((*frame* nil))
-                        (body attempt))))))
-           (cond
-             ((null *frame*)
-              (let* ((frame (make-frame
-                             :attempt 1
-                             :error-handler nil
-                             :restart-handler (lambda ()
-                                                ;; The first time we call we just call the function
-                                                (top-level-body))))
-                     (*frame* frame))
-                (block success
-                  (loop
-                    (restart-case
-                        (handler-bind ((error (lambda (e)
-                                                (funcall (frame-error-handler frame) e))))
-                          (return-from success (funcall (frame-restart-handler frame))))
-                      (,restart-name ()
-                        ;; Retry in our loop
-                        (values)))))))
-             (t
-              (incf (frame-attempt *frame*))
-              (top-level-body)))))))))
+         (declare (ignorable ,retries-var))
+         (,@before-args
+          ,@(when doc (list doc))
+          ,@decls
+          (flet ((top-level-body ()
+                   (flet ((body (,attempt)
+                            (declare (ignorable ,attempt))
+                            ,@body))
+                     (let ((attempt (frame-attempt *frame*)))
+                       (setf (frame-error-handler *frame*)
+                             (lambda (e)
+                               (cond
+                                 ((and *global-enable-auto-retries-p* (< attempt ,retries)
+                                       (%is-error-of-type e ',(eval auto-restartable-errors)))
+                                  (let ((sleep-time (%add-noise (funcall ,sleep-var attempt)
+                                                                :noise ,sleep-noise)))
+                                    (unless (= 0 sleep-time)
+                                      (sleep sleep-time)))
+                                  (invoke-restart ',restart-name)))))
+                       (setf (frame-restart-handler *frame*)
+                             (lambda ()
+                               (apply #',fn-name ,@ (fix-args-for-funcall var-names))))
+                       ;; If we make a call to another auto-restart
+                       ;; it should not see the same frame
+                       (let ((*frame* nil))
+                         (body attempt))))))
+            (cond
+              ((null *frame*)
+               (let* ((frame (make-frame
+                              :attempt 1
+                              :error-handler nil
+                              :restart-handler (lambda ()
+                                                 ;; The first time we call we just call the function
+                                                 (top-level-body))))
+                      (*frame* frame))
+                 (block success
+                   (loop
+                     (restart-case
+                         (handler-bind ((error (lambda (e)
+                                                 (funcall (frame-error-handler frame) e))))
+                           (return-from success (funcall (frame-restart-handler frame))))
+                       (,restart-name ()
+                         ;; Retry in our loop
+                         (values)))))))
+              (t
+               (incf (frame-attempt *frame*))
+               (top-level-body)))))))))
 
 (defun fix-args-for-funcall (var-names)
   (let ((state :default))
