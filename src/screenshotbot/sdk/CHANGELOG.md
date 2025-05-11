@@ -1,9 +1,10 @@
 # Changelog
 
-## xxxxx
+## 2.15.8 - 2025-05-11
 
 - Fixed netrc parsing in certain case
-
+- Fix Git HTTP URL parsing when authentication is part of the Git URL
+- Add a retry if the Git HTTP request fails
 
 
 ## 2.15.7 - 2025-05-10
