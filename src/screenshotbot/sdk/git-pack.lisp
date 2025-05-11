@@ -332,6 +332,19 @@
     (unless (equal expected-content-type content-type)
       (error "Got bad content-type: ~a" content-type))))
 
+(defmethod git-http-request ((p http-upload-pack)
+                             url &rest args)
+  (apply #'http-request (format nil "~a~a"
+                                (str:ensure-suffix "/" (http-url p))
+                                url)
+         :basic-authorization (read-netrc
+                               (quri:uri-host
+                                (quri:uri (http-url p))))
+         :want-stream t
+         :ensure-success t
+         :force-binary t
+         args))
+
 (auto-restart:with-auto-restart ()
   (defmethod read-commits ((p http-upload-pack)
                            &key (filter-blobs t)
@@ -340,15 +353,10 @@
                              (haves nil)
                              (parse-parents nil))
     (multiple-value-bind (stream code http-headers)
-        (http-request (format nil "~ainfo/refs?service=git-upload-pack"
-                              (str:ensure-suffix "/" (http-url p)))
-                      :basic-authorization (read-netrc
-                                            (quri:uri-host
-                                             (quri:uri (http-url p))))
-                      :method :get
-                      :want-stream t
-                      :ensure-success t
-                      :force-binary t)
+        (git-http-request
+         p
+         "info/refs?service=git-upload-pack"
+         :method :get)
       (declare (ignore code))
       (assert-content-type http-headers "application/x-git-upload-pack-advertisement")
       (setf (%stream p) stream)
@@ -375,16 +383,10 @@
                       :http? t)
                (let ((bytes (flex:get-output-stream-sequence body-builder)))
                 (multiple-value-bind (stream code http-headers)
-                    (http-request (format nil "~agit-upload-pack"
-                                          (str:ensure-suffix "/" (http-url p)))
-                                  :method :post
-                                  :basic-authorization (read-netrc
-                                                        (quri:uri-host
-                                                         (quri:uri (http-url p))))                                 
-                                  :content bytes 
-                                  :ensure-success t
-                                  :want-stream t
-                                  :force-binary t)
+                    (git-http-request p
+                                      "git-upload-pack"
+                                      :method :post
+                                      :content bytes)
                   (assert-content-type http-headers "application/x-git-upload-pack-result")
                   (setf (%stream p) stream)
                   (when depth
