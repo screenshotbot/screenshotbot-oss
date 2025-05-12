@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.15.12 - 2025-05-11
+
+- Fixed incomplete commit prefixes passed to
+  `--override-commit-hash`. 
+
 ## 2.15.11 - 2025-05-11
 
 - Fix couple of edge cases with the new commit graph flow
