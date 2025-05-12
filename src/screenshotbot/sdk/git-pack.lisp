@@ -512,7 +512,11 @@ a second value the headers that were initially provided (sha and refs)
   ;; This should either be a NAK (nothing common found), or ACK
   ;; <commit> signalling that that was a common commit.
   (let ((line (read-protocol-line p)))
-    (log:debug "Got ACK/NAK: ~a" line))
+    (log:debug "Got ACK/NAK: ~a" line)
+    (unless (or
+             (str:starts-with-p "NAK" line)
+             (str:starts-with-p "ACK" line))
+      (error "Didn't get an ACK or NAK: ~a" line)))
 
   (log:debug "reading packfile")        
   ;; Now we get the packfile
