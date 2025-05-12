@@ -43,11 +43,16 @@
                  (cons "repo-url" repo)))
    '(:list dto:git-ref)))
 
-(defun new-flow-enabled-p (repo)
+(defun new-flow-enabled-p (repo &key override-commit-hash)
+  (declare (ignorable repo override-commit-hash))
   #+lispworks
   (and
    (>= *api-version* 19)
-   (?. supported-remote-repo-p (git:get-remote-url repo)))
+   (?. supported-remote-repo-p (git:get-remote-url repo))
+   (or
+    
+    (not override-commit-hash)
+    (equal override-commit-hash (git:current-commit repo))))
   #-lispworks
   nil)
 
@@ -162,10 +167,11 @@ commits that are needed."
                        (cons "refs" (dto:encode-json (or refs #()))))))))))
 
 
-(defmethod update-commit-graph (api-context repo branch)
+(defmethod update-commit-graph (api-context repo branch
+                                &key override-commit-hash)
   (log:info "Updating commit graph")
   (cond
-    ((new-flow-enabled-p repo)
+    ((new-flow-enabled-p repo :override-commit-hash override-commit-hash)
      (or
       (ignore-and-log-errors ()
         (trivial-timeout:with-timeout (600)
@@ -180,7 +186,7 @@ commits that are needed."
      (warn "Using the old commit-graph flow for ~a" (git:get-remote-url repo))
      (update-commit-graph-old-style api-context repo branch))))
 
-(defmethod update-commit-graph (api-context (repo null-repo) branch)
+(defmethod update-commit-graph (api-context (repo null-repo) branch &key &allow-other-keys)
   (log:info "Not updating the commit graph, since there's no repo"))
 
 

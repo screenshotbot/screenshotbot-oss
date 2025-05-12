@@ -93,6 +93,19 @@
       (git::$ (git-command repo) "remote" "add" "origin" "git@github.com:tdrhq/fast-example.git")
       (#+lispworks is-true #-lispworks is-false (new-flow-enabled-p repo)))))
 
+(test new-flow-disabled-with-override-commit-hash
+  (with-fixture state ()
+    (answer (uiop:getenv "SCREENSHOTBOT_ENABLE_UPLOAD_PACK") "true")
+    (test-git:with-git-repo (repo :dir dir)
+      (test-git:make-commit repo "foo")
+      (git::$ (git-command repo) "remote" "add" "origin" "git@github.com:tdrhq/fast-example.git")
+      (is-false
+       (new-flow-enabled-p repo
+                           :override-commit-hash "abcd"))
+     (#+lispworks is-true #-lispworks is-false
+       (new-flow-enabled-p repo
+                           :override-commit-hash (git:current-commit repo))))))
+
 #+lispworks
 (test update-from-pack
   (with-fixture state ()
