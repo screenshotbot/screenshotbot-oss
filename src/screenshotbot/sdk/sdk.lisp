@@ -198,6 +198,7 @@ error."
                   &key repo
                     channel
                     run-context
+                    (before #'identity)
                     pull-request
                     branch
                     (branch-hash nil has-branch-hash-p)
@@ -207,6 +208,10 @@ error."
                     periodic-job-p
                     create-github-issue
                     is-trunk)
+   "BEFORE is a callback that is called before creating the run. It is
+called with the RUN-CONTEXT which is either the one passed or the
+run-context that was created here."
+
    (loop for screenshot in screenshots
          ;; We expect it to be a dto:screenshot with name and image-id
          do (check-type screenshot dto:screenshot))
@@ -240,6 +245,7 @@ error."
                                   :create-github-issue-p create-github-issue
                                   :env (e:make-env-reader)
                                   extra-run-context-args))))
+         (funcall before run-context)
          (unless (or screenshots (run-context:shard-spec run-context))
            (error 'empty-run-error))
 
@@ -576,14 +582,17 @@ pull-request looks incorrect."
 (defun single-directory-run (api-context directory &key channel)
   (let ((repo (git-repo))
         (branch flags:*main-branch*))
-    (when (and flags:*production*
-               (> flags:*commit-limit* 0))
-      (update-commit-graph api-context repo branch))
     (log:info "Uploading images from: ~a" directory)
     (make-directory-run api-context directory
                         :channel channel
                         :pull-request flags:*pull-request*
                         :create-github-issue flags:*create-github-issue*
+                        :before (lambda (run-context)
+                                  (declare (ignore run-context))
+                                  (when (and flags:*production*
+                                             (> flags:*commit-limit* 0))
+                                    (update-commit-graph api-context repo branch))
+)
                         :repo repo
                         :is-trunk flags:*production*
                         :branch branch)))
