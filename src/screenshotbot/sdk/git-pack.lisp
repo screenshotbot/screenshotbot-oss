@@ -453,11 +453,14 @@
   (when depth
     (write-packet p "deepen ~a" depth))
 
-  (when (and
-         filter-blobs
-         (str:s-member features "filter"))
-    (log:debug "filter is enabled, sending filter")
-    (write-packet p "filter blob:none"))
+  (cond
+    ((and
+      filter-blobs
+      (str:s-member features "filter"))
+     (log:debug "filter is enabled, sending filter")
+     (write-packet p "filter blob:none"))
+    (t
+     (warn "Filter is not supported")))
   (write-flush p)
 
   (when (and depth (not http?))
