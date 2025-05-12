@@ -401,6 +401,7 @@
                 (multiple-value-bind (stream code http-headers)
                     (git-http-request p
                                       "git-upload-pack"
+                                      :content-type "application/x-git-upload-pack-request"
                                       :method :post
                                       :content bytes)
                   (assert-content-type http-headers "application/x-git-upload-pack-result")
