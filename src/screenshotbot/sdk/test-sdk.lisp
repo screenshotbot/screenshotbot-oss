@@ -189,27 +189,28 @@
     (with-env ((:circle-pull-request "http://foo"))
       (parse-environment)
       (is (equal "http://foo" flags:*pull-request*))))
+  (is (eql 40 (length "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")))
   (with-fixture state ()
-    (with-env ((:circle-sha1 "abcd")
+    (with-env ((:circle-sha1 "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
                (:circle-pull-request "http://foo"))
       (parse-environment)
-      (is (equal "abcd" flags:*override-commit-hash*))))
+      (is (equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd" flags:*override-commit-hash*))))
   (with-fixture state ()
-    (with-env ((:circle-sha1 "abcd")
+    (with-env ((:circle-sha1 "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
                (:circle-pull-request ""))
       (parse-environment)
-      (is (equal "abcd" flags:*override-commit-hash*)))))
+      (is (equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd" flags:*override-commit-hash*)))))
 
 (test parse-override-commit-hash-with-bitrise
     (with-fixture state ()
-    (with-env ((:bitrise-git-commit "abcd")
+    (with-env ((:bitrise-git-commit "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
                (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
       (parse-environment)
       (is (equal nil flags:*pull-request*))
-      (is (equal "abcd" flags:*override-commit-hash*))))
+      (is (equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd" flags:*override-commit-hash*))))
 
   (with-fixture state ()
-    (with-env ((:bitrise-git-commit "abcd")
+    (with-env ((:bitrise-git-commit "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
                (:bitrise-pull-request "1")
                (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
       (parse-environment)
@@ -217,7 +218,7 @@
       (is (equal "https://bitbucket.org/tdrhq/fast-example/pull-requests/1"
                  flags:*pull-request*))
 
-      (is (equal "abcd" flags:*override-commit-hash*)))))
+      (is (equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd" flags:*override-commit-hash*)))))
 
 (test backoff-happy-path
   (is (eql 10 (backoff 1)))

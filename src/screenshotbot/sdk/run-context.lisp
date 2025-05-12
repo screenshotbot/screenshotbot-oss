@@ -309,10 +309,22 @@ pull-request looks incorrect."
       (not (null (cl-ppcre:scan regex
                                 (work-branch self)))))))
 
+(defmethod fix-commit-hash ((self env-reader-run-context)
+                            sha)
+  (cond
+    ((str:emptyp sha)
+     nil)
+    ((eql 40 (length sha))
+     sha)
+    (t
+     (git:rev-parse (git-repo self) sha))))
+
 (defmethod override-commit-hash :around ((self env-reader-run-context))
-  (or
-   (call-next-method)
-   (e:sha1 (env self))))
+  (fix-commit-hash
+   self
+   (or
+    (call-next-method)
+    (e:sha1 (env self)))))
 
 (defmethod commit-hash :around ((self env-reader-run-context))
   (or

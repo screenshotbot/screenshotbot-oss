@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/run-context
+                #:fix-commit-hash
                 #:run-context-dto
                 #:run-context-to-dto
                 #:work-branch-is-release-branch-p
@@ -90,16 +91,16 @@
                   (make-instance 'test-run-context
                                  :env (make-env-reader)))))))
   (with-fixture state ()
-    (with-env ((:circle-sha1 "abcd")
+    (with-env ((:circle-sha1 "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
                (:circle-pull-request "http://foo"))
-      (is (equal "abcd"
+      (is (equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"
                  (run-context:override-commit-hash
                   (make-instance 'test-run-context
                                  :env (make-env-reader)))))))
   (with-fixture state ()
-    (with-env ((:circle-sha1 "abcd")
+    (with-env ((:circle-sha1 "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
                (:circle-pull-request ""))
-      (is (equal "abcd"
+      (is (equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"
                  (run-context:override-commit-hash
                   (make-instance 'test-run-context
                                  :env (make-env-reader))))))))
@@ -107,15 +108,15 @@
 
 (test parse-override-commit-hash-with-bitrise
   (with-fixture state ()
-    (with-env ((:bitrise-git-commit "abcd")
+    (with-env ((:bitrise-git-commit "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
                (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
       (is (equal nil (run-context:pull-request-url
                       (make-instance 'test-run-context))))
-      (is (equal "abcd" (run-context:override-commit-hash
+      (is (equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd" (run-context:override-commit-hash
                          (make-instance 'test-run-context))))))
 
   (with-fixture state ()
-    (with-env ((:bitrise-git-commit "abcd")
+    (with-env ((:bitrise-git-commit "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
                (:bitrise-pull-request "1")
                (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
 
@@ -123,7 +124,7 @@
                  (run-context:pull-request-url
                   (make-instance 'test-run-context))))
 
-      (is (equal "abcd"
+      (is (equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd"
                  (run-context:override-commit-hash
                   (make-instance 'test-run-context)))))))
 
@@ -302,3 +303,18 @@ making sure that the doc is giving a good example."
       (finishes
         (run-context:merge-base run-context))
       (is-true calledp))))
+
+(test fix-commit-hash
+  (with-fixture state ()
+    (let ((run-context (make-instance 'my-run-context))
+          (repo :fake-repo))
+      (answer (run-context:git-repo run-context) repo)
+      (is (equal nil (fix-commit-hash run-context "")))
+      (is (equal "ce04ccee65b8af8ac13a07c21f22b887dedd88f9" (fix-commit-hash run-context "ce04ccee65b8af8ac13a07c21f22b887dedd88f9")))
+      (if-called 'git:rev-parse
+                 (lambda (repo commit)
+                   (is (eql :fake-repo repo))
+                   (is (equal "ce044" commit))
+                   "ce04ccee65b8af8ac13a07c21f22b887dedd88f9"))
+      (is (equal "ce04ccee65b8af8ac13a07c21f22b887dedd88f9"
+                 (fix-commit-hash run-context "ce044"))))))

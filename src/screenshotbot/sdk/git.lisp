@@ -23,7 +23,8 @@
    #:fetch-remote-branch
    #:author
    #:get-remote-url
-   #:repo-dir)
+   #:repo-dir
+   #:rev-parse-local)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
@@ -120,8 +121,15 @@
   nil)
 
 (defmethod rev-parse ((repo git-repo) branch)
+  (rev-parse-local
+   repo
+   (format nil "origin/~a" branch)))
+
+(defmethod rev-parse-local ((repo git-repo) rev)
+  "Technically should be called rev-parse, but for historical reasons
+rev-parse compares against the remote branch :/"
   (handler-case
-      ($ (git-command repo) "rev-parse" "-q" "--verify" (format nil "origin/~a" branch))
+      ($ (git-command repo) "rev-parse" "-q" "--verify" rev)
     (error
       nil)))
 
