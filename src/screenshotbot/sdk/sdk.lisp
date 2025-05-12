@@ -588,11 +588,11 @@ pull-request looks incorrect."
                         :pull-request flags:*pull-request*
                         :create-github-issue flags:*create-github-issue*
                         :before (lambda (run-context)
-                                  (declare (ignore run-context))
                                   (when (and flags:*production*
                                              (> flags:*commit-limit* 0))
-                                    (update-commit-graph api-context repo branch))
-)
+                                    (update-commit-graph api-context repo branch
+                                                         :override-commit-hash
+                                                         (run-context:override-commit-hash run-context))))
                         :repo repo
                         :is-trunk flags:*production*
                         :branch branch)))
