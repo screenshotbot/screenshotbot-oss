@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.15.11 - 2025-05-11
+
+- Fix couple of edge cases with the new commit graph flow
+
 ## 2.15.8 - 2025-05-11
 
 - Fixed netrc parsing in certain case
