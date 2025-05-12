@@ -221,6 +221,10 @@
   (or
    (call-next-method)
    (e:repo-url (env self))
+   ;; The Git repository URL might have temporary authentication
+   ;; information, for example on GitLab CI. We might want to remove
+   ;; this before we default to the Git repository URL instead of from
+   ;; the environment.
    (git:get-remote-url (%git-repo self))))
 
 (defmethod work-branch :around ((self env-reader-run-context))
