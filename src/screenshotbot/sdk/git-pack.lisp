@@ -197,9 +197,9 @@
 (defun read-packfile-header (stream)
   "Reads the header and returns the number of entries"
   ;; https://github.com/git/git/blob/master/Documentation/gitformat-pack.adoc
-  (let ((magick (make-array 4 :element-type '(unsigned-byte 8))))
-    (assert-equal 4 (read-sequence magick stream))
-    (assert-equal "PACK" (flex:octets-to-string magick)))
+  (let ((magic (make-array 4 :element-type '(unsigned-byte 8))))
+    (assert-equal 4 (read-sequence magic stream))
+    (assert-equal "PACK" (flex:octets-to-string magic)))
 
   (let ((version (make-array 4 :element-type '(unsigned-byte 8))))
     (assert (= 4 (read-sequence version stream)))
