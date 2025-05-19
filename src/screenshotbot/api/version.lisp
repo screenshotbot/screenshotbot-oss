@@ -15,13 +15,31 @@
   (:import-from #:core/installation/installation
                 #:installation-domain)
   (:import-from #:screenshotbot/installation
-                #:installation))
+                #:installation)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:screenshotbot/api/core
+                #:authenticate-api-request))
 (in-package :screenshotbot/api/version)
 
 (defhandler (api-version :uri "/api/version") ()
   (setf (hunchentoot:content-type*)
         "application/json; charset=utf-8")
+  (when (hunchentoot:authorization)
+    (authenticate-api-request hunchentoot:*request*))
   (encode-json
    (make-instance 'version
                   :version *api-version*
-                  :url (installation-domain (installation)))))
+                  :url (installation-domain (installation))
+                  :features
+                  (%build-features (auth:current-company)))))
+
+(defvar *gk-list* (list :cli-shallow-clones))
+
+(defmethod %build-features ((company company))
+  (loop for gk in *gk-list*
+        if (gk:check gk company)
+          collect (string-downcase (string gk))))
+
+(defmethod %build-features ((company null))
+  nil)

@@ -87,7 +87,8 @@
              #:decode-json
              #:git-ref
              #:git-ref-name
-             #:git-ref-sha))
+             #:git-ref-sha
+             #:enabled-features))
 
 (in-package :screenshotbot/api/model)
 
@@ -103,7 +104,12 @@
         :json-key "url"
         :json-type (or null :string)
         :reader installation-url
-        :documentation "The installation's URL"))
+        :documentation "The installation's URL")
+   (features :initarg :features
+             :json-key "features"
+             :json-type (:list :string)
+             :documentation "List of features enabled. This is only listed if the API call is authenticated."
+             :reader enabled-features))
   (:metaclass ext-json-serializable-class))
 
 (defmethod encode-json (object)
