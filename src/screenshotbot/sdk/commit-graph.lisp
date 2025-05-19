@@ -49,6 +49,7 @@
   (and
    (>= *api-version* 19)
    (?. supported-remote-repo-p (git:get-remote-url repo))
+   (equal "true" (uiop:getenv "SCREENSHOTBOT_ENABLE_UPLOAD_PACK"))
    (or
     
     (not override-commit-hash)
