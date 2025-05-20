@@ -88,7 +88,7 @@
              #:git-ref
              #:git-ref-name
              #:git-ref-sha
-             #:enabled-features))
+             #:api-features))
 
 (in-package :screenshotbot/api/model)
 
@@ -109,7 +109,7 @@
              :json-key "features"
              :json-type (:list :string)
              :documentation "List of features enabled. This is only listed if the API call is authenticated."
-             :reader enabled-features))
+             :reader api-features))
   (:metaclass ext-json-serializable-class))
 
 (defmethod encode-json (object)

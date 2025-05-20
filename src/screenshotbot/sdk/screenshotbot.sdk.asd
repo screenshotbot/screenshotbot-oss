@@ -131,6 +131,7 @@
                (:file "test-main")
                (:file "test-active-run")
                (:file "test-run-context")
+               (:file "test-api-context")
                (:file "test-flags")
                (:file "test-git")
                (:file "test-commit-graph")

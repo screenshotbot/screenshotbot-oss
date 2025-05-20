@@ -14,7 +14,7 @@
                 #:*gk-list*
                 #:api-version)
   (:import-from #:screenshotbot/api/model
-                #:enabled-features
+                #:api-features
                 #:installation-url
                 #:version-number
                 #:*api-version*
@@ -75,6 +75,6 @@
         (let ((version (decode-json content 'version)))
           (is (eql *api-version* (version-number version)))
           (is (equal "https://example.com" (installation-url version)))
-          (assert-that (enabled-features version)
+          (assert-that (api-features version)
                        (has-item "fake-gk")
                        (does-not (has-item "fake-gk-2"))))))))

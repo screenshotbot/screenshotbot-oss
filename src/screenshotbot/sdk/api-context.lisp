@@ -15,6 +15,8 @@
                 #:*engine*)
   (:import-from #:util/reused-ssl
                 #:reused-ssl-mixin)
+  (:import-from #:util/misc
+                #:?.)
   (:export
    #:api-context
    #:key
@@ -22,7 +24,8 @@
    #:hostname
    #:remote-version
    #:fetch-version
-   #:engine))
+   #:engine)
+  (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/api-context)
 
 (defgeneric fetch-version (api-context)
@@ -31,14 +34,27 @@
 (defclass base-api-context ()
   ((remote-version :initform nil
                    :initarg :remote-version
-                   :accessor remote-version)))
+                   :accessor remote-version)
+   (features :initarg :features
+             :initform nil
+             :initarg api-features
+             :accessor api-features)))
 
-(defmethod remote-version :around ((self base-api-context))
-  (let ((prev (call-next-method)))
+(defmethod fetch-remote-information ((self base-api-context))
+  (let ((prev (slot-value self 'remote-version)))
     (cond
       (prev  prev)
       (t
-       (setf (remote-version self) (fetch-version self))))))
+       (multiple-value-bind (version-num version-obj)
+           (fetch-version self)
+         (setf (remote-version self) version-num)
+         (setf (api-features self) (?. dto:api-features version-obj)))))))
+
+(defmethod remote-version :before ((self base-api-context))
+  (fetch-remote-information self))
+
+(defmethod api-features :before ((self base-api-context))
+  (fetch-remote-information self))
 
 (defclass api-engine (reused-ssl-mixin engine)
   ())
