@@ -57,11 +57,11 @@
   (with-tags (("cli-client" "true")
               #+lispworks ("api_hostname" *hostname*)
               #+lispworks ("api_id"  *api-key*)
-              #+lispworks ("channel" flags:*channel*))
+              #+lispworks ("channel" flags:*channel*)
+              ("cli-version" *client-version*))
     (with-extras (("features" *features*)
                   ("build_creator"
                    (uiop:getenv "BUILDKITE_BUILD_CREATOR"))
-                  ("cli-version" *client-version*)
                   ("build-url" flags:*build-url*))
       (with-cli-sentry (:verbose flags:*verbose* :dry-run dry-run
                         :stream stream

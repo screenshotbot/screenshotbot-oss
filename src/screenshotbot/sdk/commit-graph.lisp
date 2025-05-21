@@ -189,7 +189,3 @@ commits that are needed."
 
 (defmethod update-commit-graph (api-context (repo null-repo) branch &key &allow-other-keys)
   (log:info "Not updating the commit graph, since there's no repo"))
-
-
-
-
