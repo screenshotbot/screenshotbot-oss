@@ -383,8 +383,8 @@ that might've already merged."
   (let ((commit-1 (listify commit-1)))
    (cond
      ((equal commit-1 (list commit-2))
-      (when exclude-commit-2
-        (warn "COMMIT-1 is same as COMMIT-2, but EXCLUDE-COMMIT-2 was provided"))
+      ;; Technically this is incorrect when EXCLUDE-COMMIT-2 is provided,
+      ;; but abstract-pr-promoter depends on this behavior.
       commit-2)
      (t
       (let* ((merge-bases

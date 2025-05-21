@@ -345,14 +345,7 @@ for you."
     (with-fixture F279319 ()
       (is (equal nil (merge-base dag "aa" "dd")))
       (is (equal "aa" (merge-base dag "aa" "aa" :exclude-commit-2 nil)))
-      (is (equal "aa" (merge-base dag "aa" "aa" :exclude-commit-2 t)))
-      (handler-case
-          (progn
-            (merge-base dag "aa" "aa" :exclude-commit-2 t)
-            (fail "expected to have got the warning"))
-        (simple-warning (w)
-          (assert-that (format nil "~a" w)
-                       (contains-string "COMMIT-1 is same as COMMIT-2")))))))
+      (is (equal "aa" (merge-base dag "aa" "aa" :exclude-commit-2 t))))))
 
 (test merge-base-allows-multiple-commit-1s
   (with-fixture state ()
@@ -374,14 +367,7 @@ for you."
     ;; At this point, the graph looks like: https://phabricator.tdrhq.com/F279319
     (is (equal nil (merge-base dag "aa" "dd")))
     (is (equal "aa" (merge-base dag "aa" "aa" :exclude-commit-2 nil)))
-    (is (equal "aa" (merge-base dag "aa" "aa" :exclude-commit-2 t)))
-    (handler-case
-        (progn
-          (merge-base dag "aa" "aa" :exclude-commit-2 t)
-          (fail "expected to have got the warning"))
-      (simple-warning (w)
-        (assert-that (format nil "~a" w)
-                     (contains-string "COMMIT-1 is same as COMMIT-2"))))))
+    (is (equal "aa" (merge-base dag "aa" "aa" :exclude-commit-2 t)))))
 
 (test merge-base-finds-*greatest*-common-ancestor-not-just-any-ancestor
   (with-fixture state ()
