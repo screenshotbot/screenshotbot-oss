@@ -24,7 +24,6 @@
    #:flags-run-context
    #:main-branch
    #:pull-request-url
-   #:create-github-issue-p
    #:productionp
    #:repo-url
    #:git-repo
@@ -98,11 +97,6 @@
                       :reader pull-request-url
                       :json-type (or null :string)
                       :json-key "pullRequestUrl")
-    (create-github-issue-p :initarg :create-github-issue-p
-                           :initform nil
-                           :reader create-github-issue-p
-                           :json-type (or null :string)
-                           :json-key "shouldCreateGithubIssue")
     (repo-url :initarg :repo-url
               :initform nil
               :reader repo-url
@@ -405,7 +399,6 @@ pull-request looks incorrect."
    :main-branch flags:*main-branch*
    :main-branch-hash flags:*main-branch-commit-hash*
    :pull-request-url flags:*pull-request*
-   :create-github-issue-p flags:*create-github-issue*
    :repo-url flags:*repo-url*
    :productionp flags:*production*
    :build-url flags:*build-url*
@@ -434,7 +427,6 @@ pull-request looks incorrect."
   (let ((flags:*main-branch* (main-branch self))
         (flags:*main-branch-commit-hash* (main-branch-hash self))
         (flags:*pull-request* (pull-request-url self))
-        (flags:*create-github-issue* (create-github-issue-p self))
         (flags:*repo-url* (repo-url self))
         (flags:*production* (productionp self))
         (flags:*build-url* (build-url self))

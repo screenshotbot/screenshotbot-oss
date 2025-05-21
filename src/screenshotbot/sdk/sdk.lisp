@@ -206,7 +206,6 @@ error."
                     (merge-base nil has-merge-base-p)
                     github-repo ;; probably only used by replay T1708
                     periodic-job-p
-                    create-github-issue
                     is-trunk)
    "BEFORE is a callback that is called before creating the run. It is
 called with the RUN-CONTEXT which is either the one passed or the
@@ -242,7 +241,6 @@ run-context that was created here."
                                   :pull-request-url pull-request
                                   :productionp is-trunk
                                   :main-branch branch
-                                  :create-github-issue-p create-github-issue
                                   :env (e:make-env-reader)
                                   extra-run-context-args))))
          (funcall before run-context)
@@ -288,7 +286,6 @@ run-context that was created here."
                              :pull-request (run-context:pull-request-url run-context)
                              :commit-hash (run-context:commit-hash run-context)
                              :override-commit-hash (run-context:override-commit-hash run-context)
-                             :create-github-issue-p (run-context:create-github-issue-p run-context)
                              :cleanp cleanp
                              :tags (run-context:tags run-context)
                              :gitlab-merge-request-iid (safe-parse-int
@@ -331,7 +328,6 @@ run-context that was created here."
                    ("pull-request" . ,(dto:pull-request-url run))
                    ("commit" . ,(dto:run-commit run))
                    ("override-commit-hash" . ,(dto:override-commit-hash run))
-                   ("create-github-issue" . ,(bool (dto:should-create-github-issue-p run)))
                    ("is-clean" . ,(bool (dto:cleanp run)))
                    ("gitlab-merge-request-iid" .
                                                ,(dto:gitlab-merge-request-iid run))
@@ -586,7 +582,6 @@ pull-request looks incorrect."
     (make-directory-run api-context directory
                         :channel channel
                         :pull-request flags:*pull-request*
-                        :create-github-issue flags:*create-github-issue*
                         :before (lambda (run-context)
                                   (when (and flags:*production*
                                              (> flags:*commit-limit* 0))
