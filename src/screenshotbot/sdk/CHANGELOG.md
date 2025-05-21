@@ -1,15 +1,29 @@
 # Changelog
 
+## 2.15.14 - 2025-05-21
+
+### Changed
+
+- Disabled the new commit-graph flow again. We've been running an
+  older version (2.15.1), but we're pushing this new version so that
+  customers can update to this instead of running buggy versions > 2.15.1 and < 2.15.14.
+
 ## 2.15.12 - 2025-05-11
+
+### Changed
 
 - Fixed incomplete commit prefixes passed to
   `--override-commit-hash`. 
 
 ## 2.15.11 - 2025-05-11
 
+### Changed
+
 - Fix couple of edge cases with the new commit graph flow
 
 ## 2.15.8 - 2025-05-11
+
+### Changed
 
 - Fixed netrc parsing in certain case
 - Fix Git HTTP URL parsing when authentication is part of the Git URL
