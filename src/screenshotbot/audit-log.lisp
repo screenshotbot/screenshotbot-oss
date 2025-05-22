@@ -30,6 +30,9 @@
                 #:fset-set-index)
   (:import-from #:util/store/store
                 #:defindex)
+  (:import-from #:util/simple-queue
+                #:enqueue-with-max-length
+                #:make-queue)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:base-audit-log
@@ -42,6 +45,8 @@
 (defindex +company-index+
   'fset-set-index
   :slot-name '%%company)
+
+(defvar *error-log* (make-queue))
 
 (with-class-validation
   (defclass base-audit-log (store-object)
@@ -71,6 +76,8 @@
 (def-easy-macro with-audit-log (&binding audit-log expr &fn fn)
   (handler-bind ((error
                    (lambda (e)
+                     (enqueue-with-max-length e *error-log*
+                                              :max-length 10000)
                      (unless (audit-log-error expr)
                        (with-transaction ()
                          (setf (audit-log-error expr)
