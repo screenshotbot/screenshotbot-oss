@@ -117,12 +117,13 @@
     (is-true
      (rev-parse repo "car"))))
 
-(def-easy-macro with-clone (&binding clone repo &fn fn)
+(def-easy-macro with-clone (&binding clone repo &key (args "") &fn fn)
   (with-tmpdir (clone-root)
     (run-in-dir repo "git checkout -b master")
     (make-commit repo "foobar")
-    (uiop:run-program (format nil "cd ~a && git clone ~a cloned-repo"
+    (uiop:run-program (format nil "cd ~a && git clone ~a ~a cloned-repo"
                               clone-root
+                              args
                               (namestring (repo-dir repo)))
                       :error-output *standard-output*)
     (let ((clone (make-instance 'git-repo :dir (path:catdir clone-root "cloned-repo/"))))
@@ -183,3 +184,21 @@
     (with-clone (clone repo)
       (is (equal (namestring dir)
                  (namestring (get-remote-url clone)))))))
+
+(test shallow-clone-commits
+  "A test for desired behavior, but it currently is wrong."
+  (tmpdir:with-tmpdir (dir)
+    (uiop:run-program
+     (format nil
+             "cd ~a && tar xzf ~a"
+             (namestring dir)
+             (asdf:system-relative-pathname :screenshotbot.sdk "fixture/shallow-fast-example.tar.gz")))
+    (let ((dag
+            (read-graph
+             (make-instance 'git-repo
+                            :dir (path:catdir dir "fake-fast-example/")))))
+      (let ((commit (dag:get-commit dag "64d2dae97dd117315bdd17c381047172ad3511a8")))
+        (is-true commit)
+        (assert-that (dag:parents commit)
+                     ;; We want this to be 1!
+                     (has-length 0))))))
