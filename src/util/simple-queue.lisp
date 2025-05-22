@@ -15,6 +15,9 @@
    #:queue-items))
 (in-package :util/simple-queue)
 
+(defvar *lock* (bt:make-lock)
+  "Only used for enqueue-with-max-length")
+
 (defclass queue ()
   ((head :accessor head
          :initform nil)
@@ -37,6 +40,20 @@
       (t
        (setf (cdr (tail queue)) new-tail)
        (setf (tail queue) new-tail)))))
+
+(defmethod enqueue-with-max-length (value (queue queue) &key max-length)
+  "Enqueues a new element, and keeps dequeing until the max-length is
+reached.
+
+Thread safe is enqueue-with-max-length is the only way you're
+accessing the queue.
+
+Convenient for keeping in-memory logs."
+  (bt:with-lock-held (*lock*)
+    (enqueue value queue)
+    (loop while (> (queue-length queue) max-length)
+          do
+             (dequeue queue))))
 
 (defun dequeue (queue)
   (let ((head (head queue)))

@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/simple-queue
+                #:enqueue-with-max-length
                 #:queue-emptyp
                 #:tail
                 #:head
@@ -62,3 +63,11 @@
     (is-false (queue-emptyp q))
     (dequeue q)
     (is-true (queue-emptyp q))))
+
+(test enqueue-with-max-length
+  (with-fixture state ()
+    (enqueue 1 q)
+    (enqueue 2 q)
+    (enqueue 3 q)
+    (enqueue 4 q)
+    (enqueue-with-max-length 5 q :max-length 2)))
