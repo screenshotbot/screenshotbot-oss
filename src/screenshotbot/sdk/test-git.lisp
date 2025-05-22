@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/git
+                #:parse-raw-git-log
                 #:repo-link
                 #:get-remote-url
                 #:author
@@ -203,3 +204,14 @@
         (is-true commit)
         (assert-that (dag:parents commit)
                      (contains "912c8d09ba092052d69481777304d039089111ea"))))))
+
+(test parses-multiple-parents
+  (let ((input (uiop:read-file-string (asdf:system-relative-pathname
+                                       :screenshotbot.sdk
+                                       "fixture/braft.log")))
+        (expected-output (uiop:read-file-string (asdf:system-relative-pathname
+                                                 :screenshotbot.sdk
+                                                 "fixture/braft-expected.log"))))
+      (is
+   (equal expected-output
+          (parse-raw-git-log input)))))

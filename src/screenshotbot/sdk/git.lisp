@@ -116,7 +116,7 @@
                     (format output "~%~a" sha))
                    ((equal "parent" key)
                     (format output " ~a" sha))))))
-    (str:trim (get-output-stream-string output))))
+    (format nil "~a~%" (str:trim (get-output-stream-string output)))))
 
 (defmethod read-graph ((repo git-repo))
   (dag:read-from-stream

@@ -1,0 +1,219 @@
+commit ab0017f0b98d429138d83a04d3ed351197d671a9
+tree d94321f16c9b744e12af0dce52bf353a43177e6f
+parent 9d9a17db9cc4b35d9493e5ac3f7ebb81c0e8daa8
+parent 1bd6c491a8cb115147fd1ff12120f56e7dc54094
+author doc001 <wenffie@gmail.com> 1729840929 +0800
+committer GitHub <noreply@github.com> 1729840929 +0800
+gpgsig -----BEGIN PGP SIGNATURE-----
+ 
+ wsFcBAABCAAQBQJnG0chCRC1aQ7uu5UhlAAALl4QAGP53RvP5XzrhxrLxhS7SvCK
+ iGLn7DTp60dvYjpvwf3/xF/EJ16dFgaJkcFwVy6nzOUMuES1+/LM6Lgpzoxu+bWL
+ Oi/pcwaKJ989ettgBbtRatlW77fsq7DNjR/BW23C1x/dCFQGs8Ht2xfkUBnL1fby
+ ISxBWn1KWQPvS2kUZka+3zTCXLGwxymCYFiYv7zbQ+sZiq16uDzT8UZDNngRSzPL
+ cWcjuOKKPKx2xDp+qGoJKRKn6ci8MHOFoZdkr/8RX36w708Z3CFIipNi6VtmM8y4
+ iPoX8DoErQGQUX/umj3JL/Z0uC3znODqJuCOOvTlwWHpz6zXPdglvX3VtIUcVsT8
+ 7Jc4suRS4IyXlOFa6mWqccormWAQFXqf8cBJHETs/UFiV1htjwb9w3GQjYmwL9xb
+ eQwajRGIXnXaac+TCt5OMZ25OcNr8qB/uLAxEw3TdRpd9SDlXLSj8indIj9V3rMg
+ DQh6sx+IPYNu0QDFBj0mT+2uAJJYzXOzlB2Jkbnt5HJlOq3/IDlwrM/6BxEz1C/j
+ hhKBXtSv8SY8RQNlpbjIFyYjaDmIwetj9lZBVioNR2vPN5U85eCouzY5NtlM06ps
+ vKApnYw7xJkM8BChCWrdIt35s1R8lkHRFefUCEme0dniVlPij9Xpio+CXLBirx/x
+ 6vyEL5EtzNYyN0hLa0Nj
+ =iH1D
+ -----END PGP SIGNATURE-----
+ 
+
+    Merge pull request #475 from thweetkomputer/master
+    
+    fix typo in route_table
+
+commit 9d9a17db9cc4b35d9493e5ac3f7ebb81c0e8daa8
+tree 4e24078e1a119d4938188a98f39aa8fddc172210
+parent 921b00c0e0cbc96926b1d0230aedfad801f99b69
+parent 2c78931c5874ca69246e0a42eb45541d652942a0
+author doc001 <wenffie@gmail.com> 1729839361 +0800
+committer GitHub <noreply@github.com> 1729839361 +0800
+gpgsig -----BEGIN PGP SIGNATURE-----
+ 
+ wsFcBAABCAAQBQJnG0EBCRC1aQ7uu5UhlAAADFoQABty+O/W6pxTuGwTw4LxDlmc
+ c3EBdGL1a72xeJsvlpipI3xcM2XzvXzcvvku7PQ8XNn0oFgo6Nbw0Ud7I/j87MGv
+ aBqsMXPjem6ZlnkaVXTrvJYqAxxfr36pbDW5D29mqBOH9tt/KbzSzpwJk0WkFeGU
+ ip5Yxzj+3c/4xcPIrp/4n5YtqNDcxvVEwjjSAiXzXhj4WKcqPEmRt9me9khUWlKq
+ qManjkHnYIoBoXqgqZ6bq2VZjUT1BSQ7v9NFrUA153WNKmwW+/rKhrFydD6v6k4T
+ wzLyd6wUde7wpn0fxQ5dI8p9s56XexVu2wokw1/6akdIpFfOe6fE0dDvuQudkel0
+ 1d39LoEqLEj387I4J+mEKLpIyX/TWOcCgJROcktjdJvbQ7QtBZ4kD6iJx7sYvsY7
+ LWswqVZNqw9rYZ1Os+lDAXvPVEdaaeA3Tf5Y3lxZgxJ4otxPl+Ma7mAz2nz40R0k
+ vtDSSTyE51rKvSs/twyjV9vWw19+Bp7aRdcjzAyG3wHMLgyiYlgoejYHKE9+6euQ
+ zZ1f0vWxKwTJ+oTNzjAlsI9Qqfa7iH/SLhr6/sH9fFto/B1WHg6falPicQOgZnRG
+ 76Fhl/Ikqd6WJ7zG1ZX1eBWjCAtMMsY8ydQ1tw8qJKufTwE7oG2UEVBes5BRm+N0
+ VY+DwrPmh45RZa29/Rso
+ =YZYM
+ -----END PGP SIGNATURE-----
+ 
+
+    Merge pull request #472 from ideal/master
+    
+    fix typo in example
+
+commit 921b00c0e0cbc96926b1d0230aedfad801f99b69
+tree 8e2f85ec5652b58695b2702f61f10fc66fab7fee
+parent bc9fb052868560322a9b833c8179bb4d1a1f7dc5
+parent b9e12939a03506652180d5541893d7c296b6cb46
+author doc001 <wenffie@gmail.com> 1729839328 +0800
+committer GitHub <noreply@github.com> 1729839328 +0800
+gpgsig -----BEGIN PGP SIGNATURE-----
+ 
+ wsFcBAABCAAQBQJnG0DgCRC1aQ7uu5UhlAAA7DcQACAD4FmYEXzK+CHyfR5GOJHI
+ KKIhUpgFun2afrGiB7orHw0jjZCadcYzHT3ZgxTGXgh2lhnoFBBHY0xHn6gOtMzV
+ HWqt+vTSk34GWnYvJFgeKpvFwNyCx7i29bRclUpkqmXyLttiF2u2rvAPW+Ba15vq
+ mzDYi7Ql0sJj6HgUuOTuFwNCCjV0qphMGD2ulpWlqsfEyUdcqzI+kcHGjkEDr4nD
+ fGJVSN7cMolpBxEMoPwCjpEio9cZg8DuuWsqpItHfCEvUdfhFIkWH0fbmMT+0p57
+ Jc+VuRgzgEHK6PuPKUEwTPbIxaLWogWPI4eWTKjj+0xbgDWeiFOyIhZ686xcHj0P
+ 8PGQ6PhWHLasuFSqj2m8U0V1QsHxegbkKvz+UPTyo/3wfusc4zmNJpqClZ2P8rjb
+ 5lQiRNb50Mlp5jCG/WjVLIdTKhj6vBu9NwhD6V6/ON7de6Wpu9iuNoMk3e9q9HhT
+ Cif3w8n3kjEZ0AFgsxALuR6gYAa7YUbsfaYHeO8n61qQP+UD3NOPIRu6ocrvKE2w
+ 2VzfsWC+FW29u1ShOoeI30A8gU+a4H2MJ3OOAUx3IhVwT/XfOYi+jaqTT8w9hbhw
+ fk30hCfhJ/VjqOLIOSIQVR5+b+iBFLdnGJbgqO2X+eqr4sczralsdVouBYDuvo2x
+ DR+fMAh50pESCPqW23j7
+ =5Le6
+ -----END PGP SIGNATURE-----
+ 
+
+    Merge pull request #471 from BusyJay/patch-1
+    
+    fix use after free in handle_timeout_now_request
+
+commit 1bd6c491a8cb115147fd1ff12120f56e7dc54094
+tree 95107a58dea5547328767fc4d6edc231cd1f904f
+parent bc9fb052868560322a9b833c8179bb4d1a1f7dc5
+author Chen Zhao <ch3nzhao@gmail.com> 1729578461 +1100
+committer Chen Zhao <ch3nzhao@gmail.com> 1729578461 +1100
+
+    fix typo in route_table.cpp
+
+commit 2c78931c5874ca69246e0a42eb45541d652942a0
+tree 6846b0a69d7095c1463b08016f98e91cfc1392bf
+parent bc9fb052868560322a9b833c8179bb4d1a1f7dc5
+author ideal <idealities@gmail.com> 1725332794 +0800
+committer ideal <idealities@gmail.com> 1725332794 +0800
+
+    Fix typo
+
+commit b9e12939a03506652180d5541893d7c296b6cb46
+tree 8e2f85ec5652b58695b2702f61f10fc66fab7fee
+parent bc9fb052868560322a9b833c8179bb4d1a1f7dc5
+author Jay <BusyJay@users.noreply.github.com> 1724143389 +0800
+committer GitHub <noreply@github.com> 1724143389 +0800
+gpgsig -----BEGIN PGP SIGNATURE-----
+ 
+ wsFcBAABCAAQBQJmxFcdCRC1aQ7uu5UhlAAAko4QAEnYn9l0l41JcH/jxGC98OPq
+ +UG2FqfDNlVYxelEu8DY6uN4VUiaFr+7YzzyWLztc4UnCvvMwDPCwwrKdEtp8y9U
+ X2jSV3E5LViJBYiB+em0wN0z9CEpKDJo5TsCGZL6g+5//HdQsdmBcLfUPb73YHR7
+ QHWqyqURF+uqBsTxKxpAcwcJ0c/ykbeLesEJALkz4PzVNW3PKppK0maSlTg4/WnU
+ x22MP2GNQd5TaeFI74NEf0gCVMSHc+TYYk+ScYBMKfAHFDsAoNjsU2jWHorLDM91
+ 7slV2uCwzq6gUMAJKZj7lJfnemXhoe0rCYb3zVeY1YNp/nIJowDbp09ayBq9qzbT
+ YpSF27TF+a5L6PjS5Mp7WYOLTK2TLfdDwtWe0anyp1G7siDIYKH+OU2OgQaHksAp
+ 43xZq86yeUVpvEFg0QbrJx5Y0qzRT1E57s/HAIjUuBbwiwyx//X6LmQjzqi+H0fw
+ ymBTNGDr7RvLCfbV6QfvH0nwJn5bhKX9G0CZTVNuVzVRjMZu/mWIINjKxCP3f+Mt
+ Cle8q4bujKlyxl7z9raIXlG73Yfo0Kg2C5QnoC7N+kfx6jC4bLRkmVwUi7fRQoMb
+ qO99VLgQQIRaWrAuwu+PihzrfhTfBxb5iRppNdMEIi5hacq8x70E37kOKCN9x+p1
+ qhfKYONMk99njCSMyV9A
+ =RDOY
+ -----END PGP SIGNATURE-----
+ 
+
+    fix use after free in handle_timeout_now_request
+    
+    Closure maybe invoked before `elect_self`, which will free request and cause UAF.
+
+commit bc9fb052868560322a9b833c8179bb4d1a1f7dc5
+tree 92e05e8c9a851b89c095e908cc57bb5ed7dd9a38
+parent b37c610039aa34d6df2e5bda12f830003561b08b
+parent c5a306817f3976f64da9a0a9d5112164392e028d
+author doc001 <wenffie@gmail.com> 1718982014 +0800
+committer GitHub <noreply@github.com> 1718982014 +0800
+gpgsig -----BEGIN PGP SIGNATURE-----
+ 
+ wsFcBAABCAAQBQJmdZV+CRC1aQ7uu5UhlAAAkXsQABD3S2nSmBc5K9RCnq2dxh+U
+ UktHC+XozyBTM8PrDpi7QGRnwUB/EtdSPL/CY9rgKAj4CqDFcS+93K1tdndoMRT1
+ MU8JXSgQJHGKZw3CD6HjUQEm/hb/QwyVxVoX9tgajPGOkVGit9oEUvcFzc9I+832
+ NgI65cyRwbDU8dD5hsORAJvYILpnduZk72lAwl9xxdI8WgJMiQ4OKjV1asMAkTQM
+ +RrliIWtSMAOJd1AguEwf6U5IyXLPS8rdF995pl7GhbYh28Q9T0cbOhm1crSVs4Z
+ KcB7yfdb+/RxxQAGqOxxhrzhAVOf/V9npOm34lfq45FgmJCZWs1lw0Q2Pyl7Seuo
+ 1AYChlny92ZiJW84NBNqSCURcurn5bpdUFb/wLxuFQEXU/4JE0hxggwlCMIwlgXZ
+ i0A4Nu2R2y2LDBqqNxyG8XQ4hZQD6DaQ3IXJqyqdS7Lwf+GvN389pbwlGydkmh+R
+ f9Wkbgk1Ut6j8KbF9LAZ5Ja9x3aOsS+3TAqVJJf6HEbHCmO8ZbSfUvZ1LmdlaJqe
+ +UoOZXKvKkBsFqwFe/opD3HntL2GRNkORoV6ZAEUYyOyQRibFNhp+hkV3YiveZdn
+ OjR55VhIHd/tr/oG2q+PNJR3+60wimXdUEpEX0xjtfWfogUBG0cKJGbk4kRhmUFs
+ 94B3b8ETdbtdSZ+Iknf3
+ =2bxP
+ -----END PGP SIGNATURE-----
+ 
+
+    Merge pull request #458 from walterzhaoJR/fix-mem-leak-issues-454
+    
+    fix mem leak in Replicator::_prepare_entry
+
+commit c5a306817f3976f64da9a0a9d5112164392e028d
+tree 92e05e8c9a851b89c095e908cc57bb5ed7dd9a38
+parent b37c610039aa34d6df2e5bda12f830003561b08b
+author walterzhaoJR <519362600@qq.com> 1718964713 +0800
+committer walterzhaoJR <519362600@qq.com> 1718964713 +0800
+
+    fix mem leak in Replicator::_prepare_entry
+    detail:https://github.com/baidu/braft/issues/454
+
+commit b37c610039aa34d6df2e5bda12f830003561b08b
+tree e85bcb194795f98ff30c437b48f0a31ac3eef4e3
+parent ae887a0fcb82c664825331151c096403f49bf3f0
+parent 7fd7b80738014d1a5cf97486be7e6b90dbb2e0c3
+author doc001 <wenffie@gmail.com> 1708504591 +0800
+committer GitHub <noreply@github.com> 1708504591 +0800
+gpgsig -----BEGIN PGP SIGNATURE-----
+ 
+ wsFcBAABCAAQBQJl1bYPCRC1aQ7uu5UhlAAA2MQQAHpIDnVbg9Vpp1iyXstgobsL
+ B08Fa4FuQ+rcPuAz1VuVGja5feLd+lniIEM8rqUIfSj6GPjDCVgiJvi+tbV9T5PQ
+ aXxifzQEPXse+HHSE34rtCanwELC238KUW2L/2KIQe/oMDGX4Ny/XDYqzb1Fgccu
+ QlShMsReY+gThRwi80T6GLSS+uDz1KK1Y06HzIW+KTp9GfH0m2CefQdxYwiod8+9
+ EWU3Z1R6pvPn5h9yUjcp/hjvQs4fZfqukNz+cBclHDpbzGtyyF/sPGLgXoT0P6tc
+ 7DhhP7nOLRZBPut5eRm0linUCuuDzOzi9P+zNIIXSJI4Zpn9EhrbPMQ53rk+v4vh
+ VQrQSAe8Bh7YH72X7IH7fM//UKbyzN+TdXuXT2TC2KMcQt1nw2149QDht9POLxsh
+ cqV2Fg+oAbPdDhO9UOXkKhaJC1BRksYQMifulkTepL7qHKbI2TAn8v8kaVFw+98/
+ 312S9wUue4yoaa1fBvav8b0JsaYtmhWZ24pwDAbUOIo2kJBxqSF1UC5BRHSYFXkH
+ 1iU8VZf6zksP777YXz21fgt9xZ2AjfCBbPRP+km/u9ibQ0bjkNXQcfAEPPWZqezP
+ QaDDAuPPE5q3cI+Gr3v3NrTIuK2Z07SUaR6/FmQROXvO94L5lvedTRJSIed5jg+/
+ 1VJ/e5JOdXlnBD1x2vOi
+ =o6/z
+ -----END PGP SIGNATURE-----
+ 
+
+    Merge pull request #436 from lhsoft/recover_log_from_corrupt
+    
+    recover log from data corrupt
+
+commit ae887a0fcb82c664825331151c096403f49bf3f0
+tree ceb98aa5b8a762daf183a2211169f94a8d18a5e6
+parent 080689bd54c3231921d83351e23012c2e9f44b0e
+parent bd2387a7deba42a7a5d039f833a4e70f42015ea1
+author doc001 <wenffie@gmail.com> 1708504513 +0800
+committer GitHub <noreply@github.com> 1708504513 +0800
+gpgsig -----BEGIN PGP SIGNATURE-----
+ 
+ wsFcBAABCAAQBQJl1bXBCRC1aQ7uu5UhlAAArVEQAGM/U6mzq7P8g5Rd1olgF72m
+ oJ2DK/LIXdjG21Vvs5t0VS1aiHQ5rkgNXgWivQV/UybziDEDGEhLwoabRikXzYBc
+ R11ysPLqAE+9pnvm/lPQLeevKnxhOUBVHL//zxyPy8DcGxkDvKJWeN1KgVzarBu9
+ p8lIfSi6QtDbh/5pRQ0+1q1ls8mHFF57HzP1nnkg6XxEbUZPt5nYHFqAbfIFiKQC
+ GWuRBSz+hFBtx+JIi3U7gUPIOH23NEZBBMdACQJeXsqJYOl3iC7I6irIchjXucEz
+ 2xzW26hro0g9DqIgQoMfQfGkdXnR/oYwkF8XLLnSWRLKX+9TIE1zffiF5FhIwJK0
+ cc22gzqp12qfJfGd5Ip8AJJh/JMtmjnbma8uJi05pULzpNdQ+cckPEh8jzgTeD7g
+ sxrDDpDb2vF4I4Xb5W50e+E2ue3xqpRtjpQPbnSGo35AnvP6lJJYkctGV3/HmUXM
+ 66BJr5t7MR2+m31g9GRRUJNMdXzErVmpQgw5wwj8TH5SRXdzMfzRXpr/dNlKpT16
+ QGZfJbanpjUc9Ua+KSeEGH+Xthpn0R2TcNNqDOELretNT0Cmq1Ptcq3Jw5ej2Zqm
+ v9i6Cpb4op3zgTAY+M0Pn9TI2v+MOSUlYG4drvZHpRKwlhDGlHhSJw5mmBDXSV6m
+ KgsptQin73X53OVEUGV2
+ =3TBC
+ -----END PGP SIGNATURE-----
+ 
+
+    Merge pull request #437 from lhsoft/sync_conf_log
+    
+    sync log immediately when there is configuration
