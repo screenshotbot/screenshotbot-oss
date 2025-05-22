@@ -34,6 +34,8 @@
                 #:has-length)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
   (:export
    #:with-git-repo
    #:make-commit
@@ -186,7 +188,7 @@
                  (namestring (get-remote-url clone)))))))
 
 (test shallow-clone-commits
-  "A test for desired behavior, but it currently is wrong."
+  "Using --pretty='%H %P' would break this"
   (tmpdir:with-tmpdir (dir)
     (uiop:run-program
      (format nil
@@ -200,5 +202,4 @@
       (let ((commit (dag:get-commit dag "64d2dae97dd117315bdd17c381047172ad3511a8")))
         (is-true commit)
         (assert-that (dag:parents commit)
-                     ;; We want this to be 1!
-                     (has-length 0))))))
+                     (contains "912c8d09ba092052d69481777304d039089111ea"))))))

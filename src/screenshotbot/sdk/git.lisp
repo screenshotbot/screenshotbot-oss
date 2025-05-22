@@ -99,14 +99,34 @@
 (defmethod current-branch ((repo null-repo))
   nil)
 
+(defun parse-raw-git-log (log)
+  (let ((input (make-string-input-stream log))
+        (output (make-string-output-stream)))
+    (loop for line = (str:trim (read-line input nil nil))
+          while line
+          do
+             (destructuring-bind (key &optional sha)
+                 (str:split " " line :limit 2)
+               (when (and
+                      sha
+                      (= (length sha) 40)
+                      (cl-ppcre:scan "[a-f0-9]*" sha))
+                 (cond
+                   ((Equal "commit" key)
+                    (format output "~%~a" sha))
+                   ((equal "parent" key)
+                    (format output " ~a" sha))))))
+    (str:trim (get-output-stream-string output))))
+
 (defmethod read-graph ((repo git-repo))
   (dag:read-from-stream
    (make-string-input-stream
-    ($ (git-command repo)
-      "log" "--all"
-      (when flags:*commit-limit*
-        (format nil "--max-count=~a" flags:*commit-limit*))
-      "--pretty=%H %P"))
+    (parse-raw-git-log
+     ($ (git-command repo)
+       "log" "--all"
+       (when flags:*commit-limit*
+         (format nil "--max-count=~a" flags:*commit-limit*))
+       "--pretty=raw" "--no-color")))
    :format :text))
 
 (defmethod merge-base ((repo git-repo) master-sha commit-sha)
