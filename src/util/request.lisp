@@ -129,6 +129,17 @@ use stream pools.")
   (apply #'drakma:http-request url
          args))
 
+(define-condition bad-response-code (error)
+  ((code :initarg :code)
+   (url :initarg :url
+        :initform nil)
+   (body :initarg :body
+         :reader bad-response-code-body))
+  (:report (lambda (e output)
+             (with-slots (code url) e
+               (format output "Got response code ~a when downloading ~a" code url)))))
+
+
 (defmethod http-request-impl ((engine core-engine)
                               url &rest args &key headers-as-hash-table
                                                want-string
@@ -170,7 +181,10 @@ use stream pools.")
                (declare (ignore response))
                (when (and ensure-success
                           (not (http-success-response? status)))
-                 (error "Got response code ~a when downloading ~a" status url))))
+                 (error 'bad-response-code
+                        :code status
+                        :url url
+                        :body res))))
         (handler-bind ((error (lambda (e)
                                 (declare (ignore e))
                                 ;; We're not going to actually return the stream
