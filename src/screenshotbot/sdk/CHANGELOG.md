@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.15.15 - 2025-05-22
+
+### Changed
+
+- Fixed bug in the old commit-graph flow where shallow commits weren't
+  sending parent commits, thus messing up the commit graph.
+
 ## 2.15.14 - 2025-05-21
 
 ### Changed
