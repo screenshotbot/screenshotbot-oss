@@ -177,33 +177,30 @@ use stream pools.")
                    :additional-headers additional-headers
                    :verify verify
                    args)))
-      (labels ((body-content ()
-                 "Get the body content as a string. (RES might be a stream)"
-                 (cond
-                   (want-string
-                    (let ((response (uiop:slurp-input-stream 'string res)))
-                      ;; by calling this here, we'll have the response in the
-                      ;; stack trace.
-                      (maybe-ensure-success response)
-                      response))
-                   (t
-                    (maybe-ensure-success)
-                    res)))
-               (maybe-ensure-success (&optional response)
+      (flet ((maybe-ensure-success (&optional response)
                (declare (ignore response))
                (when (and ensure-success
                           (not (http-success-response? status)))
                  (error 'bad-response-code
                         :code status
                         :url url
-                        :body (body-content)))))
+                        :body res))))
         (handler-bind ((error (lambda (e)
                                 (declare (ignore e))
                                 ;; We're not going to actually return the stream
                                 (when (streamp res)
                                   (close res)))))
           (values
-           (body-content)
+           (cond
+             (want-string
+              (let ((response (uiop:slurp-input-stream 'string res)))
+                ;; by calling this here, we'll have the response in the
+                ;; stack trace.
+                (maybe-ensure-success response)
+                response))
+             (t
+              (maybe-ensure-success)
+              res))
            status
            (cond
              (headers-as-hash-table
