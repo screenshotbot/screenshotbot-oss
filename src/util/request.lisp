@@ -184,7 +184,10 @@ use stream pools.")
                  (error 'bad-response-code
                         :code status
                         :url url
-                        :body res))))
+                        :body (when want-string
+                                ;; there are other cases, that we are
+                                ;; just not handling
+                                (uiop:slurp-input-stream 'string res))))))
         (handler-bind ((error (lambda (e)
                                 (declare (ignore e))
                                 ;; We're not going to actually return the stream
