@@ -179,6 +179,7 @@ have to be called just before returning.")
                                ,@(loop for (name type) in args
                                        collect `(,(%find-lisp-to-foreign-converter type)
                                                  ,name)))))
+                     (log:info "FFI call complete for ~a" ',cffi-name)
                      (mapcar #'funcall *funcall-cleanups*)
                      (values
                       ret
