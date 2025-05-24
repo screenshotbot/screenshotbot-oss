@@ -581,13 +581,22 @@
 
 (defmethod ping-image-metadata ((magick magick-native) file)
   (push-event :magick.ping-image-metadata)
+  (log:info "here1")
   (with-wand (wand)
     (check-boolean (magick-ping-image wand (namestring file))
                    wand)
-    (list
-     (magick-get-image-width wand)
-     (magick-get-image-height wand)
-     (get-image-format wand))))
+    (prog1
+        (list
+         (progn
+           (log:info "here2")
+           (magick-get-image-width wand))
+         (progn
+           (log:info "here3")
+           (magick-get-image-height wand))
+         (progn
+           (log:info "here4")
+           (get-image-format wand)))
+      (log:info "here5"))))
 
 
 (defun from-magick-string (format)
