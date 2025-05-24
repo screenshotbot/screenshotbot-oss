@@ -17,8 +17,8 @@ jobs:
             apt-get install -y openjdk-17-jdk-headless
             # apt-get install -y valgrind
             # apt-get build-dep -y sbcl
-            curl  http://prdownloads.sourceforge.net/sbcl/sbcl-2.5.4-source.tar.bz2 -o sbcl-2.5.4-source.tar.bz2
-            tar xvjf sbcl-2.5.4-source.tar.bz2
+            curl  https://github.com/sbcl/sbcl/archive/refs/tags/sbcl-2.5.4.tar.gz -o sbcl-2.5.4-source.tar.gz
+            tar xvzf sbcl-2.5.4-source.tar.gz
             cd sbcl
             ./configure && make && make install 
       - checkout
