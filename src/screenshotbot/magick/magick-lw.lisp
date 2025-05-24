@@ -583,8 +583,10 @@
   (push-event :magick.ping-image-metadata)
   (log:info "here1")
   (with-wand (wand)
-    (check-boolean (magick-ping-image wand (namestring file))
-                   wand)
+    (progn
+      (log:info "here1.5")
+      (check-boolean (magick-ping-image wand (namestring file))
+                    wand))
     (prog1
         (list
          (progn
