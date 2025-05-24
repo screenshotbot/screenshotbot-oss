@@ -17,8 +17,11 @@ jobs:
             apt-get install -y openjdk-17-jdk-headless
             # apt-get install -y valgrind
             # apt-get build-dep -y sbcl
-            sh ./scripts/install-sbcl.sh
       - checkout
+      - run:
+          name: Install SBCL
+          command: |
+            sh ./scripts/install-sbcl.sh
       - run:
           name: SBCL tests
           command: |
