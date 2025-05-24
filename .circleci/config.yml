@@ -15,7 +15,11 @@ jobs:
             # apt-get install -y /root/imagemagick7_7.1.1-39_amd64.deb
             apt-get install -y imagemagick libmagickwand-dev
             apt-get install -y openjdk-17-jdk-headless
-            apt-get install -y valgrind
+            # apt-get install -y valgrind
+            wget http://prdownloads.sourceforge.net/sbcl/sbcl-2.5.4-source.tar.bz2
+            tar xvjf sbcl-2.5.4-source.tar.bz2
+            cd sbcl
+            ./configure && make && make install 
       - checkout
       - run:
           name: SBCL tests
