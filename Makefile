@@ -5,7 +5,7 @@
 # file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 SBCL_C_FLAGS=--dynamic-space-size 2048
-sbcl=build/sbcl-console
+sbcl=valgrind build/sbcl-console
 CACHE_KEY=8
 SBCL_CORE=sbcl $(SBCL_C_FLAGS) --no-userinit
 CCL_DEFAULT_DIRECTORY?=/opt/software/ccl
