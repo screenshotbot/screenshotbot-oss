@@ -289,6 +289,7 @@
 
 (defsystem :util/fake-fli
   :depends-on (:cffi
+               :log4cl
                :str)
   :serial t
   :components (#-lispworksc (:file "fake-fli")))

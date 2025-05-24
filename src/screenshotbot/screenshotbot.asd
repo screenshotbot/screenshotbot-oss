@@ -28,6 +28,7 @@
                :core.rpc
                :util.store/sync
                :trivial-garbage
+               :trivial-timeout
                :core.active-users
                :util/posix
                :util/throttler

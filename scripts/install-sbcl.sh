@@ -9,4 +9,6 @@ apt-get install -y wget sbcl build-essential
 # apt-get build-dep -y sbcl
 wget  https://github.com/sbcl/sbcl/archive/refs/tags/sbcl-2.5.4.tar.gz 
 tar xvzf sbcl-2.5.4.tar.gz
-cd sbcl-sbcl-2.5.4/ && sh make.sh && INSTALL_ROOT=/usr/local sh install.sh
+echo "Going to build and stuff"
+cd sbcl-sbcl-2.5.4/ && sh make.sh
+INSTALL_ROOT=/usr/local sh install.sh
