@@ -4,7 +4,7 @@ services:
     build:
       context: ${SB_OSS_CONTEXT-.}
       dockerfile: ${SB_OSS_DOCKERFILE-Dockerfile}
-    platform: linux/amd64
+
     ports:
       - "4091:4091"
     volumes:
