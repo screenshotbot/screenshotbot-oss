@@ -169,12 +169,12 @@ have to be called just before returning.")
           (defun ,name-var (,@ (mapcar #'car args))
             ,(wrap-reference-returns
               reference-returns
-              (log:info "Calling ~a" ,cffi-name)
               (let ((returns (loop for x in reference-returns
                                    collect
                                    `(cffi:mem-ref ,(car x) ',(cadr (cadr x)))
                                    )))
                 `(let ((*funcall-cleanups* nil))
+                   (log:info "Calling ~a" ,cffi-name)
                    (let ((ret (funcall-with-native-error-handling #',cffi-name
                                ,@(loop for (name type) in args
                                        collect `(,(%find-lisp-to-foreign-converter type)
