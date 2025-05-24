@@ -14,7 +14,8 @@ jobs:
             curl https://screenshotbot-assets.s3.us-east-1.amazonaws.com/imagemagick7_7.1.1-39_amd64.deb -o /root/imagemagick7_7.1.1-39_amd64.deb
             # apt-get install -y /root/imagemagick7_7.1.1-39_amd64.deb
             apt-get install -y imagemagick libmagickwand-dev
-            apt-get install -y openjdk-17-jdk-headless 
+            apt-get install -y openjdk-17-jdk-headless
+            apt-get install -y valgrind
       - checkout
       - run:
           name: SBCL tests
