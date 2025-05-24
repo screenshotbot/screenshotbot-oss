@@ -51,29 +51,30 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (with-test-user (:company company
-                     :user user
-                     :logged-in-p t)
-      (labels ((make-screenshot (img)
-                      (let* ((image (make-image :pathname img :for-tests t)))
-                        (make-instance 'screenshot
-                                       :name "foobar"
-                                       :image image))))
-        (let* ((channel (make-instance 'channel
-                                       :publicp t
-                                       :company company
-                                       :name "bleh"
-                                       :github-repo "git@github.com:a/b.gitq"))
-               (im1 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
-               (run (make-recorder-run
-                     :company company
-                     :channel channel
-                     :company company
-                     :screenshots (list (make-screenshot im1))))
-               (another-run (make-recorder-run
-                             :commit-hash "foo")))
-          (&body))))))
+  (trivial-timeout:with-timeout (120)
+   (with-test-store ()
+     (with-test-user (:company company
+                      :user user
+                      :logged-in-p t)
+       (labels ((make-screenshot (img)
+                  (let* ((image (make-image :pathname img :for-tests t)))
+                    (make-instance 'screenshot
+                                   :name "foobar"
+                                   :image image))))
+         (let* ((channel (make-instance 'channel
+                                        :publicp t
+                                        :company company
+                                        :name "bleh"
+                                        :github-repo "git@github.com:a/b.gitq"))
+                (im1 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
+                (run (make-recorder-run
+                      :company company
+                      :channel channel
+                      :company company
+                      :screenshots (list (make-screenshot im1))))
+                (another-run (make-recorder-run
+                              :commit-hash "foo")))
+           (&body)))))))
 
 (def-easy-macro wrap-snapshot (&fn fn)
   (snap-all-images)
