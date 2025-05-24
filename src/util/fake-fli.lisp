@@ -174,7 +174,7 @@ have to be called just before returning.")
                                    `(cffi:mem-ref ,(car x) ',(cadr (cadr x)))
                                    )))
                 `(let ((*funcall-cleanups* nil))
-                   (log:info "Calling ~a" ,cffi-name)
+                   (log:info "Calling ~a" ',cffi-name)
                    (let ((ret (funcall-with-native-error-handling #',cffi-name
                                ,@(loop for (name type) in args
                                        collect `(,(%find-lisp-to-foreign-converter type)
