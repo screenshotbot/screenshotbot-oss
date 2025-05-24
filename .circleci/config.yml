@@ -16,6 +16,7 @@ jobs:
             apt-get install -y imagemagick libmagickwand-dev
             apt-get install -y openjdk-17-jdk-headless
             # apt-get install -y valgrind
+            apt-get build-dep -y sbcl
             wget http://prdownloads.sourceforge.net/sbcl/sbcl-2.5.4-source.tar.bz2
             tar xvjf sbcl-2.5.4-source.tar.bz2
             cd sbcl
