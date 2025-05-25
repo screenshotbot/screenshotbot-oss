@@ -29,7 +29,7 @@ jobs:
 
   launch:
     docker:
-      - image: debian:bookworm
+      - image: debian:trixie
     steps:
       - run:
           <<: *install_deps
@@ -42,7 +42,7 @@ jobs:
 
   build_cli:
     docker:
-      - image: debian:bookworm
+      - image: debian:trixie
     steps:
       - run:
           <<: *install_deps
