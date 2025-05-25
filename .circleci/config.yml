@@ -3,7 +3,7 @@ version: 2.1
 jobs:
   build:
     docker:
-      - image: debian:bookworm
+      - image: debian:trixie
     steps:
       - run: &install_deps
           name: Install Deps
@@ -11,20 +11,12 @@ jobs:
             whoami
             apt-get update
             apt-get install -y build-essential sbcl  libssh2-1-dev ssh git sudo curl pkg-config
-            curl https://screenshotbot-assets.s3.us-east-1.amazonaws.com/imagemagick7_7.1.1-39_amd64.deb -o /root/imagemagick7_7.1.1-39_amd64.deb
-            apt-get install -y /root/imagemagick7_7.1.1-39_amd64.deb
-            # apt-get install -y imagemagick libmagickwand-dev
-            apt-get install -y openjdk-17-jdk-headless 
+            apt-get install -y imagemagick libmagickwand-dev
+            apt-get install -y openjdk-21-jdk-headless 
       - checkout
       - run:
           name: SBCL tests
           command: |
-            for dir in /usr/lib/x86_64-linux-gnu/ImageMagick-*/bin-q* ; do
-                export PATH=$PATH:$dir
-            done
-            echo $PATH
-            which MagickWand-config
-            dpkg -S MagickWand-config
             make test-sb
       - run:
           name: build-cli
@@ -37,7 +29,7 @@ jobs:
 
   launch:
     docker:
-      - image: debian:bookworm
+      - image: debian:trixie
     steps:
       - run:
           <<: *install_deps
@@ -50,7 +42,7 @@ jobs:
 
   build_cli:
     docker:
-      - image: debian:bookworm
+      - image: debian:trixie
     steps:
       - run:
           <<: *install_deps
