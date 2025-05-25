@@ -115,7 +115,12 @@
   ".Q8"
   ;; I don't want to pull in cl-ppcre just for this...
   #-windows
-  (let* ((haystack (uiop:run-program `(,(config-bin) "--libs")
+  (let* ((haystack (uiop:run-program `(#+windows ,(config-bin)
+                                       #-windows
+                                       "pkg-config"
+                                       "--libs"
+                                       #-windows
+                                       "MagickWand")
                                      :output 'string))
          (needle "lMagickWand")
          (pos
