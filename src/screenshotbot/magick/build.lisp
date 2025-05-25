@@ -93,29 +93,14 @@
 (defun guess-include-dir ()
   (path:catdir (windows-path) "include/"))
 
-(defun config-bin ()
-  #+windows
-  (error "MagickWand-config not supported on Windows")
-  #-windows
-  (namestring
-   (let ((path (%path)))
-     (loop for dir in path
-           for file = (make-pathname
-                       :name "MagickWand-config"
-                       :type nil
-                       :defaults (pathname dir))
-           if (uiop:file-exists-p file)
-             return file
-           finally
-              (warn "Could not find MagickWand-config in the PATH, or in the guessed locations: ~S" path)
-              (return "MagickWand-config")))))
-
 (defun magick-lib-suffix ()
   #+windows
   ".Q8"
   ;; I don't want to pull in cl-ppcre just for this...
   #-windows
-  (let* ((haystack (uiop:run-program `(,(config-bin) "--libs")
+  (let* ((haystack (uiop:run-program `("pkg-config"
+                                       "--libs"
+                                       "MagickWand")
                                      :output 'string))
          (needle "lMagickWand")
          (pos
@@ -135,8 +120,9 @@
 
 (defun magick-wand-config (arg)
   (%string-trim
-   (uiop:run-program `(,(config-bin)
-                       ,arg)
+   (uiop:run-program `("pkg-config"
+                       ,arg
+                       "MagickWand")
                      :output 'string)))
 
 (defun init-features ()
@@ -146,8 +132,9 @@
   #+windows
   (pushnew :magick-7 *features*)
   #-windows
-  (let ((version (%string-trim (uiop:run-program `(,(config-bin)
-                                                   "--version")
+  (let ((version (%string-trim (uiop:run-program `("pkg-config"
+                                                   "--modversion"
+                                                   "MagickWand")
                                                  :output 'string))))
     (flet ((add-feature (add remove)
              (setf *features* (remove remove *features*))
@@ -169,7 +156,7 @@
            #-windows
            (magick-wand-config "--cflags")
            #-windows
-           (magick-wand-config "--ldflags")
+           (magick-wand-config "--libs")
            #+windows
            (format nil "-DQUANTUM_DEPTH=8 -DHDRI=0 -I~a" (uiop:escape-shell-token (namestring (guess-include-dir))))
            #+windows
