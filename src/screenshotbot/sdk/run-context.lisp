@@ -46,7 +46,8 @@
    #:default-flags-run-context
    #:shard-spec
    #:run-context-metadata
-   #:work-branch-is-release-branch-p)
+   #:work-branch-is-release-branch-p
+   #:main-branch-hash-internal)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:e #:screenshotbot/sdk/env)
                     (#:dto #:screenshotbot/api/model)                    
@@ -85,6 +86,12 @@
     (main-branch-hash :initarg :main-branch-hash
                       :initform nil
                       :reader main-branch-hash
+                      ;; We need to be able to set and get the default
+                      ;; value of the main-branch-hash, that is
+                      ;; without the overriden part of it. It's not
+                      ;; ideal, and is stateful but that's what we
+                      ;; gotta do for now.
+                      :accessor main-branch-hash-internal
                       :json-type (or null :string)
                       :json-key "mainBranchCommit")
     (release-branch-regex :initarg :release-branch-regex
