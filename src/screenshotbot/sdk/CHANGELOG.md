@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.15.16 - 2025-05-30
+
+### Changed
+
+- Correctly parse partial --override-commit-hash arguments. (Context:
+  Some older customers tend to pass this arguments, but for most cases
+  you don't need to pass this and we can detect it from the
+  environment. For customers who were using this argument, some were
+  passing an incomplete SHA prefix. Around version 2.15.14, we started
+  trying to complete this prefix, but the code was buggy.)
+
 ## 2.15.15 - 2025-05-22
 
 ### Changed
