@@ -32,6 +32,7 @@
                 #:signals-error-matching
                 #:error-with-string-matching)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:assert-that)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
@@ -41,7 +42,8 @@
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
                     (#:git #:screenshotbot/sdk/git)
                     (#:dto #:screenshotbot/api/model)
-                    (#:flags #:screenshotbot/sdk/flags)))
+                    (#:flags #:screenshotbot/sdk/flags)
+                    (#:test-git #:screenshotbot/sdk/test-git)))
 (in-package :screenshotbot/sdk/test-run-context)
 
 
@@ -311,10 +313,23 @@ making sure that the doc is giving a good example."
       (answer (run-context:git-repo run-context) repo)
       (is (equal nil (fix-commit-hash run-context "")))
       (is (equal "ce04ccee65b8af8ac13a07c21f22b887dedd88f9" (fix-commit-hash run-context "ce04ccee65b8af8ac13a07c21f22b887dedd88f9")))
-      (if-called 'git:rev-parse
+      (if-called 'git:rev-parse-local
                  (lambda (repo commit)
                    (is (eql :fake-repo repo))
                    (is (equal "ce044" commit))
                    "ce04ccee65b8af8ac13a07c21f22b887dedd88f9"))
       (is (equal "ce04ccee65b8af8ac13a07c21f22b887dedd88f9"
                  (fix-commit-hash run-context "ce044"))))))
+
+(test fix-commit-hash-actually-fixes-commit-hashes
+  (with-fixture state ()
+    (test-git:with-git-repo (repo)
+      (test-git:make-commit repo "foo")
+      (let ((run-context (make-instance 'my-run-context)))
+        (answer (run-context:git-repo run-context) repo)
+        ;; a commit of length 40 doesn't change at all
+        (let ((head (git:rev-parse-local repo "HEAD")))
+          (assert-that head (has-length 40))
+          (assert-that
+           (fix-commit-hash run-context (str:substring 0 10 head))
+           (is-equal-to head)))))))

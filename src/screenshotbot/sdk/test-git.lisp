@@ -213,5 +213,5 @@
                                                  :screenshotbot.sdk
                                                  "fixture/braft-expected.log"))))
       (is
-   (equal expected-output
-          (parse-raw-git-log input)))))
+       (equal expected-output
+              (parse-raw-git-log input)))))

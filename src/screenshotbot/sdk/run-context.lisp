@@ -318,7 +318,11 @@ pull-request looks incorrect."
     ((eql 40 (length sha))
      sha)
     (t
-     (git:rev-parse (git-repo self) sha))))
+     (let ((parsed (git:rev-parse-local (git-repo self) sha)))
+       (when (str:emptyp parsed)
+         (warn "Could not rev-parse ~a, please use the full hash instead" sha)
+         sha)
+       parsed))))
 
 (defmethod override-commit-hash :around ((self env-reader-run-context))
   (fix-commit-hash

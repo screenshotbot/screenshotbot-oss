@@ -130,10 +130,10 @@
                (:file "test-version-check")
                (:file "test-main")
                (:file "test-active-run")
-               (:file "test-run-context")
                (:file "test-api-context")
                (:file "test-flags")
                (:file "test-git")
+               (:file "test-run-context")
                (:file "test-commit-graph")
                #+lispworks
                (:file "test-git-pack")
