@@ -47,7 +47,7 @@ LISP_FILES=$(call wild_src, '*.lisp') $(call wild_src, '*.asd') $(call will_src,
 JS_FILES=$(call wild_src, '*.js')
 CSS_FILES=$(call wild_src, '*.css') $(call wild_src, '*.scss')
 
-LW_SCRIPT=$(call timeout,15m) $(LW) -quiet -build
+LW_SCRIPT=PATH=/opt/homebrew/bin:$$PATH $(call timeout,15m) $(LW) -quiet -build
 SBCL_SCRIPT=$(sbcl) --script
 TMPFILE=$(shell mktemp)
 JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/
