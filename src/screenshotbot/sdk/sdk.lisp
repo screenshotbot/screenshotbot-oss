@@ -200,7 +200,6 @@ error."
                     channel
                     run-context
                     (before #'identity)
-                    pull-request
                     branch
                     (branch-hash nil has-branch-hash-p)
                     (commit nil has-commit-p)
@@ -239,7 +238,6 @@ run-context that was created here."
                                   :repo-url (or (?. repo-link repo)
                                                 github-repo)
                                   :channel channel
-                                  :pull-request-url pull-request
                                   :productionp is-trunk
                                   :main-branch branch
                                   :env (e:make-env-reader)
@@ -571,7 +569,6 @@ is used up, we update md5-to-response to remove that upload URL."
     (log:info "Uploading images from: ~a" directory)
     (make-directory-run api-context directory
                         :channel channel
-                        :pull-request flags:*pull-request*
                         :before (lambda (run-context)
                                   (when (and flags:*production*
                                              (> flags:*commit-limit* 0))
