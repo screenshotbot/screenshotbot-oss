@@ -474,19 +474,11 @@ is used up, we update md5-to-response to remove that upload URL."
        (error "Could not guess the main branch, please use --main-branch argument")))))
 
 (defun validate-pull-request ()
-  "One of our customers is using an incorrect --pull-request arg. The
-incorrect arg breaks some logic, and additionally is not required
-since we can determine the pull-request from the environment. We can
-do a quick sanity check, and recover with a warning if the
-pull-request looks incorrect."
+  "See run-context:validate-pull-request. Ideally we want to get rid of this version."
   (when flags:*pull-request*
-   (flet ((validp (url)
-            (str:starts-with-p "https://" url)))
-     (unless (validp flags:*pull-request*)
-       (signal 'invalid-pull-request)
-       (log:warn "The --pull-request argument you provided was invalid: `~a`. We're ignoring this.~%"
-             flags:*pull-request*)
-       (setf flags:*pull-request* nil)))))
+   (unless (run-context:valid-pull-request-url-p flags:*pull-request*)
+     (run-context:warn-invalid-pull-request-url)
+     (setf flags:*pull-request* nil))))
 
 (defun parse-environment ()
   (let* ((env (e:make-env-reader))

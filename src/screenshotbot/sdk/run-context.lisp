@@ -47,7 +47,10 @@
    #:shard-spec
    #:run-context-metadata
    #:work-branch-is-release-branch-p
-   #:main-branch-hash-internal)
+   #:main-branch-hash-internal
+   #:valid-pull-request-url-p
+   #:warn-invalid-pull-request
+   #:warn-invalid-pull-request-url)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:e #:screenshotbot/sdk/env)
                     (#:dto #:screenshotbot/api/model)                    
@@ -255,6 +258,16 @@
 (define-condition invalid-pull-request (condition)
   ())
 
+(defun valid-pull-request-url-p (url)
+  "Exported for convenience to reduce duplication. See sdk.lisp."
+  (str:starts-with-p "https://" url))
+
+(defun warn-invalid-pull-request-url ()
+  "Exported for convenience to reduce duplication. See sdk.lisp."
+  (signal 'invalid-pull-request)
+  (log:warn "The --pull-request argument you provided was invalid: `~a`. We're ignoring this.~%"
+               flags:*pull-request*))
+
 
 (defun validate-pull-request (pull-request)
   "One of our customers is using an incorrect --pull-request arg. The
@@ -262,18 +275,14 @@ incorrect arg breaks some logic, and additionally is not required
 since we can determine the pull-request from the environment. We can
 do a quick sanity check, and recover with a warning if the
 pull-request looks incorrect."
-  (flet ((validp (url)
-           (str:starts-with-p "https://" url)))
-    (cond
-      ((and
-        pull-request
-        (not (validp pull-request)))
-       (signal 'invalid-pull-request)
-       (log:warn "The --pull-request argument you provided was invalid: `~a`. We're ignoring this.~%"
-                 flags:*pull-request*)
-       nil)
-      (t
-       pull-request))))
+  (cond
+    ((and
+      pull-request
+      (not (valid-pull-request-url-p pull-request)))
+     (warn-invalid-pull-request-url)
+     nil)
+    (t
+     pull-request)))
 
 (defmethod pull-request-url :around ((self env-reader-run-context))
   (or
