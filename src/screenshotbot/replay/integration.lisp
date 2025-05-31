@@ -17,8 +17,7 @@
                 #:screenshots
                 #:job)
   (:import-from #:screenshotbot/sdk/sdk
-                #:upload-image-directory
-                #:make-directory-run)
+                #:upload-image-directory)
   (:import-from #:screenshotbot/sdk/git
                 #:null-repo)
   (:import-from #:screenshotbot/sdk/bundle

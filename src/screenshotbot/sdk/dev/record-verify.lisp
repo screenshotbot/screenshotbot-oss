@@ -16,8 +16,7 @@
   (:import-from #:screenshotbot/sdk/sdk
                 #:put-run-with-run-context
                 #:upload-image-directory
-                #:request
-                #:make-directory-run)
+                #:request)
   (:import-from #:screenshotbot/sdk/cli-common
                 #:with-clingon-api-context
                 #:dev/command)
