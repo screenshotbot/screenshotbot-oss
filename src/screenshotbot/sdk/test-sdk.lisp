@@ -59,7 +59,6 @@
                 #:empty-run-error
                 #:find-existing-images
                 #:get-relative-path
-                #:invalid-pull-request
                 #:keyword-except-md5
                 #:make-bundle
                 #:make-directory-run
@@ -96,6 +95,8 @@
                 #:recorder-run-commit)
   (:import-from #:screenshotbot/sdk/request
                 #:%request)
+  (:import-from #:screenshotbot/sdk/run-context
+                #:invalid-pull-request)
   (:local-nicknames (#:a #:alexandria)
                     (#:api-key #:core/api/model/api-key)
                     (#:dto #:screenshotbot/api/model)

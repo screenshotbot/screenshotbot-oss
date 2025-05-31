@@ -61,6 +61,7 @@
   (:import-from #:screenshotbot/sdk/api-context
                 #:api-context)
   (:import-from #:screenshotbot/sdk/run-context
+                #:invalid-pull-request
                 #:flags-run-context)
   (:import-from #:util/threading
                 #:with-extras)
@@ -471,9 +472,6 @@ is used up, we update md5-to-response to remove that upload URL."
        "master")
       (t
        (error "Could not guess the main branch, please use --main-branch argument")))))
-
-(define-condition invalid-pull-request (condition)
-  ())
 
 (defun validate-pull-request ()
   "One of our customers is using an incorrect --pull-request arg. The
