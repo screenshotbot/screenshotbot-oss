@@ -36,6 +36,8 @@
                 #:common-run-options
                 #:*root-commands*
                 #:with-clingon-api-context)
+  (:import-from #:screenshotbot/sdk/commit-graph
+                #:commit-graph-updater)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -218,10 +220,11 @@ upload blobs that haven't been uploaded before."
                                   assets-root
                                   &allow-other-keys)
     (assert (path:-d location))
-    (let ((git-repo (make-instance 'git:git-repo :link repo-url)))
+    (let ((git-repo (make-instance 'git:git-repo :link repo-url))
+          (commit-graph-updater (make-instance 'commit-graph-updater :api-context api-context)))
       (when production
         (sdk:update-commit-graph
-         api-context
+         commit-graph-updater
          git-repo
          main-branch))
       (let ((schedule-args

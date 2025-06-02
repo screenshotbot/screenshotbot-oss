@@ -69,6 +69,7 @@
                 #:request
                 #:%make-basic-auth)
   (:import-from #:screenshotbot/sdk/commit-graph
+                #:commit-graph-updater
                 #:update-commit-graph)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model)
@@ -553,7 +554,10 @@ is used up, we update md5-to-response to remove that upload URL."
                       :link flags:*repo-url*)))))
 
 (defun single-directory-run (api-context directory &key channel)
+  ;; Heads up! This logic is not unit-tested. If you're modifying this
+  ;; code, run `make sdk-integration-tests`.
   (let ((repo (git-repo))
+        (commit-graph-updater (make-instance 'commit-graph-updater :api-context api-context))
         (branch flags:*main-branch*))
     (log:info "Uploading images from: ~a" directory)
     (make-directory-run api-context directory
@@ -561,7 +565,7 @@ is used up, we update md5-to-response to remove that upload URL."
                         :before (lambda (run-context)
                                   (when (and flags:*production*
                                              (> flags:*commit-limit* 0))
-                                    (update-commit-graph api-context repo branch
+                                    (update-commit-graph commit-graph-updater repo branch
                                                          :override-commit-hash
                                                          (run-context:override-commit-hash run-context))))
                         :repo repo

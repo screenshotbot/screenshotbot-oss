@@ -10,6 +10,7 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/commit-graph
+                #:commit-graph-updater
                 #+lispworks
                 #:want-remote-ref
                 #+lispworks
@@ -47,15 +48,16 @@
   (cl-mock:with-mocks ()
     (let ((*wrap-internal-errors* nil)
           (auto-restart:*global-enable-auto-retries-p* nil))
-     (with-sdk-integration (api-context :company company)
-       (&body)))))
+      (with-sdk-integration (api-context :company company)
+        (let ((self (make-instance 'commit-graph-updater :api-context api-context)))
+          (&body))))))
 
 (defvar *repo* "https://github.com/tdrhq/fast-example.git")
 
 (test happy-path-without-refs
   (with-fixture state ()
     (is (eql nil (get-commit-graph-refs
-                  api-context
+                  self
                   *repo*)))))
 
 (test case-with-repo-though
@@ -66,7 +68,7 @@
                    :refs `(("master" . "abcd")))
     (assert-that
      (get-commit-graph-refs
-      api-context
+      self
       *repo*)
      (contains
       (has-typep 'dto:git-ref)))))
@@ -80,7 +82,7 @@
       (test-git:make-commit repo "foo")
       (test-git:make-commit repo "bar")
       (finishes
-       (update-commit-graph api-context
+       (update-commit-graph self
                             repo
                             "main")))))
 
@@ -115,7 +117,7 @@
       (let ((upload-pack (local-upload-pack repo)))
         (finishes
          (update-from-pack
-          api-context
+          self
           upload-pack
           "git@github.com:tdrhq/fast-example.git"
           (list (git:current-branch repo))))))))
@@ -128,7 +130,7 @@
       (test-git:enable-server-features repo)
       (let ((upload-pack (local-upload-pack repo)))
         (update-from-pack
-         api-context
+         self
          upload-pack
          "git@github.com:tdrhq/fast-example.git"
          (list (git:current-branch repo))))
@@ -136,7 +138,7 @@
       (let ((upload-pack (local-upload-pack repo)))
         (finishes
          (update-from-pack
-          api-context
+          self
           upload-pack
           "git@github.com:tdrhq/fast-example.git"
           (list (git:current-branch repo))))))))
@@ -150,14 +152,14 @@
       (test-git:enable-server-features repo)
       (let ((upload-pack (local-upload-pack repo)))
         (update-from-pack
-         api-context
+         self
          upload-pack
          "git@github.com:tdrhq/fast-example.git"
          (list (git:current-branch repo))))
       (let ((upload-pack (local-upload-pack repo)))
         (finishes
          (update-from-pack
-          api-context
+          self
           upload-pack
           "git@github.com:tdrhq/fast-example.git"
           (list (git:current-branch repo))))))))

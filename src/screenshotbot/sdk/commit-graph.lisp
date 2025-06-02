@@ -31,11 +31,17 @@
                     (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/commit-graph)
 
-(defmethod get-commit-graph-refs (api-context
+(defclass commit-graph-updater ()
+  ((api-context :initarg :api-context
+                :reader api-context))
+  (:documentation "The commit graph updater will eventually be stateful, in particular
+to cache the refs."))
+
+(defmethod get-commit-graph-refs ((self commit-graph-updater)
                                   repo)
   (dto:decode-json
    (request
-    api-context
+    (api-context self)
     "/api/commit-graph/refs"
     :method :get
     :decode-response nil
@@ -57,7 +63,7 @@
   #-lispworks
   nil)
 
-(defmethod update-commit-graph-old-style (api-context repo branch)
+(defmethod update-commit-graph-old-style ((self commit-graph-updater) repo branch)
   "Update commit-graph by pulling, and then always push the top 1000 or
 so changes."
   (fetch-remote-branch repo branch)
@@ -66,7 +72,7 @@ so changes."
          (json (with-output-to-string (s)
                  (dag:write-to-stream dag s))))
     (request
-     api-context
+     (api-context self)
      "/api/commit-graph"
      :method :post
      :parameters (list
@@ -117,13 +123,13 @@ commits that are needed."
           return (not (ref-in-sync-p known-refs sha ref))))
 
 #+lispworks
-(defmethod update-from-pack (api-context
+(defmethod update-from-pack ((self commit-graph-updater)
                              (upload-pack abstract-upload-pack)
                              (repo-url string)
                              branches
                              &key current-commit)
   (log:info "Getting known refs from Screenshotbot server")
-  (let ((known-refs (get-commit-graph-refs api-context repo-url))
+  (let ((known-refs (get-commit-graph-refs self repo-url))
         (refs nil))
     (check-type known-refs list)
     (log:info "Getting git graph via git-upload-pack")
@@ -138,7 +144,7 @@ commits that are needed."
                      ;; TODO: also do release branches, but that will need a regex here
                      :wants (lambda (list)
                               (filter-wanted-commits
-                               api-context
+                               (api-context self)
                                repo-url
                                (remove-if
                                 #'null
@@ -159,7 +165,7 @@ commits that are needed."
                                                    :parents parents))))
          (log:info "Updating git commit-graph")
          (request
-          api-context
+          (api-context self)
           "/api/commit-graph"
           :method :post
           :parameters (list
@@ -168,7 +174,7 @@ commits that are needed."
                        (cons "refs" (dto:encode-json (or refs #()))))))))))
 
 
-(defmethod update-commit-graph (api-context repo branch
+(defmethod update-commit-graph ((self commit-graph-updater) repo branch
                                 &key override-commit-hash)
   (log:info "Updating commit graph")
   (cond
@@ -176,17 +182,17 @@ commits that are needed."
      (or
       (ignore-and-log-errors ()
         (trivial-timeout:with-timeout (600)
-          (update-commit-graph-new-style api-context repo branch))
+          (update-commit-graph-new-style self repo branch))
         (log:debug "New commit graph uploaded successfully")
         t)
       (progn
         (warn "Reverting to old commit-graph flow")
-        (update-commit-graph-old-style api-context repo branch))))
+        (update-commit-graph-old-style self repo branch))))
     (t
      (log:info "Using old flow for commit-graph")
      #+nil
      (warn "Using the old commit-graph flow for ~a" (git:get-remote-url repo))
-     (update-commit-graph-old-style api-context repo branch))))
+     (update-commit-graph-old-style self repo branch))))
 
-(defmethod update-commit-graph (api-context (repo null-repo) branch &key &allow-other-keys)
+(defmethod update-commit-graph (self (repo null-repo) branch &key &allow-other-keys)
   (log:info "Not updating the commit graph, since there's no repo"))
