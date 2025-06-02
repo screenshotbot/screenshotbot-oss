@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.15.17 - 2025-06-02
+
+### Changed
+
+- Fixed the innocuous warning about `--pull-request argument` being
+  invalid, which typically only happened on Bitrise.
+
 ## 2.15.16 - 2025-05-30
 
 ### Changed
