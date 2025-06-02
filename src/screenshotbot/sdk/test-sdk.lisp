@@ -97,6 +97,8 @@
                 #:%request)
   (:import-from #:screenshotbot/sdk/run-context
                 #:invalid-pull-request)
+  (:import-from #:screenshotbot/sdk/env
+                #:make-env-reader)
   (:local-nicknames (#:a #:alexandria)
                     (#:api-key #:core/api/model/api-key)
                     (#:dto #:screenshotbot/api/model)
@@ -189,7 +191,9 @@
   (with-fixture state ()
     (with-env ((:circle-pull-request "http://foo"))
       (parse-environment)
-      (is (equal "http://foo" flags:*pull-request*))))
+      (is (equal "http://foo" (run-context:pull-request-url
+                               (make-instance 'run-context:flags-run-context
+                                              :env (make-env-reader)))))))
   (is (eql 40 (length "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")))
   (with-fixture state ()
     (with-env ((:circle-sha1 "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
@@ -207,7 +211,9 @@
     (with-env ((:bitrise-git-commit "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd")
                (:bitriseio-pull-request-repository-url "https://bitbucket.org/tdrhq/fast-example"))
       (parse-environment)
-      (is (equal nil flags:*pull-request*))
+      (is (equal nil (run-context:pull-request-url
+                  (make-instance 'run-context:flags-run-context
+                                 :env (make-env-reader)))))
       (is (equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd" flags:*override-commit-hash*))))
 
   (with-fixture state ()
@@ -217,28 +223,15 @@
       (parse-environment)
 
       (is (equal "https://bitbucket.org/tdrhq/fast-example/pull-requests/1"
-                 flags:*pull-request*))
+                 (run-context:pull-request-url
+                  (make-instance 'run-context:flags-run-context
+                                 :env (make-env-reader)))))
 
       (is (equal "abcdabcdabcdabcdabcdabcdabcdabcdabcdabcd" flags:*override-commit-hash*)))))
 
 (test backoff-happy-path
   (is (eql 10 (backoff 1)))
   (is (eql nil (backoff 100))))
-
-(test validate-pull-request
-  (with-fixture state ()
-    (flet ((%run (url)
-             (setf flags:*pull-request* url)
-             (validate-pull-request)
-             flags:*pull-request*))
-      (handler-case
-          (%run nil)
-        (invalid-pull-request ()
-          (fail "Saw warning for nil")))
-      (signals invalid-pull-request
-        (%run "git@github.com:trhq/fast-example.git"))
-      (is (equal nil (%run "git@github.com:tdrhq/fast-example.git")))
-      (is (equal "https://github.com/tdrhq/fast-example/pulls/1" (%run "https://github.com/tdrhq/fast-example/pulls/1"))))))
 
 (test make-run-happy-path
   "Does not test much, sadly"

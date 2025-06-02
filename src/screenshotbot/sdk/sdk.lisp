@@ -471,12 +471,6 @@ is used up, we update md5-to-response to remove that upload URL."
       (t
        (error "Could not guess the main branch, please use --main-branch argument")))))
 
-(defun validate-pull-request ()
-  "See run-context:validate-pull-request. Ideally we want to get rid of this version."
-  (when flags:*pull-request*
-   (unless (run-context:valid-pull-request-url-p flags:*pull-request*)
-     (run-context:warn-invalid-pull-request-url)
-     (setf flags:*pull-request* nil))))
 
 (defun parse-environment ()
   (let* ((env (e:make-env-reader))
@@ -486,8 +480,6 @@ is used up, we update md5-to-response to remove that upload URL."
                                  :env env)))
     (when flags:*branch*
       (error "--branch is no longer supported, please use --main-branch instead"))
-
-    (validate-pull-request)
 
     ;; TODO: we shouldn't refer to the flags from this point onwards,
     ;; instead just using the run-context.
@@ -500,9 +492,6 @@ is used up, we update md5-to-response to remove that upload URL."
 
     (setf flags:*work-branch*
           (run-context:work-branch run-ctx))
-
-    (setf flags:*pull-request*
-          (run-context:pull-request-url run-ctx))
 
     (setf flags:*channel*
           (run-context:channel run-ctx))
