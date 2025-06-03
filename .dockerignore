@@ -25,7 +25,6 @@ analytics-log-file.log
 buck-out
 quicklisp
 src
-third-party
 local-projects
 tools
 log
