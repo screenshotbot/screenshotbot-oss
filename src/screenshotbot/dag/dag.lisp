@@ -129,11 +129,6 @@ by other nodes, but are not themselves available. This returns if the
 node-id is a valid full node on the graph."
   (gethash node-id (commit-map dag)))
 
-(defstruct stackframe
-  sha
-  commit
-  children)
-
 (defun %dfs-topo-sort-from-starting-nodes (dag start-nodes)
   "This function is mainly to make the starting of the DFS
 deterministic, which makes it easier to test.
