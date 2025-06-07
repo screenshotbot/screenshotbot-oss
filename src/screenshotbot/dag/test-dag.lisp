@@ -122,6 +122,12 @@
                  (assoc-value (json:decode-json-from-string json)
                               :commits))))))
 
+(test technically-we-can-still-create-a-cyclical-graph
+  (with-fixture state ()
+    (add-edge "cc" "dd")
+    (finishes
+     (add-edge "dd" "cc"))))
+
 (test serialize-incomplete-graph
   (with-fixture state ()
     (add-edge "cc" (list "aa" "dd"))
