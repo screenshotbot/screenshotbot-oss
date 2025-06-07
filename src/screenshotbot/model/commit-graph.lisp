@@ -218,7 +218,9 @@ to the same repo, the graph will still be the same."
      (error "unimpl")))
 
 (defmethod flush-dag ((obj commit-graph))
+  "This code is no longer being called for most dags and could probably be removed"
   (when (transient-dag-p)
+    (warn "Expected this code to not be running in prod.")
     (bt:with-recursive-lock-held ((lock obj))
       (with-tracing (:flush-dag :id (store-object-id obj))
         (let ((dag (%commit-graph-dag obj)))
