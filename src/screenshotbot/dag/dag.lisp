@@ -246,6 +246,8 @@ tree. This version uses the Kahn's algorithm instead of DFS"
      (kahns-algo-topo-sort dag))))
 
 (defmethod write-to-stream ((dag dag) stream &key (format :json))
+  ;; TODO: do we need safe-topological-sort here? Since we no longer
+  ;; write to disk on the server, seems very unlikely.
   (let ((sorted-nodes (reverse (safe-topological-sort dag)))
         (commit-map (commit-map dag)))
     (ecase format
@@ -329,6 +331,7 @@ tree. This version uses the Kahn's algorithm instead of DFS"
       dag))))
 
 (defmethod merge-dag ((dag dag) (from-dag dag))
+  ;; TODO: do we need safe-topological-sort here? Seems very unlikely.
   (dolist (node-id (safe-topological-sort from-dag))
     (unless (gethash node-id (commit-map dag))
       (let ((commit (gethash node-id (commit-map from-dag))))
