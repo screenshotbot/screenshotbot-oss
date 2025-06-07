@@ -10,6 +10,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
+                #:%dfs-topo-sort-from-starting-nodes
                 #:dfs-topo-sort
                 #:*use-dfs-p*
                 #:commit-timestamp
@@ -68,9 +69,8 @@
     (let ((dag::*use-dfs-p* t))
       (run-inner))))
 
-(defun make-big-linear-dag ()
-  (let* ((num 100)
-         (dag (make-instance 'dag))
+(defun make-big-linear-dag (&key (num 100))
+  (let* ((dag (make-instance 'dag))
          (commits (loop for i from 1 to num collect
                                             (format nil "~4,'0X" i)))
          (fns nil))
@@ -190,9 +190,15 @@
       (is (equal final-order commits)))))
 
 (test dfs-topo-sort-recursion
-  (multiple-value-bind (dag commits) (make-big-linear-dag)
+  (multiple-value-bind (dag commits) (make-big-linear-dag :num #xf000)
+    (let ((start-commit (get-commit dag "F000")))
+      (is (not (null start-commit)))
+      (%dfs-topo-sort-from-starting-nodes
+       dag
+       (list start-commit))
+      (pass))
     (finishes
-     (dfs-topo-sort dag))))
+      (dfs-topo-sort dag))))
 
 (test merge-existing-commits
   (with-fixture state ()

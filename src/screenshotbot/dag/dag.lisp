@@ -127,6 +127,60 @@ by other nodes, but are not themselves available. This returns if the
 node-id is a valid full node on the graph."
   (gethash node-id (commit-map dag)))
 
+(defstruct stackframe
+  sha
+  commit
+  children)
+
+(defun %dfs-topo-sort-from-starting-nodes (dag start-nodes)
+  "This function is mainly to make the starting of the DFS
+deterministic, which makes it easier to test.
+
+The reason this code is so hard to read: I first wrote a basic
+recursive DFS. I then replaced it with a continuation passing style
+version. Finally, I refactored it with a stack (where the stack is a
+stack of lambdas, not the state itself)."
+  (let ((visited (make-hash-table :test #'equal))
+        (result nil)
+        (stack nil))
+    (labels ((dfs (sha callback)
+               (block nil
+                (let ((commit (get-commit dag sha)))
+                  (cond
+                    ((and commit (not (gethash commit visited)))
+                     (setf (gethash commit visited) t)
+                    
+                     (let ((parents (dag:parents commit)))
+                       (labels ((process-end ()
+                                  (push sha result)
+                                  (push callback stack))
+                                (process-next-parent ()
+                                  (cond
+                                    (parents
+                                     (let ((parent (pop parents)))
+                                       (push
+                                        (lambda ()
+                                          (dfs parent #'process-next-parent))
+                                        stack)))
+                                    (t
+                                     (process-end)))))
+                         (process-next-parent))))
+                    (t
+                     (push callback stack)))))))
+
+      (labels ((process-stack (start)
+                 (push start stack)
+                 (loop while stack
+                       do
+                          (let ((next (pop stack)))
+                            (funcall next)))))
+        (loop for commit in start-nodes
+              do
+                 (process-stack
+                  (lambda ()
+                    (?. dfs (dag:sha commit)  (lambda ())))))))
+    (mapcar #'commit-node-id result)))
+
 (defmethod dfs-topo-sort (dag)
   "This is modified from GRAPH. Sadly that library uses recursion for
 some of their graph algorithms, which doesn't work nicely for a 'deep'
@@ -134,19 +188,10 @@ tree. This version uses the Kahn's algorithm instead of DFS
 
 Returns the \"newest\" first and ancestors last. "
   ;;(declare (optimize (speed 3) (debug 0)))
-  (let ((visited (make-hash-table :test #'equal))
-        (result nil))
-    (labels ((dfs (sha)
-               (let ((commit (get-commit dag sha)))
-                 (when commit
-                  (unless (gethash commit visited)
-                    (setf (gethash commit visited) t)
-                    (dolist (parent (dag:parents commit))
-                      (dfs parent))
-                    (push sha result))))))
-      (loop for commit being the hash-values of (commit-map dag)
-            do (?. dfs (dag:sha commit))))
-    (mapcar #'commit-node-id result)))
+  (%dfs-topo-sort-from-starting-nodes
+   dag
+   (loop for x being the hash-values of (commit-map dag)
+         collect x)))
 
 (defmethod kahns-algo-topo-sort (dag)
   (let* ((rL nil)
