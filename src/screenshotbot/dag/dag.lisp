@@ -127,11 +127,28 @@ by other nodes, but are not themselves available. This returns if the
 node-id is a valid full node on the graph."
   (gethash node-id (commit-map dag)))
 
-(defmethod safe-topological-sort (dag)
+(defmethod dfs-topo-sort (dag)
   "This is modified from GRAPH. Sadly that library uses recursion for
 some of their graph algorithms, which doesn't work nicely for a 'deep'
-tree. This version uses the Kahn's algorithm instead of DFS"
+tree. This version uses the Kahn's algorithm instead of DFS
+
+Returns the \"newest\" first and ancestors last. "
   ;;(declare (optimize (speed 3) (debug 0)))
+  (let ((visited (make-hash-table :test #'equal))
+        (result nil))
+    (labels ((dfs (sha)
+               (let ((commit (get-commit dag sha)))
+                 (when commit
+                  (unless (gethash commit visited)
+                    (setf (gethash commit visited) t)
+                    (dolist (parent (dag:parents commit))
+                      (dfs parent))
+                    (push sha result))))))
+      (loop for commit being the hash-values of (commit-map dag)
+            do (?. dfs (dag:sha commit))))
+    (mapcar #'commit-node-id result)))
+
+(defmethod kahns-algo-topo-sort (dag)
   (let* ((rL nil)
          (out-degrees (make-hash-table :test #'equal))
          (children (make-hash-table :test #'equal)))
@@ -164,6 +181,24 @@ tree. This version uses the Kahn's algorithm instead of DFS"
                 (push m S)))))))
     (remove-if-not (curry #'full-commit-on-graph-p dag)
                    (mapcar #'commit-node-id rL))))
+
+(defvar *use-dfs-p* nil
+  "We needed the DFS version of topo sort just for rending the graph,
+because it makes for a better human readable graph.
+
+However, the Kahn's algorithm version is much better tested and I
+don't want to switch it yet in the hot path. There are a bunch of
+cases.")
+
+(defmethod safe-topological-sort (dag &key (use-dfs-p *use-dfs-p*))
+  "This is modified from GRAPH. Sadly that library uses recursion for
+some of their graph algorithms, which doesn't work nicely for a 'deep'
+tree. This version uses the Kahn's algorithm instead of DFS"
+  (cond
+    (use-dfs-p
+     (dfs-topo-sort dag))
+    (t
+     (kahns-algo-topo-sort dag))))
 
 (defmethod write-to-stream ((dag dag) stream &key (format :json))
   (let ((sorted-nodes (reverse (safe-topological-sort dag)))

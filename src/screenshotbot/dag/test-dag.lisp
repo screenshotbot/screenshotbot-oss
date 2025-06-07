@@ -10,6 +10,8 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
+                #:dfs-topo-sort
+                #:*use-dfs-p*
                 #:commit-timestamp
                 #:all-commits
                 #:dag-difference
@@ -50,16 +52,21 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let ((dag (make-instance 'dag)))
-    (flet ((add-edge (from to &key (dag dag))
-             (add-commit dag (make-instance 'commit :sha from :parents (cond
-                                                                         ((listp to)
-                                                                          to)
-                                                                         (t (list to)))
-                                             :author "Arnold Noronha <arnold@tdrhq.com>"))))
-      (add-edge "bb" nil)
-      (add-edge "aa" "bb")
-      (&body))))
+  (flet ((run-inner ()
+           (let ((dag (make-instance 'dag)))
+             (flet ((add-edge (from to &key (dag dag))
+                      (add-commit dag (make-instance 'commit :sha from :parents (cond
+                                                                                  ((listp to)
+                                                                                   to)
+                                                                                  (t (list to)))
+                                                             :author "Arnold Noronha <arnold@tdrhq.com>"))))
+               (add-edge "bb" nil)
+               (add-edge "aa" "bb")
+               (&body)))))
+    (let ((dag::*use-dfs-p* nil))
+      (run-inner))
+    (let ((dag::*use-dfs-p* t))
+      (run-inner))))
 
 (defun make-big-linear-dag ()
   (let* ((num 100)
@@ -181,6 +188,11 @@
                                        :commits)
                              collect (assoc-value x :sha))))
       (is (equal final-order commits)))))
+
+(test dfs-topo-sort-recursion
+  (multiple-value-bind (dag commits) (make-big-linear-dag)
+    (finishes
+     (dfs-topo-sort dag))))
 
 (test merge-existing-commits
   (with-fixture state ()
