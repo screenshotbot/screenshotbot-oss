@@ -90,6 +90,8 @@
                 #:company-admin-p)
   (:import-from #:screenshotbot/model/batch
                 #:batch-name)
+  (:import-from #:util/timeago
+                #:timeago)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -247,8 +249,8 @@
         <thead>
           <tr>
             <th>Commit hash</th>
-            <th>Author (if available)</th>
             <th>Parents</th>
+            <th>First seen</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -256,7 +258,6 @@
         ,@ (loop for commit in commits collect
                  <tr id= (dag:sha commit) >
                    <td class= "font-monospace" >,(str:shorten 13 (dag:sha commit)) </td>
-                   <td>,(or (dag:author commit) "no author") </td>
                    <td class= "font-monospace" >
                      ,@ (loop for parent in (dag:parents commit)
                               collect
@@ -264,6 +265,9 @@
                                 <a href= (format nil "#~a" parent) class= "commit-link" >,(str:shorten 13 parent)</a>
                               </span>)
 
+                   </td>
+                   <td>
+                     <timeago timestamp= (ignore-errors (dag:commit-timestamp commit)) />
                    </td>
                    <td><button class= "highlight-branch btn btn-link" data-commit= (dag:sha commit) >Highlight Branch</button></td>
                  </tr>)

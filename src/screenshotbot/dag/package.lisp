@@ -48,5 +48,6 @@
            #:best-path
            #:dag-difference
            #:clone-dag
-           #:all-commits))
+           #:all-commits
+           #:commit-timestamp))
 (in-package :dag)
