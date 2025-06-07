@@ -342,13 +342,13 @@ tree. This version uses the Kahn's algorithm instead of DFS"
       dag))))
 
 (defmethod merge-dag ((dag dag) (from-dag dag))
-  ;; TODO: do we need safe-topological-sort here? Seems very unlikely.
-  (dolist (node-id (safe-topological-sort from-dag))
-    (unless (gethash node-id (commit-map dag))
-      (let ((commit (gethash node-id (commit-map from-dag))))
-        (assert commit)
-        (add-commit dag commit)
-        (assert (gethash node-id (commit-map dag)))))))
+  (loop for node-id being the hash-keys of (commit-map from-dag)
+        do
+           (unless (gethash node-id (commit-map dag))
+             (let ((commit (gethash node-id (commit-map from-dag))))
+               (assert commit)
+               (add-commit dag commit)
+               (assert (gethash node-id (commit-map dag)))))))
 
 (defmethod dag-difference ((dag dag) (other dag))
   (let ((result (make-instance 'dag)))
