@@ -62,7 +62,9 @@
         collect commit))
 
 (defmethod ordered-commits ((dag dag))
-  (let ((sorted (safe-topological-sort dag)))
+  "This function isn't being used in any non-debug paths (only in health
+checks and on the commit graph debug page."
+  (let ((sorted (safe-topological-sort dag :use-dfs-p t)))
     (loop for id in sorted
           collect (gethash id (commit-map dag)))))
 
@@ -190,8 +192,18 @@ Returns the \"newest\" first and ancestors last. "
   ;;(declare (optimize (speed 3) (debug 0)))
   (%dfs-topo-sort-from-starting-nodes
    dag
-   (loop for x being the hash-values of (commit-map dag)
-         collect x)))
+   (sort
+    (loop for x being the hash-values of (commit-map dag)
+          collect x)
+    ;; Why start at the oldest commit? That way those paths gets
+    ;; DFS-ed first, and gets pushed onto the result earlier.
+    #'<
+    :key
+    (lambda (commit)
+      (handler-case
+          (commit-timestamp commit)
+        (unbound-slot ()
+          -1))))))
 
 (defmethod kahns-algo-topo-sort (dag)
   (let* ((rL nil)
