@@ -49,7 +49,16 @@
   ((commits :initform (make-hash-table :test 'equal)
             :initarg :commit-map
             :accessor commit-map
-            :documentation "A map from COMMIT-NODE-ID (number) to COMMIT. We eventually plan to replace this with sha to COMMIT.")))
+            :documentation "A map from COMMIT-NODE-ID (number) to COMMIT. We eventually plan to replace this with sha to COMMIT."))
+  (:documentation "
+WARNING!
+
+Even though we call this a DAG, you must not assume it's Acyclic. Sorry :(
+
+There's limited checks to how users can construct the graph, so by the
+time you're running graph algorithms on it, it might actually be a
+cyclical graph.
+"))
 
 (defmethod clone-dag ((dag dag))
   "This is not bad in terms of performance! But obviously, we can optimize this in future with either FSET of CoW."
@@ -107,10 +116,13 @@ changes."
 
 (defmethod add-commit ((dag dag) (commit  commit))
   (assert commit)
-  (let ((map (commit-map dag))
-        (node-id (commit-node-id (sha commit))))
+  (let* ((map (commit-map dag))
+         (node-id (commit-node-id (sha commit)))
+         (existing-node (gethash node-id map)))
     (cond
-      ((gethash node-id map)
+      ((and existing-node
+            ;; But we're allowed to overwrite shallow nodes
+            (dag:parents existing-node))
        (error 'node-already-exists))
       (t
        (setf
@@ -348,8 +360,10 @@ tree. This version uses the Kahn's algorithm instead of DFS"
 (defmethod dag-difference ((dag dag) (other dag))
   (let ((result (make-instance 'dag)))
     (dolist (commit (all-commits dag))
-      (unless (get-commit other (sha commit))
-        (add-commit result commit)))
+      (let ((other-commit (get-commit other (sha commit))))
+        (unless (and other-commit
+                     (dag:parents other-commit))
+          (add-commit result commit))))
     result))
 
 (defun listify (x)

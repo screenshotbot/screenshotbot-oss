@@ -104,10 +104,28 @@
   (with-fixture state ()
     (pass)))
 
-(test wont-let-me-add-cycles
+(test wont-let-me-add-the-same-nodes-again
   (with-fixture state ()
     (signals node-already-exists
-      (add-edge "bb" nil))))
+      (add-edge "aa" "bb"))))
+
+(test allows-me-to-overwrite-shallow-nodes
+  (with-fixture state ()
+    (is (equal nil
+               (dag:parents (get-commit dag "bb"))))
+    (add-edge "bb" "cc")
+    (is (equal
+         (list "cc")
+         (dag:parents (get-commit dag "bb"))))))
+
+(test allows-me-to-overwrite-shallow-nodes-with-the-same-shallow-node
+  (with-fixture state ()
+    (is (equal nil
+               (dag:parents (get-commit dag "bb"))))
+    (add-edge "bb" nil)
+    (is (equal
+         nil
+         (dag:parents (get-commit dag "bb"))))))
 
 (test serialize
   (with-fixture state ()
@@ -598,3 +616,12 @@ for you."
                      (does-not (has-item "aa"))
                      (does-not (has-item "dd"))
                      (has-length 1))))))
+
+(test dag-difference-includes-previously-shallow-clones
+  (with-fixture state ()
+    (let ((other (make-instance 'dag)))
+      (add-edge "aa" nil :dag other)
+      (add-edge "dd" "ee" :dag other)
+      (let ((result (dag:dag-difference dag other)))
+        (assert-that (mapcar #'sha (all-commits result))
+                     (has-item "aa"))))))

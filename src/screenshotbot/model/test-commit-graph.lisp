@@ -33,7 +33,9 @@
   (:import-from #:fiveam-matchers/misc
                 #:is-not-null)
   (:import-from #:util/store/simple-object-snapshot
-                #:snapshot-slot-value))
+                #:snapshot-slot-value)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :screenshotbot/model/test-commit-graph)
 
 (util/fiveam:def-suite)
@@ -159,6 +161,27 @@
         (merge-dag-into-commit-graph cg dag)
         (is-true (dag:get-commit (%persisted-dag cg) "aa"))
         (is-true (dag:get-commit (%persisted-dag cg) "bb"))))))
+
+(test merging-a-non-shallow-commit-into-a-shallow-commit
+  "There are probably old versions of the CLIs still sending shallow
+commits every now and then and we need to handle it."
+  (with-fixture state ()
+    (let ((cg (find-or-create-commit-graph company "foo")))
+      (merge-dag-into-commit-graph cg dag)
+      (is-true (%persisted-dag cg))
+      (is-true (dag:get-commit (%persisted-dag cg) "aa"))
+      (assert-that (dag:parents (dag:get-commit (%persisted-dag cg) "aa"))
+                   (has-length 0))
+
+      (let ((dag (make-instance 'dag:dag)))
+        (dag:add-commit dag (make-instance 'dag:commit
+                                           :sha "aa"
+                                           :parents (list "cc")))
+        (merge-dag-into-commit-graph cg dag)
+        (is-true (dag:get-commit (%persisted-dag cg) "aa"))
+        (assert-that (dag:parents (dag:get-commit (%persisted-dag cg) "aa"))
+                     (has-length 1))
+        (is-false (dag:get-commit (%persisted-dag cg) "cc"))))))
 
 
 (test commit-graph-refs-when-refs-is-nil
