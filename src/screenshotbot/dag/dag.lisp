@@ -258,9 +258,8 @@ tree. This version uses the Kahn's algorithm instead of DFS"
      (kahns-algo-topo-sort dag))))
 
 (defmethod write-to-stream ((dag dag) stream &key (format :json))
-  ;; TODO: do we need safe-topological-sort here? Since we no longer
-  ;; write to disk on the server, seems very unlikely.
-  (let ((sorted-nodes (reverse (safe-topological-sort dag)))
+  (let ((sorted-nodes (loop for node-id being the hash-keys of (commit-map dag)
+                            collect node-id))
         (commit-map (commit-map dag)))
     (ecase format
       (:json

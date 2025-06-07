@@ -32,6 +32,8 @@
                 #:encodable)
   (:import-from #:util/threading
                 #:with-extras)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export #:dag
            #:add-commit
            #:commit
