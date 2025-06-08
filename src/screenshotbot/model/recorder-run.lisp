@@ -733,3 +733,18 @@ list of warnings for RUN."
   (let ((warning (apply #'make-instance type args)))
     (bt:with-lock-held (*warning-lock*)
       (push warning (recorder-run-warnings run)))))
+
+(defun delete-old-unchanged-runs (&key (now (get-universal-time)))
+  (let ((cutoff (- now (* 3600 24 180))))
+    (loop for unchanged-run in (bknr.datastore:class-instances 'unchanged-run)
+          if (<
+              (handler-case
+                  (%created-at unchanged-run)
+                (slot-unbound ()
+                  0))
+              cutoff)
+            do
+               (bknr.datastore:delete-object unchanged-run))))
+
+(def-cron delete-old-unchanged-runs (:minute 22 :hour 4)
+  (delete-old-unchanged-runs))

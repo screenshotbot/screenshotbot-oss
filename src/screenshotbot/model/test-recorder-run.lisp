@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:delete-old-unchanged-runs
                 #:%run-build-url
                 #:run-build-url
                 #:clean-up-old-shards
@@ -40,6 +41,7 @@
   (:import-from #:bknr.datastore
                 #:blob-pathname)
   (:import-from #:fiveam-matchers/lists
+                #:contains-in-any-order
                 #:has-item
                 #:contains)
   (:import-from #:screenshotbot/user-api
@@ -365,3 +367,15 @@
                  :build-url "foobar")))
       (is (equal "foobar" (run-build-url run)))
       (is (typep (%run-build-url run) 'constant-string)))))
+
+(test delete-old-unchanged-runs
+  (with-fixture state ()
+    (let* ((now 1000000000)
+           (one (make-instance 'unchanged-run :created-at 1000000))
+           (two (make-instance 'unchanged-run :created-at 2000000))
+           (three (make-instance 'unchanged-run :created-at 999999000))
+           (four (make-instance 'unchanged-run :created-at 999999999)))
+      (delete-old-unchanged-runs :now now)
+      (assert-that (bknr.datastore:class-instances 'unchanged-run)
+                   (contains-in-any-order
+                    three four)))))
