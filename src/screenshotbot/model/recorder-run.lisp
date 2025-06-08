@@ -740,7 +740,7 @@ list of warnings for RUN."
           if (<
               (handler-case
                   (%created-at unchanged-run)
-                (slot-unbound ()
+                (unbound-slot ()
                   0))
               cutoff)
             do
