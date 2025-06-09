@@ -49,6 +49,11 @@ to cache the refs."))
                  (cons "repo-url" repo)))
    '(:list dto:git-ref)))
 
+(defun locally-rebased-p (repo &key override-commit-hash)
+  (or
+   (not override-commit-hash)
+   (equal override-commit-hash (git:current-commit repo))))
+
 (defun new-flow-enabled-p (repo &key override-commit-hash)
   (declare (ignorable repo override-commit-hash))
   #+lispworks
@@ -56,10 +61,7 @@ to cache the refs."))
    (>= *api-version* 19)
    (?. supported-remote-repo-p (git:get-remote-url repo))
    (equal "true" (uiop:getenv "SCREENSHOTBOT_ENABLE_UPLOAD_PACK"))
-   (or
-    
-    (not override-commit-hash)
-    (equal override-commit-hash (git:current-commit repo))))
+   (locally-rebased-p repo :override-commit-hash override-commit-hash))
   #-lispworks
   nil)
 
