@@ -133,6 +133,7 @@
    (:file "artifacts")
    (:file "assets")
    (:file "git-repo")
+   (:file "uname")
    (:module "model"
     :serial t
     :components ((:file "core")
@@ -409,6 +410,7 @@
                              (:file "test-signup")
                              (:file "test-common")))
                (:file "test-invite")
+               (:file "test-uname")
                (:module "model"
                 :components ((:file "test-core")
                              (:file "test-constant-string")
