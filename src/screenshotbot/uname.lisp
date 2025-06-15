@@ -85,7 +85,7 @@
 ;; https://en.wikipedia.org/wiki/Apple_silicon#Comparison_of_M-series_processors
 ;; I first used the source of that table and asked Gemini to create a
 ;; JSON map. Then asked it to create a common lisp alist out of it.
-(defvar *processor-types*
+(defparameter *processor-types*
   `(("T8103" . "M1")
     ("T6000" . "M1 Pro")
     ("T6001" . "M1 Max")
