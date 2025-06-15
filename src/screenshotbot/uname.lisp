@@ -6,6 +6,7 @@
 
 (defpackage :screenshotbot/uname
   (:use #:cl)
+  (:nicknames :%uname)
   (:import-from #:alexandria
                 #:assoc-value))
 (in-package :screenshotbot/uname)
