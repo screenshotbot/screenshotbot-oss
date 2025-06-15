@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-uname
                 #:delete-old-unchanged-runs
                 #:%run-build-url
                 #:run-build-url
@@ -379,3 +380,11 @@
       (assert-that (bknr.datastore:class-instances 'unchanged-run)
                    (contains-in-any-order
                     three four)))))
+
+(test uname
+  (with-fixture state ()
+    (let ((one (make-recorder-run
+                :metadata `(("foo" . "bar")
+                            ("uname" . "carbar")))))
+      (is (equal "carbar"
+                 (recorder-run-uname one))))))

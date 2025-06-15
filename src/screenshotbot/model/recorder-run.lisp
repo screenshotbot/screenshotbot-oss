@@ -132,7 +132,8 @@
    #:shard-count
    #:shard-screenshots
    #:shard-key
-   #:recorder-run-metadata)
+   #:recorder-run-metadata
+   #:recorder-run-uname)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -359,6 +360,10 @@ associated report is rendered.")
                        :metadata nil
                        :tags nil
                        :was-promoted-p nil)))
+
+(defun recorder-run-uname (run)
+  (assoc-value (recorder-run-metadata run)
+               "uname" :test #'equal))
 
 (defmethod pull-request-url ((self recorder-run))
   (constant-string-string (%pull-request-url self)))
