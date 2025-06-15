@@ -101,19 +101,25 @@
     ("T6032" . "M3 Ultra")
     ("T8132" . "M4")
     ("T6040" . "M4 Pro")
-    ("T6041" . "M4 Max")))
+    ("T6041" . "M4 Max")
+
+    ;; This one was added manually
+    ("VMAPPLE" . "VMAPPLE")))
 
 (defgeneric parse-t-type (uname)
   (:method (uname)
     nil)
   (:method ((uname darwin-uname))
-    (%scan 0 "RELEASE_.*?_(T[0-9]*) " uname)))
+    (%scan 0 "RELEASE_.*?_(T[0-9]*|VMAPPLE) " uname)))
 
 (defgeneric cpu-codename (uname)
   (:method (uname)
     nil)
   (:method ((uname darwin-uname))
-    (assoc-value
-     *processor-types*
-     (parse-t-type uname)
-     :test #'string-equal)))
+    (let ((result (assoc-value
+                   *processor-types*
+                   (parse-t-type uname)
+                   :test #'string-equal)))
+      (unless result
+        (warn "unknown cpu codename: ~a" (uname-str uname)))
+      result)))

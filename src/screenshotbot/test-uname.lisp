@@ -50,3 +50,8 @@
     (is (equal nil (parse-t-type uname)))
     (is (equal nil (cpu-codename uname)))
     (is (equal nil (uname-arch uname)))))
+
+
+(test apple-vm
+  (let ((uname (parse-uname "Darwin VM-ba26e239df 23.6.0 Darwin Kernel Version 23.6.0: Mon Jul 29 21:13:03 PDT 2024; root:xnu-10063.141.2~1/RELEASE_ARM64_VMAPPLE arm64")))
+    (is (equal "VMAPPLE" (parse-t-type uname)))))
