@@ -516,10 +516,10 @@
                 (funcall fn wand1 (= res 0)))))
        (cond
          ((and
-           (<
+           (<=
             (magick-get-image-height wand1)
             (magick-get-image-height wand2))
-           (<
+           (<=
             (magick-get-image-width wand1)
             (magick-get-image-width wand2)))
           ;; if both the dimensions of wand1 are smaller than wand2, then

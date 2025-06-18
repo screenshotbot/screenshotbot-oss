@@ -25,6 +25,7 @@
                 #:image-comparison
                 #:do-image-comparison)
   (:import-from #:screenshotbot/model/image
+                #:image-dimensions
                 #:with-local-image
                 #:mask-rect
                 #:make-image
@@ -40,6 +41,12 @@
                 #:installation
                 #:*installation*)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:magick-get-image-height
+                #:magick-get-image-width
+                #:save-as-webp
+                #:magick-new-image
+                #:pixel-set-color
+                #:new-pixel-wand
                 #:magick-write-image
                 #:magick-read-image
                 #:check-boolean
@@ -60,6 +67,22 @@
 (defvar im1 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
 (defvar im2 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-2.png"))
 (defvar im3 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
+
+(def-easy-macro with-test-image (&binding name &key pixels (color "red")
+                                          (height 10)
+                                          (width 10)
+                                          &fn fn)
+  (uiop:with-temporary-file (:pathname p :type "webp")
+    (with-wand (wand)
+     (let ((default-pixel (new-pixel-wand)))
+       (pixel-set-color default-pixel "none")
+       (magick-new-image wand width height default-pixel)
+       (loop for (x y) in pixels
+             do
+                (with-pixel (pixel x y)
+                  (screenshotbot-set-pixel wand pixel color)))
+       (save-as-webp wand p)
+       (fn p)))))
 
 (def-fixture state (&key dir)
   (let ((*installation* (make-instance 'installation)))
@@ -264,4 +287,64 @@ to be doing image processing during the request."
          (is (eql 1 (fset:size *stored-cache*)))
          (check-for-bad-state))))))
 
- 
+(defun image-dimensions-for-pathname (pathname)
+  "Returns a list of (width height) for the image at pathname"
+  (with-wand (wand :file pathname)
+    (list (magick-get-image-width wand)
+          (magick-get-image-height wand))))
+
+
+
+(test different-sized-images-should-not-be-identical
+  "Regression test: images of different sizes should never be considered identical,
+   even if all overlapping pixels match"
+  (with-fixture state ()
+    (uiop:with-temporary-file (:pathname out :type "png")
+      ;; Test case 1: second image larger than first
+      (with-test-image (small-img :width 10 :height 10 :color "red")
+        (with-test-image (large-img :width 20 :height 20 :color "red")
+          (is-false (do-image-comparison 
+                      (make-screenshot small-img) 
+                      (make-screenshot large-img) 
+                      out))
+          (is (equal
+               (list 20 20)
+               (image-dimensions-for-pathname out)))))
+      
+      ;; Test case 2: first image larger than second  
+      (with-test-image (large-img :width 20 :height 20 :color "blue")
+        (with-test-image (small-img :width 10 :height 10 :color "blue")
+          (is-false (do-image-comparison 
+                      (make-screenshot large-img) 
+                      (make-screenshot small-img) 
+                      out))
+          (is (equal
+               (list 20 20)
+               (image-dimensions-for-pathname out))))))))
+
+(test different-sized-images-should-not-be-identical--with-only-height-change
+  "Regression test: images of different sizes should never be considered identical,
+   even if all overlapping pixels match"
+  (with-fixture state ()
+    (uiop:with-temporary-file (:pathname out :type "png")
+      ;; Test case 1: second image larger than first
+      (with-test-image (small-img :width 10 :height 10 :color "red")
+        (with-test-image (large-img :width 10 :height 20 :color "red")
+          (is-false (do-image-comparison 
+                      (make-screenshot small-img) 
+                      (make-screenshot large-img) 
+                      out))
+          (is (equal
+               (list 10 20)
+               (image-dimensions-for-pathname out)))))
+      
+      ;; Test case 2: first image larger than second  
+      (with-test-image (large-img :width 10 :height 20 :color "blue")
+        (with-test-image (small-img :width 10 :height 10 :color "blue")
+          (is-false (do-image-comparison 
+                      (make-screenshot large-img) 
+                      (make-screenshot small-img) 
+                      out))
+          (is (equal
+               (list 10 20)
+               (image-dimensions-for-pathname out))))))))
