@@ -412,7 +412,8 @@
                (:file "test-invite")
                (:file "test-uname")
                (:module "model"
-                :components ((:file "test-core")
+                :components ((:file "testing")
+                             (:file "test-core")
                              (:file "test-constant-string")
                              (:file "test-auto-cleanup")
                              (:file "test-transient-object")

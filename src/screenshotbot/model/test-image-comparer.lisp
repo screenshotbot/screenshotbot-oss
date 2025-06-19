@@ -7,17 +7,8 @@
 (defpackage :screenshotbot/model/test-image-comparer
   (:use #:cl
         #:fiveam)
-  (:import-from #:easy-macros
-                #:def-easy-macro)
   (:import-from #:screenshotbot/magick/magick-lw
-                #:get-non-alpha-pixels
-                #:save-as-webp
-                #:with-pixel
-                #:screenshotbot-set-pixel
-                #:magick-new-image
-                #:with-wand
-                #:pixel-set-color
-                #:new-pixel-wand)
+                #:get-non-alpha-pixels)
   (:import-from #:screenshotbot/model/image
                 #:image-hash
                 #:base-image-comparer
@@ -32,11 +23,8 @@
                 #:with-test-store)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
-  (:import-from #:util/testing
-                #:with-global-binding)
   (:import-from #:screenshotbot/model/recorder-run
-                #:make-recorder-run
-                #:recorder-run)
+                #:make-recorder-run)
   (:import-from #:fiveam-matchers/core
                 #:is-equal-to
                 #:has-typep
@@ -46,26 +34,12 @@
   (:import-from #:bknr.datastore
                 #:class-instances)
   (:import-from #:fiveam-matchers/has-length
-                #:has-length))
+                #:has-length)
+  (:import-from #:screenshotbot/model/testing
+                #:with-test-image))
 (in-package :screenshotbot/model/test-image-comparer)
 
 (util/fiveam:def-suite)
-
-(def-easy-macro with-test-image (&binding name &key pixels (color "red")
-                                          (height 10)
-                                          (width 10)
-                                          &fn fn)
-  (uiop:with-temporary-file (:pathname p :type "webp")
-    (with-wand (wand)
-     (let ((default-pixel (new-pixel-wand)))
-       (pixel-set-color default-pixel "none")
-       (magick-new-image wand width height default-pixel)
-       (loop for (x y) in pixels
-             do
-                (with-pixel (pixel x y)
-                  (screenshotbot-set-pixel wand pixel color)))
-       (save-as-webp wand p)
-       (fn p)))))
 
 (def-fixture state (&key (threshold 0))
   (with-test-store ()

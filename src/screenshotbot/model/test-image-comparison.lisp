@@ -24,39 +24,25 @@
                 #:make-image-comparison
                 #:*stored-cache*
                 #:image-comparison
-                #:do-image-comparison)
+                #:do-image-comparison
+                #:find-image-comparison-on-images)
   (:import-from #:screenshotbot/model/image
-                #:image-dimensions
-                #:with-local-image
-                #:mask-rect
-                #:make-image
-                #:image-blob)
-  (:import-from #:bknr.datastore
-                #:blob-pathname)
+                #:make-image)
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
-  (:import-from #:screenshotbot/model/image-comparison
-                #:%image-comparisons-for-before
-                #:find-image-comparison-on-images)
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:*installation*)
   (:import-from #:screenshotbot/magick/magick-lw
                 #:magick-get-image-height
                 #:magick-get-image-width
-                #:save-as-webp
-                #:magick-new-image
-                #:pixel-set-color
-                #:new-pixel-wand
-                #:magick-write-image
-                #:magick-read-image
-                #:check-boolean
-                #:magick-set-size
                 #:with-wand)
   (:import-from #:bknr.datastore
                 #:delete-object)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:screenshotbot/model/testing
+                #:with-test-image)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli)))
@@ -68,22 +54,6 @@
 (defvar im1 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image.png"))
 (defvar im2 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-2.png"))
 (defvar im3 #.(asdf:system-relative-pathname :screenshotbot "dashboard/fixture/image-3.png"))
-
-(def-easy-macro with-test-image (&binding name &key pixels (color "red")
-                                          (height 10)
-                                          (width 10)
-                                          &fn fn)
-  (uiop:with-temporary-file (:pathname p :type "webp")
-    (with-wand (wand)
-     (let ((default-pixel (new-pixel-wand)))
-       (pixel-set-color default-pixel "none")
-       (magick-new-image wand width height default-pixel)
-       (loop for (x y) in pixels
-             do
-                (with-pixel (pixel x y)
-                  (screenshotbot-set-pixel wand pixel color)))
-       (save-as-webp wand p)
-       (fn p)))))
 
 (def-fixture state (&key dir)
   (let ((*installation* (make-instance 'installation)))
