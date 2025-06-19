@@ -14,6 +14,7 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/model/image-comparison
+                #:remove-image-comparison
                 #:identical-p
                 #:image-comparison-difference-value
                 #:image-comparison-after
@@ -348,3 +349,27 @@ to be doing image processing during the request."
           (is (equal
                (list 10 20)
                (image-dimensions-for-pathname out))))))))
+
+(test remove-image-comparison
+  "Test that we can create and remove image-comparison objects from the cache"
+  (with-fixture stored-cache ()
+    (let ((*installation* (make-instance 'installation)))
+      (tmpdir:with-tmpdir (dir)
+        (with-test-store (:dir dir)
+          (let ((s1 (make-image :pathname im1))
+                (s2 (make-image :pathname im2))
+                (s3 (make-image :pathname im3)))
+            ;; Create two image comparisons
+            (let ((imc1 (make-image-comparison :before s1 :after s2 :result s3))
+                  (imc2 (make-image-comparison :before s2 :after s3 :result s1)))
+              ;; Verify both are in the cache
+              (is (eql 2 (fset:size *stored-cache*)))
+              ;; Remove one of them
+              (remove-image-comparison s1 s2)
+              ;; Verify only one remains
+              (is (eql 1 (fset:size *stored-cache*)))
+              ;; Verify the correct one remains
+              (is (eql imc2 (find-image-comparison-from-cache :before s2 :after s3)))
+              ;; Verify the removed one is gone
+              (is (eql nil (find-image-comparison-from-cache :before s1 :after s2))))))))))
+
