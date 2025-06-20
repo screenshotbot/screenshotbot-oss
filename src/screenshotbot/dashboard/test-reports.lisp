@@ -57,6 +57,10 @@
   (:import-from #:screenshotbot/dashboard/compare
                 #:warmup-comparison-images-sync
                 #:warmup-report)
+  (:import-from #:screenshotbot/model/testing
+                #:with-test-image)
+  (:import-from #:util/testing
+                #:with-fake-request)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-reports)
 
@@ -188,3 +192,34 @@
          (markup:write-html res)
          (does-not (contains-string "not complete")))
         res))))
+
+(screenshot-test report-page-happy-path-2
+  (with-fixture report-page ()
+    (with-fake-request ()
+      (with-test-user (:company company
+                       :logged-in-p t)
+       (with-test-image (im1-path :pixels '((1 1) (2 2)))
+         (with-test-image (im2-path :pixels '((3 3) (4 4)) :color "blue")
+           (let* ((im1 (make-image :pathname im1-path))
+                  (im2 (make-image :pathname im2-path))
+                  (run1 (make-recorder-run :channel channel
+                                           :company company
+                                           :screenshots (list (make-screenshot
+                                                               :name "FakeName"
+                                                               :image im1))))
+                  (run2 (make-recorder-run :channel channel
+                                           :company company
+                                           :screenshots (list
+                                                         (make-screenshot
+                                                          :name "FakeName"
+                                                          :image im2))))
+                  (report (make-instance 'report
+                                         :run run2
+                                         :previous-run run1)))
+             (warmup-comparison-images-sync run2 run1)
+             (snap-all-images)
+             (let ((res (report-page :id (oid report))))
+               (assert-that
+                (markup:write-html res)
+                (contains-string "FakeName"))
+               res))))))))
