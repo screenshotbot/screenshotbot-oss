@@ -157,6 +157,9 @@
 
 (named-readtables:in-readtable markup:syntax)
 
+(declaim (ftype function associate-figma))
+
+
 (defhandler (acceptable-review-url :uri "/acceptable/:id/review" :method :post)
             (id action redirect csrf)
   (assert (equal csrf (auth:csrf-token)))
@@ -639,7 +642,7 @@ If the diff-report is cached, then we process the body immediately instead."
                (screenshot-key after))) >
               Permalink
             </a>
-           </li>
+          </li>
 
           ,(let ((id (format nil "a~a" (random 10000000000))))
              <li>
@@ -657,7 +660,15 @@ If the diff-report is cached, then we process the body immediately instead."
                  </li>
                </ul>
              </li>)
+
+          ,(when (gk:check :figma (auth:current-company))
+             <li>
+               <a  href= (nibble () (associate-figma)) >
+                 Link to Figma
+               </a>
+             </li>)          
         </ul>
+        
       </div>
       <change-image-row before-image=(screenshot-image before)
                         after-image=(screenshot-image after)

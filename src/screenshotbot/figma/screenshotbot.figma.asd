@@ -8,14 +8,15 @@
   :serial t
   :depends-on (:screenshotbot
                :util/request)
-  :components ())
+  :components ((:file "view")))
 
 (defsystem :screenshotbot.figma/tests
   :serial t
   :depends-on (:screenshotbot.figma
                :fiveam
+               :screenshotbot/testing-lib
                :util/testing)
-  :components ())
+  :components ((:file "test-view")))
 
 
 
