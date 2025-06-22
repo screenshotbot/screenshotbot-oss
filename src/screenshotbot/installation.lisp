@@ -70,6 +70,9 @@
    (default-oidc-provider :initform nil
                           :initarg :default-oidc-provider
                           :accessor default-oidc-provider)
+   (figma :initarg :figma
+          :initform nil
+          :accessor installation-figma)
    (cdn :initarg :cdn
         :initform nil
         :accessor installation-cdn)))
