@@ -135,6 +135,10 @@
                 #:commit-graph)
   (:import-from #:screenshotbot/login/common
                 #:with-login)
+  (:import-from #:screenshotbot/model/figma
+                #:figma-link-url
+                #:figma-link-image
+                #:find-existing-figma-link)
   (:export
    #:render-acceptable
    #:render-diff-report
@@ -265,7 +269,8 @@
 (deftag change-image-row (&key before-image
                           after-image
                           before-dims
-                          after-dims)
+                          after-dims
+                          figma-link)
   <div class="change-image-row">
 
     <picture-with-img
@@ -280,6 +285,27 @@
       dimensions=after-dims
       alt="after image"
       class= "change-image-right" />
+
+    ,(when figma-link
+       <div class="figma-link mt-2">
+         <div class="d-flex align-items-center">
+           <a href=(figma-link-url figma-link)
+              target="_blank"
+              class="position-relative d-inline-block">       
+             <picture-with-img
+               image=(figma-link-image figma-link)
+               dimensions=(ignore-errors (image-dimensions (screenshotbot/model/figma:figma-link-image figma-link)))
+               alt="Figma component"
+               class="figma-preview me-2"
+               />
+             <span class="position-absolute top-0 start-0 badge bg-primary text-white" style="font-size: 0.7em;">
+               Figma
+             </span>
+           </a>
+         </div>
+       </div>)
+
+
 
   </div>)
 
@@ -676,6 +702,9 @@ If the diff-report is cached, then we process the body immediately instead."
                         after-image=(screenshot-image after)
                         before-dims= (ignore-errors (image-dimensions (screenshot-image before)))
                         after-dims= (ignore-errors (image-dimensions (screenshot-image after)))
+                        figma-link= (find-existing-figma-link 
+                                     :channel (recorder-run-channel run) 
+                                     :screenshot-name (screenshot-name before))
                         />
       <comparison-modal before=before after=after toggle-id=toggle-id />
     </div>)))
