@@ -320,7 +320,10 @@
     :components ((:file "common")))
    (:file "config")
    (:file "cleanup")
-   (:file "metrics")))
+   (:file "metrics")
+   (:module "figma"
+    :components ((:file "figma")
+                 (:file "view")))))
 
 (defsystem :screenshotbot/testing-lib
   :serial t
@@ -350,6 +353,8 @@
   :components ((:file "test-server")
                (:file "test-throttler")
                (:file "test-testing")
+               (:module "figma"
+                :components ((:file "test-view")))
                (:file "test-artifacts")
                (:file "test-email-template")
                (:file "test-promote-api")

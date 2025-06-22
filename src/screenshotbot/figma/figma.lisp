@@ -5,7 +5,9 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (defpackage :screenshotbot/figma/figma
-  (:use #:cl))
+  (:use #:cl)
+  (:export
+   #:figma))
 (in-package :screenshotbot/figma/figma)
 
 (defclass figma ()
