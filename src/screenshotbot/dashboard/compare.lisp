@@ -663,7 +663,9 @@ If the diff-report is cached, then we process the body immediately instead."
 
           ,(when (gk:check :figma (auth:current-company))
              <li>
-               <a  href= (nibble () (associate-figma)) >
+               <a  href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name before))
+
+) >
                  Link to Figma
                </a>
              </li>)          

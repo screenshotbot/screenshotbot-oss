@@ -26,8 +26,7 @@
 (named-readtables:in-readtable markup:syntax)
 
 ;; TODO: take in image etc.
-(defun associate-figma ()
-
+(defun associate-figma (&key channel screenshot-name)
   (let ((submit (nibble (url)
                   (%start-oauth-flow url))))
     <simple-card-page form-action= submit >
@@ -45,7 +44,6 @@
       </div>
       <button type="submit" class="btn btn-primary">Associate with Figma</button>
     </simple-card-page>))
-
 
 
 (defun %start-oauth-flow (figma-url &optional (callback #'temp-render-image))
