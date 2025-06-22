@@ -13,7 +13,12 @@
   (:import-from #:hunchentoot-extensions
                 #:make-url)
   (:import-from #:nibble
-                #:nibble))
+                #:nibble)
+  (:import-from #:screenshotbot/figma/figma
+                #:figma-client-secret
+                #:figma-client-id)
+  (:import-from #:screenshotbot/installation
+                #:installation-figma))
 (in-package :screenshotbot/figma/view)
 
 (named-readtables:in-readtable markup:syntax)
@@ -44,20 +49,50 @@
 (defun %start-oauth-flow (figma-url)
   "Initiates the Figma OAuth flow to get access to the user's Figma files"
   (declare (ignore figma-url))
-  (let* ((client-id
-           "HVQtnSgeupuL95jTasRX1h" ;; TODO: remove later
-           #+nil
-           (installation-figma-client-id (screenshotbot/installation:installation)))
+  (let* ((figma (installation-figma (screenshotbot/installation:installation)))
+         (client-id
+           (figma-client-id figma))
+         (client-secret
+           (figma-client-secret figma))
          (redirect-uri (hex:make-full-url hunchentoot:*request* "/account/oauth-callback"))
          (redirect (nibble (code error)
-                     (declare (ignore code error))
-                     (error "not yet implemented")))
+                     (cond
+                       (error
+                        (error "OAuth error: ~a" error))
+                       (code
+                        (handle-after-oauth-response
+                         figma-url
+                         :code code
+                         :client-id client-id
+                         :client-secret client-secret))
+                       (t
+                        (error "Invalid OAuth callback state")))))
          (state (nibble:nibble-id redirect))
          (oauth-url (format nil "https://www.figma.com/oauth?client_id=~a&redirect_uri=~a&scope=file_read&state=~a&response_type=code"
                            (quri:url-encode client-id)
                            (quri:url-encode redirect-uri)
                            state)))
     (hex:safe-redirect oauth-url)))
+
+(defun handle-after-oauth-response (figma-url &key code client-secret client-id)
+  "Handle the OAuth response by exchanging the code for an access token"
+  (let* ((redirect-uri (hex:make-full-url hunchentoot:*request* "/account/oauth-callback"))
+         (token-response (util/request:http-request 
+                          "https://api.figma.com/v1/oauth/token"
+                          :method :post
+                          :parameters `(("client_id" . ,client-id)
+                                        ("client_secret" . ,client-secret)
+                                        ("redirect_uri" . ,redirect-uri)
+                                        ("code" . ,code)
+                                        ("grant_type" . "authorization_code"))
+                          :want-string t))
+         (token-data (json:decode-json-from-string token-response))
+         (access-token (cdr (assoc :access--token token-data))))
+    (declare (ignore figma-url))
+    ;; TODO: Store the access token and process the Figma URL
+    (error "don't know what to do yet: ~a" access-token)))
+
+
 
 
 
