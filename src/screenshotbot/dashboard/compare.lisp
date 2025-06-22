@@ -266,6 +266,20 @@
 
   </picture>)
 
+(markup:deftag image-badge (children &key class)
+  <span class= (format nil "screenshot-image-badge position-absolute badge bg-primary text-white ~a" class)
+        style="font-size: 0.7em; top: -0.25rem; left: 0; margin-left: 0.25rem; z-index: 10;  line-height: 1; vertical-align: top;">
+    ,@children
+  </span>)
+
+(markup:deftag image-container (children)
+  "A wrapper for images, that allows us to place widgets around the image."
+  <div class= "d-inline-block image-container">
+    <div class= "position-relative">
+        ,@children
+      </div>
+  </div>)
+
 (deftag change-image-row (&key before-image
                           after-image
                           before-dims
@@ -273,41 +287,52 @@
                           figma-link)
   <div class="change-image-row">
 
-    <picture-with-img
-      image=before-image
-      dimensions=before-dims
-      alt= "before image"
-      class= "change-image-left" />
+    <image-container>
+      <picture-with-img
+        image=before-image
+        dimensions=before-dims
+        alt= "before image"
+        class= "change-image-left" />
+      <image-badge class= "bg-secondary" >
+        Previous
+      </image-badge>
+    </image-container>
     <mdi name= "arrow_forward" />
 
-    <picture-with-img
-      image=after-image
-      dimensions=after-dims
-      alt="after image"
-      class= "change-image-right" />
+    <image-container>
+      <picture-with-img
+        image=after-image
+        dimensions=after-dims
+        alt="after image"
+        class= "change-image-right" />
+      <image-badge class= "bg-success" >
+        Updated
+      </image-badge>
+    </image-container>
 
     ,(when figma-link
        <div class="figma-link mt-2">
-         <div class="d-flex align-items-center">
+         <image-container>
            <a href=(figma-link-url figma-link)
               target="_blank"
-              class="position-relative d-inline-block">       
+              >       
              <picture-with-img
                image=(figma-link-image figma-link)
                dimensions=(ignore-errors (image-dimensions (screenshotbot/model/figma:figma-link-image figma-link)))
                alt="Figma component"
                class="figma-preview me-2"
                />
-             <span class="position-absolute top-0 start-0 badge bg-primary text-white" style="font-size: 0.7em;">
-               Figma
-             </span>
+             <image-badge>
+                  Figma
+             </image-badge>
            </a>
-         </div>
+         </image-container>
        </div>)
 
 
 
   </div>)
+
 
 (deftag change-image-row-triple (&key before-image
                           after-image

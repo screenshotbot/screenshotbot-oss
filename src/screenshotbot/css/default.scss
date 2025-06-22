@@ -616,6 +616,7 @@ body > section:nth-child(2) {
         }
 
     }
+    margin-bottom: 1em;
 }
 
 .report-result {
@@ -1266,3 +1267,12 @@ input[type=number].number-to-text {
 }
 
 
+screenshot-image-badge {
+    font-size: 0.7em;
+    top: -0.25rem;
+    left: 0;
+    margin-left: 0.25rem;
+    z-index: 10;
+    line-height: 1;
+    vertical-align: top;
+}
