@@ -67,6 +67,8 @@
                 #:screenshot-key)
   (:import-from #:screenshotbot/template
                 #:app-template)
+  (:import-from #:screenshotbot/model/figma
+                #:update-figma-link)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-compare)
 
@@ -121,9 +123,8 @@
           (is (eql -1 x))
           (is (eql -1 y)))))))
 
-(test report-screenshot-test
-  (with-fixture state ()
-    (with-test-user (:user user
+(def-fixture single-change ()
+  (with-test-user (:user user
                      :company company
                      :logged-in-p t)
       (let* ((channel (make-instance 'channel
@@ -142,11 +143,26 @@
                                     :title "foobar"
                                     :run one
                                     :previous-run two)))
-        (snap-all-images)
-        (screenshot-static-page
-         :screenshotbot
-         "report-page"
-         (render-report-page report :skip-access-checks t))))))
+        (&body))))
+
+(test report-screenshot-test
+  (with-fixture state ()
+    (with-fixture single-change ()
+      (snap-all-images)
+      (screenshot-static-page
+       :screenshotbot
+       "report-page"
+       (render-report-page report :skip-access-checks t)))))
+
+(screenshot-test report-change-but-with-figma
+  (with-fixture state ()
+    (with-fixture single-change ()
+      (update-figma-link :channel channel 
+                   :screenshot-name "foobar"
+                   :url "https://www.figma.com/file/ABC123/Screenshotbot-Report-UI?node-id=1%3A2"
+                   :image (make-image :pathname im1 :for-tests t))
+      (snap-all-images)
+      (render-report-page report :skip-access-checks t))))
 
 (test report-screenshot-test-with-one-screenshot-added
   (with-fixture state ()
