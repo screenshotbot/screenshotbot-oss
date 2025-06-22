@@ -48,9 +48,8 @@
 
 
 
-(defun %start-oauth-flow (figma-url)
+(defun %start-oauth-flow (figma-url &optional (callback #'temp-render-image))
   "Initiates the Figma OAuth flow to get access to the user's Figma files"
-  (declare (ignore figma-url))
   (let* ((figma (installation-figma (screenshotbot/installation:installation)))
          (client-id
            (figma-client-id figma))
@@ -64,6 +63,7 @@
                        (code
                         (handle-after-oauth-response
                          figma-url
+                         callback
                          :code code
                          :client-id client-id
                          :client-secret client-secret))
@@ -120,7 +120,7 @@
                 (error "No image found for node ~A (in ~a)" node-id json-response)))
           (error "Figma API error: ~A" status-code)))))
 
-(defun handle-after-oauth-response (figma-url &key code client-secret client-id)
+(defun handle-after-oauth-response (figma-url callback &key code client-secret client-id)
   "Handle the OAuth response by exchanging the code for an access token"
   (let* ((redirect-uri (hex:make-full-url hunchentoot:*request* "/account/oauth-callback"))
          (token-response (util/request:http-request 
@@ -134,9 +134,9 @@
                           :want-string t))
          (token-data (json:decode-json-from-string token-response))
          (access-token (cdr (assoc :access--token token-data))))
-    (declare (ignore figma-url))
     (process-figma-url-for-screenshot
      figma-url
+     callback
      access-token)))
 
 (defun download-figma-image (image-url)
@@ -147,31 +147,33 @@
         image-data
         (error "Failed to download image: ~A" status-code))))
 
-(defun process-figma-url-for-screenshot (figma-url access-token)
+(defun process-figma-url-for-screenshot (figma-url callback access-token)
   "Complete flow: parse URL, fetch from API, download image"
   (multiple-value-bind (file-key node-id)
       (parse-figma-url figma-url)
     (unless (and file-key node-id)
       (error "Invalid Figma URL format"))
     
-    (let* ((image-url (fetch-figma-image access-token file-key node-id))
-           (image-data (download-figma-image image-url)))
-      ;; Return image data that can be processed by Screenshotbot
-      (let ((base64-image (cl-base64:usb8-array-to-base64-string image-data)))
-        <simple-card-page>
-          <div class="text-center">
-            <h3>Figma Image Retrieved Successfully</h3>
-            <div class="mt-4">
-              <img src= (format nil "data:image/png;base64,~A" base64-image)
-                   class="img-fluid"
-                   alt="Figma Component" />
-            </div>
-            <div class="mt-3">
-              <p class="text-muted">Image fetched from: <code>{figma-url}</code></p>
-            </div>
-          </div>
-        </simple-card-page>))))
+    (let* ((image-url (fetch-figma-image access-token file-key node-id)))
+      (funcall callback image-url))))
 
+
+(defun temp-render-image (image-url)
+  (let ((image-data (download-figma-image image-url)))
+    (let ((base64-image (cl-base64:usb8-array-to-base64-string image-data)))
+      <simple-card-page>
+        <div class="text-center">
+          <h3>Figma Image Retrieved Successfully</h3>
+          <div class="mt-4">
+            <img src= (format nil "data:image/png;base64,~A" base64-image)
+                 class="img-fluid"
+                 alt="Figma Component" />
+          </div>
+          <div class="mt-3">
+            <p class="text-muted">Image fetched from: <code>{figma-url}</code></p>
+          </div>
+        </div>
+      </simple-card-page>)))
 
 
 
