@@ -21,8 +21,9 @@
 
 (screenshot-test associate-figma-form
   (with-installation ()
-   (with-fake-request ()
-     (associate-figma))))
+    (with-fake-request ()
+      (auth:with-sessions ()
+       (associate-figma)))))
 
 
 
