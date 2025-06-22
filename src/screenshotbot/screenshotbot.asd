@@ -150,6 +150,7 @@
                  (:file "recorder-run")
                  (:file "pr-rollout-rule")
                  (:file "downloadable-run")
+                 (:file "figma")
                  (:file "batch")
                  (:file "report" :depends-on ("recorder-run"))
                  (:file "image-comparison")
