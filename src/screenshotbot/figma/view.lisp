@@ -20,7 +20,13 @@
   (:import-from #:screenshotbot/installation
                 #:installation-figma)
   (:import-from #:alexandria
-                #:assoc-value))
+                #:assoc-value)
+  (:import-from #:screenshotbot/model/image
+                #:make-image)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:screenshotbot/model/figma
+                #:update-figma-link))
 (in-package :screenshotbot/figma/view)
 
 (named-readtables:in-readtable markup:syntax)
@@ -28,7 +34,13 @@
 ;; TODO: take in image etc.
 (defun associate-figma (&key channel screenshot-name)
   (let ((submit (nibble (url)
-                  (%start-oauth-flow url))))
+                  (%start-oauth-flow
+                   url
+                   (lambda (image-url)
+                     (perform-update-image-link :channel channel
+                                                :screenshot-name screenshot-name
+                                                :figma-url url
+                                                :image-url image-url))))))
     <simple-card-page form-action= submit >
       <div class="form-group mb-3">
         <label for="figma-url" class="form-label">Figma Component URL</label>
@@ -44,6 +56,47 @@
       </div>
       <button type="submit" class="btn btn-primary">Associate with Figma</button>
     </simple-card-page>))
+
+(defun make-image-from-data (image-data &key company)
+  "Create an IMAGE instance from binary image data"
+  (uiop:with-temporary-file (:stream stream :direction :output 
+                             :element-type '(unsigned-byte 8)
+                             :pathname temp-file)
+    (write-sequence image-data stream)
+    (finish-output stream)
+    (make-image :pathname temp-file
+                :company company)))
+
+(defun perform-update-image-link (&key channel screenshot-name figma-url image-url)
+  "Downloads the Figma image and creates/updates the figma-link record"
+  (let* ((image-data (download-figma-image image-url))
+         (image (make-image-from-data image-data
+                                      :company (company channel)))
+         (figma-link (update-figma-link
+                      :channel channel
+                      :screenshot-name screenshot-name
+                      :url figma-url
+                      :image image)))
+    (declare (ignore figma-link))
+    <simple-card-page>
+      <div class="text-center">
+        <h3>Figma Link Created Successfully</h3>
+        <div class="mt-4">
+          <img src= (screenshotbot/model/image:image-public-url image)
+               class="img-fluid"
+               alt="Figma Component" />
+        </div>
+        <div class="mt-3">
+          <p class="text-success">
+            Successfully linked screenshot ",(progn screenshot-name)" to Figma component
+          </p>
+          <p class="text-muted">
+            Figma URL: <code>,(progn figma-url)</code>
+          </p>
+        </div>
+      </div>
+    </simple-card-page>))
+
 
 
 (defun %start-oauth-flow (figma-url &optional (callback #'temp-render-image))
