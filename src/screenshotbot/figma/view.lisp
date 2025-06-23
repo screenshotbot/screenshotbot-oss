@@ -30,6 +30,7 @@
   (:import-from #:screenshotbot/model/figma
                 #:update-figma-link)
   (:import-from #:util/form-errors
+                #:with-form-errors
                 #:with-error-builder))
 (in-package :screenshotbot/figma/view)
 
@@ -198,7 +199,13 @@
                  (image-url (assoc-value images node-id :test #'string-equal)))
             (if image-url
                 image-url
-                (error "No image found for node ~A (in ~a)" node-id json-response)))
+                (hex:safe-redirect
+                 (nibble ()
+                   <simple-card-page>
+                     <p>
+                       Oops, failed to find that image. Please make sure you copy pasted the URL correctly.
+                     </p>
+                   </simple-card-page>))))
           (error "Figma API error: ~A" status-code)))))
 
 (defun handle-after-oauth-response (figma-url callback &key code client-secret client-id)
