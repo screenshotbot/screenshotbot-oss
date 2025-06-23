@@ -20,6 +20,7 @@
   (:import-from #:screenshotbot/installation
                 #:installation-figma)
   (:import-from #:alexandria
+                #:when-let
                 #:assoc-value)
   (:import-from #:screenshotbot/model/image
                 #:with-tmp-image-file
@@ -27,7 +28,9 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/model/figma
-                #:update-figma-link))
+                #:update-figma-link)
+  (:import-from #:util/form-errors
+                #:with-error-builder))
 (in-package :screenshotbot/figma/view)
 
 (named-readtables:in-readtable markup:syntax)
@@ -37,14 +40,11 @@
                           redirect)
   "REDIRECT is where we want to redirect to after the change is made."
   (let ((submit (nibble (url)
-                  (%start-oauth-flow
+                  (validate-input
                    url
-                   (lambda (image-url)
-                     (perform-update-image-link :channel channel
-                                                :screenshot-name screenshot-name
-                                                :figma-url url
-                                                :image-url image-url
-                                                :redirect redirect))))))
+                   :channel channel
+                   :screenshot-name screenshot-name
+                   :redirect redirect))))
     <simple-card-page form-action= submit >
       <div class="form-group mb-3">
         <label for="figma-url" class="form-label">Figma Component URL</label>
@@ -60,6 +60,30 @@
       </div>
       <button type="submit" class="btn btn-primary">Associate with Figma</button>
     </simple-card-page>))
+
+(defun validate-input (url &key channel screenshot-name redirect)
+  (with-error-builder (:check check :errors errors
+                       :form-builder
+                       (associate-figma :channel channel :screenshot-name screenshot-name
+                                        :redirect redirect)
+                       :form-args (:url url)
+                       :success
+                       (%start-oauth-flow
+                        url
+                        (lambda (image-url)
+                          (perform-update-image-link :channel channel
+                                                     :screenshot-name screenshot-name
+                                                     :figma-url url
+                                                     :image-url image-url
+                                                     :redirect redirect))))
+
+    (check :url (ignore-errors (quri:uri url))
+           "Could not parse URL")
+    (when-let ((uri (quri:uri url)))
+      (check :url (or
+                   (equal "www.figma.com" (quri:uri-host uri))
+                   (equal "figma.com" (quri:uri-host uri)))
+             "Must be a figma.com URL. Click on the component in Figma, and copy paste the URL here."))))
 
 (defun make-image-from-data (image-data &key company)
   "Create an IMAGE instance from binary image data"
