@@ -294,8 +294,12 @@
         dimensions=before-dims
         alt= "before image"
         class= "change-image-left" />
-      <image-badge class= "bg-secondary" >
+      <image-badge class= "bg-secondary non-hover-badge" >
         Previous
+      </image-badge>
+
+      <image-badge class= "bg-secondary d-none hover-badge" >
+        Updated (toggled by hover)
       </image-badge>
     </image-container>
 

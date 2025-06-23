@@ -55,7 +55,31 @@ function updateResizeObserver(el, obs) {
     obs.observe(el);
 }
 
+/*
+ * Toggles visibility between two children of the parent.
+ *
+ * If isSelector2 is set, the selector2 gets the visibility, otherwise
+ * selector1 does.
+ */
+function toggleVisibilityForTwoChildren(parent,
+                                        selector1,
+                                        selector2,
+                                        isSelector2) {
+    let child1 = $(parent).find(selector1);
+    let child2 = $(parent).find(selector2);
 
+    function maybeShow(child, show) {
+        if (show) {
+            child.removeClass("d-none");
+        } else {
+            child.addClass("d-none");
+        }
+    }
+
+    maybeShow(child1, !isSelector2);
+    maybeShow(child2, isSelector2);
+}
+                                        
 
 
 function prepareReportJs () {
@@ -78,8 +102,9 @@ function prepareReportJs () {
         var isMousing = false;
 
         function setImg() {
+            let isUpdated = (isTouching || isMousing);
             let [src, webpSrcset] =
-                (isTouching || isMousing)
+                isUpdated
                 ? [newSrc, newWebpSrcset]
                 : [oldSrc, oldWebpSrcset];
             if (src === undefined) {
@@ -94,6 +119,11 @@ function prepareReportJs () {
                 $(img).attr("src", src);
                 findSourceTag(img).attr("srcset", webpSrcset);
             }
+
+            toggleVisibilityForTwoChildren($(img).closest("div"),
+                                           ".non-hover-badge",
+                                           ".hover-badge",
+                                           isUpdated);
         }
 
         $(this).mouseover(function () {
