@@ -118,6 +118,7 @@
                 #:recorder-run-tags
                 #:run-build-url)
   (:import-from #:core/ui/simple-card-page
+                #:confirmation-page
                 #:simple-card-page)
   (:import-from #:screenshotbot/model/review-policy
                 #:can-review?)
@@ -716,13 +717,32 @@ If the diff-report is cached, then we process the body immediately instead."
              </li>)
 
           ,(when (gk:check :figma (auth:current-company))
-             <li>
-               <a  href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name before))
+             (let ((id (format nil "a~a" (random 10000000000)))
+                   (existing-figma (find-existing-figma-link :channel
+                                                             (recorder-run-channel run)
+                                                             :screenshot-name
+                                                             (screenshot-name before))))
+                <li>
+                  <a href= "#" class= "dropdown-toggle" data-bs-toggle= "dropdown"
+                     data-bs-target= id
+                     aria-expanded= "false" >Figma</a>
+                  <ul class= "dropdown-menu" >
+                    ,(unless existing-figma
+                       <li>
+                         <a class= "dropdown-item" href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name before)))
+                            >Link to Figma</a>
+                       </li>)
 
-) >
-                 Link to Figma
-               </a>
-             </li>)          
+                    ,(when existing-figma
+                       <li>
+                         <a class= "dropdown-item" href= (nibble ()
+                                                           (delete-figma existing-figma :redirect script-name)) >
+                           Delete Figma
+                         </a>
+                       </li>)
+                    
+                  </ul>
+                </li>))          
         </ul>
         
       </div>
@@ -743,6 +763,15 @@ If the diff-report is cached, then we process the body immediately instead."
                   (diff-report:group-title group))))
   </div>
   </div>)
+
+(defun delete-figma (existing-figma &key redirect)
+  (confirmation-page
+   :yes (nibble () (bknr.datastore:delete-object existing-figma)
+          (hex:safe-redirect redirect))
+   :no redirect
+   <div>
+     Are you sure you want to delete this association from Figma?
+   </div>))
 
 (defun highlight-search-term (search title)
   (cond
