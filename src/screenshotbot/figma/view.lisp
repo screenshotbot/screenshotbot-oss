@@ -22,6 +22,7 @@
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:screenshotbot/model/image
+                #:with-tmp-image-file
                 #:make-image)
   (:import-from #:screenshotbot/model/company
                 #:company)
@@ -59,9 +60,9 @@
 
 (defun make-image-from-data (image-data &key company)
   "Create an IMAGE instance from binary image data"
-  (uiop:with-temporary-file (:stream stream :direction :output 
-                             :element-type '(unsigned-byte 8)
-                             :pathname temp-file)
+  (with-tmp-image-file (:stream stream :direction :output 
+                        :element-type '(unsigned-byte 8)
+                        :pathname temp-file)
     (write-sequence image-data stream)
     (finish-output stream)
     (make-image :pathname temp-file
@@ -99,7 +100,7 @@
 
 
 
-(defun %start-oauth-flow (figma-url &optional (callback #'temp-render-image))
+(defun %start-oauth-flow (figma-url callback)
   "Initiates the Figma OAuth flow to get access to the user's Figma files"
   (let* ((figma (installation-figma (screenshotbot/installation:installation)))
          (client-id
@@ -209,22 +210,6 @@
       (funcall callback image-url))))
 
 
-(defun temp-render-image (image-url)
-  (let ((image-data (download-figma-image image-url)))
-    (let ((base64-image (cl-base64:usb8-array-to-base64-string image-data)))
-      <simple-card-page>
-        <div class="text-center">
-          <h3>Figma Image Retrieved Successfully</h3>
-          <div class="mt-4">
-            <img src= (format nil "data:image/png;base64,~A" base64-image)
-                 class="img-fluid"
-                 alt="Figma Component" />
-          </div>
-          <div class="mt-3">
-            <p class="text-muted">Image fetched from: <code>{figma-url}</code></p>
-          </div>
-        </div>
-      </simple-card-page>)))
 
 
 
