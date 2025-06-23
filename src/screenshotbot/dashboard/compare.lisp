@@ -79,6 +79,8 @@
                 #:get-non-alpha-pixels
                 #:with-wand)
   (:import-from #:screenshotbot/diff-report
+                #:group-diff-report
+                #:diff-report-run
                 #:group-renamed-p
                 #:group
                 #:deleted-groups
@@ -654,6 +656,35 @@ If the diff-report is cached, then we process the body immediately instead."
      (image-comparison-result
       (prepare-image-comparison-file image-comparison-job))))
 
+(markup:deftag figma-drop-down (&key script-name run screenshot)
+  (when (gk:check :figma (auth:current-company))
+    (let ((id (format nil "a~a" (random 10000000000)))
+          (existing-figma (find-existing-figma-link :channel
+                                                    (recorder-run-channel run)
+                                                     :screenshot-name
+                                                     (screenshot-name screenshot))))
+      <li>
+        <a href= "#" class= "dropdown-toggle" data-bs-toggle= "dropdown"
+           data-bs-target= id
+           aria-expanded= "false" >Figma</a>
+        <ul class= "dropdown-menu" >
+          ,(unless existing-figma
+             <li>
+               <a class= "dropdown-item" href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name screenshot)  :redirect script-name))
+                  >Link to Figma</a>
+             </li>)
+
+          ,(when existing-figma
+             <li>
+               <a class= "dropdown-item" href= (nibble ()
+                                                         (delete-figma existing-figma :redirect script-name)) >
+                 Delete Figma
+               </a>
+             </li>)
+          
+        </ul>
+      </li>)))
+
 (defun render-change-group (group run script-name &key search
                                                     index)
   <div class= "col-12">
@@ -720,33 +751,7 @@ If the diff-report is cached, then we process the body immediately instead."
                </ul>
              </li>)
 
-          ,(when (gk:check :figma (auth:current-company))
-             (let ((id (format nil "a~a" (random 10000000000)))
-                   (existing-figma (find-existing-figma-link :channel
-                                                             (recorder-run-channel run)
-                                                             :screenshot-name
-                                                             (screenshot-name before))))
-                <li>
-                  <a href= "#" class= "dropdown-toggle" data-bs-toggle= "dropdown"
-                     data-bs-target= id
-                     aria-expanded= "false" >Figma</a>
-                  <ul class= "dropdown-menu" >
-                    ,(unless existing-figma
-                       <li>
-                         <a class= "dropdown-item" href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name before)  :redirect script-name))
-                            >Link to Figma</a>
-                       </li>)
-
-                    ,(when existing-figma
-                       <li>
-                         <a class= "dropdown-item" href= (nibble ()
-                                                           (delete-figma existing-figma :redirect script-name)) >
-                           Delete Figma
-                         </a>
-                       </li>)
-                    
-                  </ul>
-                </li>))          
+          <figma-drop-down run=run screenshot=before script-name=script-name />
         </ul>
         
       </div>
@@ -1250,6 +1255,11 @@ additional actions in the More dropdown menu.
                                <a href= (image-public-url (screenshot-image screenshot) :originalp t)
                                   >Download Original</a>
                              </li>
+
+                             <figma-drop-down run= (diff-report-run (group-diff-report group))
+                                              screenshot=screenshot
+                                              script-name=script-name />
+                             
                            </ul>
                          </div>
 
