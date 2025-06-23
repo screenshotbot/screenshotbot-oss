@@ -733,7 +733,7 @@ If the diff-report is cached, then we process the body immediately instead."
                   <ul class= "dropdown-menu" >
                     ,(unless existing-figma
                        <li>
-                         <a class= "dropdown-item" href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name before)))
+                         <a class= "dropdown-item" href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name before)  :redirect script-name))
                             >Link to Figma</a>
                        </li>)
 

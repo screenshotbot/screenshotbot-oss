@@ -54,11 +54,12 @@
         (cl-mock:answer (download-figma-image image-url)
           mock-image-data)
         
-        (let ((result (perform-update-image-link
-                       :channel channel
-                       :screenshot-name screenshot-name
-                       :figma-url figma-url
-                       :image-url image-url)))
+        (let ((result (catch 'hunchentoot::handler-done
+                        (perform-update-image-link
+                         :channel channel
+                         :screenshot-name screenshot-name
+                         :figma-url figma-url
+                         :image-url image-url))))
           
           ;; Verify that a figma-link was created
           (let ((figma-link (find-existing-figma-link
