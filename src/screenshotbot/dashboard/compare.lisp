@@ -297,7 +297,10 @@
         Previous
       </image-badge>
     </image-container>
-    <mdi name= "arrow_forward" />
+
+    <div class= "arrow-forward" >
+      <mdi name= "arrow_forward" />
+    </div>
 
     <image-container>
       <picture-with-img

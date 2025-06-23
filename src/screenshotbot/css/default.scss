@@ -1276,3 +1276,10 @@ screenshot-image-badge {
     line-height: 1;
     vertical-align: top;
 }
+
+.change-image-row {
+    display: flex;
+    align-items: center;
+    gap: 1em 1em;
+    flex-wrap: wrap;
+}
