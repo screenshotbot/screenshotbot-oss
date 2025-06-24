@@ -21,7 +21,10 @@
                 #:section-title
                 #:toplevel
                 #:section
-                #:section-children)
+                #:section-children
+                #:page-text
+                #:page-aliases
+                #:page)
   (:import-from #:remark/markdown
                 #:header-id)
   (:import-from #:util/events
@@ -33,7 +36,8 @@
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:render-table-of-contents
-   #:render-page))
+   #:render-page
+   #:generate-documentation-context))
 (in-package :remark/render)
 
 (markup:enable-reader)
@@ -174,3 +178,37 @@
        ,(when page
           (render-outline page-content))
        </div>))))
+
+(defun generate-documentation-context (toplevel-node &key (max-depth 3) (current-depth 0))
+  "Generates a hierarchical documentation context from a toplevel node,
+suitable for passing to Claude for queries. Returns a formatted string
+containing the structure and content of all documentation pages."
+  (let ((context (make-string-output-stream))
+        (*toplevel* toplevel-node))
+    (labels ((write-section (node depth prefix)
+               (when (> depth max-depth)
+                 (return-from write-section))
+               (let ((indent (make-string (* depth 2) :initial-element #\Space)))
+                 (format context "~a~a ~a~%" 
+                         indent
+                         (make-string (max 1 (- 4 depth)) :initial-element #\>)
+                         (section-title node))
+                 (when (typep node 'page)
+                   (let ((page-content (funcall (page-generator node))))
+                     (when page-content
+                       (format context "~a~a~2%" indent 
+                               (util/html2text:html2text 
+                                (markup:write-html page-content)))))
+                   (when (page-aliases node)
+                     (format context "~aAliases: ~{~a~^, ~}~2%" indent (page-aliases node))))
+                 (when (typep node 'section)
+                   (loop for child-name in (section-children node)
+                         for child = (find-node child-name)
+                         when child do
+                           (write-section child 
+                                        (1+ depth)
+                                        (if (typep node 'toplevel)
+                                            (toplevel-prefix node)
+                                            prefix)))))))
+      (write-section toplevel-node current-depth (toplevel-prefix toplevel-node))
+      (get-output-stream-string context))))
