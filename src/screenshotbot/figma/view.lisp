@@ -8,8 +8,6 @@
   (:use #:cl)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
-  (:import-from #:screenshotbot/dashboard/compare
-                #:associate-figma)
   (:import-from #:hunchentoot-extensions
                 #:make-url)
   (:import-from #:nibble

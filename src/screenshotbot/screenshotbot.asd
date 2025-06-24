@@ -171,6 +171,10 @@
    (:file "site-admin")
    (:file "diff-report")
    (:file "invite")
+   (:module "figma"
+    :components ((:file "figma")
+                 (:file "view")
+                 (:file "dropdown")))
    (:module "dashboard"
     :serial t
     :components ((:file "explain")
@@ -321,10 +325,7 @@
     :components ((:file "common")))
    (:file "config")
    (:file "cleanup")
-   (:file "metrics")
-   (:module "figma"
-    :components ((:file "figma")
-                 (:file "view")))))
+   (:file "metrics")))
 
 (defsystem :screenshotbot/testing-lib
   :serial t

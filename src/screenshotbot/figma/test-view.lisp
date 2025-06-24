@@ -10,11 +10,10 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation
                 #:screenshot-test)
-  (:import-from #:screenshotbot/dashboard/compare
-                #:associate-figma)
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/figma/view
+                #:associate-figma
                 #:perform-update-image-link
                 #:download-figma-image)
   (:import-from #:screenshotbot/model/figma

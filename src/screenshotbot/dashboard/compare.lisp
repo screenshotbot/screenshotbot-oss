@@ -142,6 +142,8 @@
                 #:figma-link-url
                 #:figma-link-image
                 #:find-existing-figma-link)
+  (:import-from #:screenshotbot/figma/dropdown
+                #:figma-drop-down)
   (:export
    #:render-acceptable
    #:render-diff-report
@@ -163,9 +165,6 @@
   "Always use async for WITH-ASYNC-DIFF-REPORT. Only useful for testing the async flow.")
 
 (named-readtables:in-readtable markup:syntax)
-
-(declaim (ftype function associate-figma))
-
 
 (defhandler (acceptable-review-url :uri "/acceptable/:id/review" :method :post)
             (id action redirect csrf)
@@ -656,35 +655,6 @@ If the diff-report is cached, then we process the body immediately instead."
      (image-comparison-result
       (prepare-image-comparison-file image-comparison-job))))
 
-(markup:deftag figma-drop-down (&key script-name run screenshot)
-  (when (gk:check :figma (auth:current-company))
-    (let ((id (format nil "a~a" (random 10000000000)))
-          (existing-figma (find-existing-figma-link :channel
-                                                    (recorder-run-channel run)
-                                                     :screenshot-name
-                                                     (screenshot-name screenshot))))
-      <li>
-        <a href= "#" class= "dropdown-toggle" data-bs-toggle= "dropdown"
-           data-bs-target= id
-           aria-expanded= "false" >Figma</a>
-        <ul class= "dropdown-menu" >
-          ,(unless existing-figma
-             <li>
-               <a class= "dropdown-item" href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name screenshot)  :redirect script-name))
-                  >Link to Figma</a>
-             </li>)
-
-          ,(when existing-figma
-             <li>
-               <a class= "dropdown-item" href= (nibble ()
-                                                         (delete-figma existing-figma :redirect script-name)) >
-                 Delete Figma
-               </a>
-             </li>)
-          
-        </ul>
-      </li>)))
-
 (defun render-change-group (group run script-name &key search
                                                     index)
   <div class= "col-12">
@@ -772,15 +742,6 @@ If the diff-report is cached, then we process the body immediately instead."
                   (diff-report:group-title group))))
   </div>
   </div>)
-
-(defun delete-figma (existing-figma &key redirect)
-  (confirmation-page
-   :yes (nibble () (bknr.datastore:delete-object existing-figma)
-          (hex:safe-redirect redirect))
-   :no redirect
-   <div>
-     Are you sure you want to delete this association from Figma?
-   </div>))
 
 (defun highlight-search-term (search title)
   (cond
