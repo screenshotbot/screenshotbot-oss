@@ -25,33 +25,32 @@
 (named-readtables:in-readtable markup:syntax)
 
 (markup:deftag figma-drop-down (&key script-name run screenshot)
-  (when (gk:check :figma (auth:current-company))
-    (let ((id (format nil "a~a" (random 10000000000)))
-          (existing-figma (find-existing-figma-link :channel
-                                                    (recorder-run-channel run)
-                                                     :screenshot-name
-                                                     (screenshot-name screenshot))))
-      <li>
-        <a href= "#" class= "dropdown-toggle" data-bs-toggle= "dropdown"
-           data-bs-target= id
-           aria-expanded= "false" >Figma</a>
-        <ul class= "dropdown-menu" >
-          ,(unless existing-figma
-             <li>
-               <a class= "dropdown-item" href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name screenshot)  :redirect script-name))
-                  >Link to Figma</a>
-             </li>)
+  (let ((id (format nil "a~a" (random 10000000000)))
+        (existing-figma (find-existing-figma-link :channel
+                                                  (recorder-run-channel run)
+                                                  :screenshot-name
+                                                  (screenshot-name screenshot))))
+    <li>
+      <a href= "#" class= "dropdown-toggle" data-bs-toggle= "dropdown"
+         data-bs-target= id
+         aria-expanded= "false" >Figma</a>
+      <ul class= "dropdown-menu" >
+        ,(unless existing-figma
+           <li>
+             <a class= "dropdown-item" href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name screenshot)  :redirect script-name))
+                >Link to Figma</a>
+           </li>)
 
-          ,(when existing-figma
-             <li>
-               <a class= "dropdown-item" href= (nibble ()
-                                                         (delete-figma existing-figma :redirect script-name)) >
-                 Delete Figma
-               </a>
-             </li>)
-          
-        </ul>
-      </li>)))
+        ,(when existing-figma
+           <li>
+             <a class= "dropdown-item" href= (nibble ()
+                                                       (delete-figma existing-figma :redirect script-name)) >
+               Delete Figma
+             </a>
+           </li>)
+        
+      </ul>
+    </li>))
 
 
 (defun delete-figma (existing-figma &key redirect)
