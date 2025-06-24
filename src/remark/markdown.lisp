@@ -62,7 +62,9 @@ programmatically change the depth at which a specific node might be."
 (defclass paragraph ()
   ((nodes :initarg :nodes
           :initform nil
-          :accessor %paragraph-nodes)))
+          :accessor %paragraph-nodes
+          :documentation "The reverse of the nodes in the paragraph (note that the
+PARAGRAPH-NODES accessor reverses this finally).")))
 
 
 (defun paragraph-nodes (paragraph)
@@ -77,6 +79,15 @@ programmatically change the depth at which a specific node might be."
 (defun merge-adjacent-strings (list)
   (declare (optimize (debug 3)) )
   (labels ((merge (current-para list ret)
+             "Processes a flat list of mixed content (strings and XML tags) and groups them into
+              logical paragraphs. Strings are split on paragraph boundaries (double
+              newlines) and merged with adjacent inline elements. Block-level
+              elements are treated as separate paragraphs. Returns a list of
+              paragraph objects that can be formatted appropriately.
+
+              CURRENT-PARA is the current paragraph being processed.
+              LIST is the list of elements remain to be processed
+              RET is the reverse result being built"
              (declare (optimize (Debug 3)))
              (cond
                ((not list)
@@ -107,24 +118,38 @@ programmatically change the depth at which a specific node might be."
                      (cond
                        ((member (markup:xml-tag-name next) '(:b :em :a :tt :span))
                         (merge
-                         (make-instance 'paragraph
-                                         :nodes (list*
-                                                 next
-                                                 (%paragraph-nodes current-para)))
-                         rest
+                         (para*
+                          current-para
+                          next)
+                           rest
                          ret))
                        (t
                         (merge
                          (make-instance 'paragraph)
                          rest
                          (list* (make-instance 'paragraph :nodes (list next))
-                                ret)))))
+                                (build-para-list*
+                                 current-para
+                                 ret))))))
                     (t
                      (error "unknown type: ~a" (type-of next)))))))))
     (merge
      (make-instance 'paragraph)
      list
      nil)))
+
+(defun build-para-list* (current-para list)
+  "Builds the result list, adding current-para to ret if it has content"
+  (if (%paragraph-nodes current-para)
+      (list* current-para list)
+      list))
+
+(defun para* (current-para next)
+  "Combines the current paragraph with the next node"
+  (make-instance 'paragraph
+                 :nodes (list*
+                         next
+                         (%paragraph-nodes current-para))))
 
 (markup:deftag md (children)
   (markup:make-merge-tag
