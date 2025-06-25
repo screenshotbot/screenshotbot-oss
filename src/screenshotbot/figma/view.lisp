@@ -150,9 +150,10 @@
                        (t
                         (error "Invalid OAuth callback state")))))
          (state (nibble:nibble-id redirect))
-         (oauth-url (format nil "https://www.figma.com/oauth?client_id=~a&redirect_uri=~a&scope=file_read&state=~a&response_type=code"
+         (oauth-url (format nil "https://www.figma.com/oauth?client_id=~a&redirect_uri=~a&scope=~a&state=~a&response_type=code"
                            (quri:url-encode client-id)
                            (quri:url-encode redirect-uri)
+                           (quri:url-encode "file_content:read")
                            state)))
     (hex:safe-redirect oauth-url)))
 
