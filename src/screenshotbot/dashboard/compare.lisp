@@ -213,8 +213,8 @@
                  ,(progn title)
                </button>
              </form>))
-      <markup:merge-tag>
-        <button class= (format nil"btn  btn-secondary dropdown-toggle ~a" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+<markup:merge-tag>
+        <button class= (format nil"btn  btn-secondary dropdown-toggle ~a" btn-class) type="button" id="reviewDropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
           ,(progn btn-text)
         </button>
 
@@ -223,7 +223,7 @@
              ((can-review? (review-policy channel)
                            (acceptable-report acceptable)
                            (auth:current-user))
-              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
+              <div class="dropdown-menu review-dropdown-menu" aria-labelledby="reviewDropdownMenuButton" style= "z-index: 99999999; position: static" >
                 ,(form-menu :title "Accept" :action "accept")
                 ,(form-menu :title "Reject" :action "reject")
               </div>)
