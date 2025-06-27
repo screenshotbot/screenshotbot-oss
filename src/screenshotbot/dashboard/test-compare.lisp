@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:render-diff-report
                 #:render-single-change-permalink
                 #:metrics-page
                 #:warmup-comparison-images-sync
@@ -69,6 +70,8 @@
                 #:app-template)
   (:import-from #:screenshotbot/model/figma
                 #:update-figma-link)
+  (:import-from #:screenshotbot/model/report
+                #:base-acceptable)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-compare)
 
@@ -297,3 +300,39 @@
           (store-object-id (screenshot-key (make-screenshot im2)))
           "/report/dfdfd"
           :run one))))))
+
+(screenshot-test comparison-with-acceptable-review-button
+  (with-fixture state ()
+    (with-test-user (:user user
+                     :company company
+                     :logged-in-p t)
+      (let* ((channel (make-instance 'channel
+                                     :company company
+                                     :name "bleh"
+                                     :github-repo "git@github.com:a/b.gitq"))
+             (one (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots (list (make-screenshot im1))))
+             (two (make-recorder-run
+                   :channel channel
+                   :company company
+                   :screenshots (list (make-screenshot im2))))
+             (report (make-instance 'report
+                                    :title "foobar"
+                                    :channel channel
+                                    :run one
+                                    :previous-run two))
+             (acceptable (make-instance 'base-acceptable
+                                        :report report)))
+        (snap-all-images)
+        (app-template
+         :body-class "dashboard bg-white"
+         (render-diff-report
+          :diff-report (make-diff-report one two)
+          :acceptable acceptable
+          :script-name "/report/test"))))))
+
+
+
+
