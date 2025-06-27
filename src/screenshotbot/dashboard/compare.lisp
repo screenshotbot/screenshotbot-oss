@@ -202,14 +202,14 @@
              "Rejected")
             ((nil)
              "Review"))))
-    (flet ((form-menu (&key title action)
+    (flet ((form-menu (&key title action mdi)
              <form action=review-url method= "POST" >
                <button action= "submit" class= (format nil "btn btn-link acceptable ~a-link dropdown-item" action) >
                  <input type= "hidden" name= "action" value= action />
                  <input type= "hidden" name= "csrf" value= (auth:csrf-token) />
                  <input type= "hidden" name= "redirect"
                         value= (hunchentoot:script-name*) />
-                 <mdi name= "check" />
+                 <mdi name=mdi />
                  ,(progn title)
                </button>
              </form>))
@@ -224,8 +224,8 @@
                            (acceptable-report acceptable)
                            (auth:current-user))
               <div class="dropdown-menu review-dropdown-menu" aria-labelledby="reviewDropdownMenuButton" style= "z-index: 99999999; position: static" >
-                ,(form-menu :title "Accept" :action "accept")
-                ,(form-menu :title "Reject" :action "reject")
+                ,(form-menu :title "Accept" :action "accept" :mdi "check" )
+                ,(form-menu :title "Reject" :action "reject" :mdi "close")
               </div>)
              (t
               <div class="dropdown-menu p-4 text-muted" style="max-width: 200px;">
