@@ -373,12 +373,40 @@
        (let ((report (share-object share)))
          (check-type report report)
 
-         (render-report-page report
-                             :skip-access-checks t
-                             :alert
-                             <div class= "alert alert-warning mt-3">
-                             <b>Caution!</b> This is a publicly shared URL of a private report. Some actions on this page will require an authorized logged-in user. <a href= (report-link report)>Click here to view the private report.</a>
-                             </div>))))))
+         (add-sales-toast
+          (render-report-page report
+                              :skip-access-checks t
+                              :alert
+                              <div class= "alert alert-warning mt-3">
+                              <b>Caution!</b> This is a publicly shared URL of a private report. Some actions on this page will require an authorized logged-in user. <a href= (report-link report)>Click here to view the private report.</a>
+                              </div>)))))))
+
+(defun add-sales-toast (html)
+  (mquery:with-document (html)
+    (let ((toast <div class="toast position-fixed bottom-0 end-0 m-3 show" role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false" style="z-index: 9999; transition: opacity 0.3s ease, transform 0.3s ease;" id= "upsell-toast" >
+                   <div class="toast-header">
+                     <strong class="me-auto">Would you like to see reports like these on your Pull Requests?</strong>
+                     <button type="button" class="btn-close me-2" data-bs-dismiss="toast" onclick="var toast = this.closest('.toast'); toast.style.opacity = '0'; toast.style.transform = 'translateX(100%)'; setTimeout(function() { toast.remove(); }, 300);" aria-label="Close"></button>
+                   </div>
+                                
+                   <div class="toast-body">
+                     <p>Screenshotbot works with most platforms, and helps you write screenshot tests with existing testing libraries.</p>
+                     <p>Take a look at our documentation for:</p>
+
+                     <ul>
+                       <li><a href="/documentation/platforms/android-apps">Android</a></li>
+                       <li><a href="/documentation/platforms/ios-apps">iOS</a></li>
+                       <li><a href="/documentation/platforms/flutter-apps">Flutter</a></li>
+                       <li><a href="/documentation/web-projects/introduction">Web</a></li>
+                     </ul>
+
+                     <a href= "/request-demo" target= "_blank" class= "btn btn-success w-100" >Contact us</a>
+                   </div>
+
+
+                 </div>))
+      (mquery:mqappend (mquery:$ "body") toast))))
+
 
 
 (defhandler (single-image-page :uri "/report/:oid/image/:key-id") (oid
