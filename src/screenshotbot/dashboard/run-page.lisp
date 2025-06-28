@@ -143,12 +143,12 @@
     (mquery:add-class (mquery:$ "a" children) "dropdown-item")
 
     <div class="dropdown">
-  <button class= (format nil "btn btn-sm ~a dropdown-toggle" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-    ,(progn title)
-  </button>
-  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
-    ,@(progn children)
-  </div>
+      <button class= (format nil "btn btn-sm ~a dropdown-toggle" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        ,(progn title)
+      </button>
+      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
+        ,@(progn children)
+      </div>
     </div>))
 
 (defun promotion-log-page (run)
