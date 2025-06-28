@@ -29,7 +29,9 @@
                 #:update-figma-link)
   (:import-from #:util/form-errors
                 #:with-form-errors
-                #:with-error-builder))
+                #:with-error-builder)
+  (:import-from #:util/events
+                #:push-event))
 (in-package :screenshotbot/figma/view)
 
 (named-readtables:in-readtable markup:syntax)
@@ -38,6 +40,7 @@
 (defun associate-figma (&key channel screenshot-name
                           redirect)
   "REDIRECT is where we want to redirect to after the change is made."
+  (push-event :associate-figma)
   (let ((submit (nibble (url)
                   (validate-input
                    url
