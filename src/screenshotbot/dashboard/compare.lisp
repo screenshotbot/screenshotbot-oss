@@ -223,7 +223,7 @@
              ((can-review? (review-policy channel)
                            (acceptable-report acceptable)
                            (auth:current-user))
-              <div class="dropdown-menu review-dropdown-menu" aria-labelledby="reviewDropdownMenuButton" style= "z-index: 99999999; position: static" >
+              <div class="dropdown-menu dropdown-menu-end review-dropdown-menu" aria-labelledby="reviewDropdownMenuButton" style= "z-index: 99999999; position: static" >
                 ,(form-menu :title "Accept" :action "accept" :mdi "check" )
                 ,(form-menu :title "Reject" :action "reject" :mdi "close")
               </div>)
