@@ -145,7 +145,7 @@
   (unless skip-access-checks
     (can-view! report))
 
-  <app-template body-class= "dashboard bg-white" title= (report-title report) >
+  <app-template body-class= "dashboard" title= (report-title report) >
 
     ,(when (and nil (can-public-view report))
        <section class= "mt-3" >
@@ -416,7 +416,7 @@
     (with-report-login (report)
       (let ((diff-report (report-diff-report report)))
         (let ((report-link (format nil "/report/~a" oid)))
-          <app-template body-class= "dashboard bg-white">
+          <app-template body-class= "dashboard">
             ,(render-single-change-permalink diff-report key-id report-link
                                              :run (report-run report))
           </app-template>)))))

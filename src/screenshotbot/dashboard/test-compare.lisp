@@ -272,7 +272,7 @@
                    :screenshots (list (make-screenshot im2)))))
         (snap-all-images)
         (app-template
-         :body-class "dashboard bg-white"
+         :body-class "dashboard"
          (render-single-change-permalink
           (make-diff-report one two)
           (store-object-id (screenshot-key (make-screenshot im1)))
@@ -298,7 +298,7 @@
                    :screenshots (list (make-screenshot im2)))))
         (snap-all-images)
         (app-template
-         :body-class "dashboard bg-white"
+         :body-class "dashboard"
          (render-single-change-permalink
           (make-diff-report two one)
           (store-object-id (screenshot-key (make-screenshot im2)))
@@ -331,7 +331,7 @@
                                         :report report)))
         (snap-all-images)
         (app-template
-         :body-class "dashboard bg-white"
+         :body-class "dashboard"
          (render-diff-report
           :diff-report (make-diff-report one two)
           :acceptable acceptable
@@ -365,7 +365,7 @@
         (snap-all-images)
         (expand-review-button
          (app-template
-          :body-class "dashboard bg-white"
+          :body-class "dashboard"
           (render-diff-report
            :diff-report (make-diff-report one two)
            :acceptable acceptable

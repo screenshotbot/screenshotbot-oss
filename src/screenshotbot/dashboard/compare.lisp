@@ -251,7 +251,7 @@
   (when (string= "254" id)
     (hex:safe-redirect "/report/5fd16bcf4f4b3822fd000146"))
   (with-runs-for-comparison (run to :run-id id :to-id to)
-    <app-template body-class= "dashboard bg-white" >
+    <app-template body-class= "dashboard" >
       ,(async-diff-report :run run :to to
                           :script-name (format nil "/runs/~a/compare/~a" (oid run) (oid to)))
     </app-template>))
@@ -1345,7 +1345,7 @@ WHY is either \"added\" or \"deleted\", and just describes why we're showing thi
 (defhandler (compare-single-image :uri "/runs/:run/compare/:to/image/:key-id")
     (run to key-id)
   (with-runs-for-comparison (run to :run-id run :to-id to)
-    <app-template body-class= "dashboard bg-white">
+    <app-template body-class= "dashboard">
       ,(with-async-diff-report (diff-report :run run :to to)
          (render-single-change-permalink
           diff-report

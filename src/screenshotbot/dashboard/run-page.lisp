@@ -538,7 +538,7 @@
                    (t
                     #'identity)))
          (filtered-screenshots (apply-map-filter screenshots filter)))
-    <app-template body-class= "dashboard bg-white" >
+    <app-template body-class= "dashboard" >
       <div class= "page-title-box">
         <h4 class= "page-title" >Run from
           <:time class= "timeago" datetime= (created-at run)>

@@ -80,7 +80,7 @@ ul.compare-image-header {
 }
 
 .change-image {
-    max-width: 30vw;
+    max-width: 100%;
     max-height: 90vh;
 }
 
@@ -736,7 +736,7 @@ body.dashboard {
     .content-page {
         margin-left: 1em;
         margin-right: 1em;
-        .main-content {
+        .main-content, .content {
             max-width: 1280px;
             margin-left: auto;
             margin-right: auto;
@@ -1280,6 +1280,11 @@ screenshot-image-badge {
 .change-image-row {
     display: flex;
     align-items: center;
-    gap: 1em 1em;
-    flex-wrap: wrap;
+    gap: 1em 0.5em;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.image-container {
+    max-width: 100%;
 }
