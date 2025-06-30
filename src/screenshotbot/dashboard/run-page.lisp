@@ -92,6 +92,8 @@
                 #:batch-name)
   (:import-from #:util/timeago
                 #:timeago)
+  (:import-from #:screenshotbot/figma/dropdown
+                #:figma-drop-down)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -741,6 +743,8 @@
                         </a>
 
                       </li>
+
+                      <figma-drop-down script-name= (run-link run) run=run screenshot=screenshot />
                     </ul>
                   </div>
                   <a href= (image-public-url (screenshot-image screenshot) :size :full-page :type "webp") title= (screenshot-name screenshot)
