@@ -219,13 +219,26 @@ have to be called just before returning.")
   (cffi:convert-from-foreign x :string))
 
 (defun null-pointer-p (x)
-  (cffi:null-pointer-p x))
+  (cffi:null-pointer-p (typed-pointer-ptr x)))
 
-(defun make-pointer (&key address type)
-  (make-typed-pointer
-   :ptr
-   (cffi:make-pointer address)
-   :type type))
+(defun make-pointer (&key address type symbol-name)
+  (declare (optimize (speed 0) (debug 3)))
+  (cond
+    (symbol-name
+     (let ((str (str:replace-all "-" "_" (str:downcase symbol-name))))
+       (make-typed-pointer
+        :ptr (let ((ptr (cffi:foreign-symbol-pointer str)))
+               (if (not ptr) ;; returns null, not null-pointer
+                   (eval `(cffi:callback ,symbol-name))
+                   ptr))
+        :type type)))
+    ((not address)
+     (cffi:null-pointer))
+    (t
+     (make-typed-pointer
+      :ptr
+      (cffi:make-pointer address)
+      :type type))))
 
 (defmacro %with-dynamic-foreign-objects (((output type &key (nelems 1) (fill 0))) &body body)
   ;; fill is ignored!

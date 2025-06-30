@@ -13,6 +13,7 @@
 (util/fiveam:def-suite)
 
 
+
 (fake-fli:define-foreign-function strlen
     ((s (:reference-pass :ef-mb-string)))
   :result-type :size-t)
@@ -69,5 +70,19 @@
     (is (equalp #(1 1 1 1 1 1 0 1 1 1)
                 arr2))))
 
+(fake-fli:define-foreign-callable (dumb-stuff :result-type :void)
+    ((status :int))
+  (values))
 
+(test pointer-check
+  (is-true (fake-fli:null-pointer-p
+            (fake-fli:make-pointer :address 0)))
+  (is-false (fake-fli:null-pointer-p
+             (fake-fli:make-pointer :address 1))))
+
+(test get-ptr-for-callable
+  (signals error
+   (fake-fli:make-pointer :symbol-name 'does-not-exist!))
+  (let ((ptr (fake-fli:make-pointer :symbol-name 'dumb-stuff)))
+    (is-false (fake-fli:null-pointer-p ptr))))
 
