@@ -42,6 +42,7 @@
   (:import-from #:screenshotbot/dashboard/reports
                 #:report-link)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-key
                 #:make-promoter-for-acceptable
                 #:abstract-pr-acceptable
                 #:push-remote-check
@@ -185,6 +186,7 @@
     :company (recorder-run-company run)
     :project-path project-path
     :sha (check-sha check)
+    :name (format nil "Screenshotbot: ~a" (check-key check))
     :state (ecase (check-status check)
              (:success "success")
              (:accepted "success")

@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/gitlab/merge-request-promoter
+                #:make-gitlab-args
                 #:base-sha
                 #:gitlab-request
                 #:get-merge-request
@@ -167,3 +168,11 @@
     (let ((promoter (make-instance 'merge-request-promoter)))
       (push-remote-check promoter
                          run (make-check run :status :accepted :title "1 accepted")))))
+
+(test make-gitlab-args-name
+  (with-fixture state ()
+    (let* ((promoter (make-instance 'merge-request-promoter))
+           (check (make-check run :status :accepted :title "Test check"))
+           (args (make-gitlab-args run check)))
+      (is (equal "Screenshotbot: gitlab-test-channel" (getf args :name))))))
+
