@@ -68,7 +68,6 @@ to cache the refs."))
 (defmethod update-commit-graph-old-style ((self commit-graph-updater) repo branch)
   "Update commit-graph by pulling, and then always push the top 1000 or
 so changes."
-  (fetch-remote-branch repo branch)
   (log:info "Updating commit graph")
   (let* ((dag (read-graph repo))
          (json (with-output-to-string (s)
@@ -178,6 +177,9 @@ commits that are needed."
 
 (defmethod update-commit-graph ((self commit-graph-updater) repo branch
                                 &key override-commit-hash)
+  ;; TODO: we don't need to fetch-remote branch in the new flow, but
+  ;; for now keep this here. (See: T1928)
+  (fetch-remote-branch repo branch)
   (log:info "Updating commit graph")
   (cond
     ((new-flow-enabled-p repo :override-commit-hash override-commit-hash)
