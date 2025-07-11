@@ -32,6 +32,7 @@
        (ironclad:digest-file :sha256 p)))))
 
 (def-cron test-sync (:minute 0 :step-hour 6)
+  #+nil
   (let ((shas (core/rpc/rpc::map-rpc (make-instance 'sync-sha-request))))
     (push-event
      :sync-state
