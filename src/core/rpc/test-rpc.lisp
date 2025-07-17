@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:core/rpc/rpc
+                #:id-to-ip
                 #:rpc-auth-id
                 #:rpc-authentication-failed
                 #:authenticate-rpc-request)
@@ -51,3 +52,7 @@
                         :uri "foo"
                         :headers-in (make-authorization (store-object-id auth-id)
                                                         "car")))))))
+
+(test id-to-ip
+  (is (equal "172.30.1.199" (id-to-ip "172.30.1.199:7070:0:0")))
+  (is (equal "[::1]" (id-to-ip "[::1]:7070:0:0"))))

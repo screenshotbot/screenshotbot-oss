@@ -104,12 +104,15 @@
       :read-timeout read-timeout
       :content (encode-bknr-object rpc)))))
 
+(defun id-to-ip (conf)
+  (first (str:rsplit ":" conf :limit 4)))
+
 (defun %servers ()
   (typecase bknr.datastore:*store*
     #+bknr.cluster
     (bknr.cluster/server::lisp-state-machine
      (loop for conf in (bknr.cluster/server:list-peers bknr.datastore:*store*)
-           collect (first (str:rsplit ":" conf :limit 4))))
+           collect (id-to-ip conf)))
     (t
      (list "127.0.0.1"))))
 
@@ -127,7 +130,7 @@
 (defun send-rpc-to-leader (rpc &key (read-timeout 600))
   #+bknr.cluster
   (send-rpc-to-server
-   (leader-id *store*)
+   (id-to-ip (leader-id *store*))
    rpc
    :read-timeout read-timeout))
 
