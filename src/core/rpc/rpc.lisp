@@ -7,6 +7,7 @@
 (defpackage :core/rpc/rpc
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:*store*
                 #:encode
                 #:decode
                 #:persistent-class
@@ -22,6 +23,9 @@
                 #:encodable)
   (:import-from #:util/request
                 #:http-request)
+  #+bknr.cluster
+  (:import-from #:bknr.cluster/server
+                #:leader-id)
   (:export
    #:authenticate-rpc-request))
 (in-package :core/rpc/rpc)
@@ -112,6 +116,21 @@
 (defun %port ()
   (hunchentoot:acceptor-port server::*multi-acceptor*))
 
+(defun send-rpc-to-server (server rpc &key (read-timeout 600))
+  (send-rpc
+   (format nil "http://~a:~a/intern/rpc"
+           server
+           (%port))
+   rpc
+   :read-timeout read-timeout))
+
+(defun send-rpc-to-leader (rpc &key (read-timeout 600))
+  #+bknr.cluster
+  (send-rpc-to-server
+   (leader-id *store*)
+   rpc
+   :read-timeout read-timeout))
+
 (defun map-rpc (rpc &key (read-timeout 600))
   "Map the RPC across all the peers in the cluster (including the current-one)"
   (let* ((servers (%servers))
@@ -127,10 +146,8 @@
               (lambda ()
                 (setf
                  (aref results i)
-                 (send-rpc
-                  (format nil "http://~a:~a/intern/rpc"
-                          server
-                          (%port))
+                 (send-rpc-to-server
+                  server
                   rpc
                   :read-timeout read-timeout)))))))
     (loop for result across results
