@@ -145,9 +145,6 @@ independetly)")
 
 (pushnew 'repo-added-hook *repo-added-hook*)
 
-;; TODO: remove
-(defun repositories-added-webhook (json))
-
 (deftag refresh (&key repo)
   (let* ((post (nibble ()
                  (maybe-verify-repo repo)
