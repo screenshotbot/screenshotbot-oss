@@ -58,35 +58,6 @@
      "https://")
     (format nil "https://~a/" host))))
 
-(defclass pull-request (store-object)
-  ((url
-    :initarg :url
-    :index-type hash-index
-    :index-initargs (:test #'equal)
-    :index-reader pull-requests-with-url
-    :index-values all-pull-requests)
-   (pull-id
-    :initarg :pull-id
-    :initform nil
-    :accessor pull-request-id)
-   (repo-full-name
-    :initarg :repo-full-name
-    :accessor repo-full-name)
-   (head
-    :initarg :head
-    :accessor pull-request-head)
-   (base
-    :initarg :base
-    :accessor pull-request-base))
-  (:metaclass persistent-class)
-  (:documentation "DEPRECATED: we don't believe this was used, so we removed all the code
-creating and referencing this. TODO: delete existing objects, that only show up in prod."))
-
-(defun pull-request-with-url (url)
-  (error "No longer supported"))
-
-(defun channels-for-pull-request (pull-request))
-
 (defvar *hooks* nil)
 
 (defvar *thread-pool* (make-instance 'max-pool
