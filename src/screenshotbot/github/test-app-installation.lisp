@@ -9,9 +9,7 @@
                 #:app-installation-repos
                 #:repos
                 #:app-installation-by-id
-                #:github-get-access-token-for-installation
-                #:update-app-installation
-                #:delete-app-installation)
+                #:github-get-access-token-for-installation)
   (:import-from #:screenshotbot/github/plugin
                 #:github-plugin)
   (:import-from #:screenshotbot/github/jwt-token
@@ -52,30 +50,6 @@ private-key.README.md for how this was generated.")
                                       private-key)
                              "dummy-token"))
         (&body)))))
-
-(test delete-non-existent-app
-  (with-fixture state ()
-    (finishes (delete-app-installation 22))))
-
-(test update-app-installation-happy-path
-  (with-fixture state ()
-    (cl-mock:if-called 'github-request
-                        (lambda (url &key installation-token)
-                          (let ((page (parse-integer (car (last (str:split "=" url))))))
-                            (case page
-                              (0
-                               `((:repositories
-                                  ((:full--name . "screenshotbot/blah"))
-                                  ((:full--name . "tdrhq/car")))))
-                              (t
-                               nil)))))
-    (finishes (update-app-installation 23))
-    (let ((app-installation (app-installation-by-id 23)))
-      (is (equal (list "screenshotbot/blah" "tdrhq/car")
-                 (app-installation-repos app-installation))))
-
-    (delete-app-installation 23)
-    (is (null (app-installation-by-id 23)))))
 
 (test app-installation-id
   (with-fixture state ()

@@ -52,61 +52,8 @@
 (defvar *repo-added-hook* nil)
 
 (auto-restart:with-auto-restart ()
- (defun update-app-installation (installation-id)
-   (let ((app-installation (bt:with-lock-held (*lock*)
-                             (or
-                              (app-installation-by-id installation-id)
-                              (make-instance 'app-installation
-                                              :installation-id installation-id))))
-         (github-plugin (github-plugin)))
-     (let ((access-token (github-get-access-token-for-installation
-                          (installation-id app-installation)
-                          :app-id
-                          (app-id github-plugin)
-                          :private-key (private-key github-plugin))))
-       (let ((repos (loop for page from 0 to 100
-                          for json-response = (with-throttler (*github-throttler*)
-                                                (github-request
-                                                 (format nil
-                                                         "/installation/repositories?page=~d" page)
-                                                 :installation-token access-token))
-                          for repos = (a:assoc-value json-response :repositories)
-                          while repos
-                          appending
-                          (loop for repo in repos
-                                collect (a:assoc-value repo :full--name))
-                          do
-                             (setf json-response ()))))
-         (let ((old-repos (app-installation-repos app-installation)))
-          (with-transaction ()
-            (setf (app-installation-repos app-installation)
-                  repos)
-            (setf (updated-ts app-installation) (get-universal-time)))
-           (dolist (repo (set-difference repos old-repos :test #'equal))
-             (dolist (hook *repo-added-hook*)
-               (funcall hook repo)))))))))
-
-(defun delete-app-installation (installation-id)
-  (let ((installation (app-installation-by-id installation-id)))
-    (when installation
-     (bknr.datastore:delete-object
-      installation))))
-
-(auto-restart:with-auto-restart ()
   (defun handle-webhook (json)
-    (log:info "handle-webhook being called")
-    (let ((installation (a:assoc-value json :installation)))
-      (when installation
-        (let ((action (a:assoc-value json :action))
-              (installation-id (a:assoc-value installation :id)))
-          (when (or
-                 (equal "created" action)
-                 (a:assoc-value json :repositories--added)
-                 (a:assoc-value json :repositories--removed))
-            (log:info "Updating app installation")
-            (update-app-installation installation-id))
-          (when (equal "deleted" action)
-            (delete-app-installation installation-id)))))))
+    (log:warn "Handle webhook is a no-op right now")))
 
 (pushnew 'handle-webhook *hooks*)
 
