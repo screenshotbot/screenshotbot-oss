@@ -26,6 +26,8 @@
                 #:class-instances)
   (:import-from #:util/cron
                 #:def-cron)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:github-get-access-token-for-installation
@@ -106,3 +108,8 @@
 repo-id (e.g. 'tdrhq/fast-example'). If FORCE is T, then we will not
 use a cached value."
   (%app-installation-id repo-id :force force))
+
+
+(def-store-migration ("Delete app-installation objects -- T1963" :version 35)
+  (mapc #'bknr.datastore:delete-object
+        (bknr.datastore:class-instances 'app-installation)))
