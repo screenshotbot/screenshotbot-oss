@@ -43,7 +43,7 @@ over the instance and it's only used by people you know.")
    (webhook-relays :initarg :webhook-relays
                    :initform nil
                    :accessor webhook-relays
-                   :documentation "A list of backends to relay this webhook to.")
+                   :documentation "A list of backends to relay this webhook to. DEPRECATED, and unused.")
    (verification-oauth-provider
     :initarg :verification-oauth-provider
     :accessor verification-oauth-provider

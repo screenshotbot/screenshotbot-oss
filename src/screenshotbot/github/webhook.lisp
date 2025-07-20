@@ -20,7 +20,6 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:github-repo)
   (:import-from #:screenshotbot/github/plugin
-                #:webhook-relays
                 #:webhook-secret
                 #:github-plugin)
   (:import-from #:util/threading
@@ -91,29 +90,6 @@ creating and referencing this. TODO: delete existing objects, that only show up 
 (defvar *thread-pool* (make-instance 'max-pool
                                      :max 20))
 
-(defun relay-one-webhook (relay data &key signature)
-  (let ((url (quri:render-uri
-              (quri:merge-uris
-               "/github-webhook"
-               (quri:uri relay)))))
-    (log:info "Relaying to ~a" url)
-    (make-thread
-     (lambda ()
-       (http-request
-        url
-        :additional-headers `(("x-hub-signature-256" . ,signature))
-        :method :post
-        :external-format-out :utf-8
-        :content (flexi-streams:octets-to-string data
-                                                 :external-format :utf-8)))
-
-     :pool *thread-pool*)))
-
-(defun maybe-relay-webhook (plugin data &key  signature)
-  (dolist (relay (webhook-relays plugin))
-    (relay-one-webhook relay
-                       data :signature signature)))
-
 (defhandler (nil :uri "/github-webhook") ()
   (let* ((plugin (github-plugin))
          (webhook-secret (webhook-secret plugin)))
@@ -124,10 +100,6 @@ creating and referencing this. TODO: delete existing objects, that only show up 
           (signature (hunchentoot:header-in* :x-hub-signature-256)))
       (let ((data (make-array length :element-type 'flexi-streams:octet )))
         (read-sequence data stream)
-        (maybe-relay-webhook
-         plugin
-         data
-         :signature signature)
         (make-thread
          (lambda ()
            (ignore-and-log-errors ()
