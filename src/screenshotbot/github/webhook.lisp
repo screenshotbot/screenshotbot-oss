@@ -39,7 +39,6 @@
    #:pull-request-base
    #:all-pull-requests
    #:pull-request-with-url
-   #:github-maybe-update-pull-request
    #:*hooks*))
 (in-package :screenshotbot/github/webhook)
 
@@ -78,10 +77,12 @@
    (base
     :initarg :base
     :accessor pull-request-base))
-  (:metaclass persistent-class))
+  (:metaclass persistent-class)
+  (:documentation "DEPRECATED: we don't believe this was used, so we removed all the code
+creating and referencing this. TODO: delete existing objects, that only show up in prod."))
 
 (defun pull-request-with-url (url)
-  (car (pull-requests-with-url url)))
+  (error "No longer supported"))
 
 (defun channels-for-pull-request (pull-request))
 
@@ -142,10 +143,7 @@
                ;; and eventually just moved to the checks API. I think it
                ;; could go.
                (loop for hook in *hooks*
-                     do (funcall hook json))
-               (let ((pull-request (github-maybe-update-pull-request json)))
-                 (declare (ignore pull-request))))
-             ))
+                     do (funcall hook json)))))
          :name "github-webhook"
          :pool *thread-pool*))
       "OK")))
@@ -167,25 +165,6 @@
          (error "invalid hmac, expected ~a, got ~a" expected actual)))))
   (log:debug "hmac validated"))
 
-(defun github-maybe-update-pull-request (json)
-  (let ((obj (assoc-value json :pull--request)))
-    (when obj
-      (let* ((url (assoc-value obj :url))
-             (full-name (assoc-value (assoc-value (assoc-value obj :base) :repo)
-                                     :full--name))
-             (head (assoc-value (assoc-value obj :head) :sha))
-             (base (assoc-value (assoc-value obj :base) :sha))
-             (pull-id (assoc-value obj :number))
-             (pull-request
-               (progn
-                 (assert url)
-                 (make-instance 'pull-request
-                                :url url
-                                :head head
-                                :pull-id pull-id
-                                :base base
-                                :repo-full-name full-name))))
-        pull-request))))
 
 #| Sample webhook
 
