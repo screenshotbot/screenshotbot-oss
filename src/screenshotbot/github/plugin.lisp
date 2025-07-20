@@ -29,8 +29,6 @@
 (defclass github-plugin (plugin)
   ((app-name :initarg :app-name
              :accessor app-name)
-   (webhook-secret :initarg :webhook-secret
-                   :accessor webhook-secret)
    (app-id :initarg :app-id
            :accessor app-id)
    (private-key :initarg :private-key
@@ -40,10 +38,6 @@
                    :reader verified-orgs
                    :documentation "A list of orgs for which we don't have to do the manual OAuth verification. If T, then all orgs will be automatically verified. This is reasonable if you have control
 over the instance and it's only used by people you know.")
-   (webhook-relays :initarg :webhook-relays
-                   :initform nil
-                   :accessor webhook-relays
-                   :documentation "A list of backends to relay this webhook to. DEPRECATED, and unused.")
    (verification-oauth-provider
     :initarg :verification-oauth-provider
     :accessor verification-oauth-provider
