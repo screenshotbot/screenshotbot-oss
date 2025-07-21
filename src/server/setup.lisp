@@ -368,13 +368,15 @@
 
   (setf hunchentoot:*rewrite-for-session-urls* nil)
 
-  (with-cron ()
-    (when enable-store
-      (util/store:prepare-store))
-    (log:info "Store is prepared, moving on...")
+  (when enable-store
+    (util/store:prepare-store))
+  (log:info "Store is prepared, moving on...")
 
-    #+screenshotbot-oss
-    (run-migrations)
+  #+screenshotbot-oss
+  (run-migrations)
+
+  ;; Cron should only be started once the store is up and running
+  (with-cron ()
     (cond
       (shell
        (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
