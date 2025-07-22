@@ -14,8 +14,6 @@
   (:import-from #:screenshotbot/github/access-checks
                 #:*github-throttler*
                 #:with-throttler)
-  (:import-from #:screenshotbot/github/webhook
-                #:*hooks*)
   (:import-from #:screenshotbot/github/plugin
                 #:private-key
                 #:github-plugin
@@ -56,8 +54,6 @@
 (auto-restart:with-auto-restart ()
   (defun handle-webhook (json)
     (log:warn "Handle webhook is a no-op right now")))
-
-(pushnew 'handle-webhook *hooks*)
 
 (defun github-get-access-token-for-installation (installation-id
                                                  &key

@@ -27,8 +27,6 @@
    #:bknr.datastore
    #:with-transaction)
   (:local-nicknames (#:a #:alexandria))
-  (:import-from #:screenshotbot/github/webhook
-                #:*hooks*)
   (:import-from #:bknr.datastore
                 #:class-instances)
   (:import-from #:nibble
@@ -116,24 +114,6 @@ independetly)")
      (verification-failure-message :initform nil
                                    :accessor verification-failure-message))
     (:metaclass persistent-class)))
-
-(defun installation-delete-webhook (json)
-  (ignore-and-log-errors ()
-   (let ((installation (a:assoc-value json :installation)))
-     (when (and (equal "deleted" (a:assoc-value json :action))
-                installation)
-       (let ((id (a:assoc-value installation :id)))
-         (delete-installation-by-id id))))))
-
-(defun delete-installation-by-id (id)
-  (log:info "Deleting by installation by id: ~a" id)
-  (loop for github-config in (class-instances 'github-config)
-        if (eql id (installation-id github-config))
-          do (with-transaction ()
-               (setf (installation-id github-config) nil))))
-
-(pushnew 'installation-delete-webhook
-          *hooks*)
 
 (defun repo-added-hook (full-name)
   (ignore-and-log-errors ()
