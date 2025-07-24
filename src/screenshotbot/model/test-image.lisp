@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:image-file-deleted
                 #:update-company-image-size
                 #:get-company-image-size
                 #:img-tmp-dir
@@ -216,15 +217,6 @@ uses the base-image-comparer."
           (is (equalp hash
                       (md5-file file))))))))
 
-(test with-local-image-when-theres-no-local-image
-  (with-fixture state ()
-    (let ((local-file (image-filesystem-pathname img)))
-      (is (path:-e local-file))
-      (delete-file local-file)
-      (with-local-image (local-file img)
-        ;; This is a legacy test from when we used to do S3.
-        (is (not (path:-e local-file)))))))
-
 (test find-image-by-oid
   (with-fixture state ()
     (let ((img (make-image :pathname file)))
@@ -343,3 +335,14 @@ uses the base-image-comparer."
           (total-size 0))
       (update-company-image-size)
       (is (eql 0 (get-company-image-size company))))))
+
+(test with-local-image-raises-image-file-deleted
+  (with-fixture state ()
+    (let ((image (make-image :pathname file)))
+      (let ((local-file (image-filesystem-pathname image)))
+        (is (path:-e local-file))
+        (delete-file local-file)
+        (signals image-file-deleted
+          (with-local-image (file image)
+            (fail "Should not reach this point")))))))
+

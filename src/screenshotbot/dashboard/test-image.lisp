@@ -23,6 +23,8 @@
                 #:chain
                 #:future)
   (:import-from #:screenshotbot/model/image
+                #:image-file-deleted
+                #:with-local-image
                 #:image-blob-get
                 #:make-image
                 #:image)
@@ -201,3 +203,15 @@
     (is (eql 400 (quantized-timestamp 420)))
     (is (eql 400 (quantized-timestamp 400)))
     (is (eql 450 (quantized-timestamp 470)))))
+
+(test handle-nonexistent-image-file
+  (with-fixture state ()
+    (let* ((temp-image im))
+      (unwind-protect
+           (progn
+             (with-local-image (pathname im)
+               (delete-file pathname))
+             (signals image-file-deleted
+               (handle-resized-image temp-image :tiny :warmup t)))
+        (ignore-errors (delete-object temp-image))))))
+

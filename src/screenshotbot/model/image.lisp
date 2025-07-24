@@ -344,10 +344,18 @@
   (:default-initargs :oid (%make-oid))
   (:documentation "An IMAGE, that's used only for testing purposes locally"))
 
-(define-condition no-image-uploaded-yet (error)
-  ((image :initarg :image))
+(define-condition image-error (error)
+  ((image :initarg :image)))
+
+(define-condition no-image-uploaded-yet (image-error)
+  ()
   (:report (lambda (self stream)
              (format stream "No image uploaded for ~a" (slot-value self 'image)))))
+
+(define-condition image-file-deleted (image-error)
+  ()
+  (:report (lambda (self stream)
+             (format stream "Image file deleted for ~a" (slot-value self 'image)))))
 
 (defmethod %with-local-image ((image abstract-image) fn)
   (cond
@@ -355,6 +363,8 @@
      (error 'no-image-uploaded-yet :image image))
     (t
      (multiple-value-bind (file) (image-filesystem-pathname image)
+       (unless (path:-e file)
+         (error 'image-file-deleted :image image))
        (funcall fn file)))))
 
 ;; todo: remove
