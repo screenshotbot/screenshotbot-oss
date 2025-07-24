@@ -145,12 +145,15 @@
 (defun make-image-comparison (&rest args)
   (%make-image-comparison args))
 
-(deftransaction remove-image-comparison (before after)
+(deftransaction tx-remove-image-comparison (before after)
   "Deletes the image-comparison object with BEFORE and AFTER."
   (setf *stored-cache*
         (fset:less *stored-cache* (make-instance 'transient-image-comparison
                                                  :before before
                                                  :after after))))
+
+(defun remove-image-comparison (before after)
+  (tx-remove-image-comparison before after))
 
 (defun do-image-comparison (before-image
                             after-image
