@@ -316,6 +316,16 @@ uses the base-image-comparer."
         (update-company-image-size)
         (is (eql (* 2 1085) (get-company-image-size company)))))))
 
+(test company-image-size-when-the-slot-is-NIL
+  (with-fixture state ()
+    (let ((company (make-instance 'company))
+          (total-size 0))
+      (let ((image1 (make-image :pathname file :company company))
+            (image2 (make-image :pathname file :company company)))
+        (setf (%image-size image1) nil)
+        (update-company-image-size)
+        (is (eql 1085 (get-company-image-size company)))))))
+
 (test company-image-size-with-two-companies
   (with-fixture state ()
     (let ((company1 (make-instance 'company))

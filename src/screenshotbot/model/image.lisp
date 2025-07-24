@@ -704,7 +704,9 @@ recognized the file, we'll return nil."
             collect im)))
 
 (defmethod image-size (image)
-  (%image-size image))
+  (or
+   (%image-size image)
+   0))
 
 ;;(length (all-soft-expired-images))
 
