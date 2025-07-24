@@ -375,7 +375,8 @@
   "Delete the image and the image files associated with it."
   (let ((file (image-filesystem-pathname image)))
     (bknr.datastore:delete-object image)
-    (delete-file file)))
+    (when (path:-e file)
+      (delete-file file))))
 
 (defmethod %with-local-image ((image local-image) fn)
   ;; this could be bad if users have a way of creating local-images,

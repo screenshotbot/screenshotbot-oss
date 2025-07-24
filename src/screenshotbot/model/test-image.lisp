@@ -355,4 +355,12 @@ uses the base-image-comparer."
         (delete-image image)
         (is-false (path:-e image-file))))))
 
-
+(test delete-image-when-file-already-deleted
+  (with-fixture state ()
+    (let ((image (make-image :pathname file)))
+      (let ((image-file (image-filesystem-pathname image)))
+        (is (path:-e image-file))
+        (delete-file image-file)
+        (is-false (path:-e image-file))
+        (finishes
+          (delete-image image))))))
