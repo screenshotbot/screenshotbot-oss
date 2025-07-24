@@ -20,10 +20,12 @@
                 #:installation
                 #:*installation*)
   (:import-from #:screenshotbot/model/image
+                #:delete-image
                 #:image=)
   (:import-from #:util/object-id
                 #:oid)
   (:import-from #:screenshotbot/model/screenshot
+                #:image-no-longer-exists-for-screenshot
                 #:find-in-run
                 #:screenshot-key
                 #:lite-screenshot)
@@ -170,3 +172,14 @@
                                 s2))))
         (is (equal "bleh" (screenshot-name (find-in-run run "bleh"))))
         (is (equal "foo" (screenshot-name (find-in-run run "foo"))))))))
+
+(test screenshot-with-deleted-image-throws-error
+  (with-fixture state ()
+    (with-fixture history-fixture ()
+      (let* ((screenshot (make-screenshot
+                          :name "test-screenshot"
+                          :image im1)))
+        (delete-image im1)
+        (signals image-no-longer-exists-for-screenshot
+          (screenshot-image screenshot))))))
+

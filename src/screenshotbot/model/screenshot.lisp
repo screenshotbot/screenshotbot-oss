@@ -142,9 +142,16 @@
 (defmethod screenshot-masks ((self lite-screenshot))
   (screenshot-masks (screenshot-key self)))
 
+(define-condition image-no-longer-exists-for-screenshot (error)
+  ())
+
 (defmethod screenshot-image ((self lite-screenshot))
   (when-let ((oid (image-oid self)))
-   (find-image-by-oid oid)))
+    (let ((image (find-image-by-oid oid)))
+      (cond
+        (image image)
+        (t
+         (error 'image-no-longer-exists-for-screenshot))))))
 
 (defmethod encode-object ((self lite-screenshot) stream)
   (bknr.datastore::%write-tag #\S stream)
