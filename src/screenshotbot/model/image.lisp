@@ -95,6 +95,8 @@
                 #:def-store-migration)
   (:import-from #:screenshotbot/model/core
                 #:ensure-slot-boundp)
+  (:import-from #:util/cron
+                #:def-cron)
   ;; classes
   (:export
    #:image
@@ -728,3 +730,19 @@ recognized the file, we'll return nil."
   (loop for image in (bknr.datastore:class-instances 'image)
         do
            (%fix-one-image-v33 image)))
+
+(defvar *company-image-size* (make-hash-table))
+
+(defun update-company-image-size ()
+  (let ((ht (make-hash-table)))
+    (loop for image in (bknr.datastore:class-instances 'image)
+          do
+             (incf (gethash (company image) ht 0)
+                   (image-size image)))
+    (setf *company-image-size* ht)))
+
+(defun get-company-image-size (company)
+  (gethash company *company-image-size* 0))
+
+(def-cron update-company-image-size (:minute 13 :step-hour 3)
+  (update-company-image-size))

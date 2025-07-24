@@ -9,6 +9,8 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:update-company-image-size
+                #:get-company-image-size
                 #:img-tmp-dir
                 #:%image-size
                 #:image-reuploaded-warning
@@ -304,3 +306,30 @@ uses the base-image-comparer."
 (test img-tmp-dir-exists
   (with-fixture state ()
     (path:-d (img-tmp-dir))))
+
+(test company-image-size
+  (with-fixture state ()
+    (let ((company (make-instance 'company))
+          (total-size 0))
+      (let ((image1 (make-image :pathname file :company company))
+            (image2 (make-image :pathname file :company company)))
+        (update-company-image-size)
+        (is (eql (* 2 1085) (get-company-image-size company)))))))
+
+(test company-image-size-with-two-companies
+  (with-fixture state ()
+    (let ((company1 (make-instance 'company))
+          (company2 (make-instance 'company)))
+      (let ((image1 (make-image :pathname file :company company1))
+            (image2 (make-image :pathname file :company company1))
+            (image3 (make-image :pathname file :company company2)))
+        (update-company-image-size)
+        (is (eql (* 2 1085) (get-company-image-size company1)))
+        (is (eql 1085 (get-company-image-size company2)))))))
+
+(test company-image-size-with-no-images
+  (with-fixture state ()
+    (let ((company (make-instance 'company))
+          (total-size 0))
+      (update-company-image-size)
+      (is (eql 0 (get-company-image-size company))))))
