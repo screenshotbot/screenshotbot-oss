@@ -701,16 +701,8 @@ recognized the file, we'll return nil."
               now)
             collect im)))
 
-(defvar *image-size-cache* (make-hash-table))
-
 (defmethod image-size (image)
-  (util:or-setf
-   (gethash image *image-size-cache*)
-   (handler-case
-       (with-local-image (file image)
-         (trivial-file-size:file-size-in-octets file))
-     (no-image-uploaded-yet ()
-       0))))
+  (%image-size image))
 
 ;;(length (all-soft-expired-images))
 
