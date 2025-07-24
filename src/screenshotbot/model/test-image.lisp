@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:delete-image
                 #:image-file-deleted
                 #:update-company-image-size
                 #:get-company-image-size
@@ -345,4 +346,13 @@ uses the base-image-comparer."
         (signals image-file-deleted
           (with-local-image (file image)
             (fail "Should not reach this point")))))))
+
+(test delete-image-deletes-associated-file
+  (with-fixture state ()
+    (let ((image (make-image :pathname file)))
+      (let ((image-file (image-filesystem-pathname image)))
+        (is (path:-e image-file))
+        (delete-image image)
+        (is-false (path:-e image-file))))))
+
 
