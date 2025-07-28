@@ -137,10 +137,10 @@ Since q_0 = q_1, and p_0 = p_1, we have:
 M_0 C p = M_1 C p
 
 
-But, M_1 = TZ, where Z is the zoom matrix from delta-zoom, and T is a
+But, M_1 = TZM_0, where Z is the zoom matrix from delta-zoom, and T is a
 pure translation matrix.
 
-M_0 C p = T Z C p.
+M_0 C p = T Z M_0 C p.
 
 Since T looks like:
 
@@ -150,17 +150,15 @@ Since T looks like:
 
 We can write:
 
-ZCp + t = M_0Cp
+ZM_0Cp + t = M_0Cp
 
-t = (M_0-Z) C p = (M_0 - Z)C C^-1 M_0^-1 q
-  = (M_0 - Z) M_0^-1 q
-  = (I - ZM_0^-1) q
-  
+t = (I-Z) M_0 C p = (I - Z) M_0 C C^-1 M_0^-1 q
+  = (I - Z) q
 
 Once we calculate that, we reconstruct T, and return T*Z, which is just
 
-z 0 qx
-0 z qy
+z 0 tx
+0 z ty
 0 0 1.
 
 It's the callers responsibility to multiply the resulting transforms.
@@ -172,7 +170,7 @@ It's the callers responsibility to multiply the resulting transforms.
         (Z (3d-matrices:mat3 `#(,delta-zoom 0 0
                                 0 ,delta-zoom 0
                                 0 0 1))))
-    (let ((t-vec (m* (m- I (m* Z (minv transform))) (vec3 client-x client-y 1))))
+    (let ((t-vec (m* (m- I Z) (vec3 client-x client-y 1))))
       (3d-vectors:with-vec3 (x y z) t-vec
         (make-matrix
          delta-zoom 0 0 delta-zoom x y)))))

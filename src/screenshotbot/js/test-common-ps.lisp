@@ -129,3 +129,90 @@
       0 1 0
       0 0 1)
      2))))
+
+(defun m~= (a b &optional (tolerance 1e-3))
+  (let ((diff (3d-matrices:m- a b)))
+    (loop for i from 0 to 8
+          always (< (abs (aref (3d-matrices::marr3 diff) i)) tolerance))))
+
+(test calc-transform-for-zoom-invariant-after-multiple-zooms
+  (let ((initial-transform (mat
+                            1 0 0
+                            0 1 0
+                            0 0 1))
+        (mouse-x 100)
+        (mouse-y 150)
+        (zoom-factor 1.5))
+    (let ((transform-after-zooms initial-transform))
+      ;; Zoom in 5 times
+      (loop for i from 1 to 5 do
+        (setf transform-after-zooms
+              (m* (calc-transform-for-zoom mouse-x mouse-y
+                                           transform-after-zooms
+                                           zoom-factor)
+                  transform-after-zooms)))
+      ;; Zoom out 5 times
+      (loop for i from 1 to 5 do
+        (setf transform-after-zooms
+              (m* (calc-transform-for-zoom mouse-x mouse-y
+                                           transform-after-zooms
+                                           (/ 1 zoom-factor))
+                  transform-after-zooms)))
+      ;; Should be back to identity matrix
+      (is (m~= initial-transform transform-after-zooms)))))
+
+(test calc-transform-for-zoom-invariant-after-multiple-zooms-with-initial-translation
+  (let ((initial-transform (mat
+                            1 0 -1000
+                            0 1 -2000
+                            0 0 1))
+        (mouse-x 100)
+        (mouse-y 150)
+        (zoom-factor 1.5))
+    (let ((transform-after-zooms initial-transform))
+      ;; Zoom in 5 times
+      (loop for i from 1 to 5 do
+        (setf transform-after-zooms
+              (m* (calc-transform-for-zoom mouse-x mouse-y
+                                           transform-after-zooms
+                                           zoom-factor)
+                  transform-after-zooms)))
+      ;; Zoom out 5 times
+      (loop for i from 1 to 5 do
+        (setf transform-after-zooms
+              (m* (calc-transform-for-zoom mouse-x mouse-y
+                                           transform-after-zooms
+                                           (/ 1 zoom-factor))
+                  transform-after-zooms)))
+      ;; Should be back to identity matrix
+      (is (m~= initial-transform transform-after-zooms)))))
+
+(test calc-transform-for-zoom-invariant-after-multiple-zooms-back-and-forths
+  (let ((initial-transform (mat
+                            1 0 0
+                            0 1 0
+                            0 0 1))
+        (mouse-x 100)
+        (mouse-y 1500)
+        (zoom-factor 1.5))
+    (let ((transform-after-zooms initial-transform))
+      (dotimes (i 3)
+        ;; Zoom in 5 times
+        (loop for i from 1 to 5 do
+          (setf transform-after-zooms
+                (m* (calc-transform-for-zoom mouse-x mouse-y
+                                             transform-after-zooms
+                                             zoom-factor)
+                    transform-after-zooms)))
+        ;; Zoom out 5 times
+        (loop for i from 1 to 5 do
+          (setf transform-after-zooms
+                (m* (calc-transform-for-zoom mouse-x mouse-y
+                                             transform-after-zooms
+                                             (/ 1 zoom-factor))
+                    transform-after-zooms))))
+      ;; Should be back to identity matrix
+      (is (m~= initial-transform transform-after-zooms 0.1)))))
+
+
+
