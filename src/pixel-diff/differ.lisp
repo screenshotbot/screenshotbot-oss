@@ -1,6 +1,8 @@
 (defpackage :pixel-diff/differ
   (:use #:cl
-        #:capi))
+        #:capi)
+  (:import-from #:screenshotbot-js
+                #:animate-transform))
 (in-package :pixel-diff/differ)
 
 (defun create-empty-pane ()
@@ -133,29 +135,44 @@
    :width 450
    :height 350))
 
+(defun start-animation-timer (duration-seconds callback)
+  "Start an animation timer that calls callback with progress from 0.0 to 1.0"
+  (let ((start-time (get-internal-real-time))
+        (duration-internal (* duration-seconds internal-time-units-per-second))
+        (count-cons (list 1)))
+    (labels ((timer-tick (count-cons)
+               (let* ((current-time (get-internal-real-time))
+                      (elapsed (- current-time start-time))
+                      (progress (min 1.0 (/ elapsed duration-internal))))
+                 (when (> (car count-cons) 0)
+                   (funcall callback progress)
+                   (when (< progress 1.0)
+                     (values))
+                   (when (>= progress 1.0)
+                     (setf (car count-cons) -1)
+                     :stop)))))
+      (let ((timer (mp:make-timer #'timer-tick count-cons)))
+        (mp:schedule-timer-relative-milliseconds timer 16 16)))))
+
+
+
 (defun %zoom-to (interface x y &optional (zoom 5))
   (let ((pane (slot-value interface 'image-pane)))
-    (let ((image (gp:load-image pane (image (image1 interface)))))
-      (setf (image-transform interface)
-            (3dmat-to-transform
-             (screenshotbot-js::calc-transform-for-center
-              (gp:port-width pane)
-              (gp:port-height pane)
-              (gp:image-width image)
-              (gp:image-height image)
-              x y 1)))
-      (let ((combined-transform (gp:copy-transform (core-transform interface))))
-        (gp:postmultiply-transforms
-         combined-transform
-         (image-transform interface))
-        (multiple-value-bind (newx newy) (gp:transform-point combined-transform 0 0)
-          (log:info "New image transform: ~a, core transform: ~a, combined * (0,0): ~a in (~a, ~a)"
-                    (image-transform interface)
-                    (core-transform interface)
-                    (cons newx newy)
-                    (gp:port-width pane)
-                    (gp:port-height pane))))
-      (gp:invalidate-rectangle pane))))
+    (let* ((image (gp:load-image pane (image (image1 interface))))
+           (start-mat (transform-to-3dmat (image-transform interface)))
+           (final-mat (screenshotbot-js::calc-transform-for-center
+                       (gp:port-width pane)
+                       (gp:port-height pane)
+                      (gp:image-width image)
+                      (gp:image-height image)
+                      x y zoom)))
+      (start-animation-timer
+       1
+       (lambda (progress)
+         (setf (image-transform interface)
+               (3dmat-to-transform
+                (animate-transform start-mat final-mat progress)))
+      (gp:invalidate-rectangle pane))))))
 
 (defun zoom-to-change-callback (data interface)
   "Callback function for zoom-to-change button - currently just logs"
