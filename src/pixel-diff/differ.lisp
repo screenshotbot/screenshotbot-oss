@@ -121,6 +121,7 @@
                               (:character
                                image-pane-char-press)))
    (zoom-button push-button
+                :reader zoom-button
                 :text "Zoom to change"
                 :callback 'zoom-to-change-callback))
   (:layouts
@@ -136,7 +137,8 @@
    :width 450
    :height 350))
 
-(defun start-animation-timer (pane duration-seconds callback)
+(defun start-animation-timer (pane duration-seconds callback
+                              &key (finally (lambda ())))
   "Start an animation timer that calls callback with progress from 0.0 to 1.0"
   (let ((start-time (get-internal-real-time))
         (duration-internal (* duration-seconds internal-time-units-per-second))
@@ -150,17 +152,21 @@
                     pane
                     (lambda ()
                       (funcall callback progress)))
-                   (when (< progress 1.0)
-                     (values))
-                   (when (>= progress 1.0)
-                     (setf (car count-cons) -1)
-                     :stop)))))
+                   (cond
+                     ((< progress 1.0)
+                      (values))
+                     ((>= progress 1.0)
+                      (setf (car count-cons) -1)
+                      (capi:apply-in-pane-process-if-alive
+                       pane
+                       finally)
+                      :stop))))))
       (let ((timer (mp:make-timer #'timer-tick count-cons)))
         (mp:schedule-timer-relative-milliseconds timer 32 32)))))
 
 
 
-(defun %zoom-to (interface x y &optional (zoom 5))
+(defun %zoom-to (interface x y &key (zoom 5) (finally (lambda ())))
   (let ((pane (slot-value interface 'image-pane)))
     (let* ((image (gp:load-image pane (image (image1 interface))))
            (start-mat (transform-to-3dmat (image-transform interface)))
@@ -177,7 +183,8 @@
          (setf (image-transform interface)
                (3dmat-to-transform
                 (animate-transform start-mat final-mat progress)))
-         (gp:invalidate-rectangle pane))))))
+         (gp:invalidate-rectangle pane))
+       :finally finally))))
 
 
 (defmethod find-non-transparent-pixel (pane (image gp:image))
@@ -202,7 +209,11 @@
        (image-pane interface)
        (read-image (image-pane interface)
                    (comparison interface)))
-   (%zoom-to interface x y))
+    (setf (capi:button-enabled (zoom-button interface))  nil)
+    (%zoom-to interface x y
+              :finally
+              (lambda ()
+                (setf (capi:button-enabled (zoom-button interface)) t))))
   (log:info "Zoom to change button pressed for interface: ~a" interface))
 
 
