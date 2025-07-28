@@ -104,7 +104,9 @@
    (last-width :initform nil
                :accessor last-width)
    (last-height :initform nil
-                :accessor last-height))
+                :accessor last-height)
+   (view-mode :initform :previous
+              :accessor view-mode))
   (:panes
    (image-pane image-pane
                :reader image-pane
@@ -120,6 +122,13 @@
                                image-pane-drag)
                               (:character
                                image-pane-char-press)))
+   (view-radio-panel capi:radio-button-panel
+                     :reader view-radio-panel
+                     :items '(:previous :diff :updated)
+                     :print-function (lambda (item)
+                                       (string-capitalize (symbol-name item)))
+                     :selected-item :diff
+                     :layout-class 'row-layout)
    (zoom-button push-button
                 :reader zoom-button
                 :text "Zoom to change"
@@ -130,7 +139,7 @@
     '(image-pane bottom-bar))
    (bottom-bar
     row-layout
-    '(nil zoom-button)
+    '(view-radio-panel nil zoom-button)
     :internal-border 10))
   (:default-initargs
    :title "Image Display Window"
