@@ -107,6 +107,7 @@
                 :accessor last-height))
   (:panes
    (image-pane image-pane
+               :reader image-pane
                :display-callback 'draw-image-callback
                :background :white
                :visible-min-width 400
@@ -172,12 +173,31 @@
          (setf (image-transform interface)
                (3dmat-to-transform
                 (animate-transform start-mat final-mat progress)))
-      (gp:invalidate-rectangle pane))))))
+         (gp:invalidate-rectangle pane))))))
+
+
+(defmethod find-non-transparent-pixel (pane (image gp:image))
+  (let ((image-access (gp:make-image-access pane image)))
+    (unwind-protect
+         (let ((width (gp:image-width image))
+               (height (gp:image-height image)))
+           (loop for y from 0 below height do
+             (loop for x from 0 below width do
+               (let ((color (gp:image-access-pixel image-access x y)))
+                 (when (= 4 (length color)) ;; #(:RGB r g b a) with alpha, and #(:RBG r g b) without alpha.
+                   (return-from find-non-transparent-pixel (values x y))))))
+           nil)
+      (gp:free-image-access image-access))))
 
 (defun zoom-to-change-callback (data interface)
   "Callback function for zoom-to-change button - currently just logs"
   (declare (ignore data))
-  (%zoom-to interface 0 0)
+  (multiple-value-bind (x y)
+      (find-non-transparent-pixel
+       (image-pane interface)
+       (read-image (image-pane interface)
+                   (comparison interface)))
+   (%zoom-to interface x y))
   (log:info "Zoom to change button pressed for interface: ~a" interface))
 
 
