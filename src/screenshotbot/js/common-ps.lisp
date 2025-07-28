@@ -102,12 +102,15 @@ Once we have t, we can construct our final matrix.
            (d (3d-vectors:vec3 (/ client-width 2)
                                (/ client-height 2)
                                0))
-          (tt (v- d
-                  (v* zoom (m* C (3d-vectors:vec3 x y 0))))))
-     (make-matrix
-      zoom 0
-      0 zoom
-      (3d-vectors:vx3 tt) (3d-vectors:vy3 tt)))))
+           (Z (make-matrix zoom 0
+                           0 zoom
+                           0 0))
+           (tt (v- d
+                   (m* Z (m* C (3d-vectors:vec3 x y 1))))))
+      (make-matrix
+       zoom 0
+       0 zoom
+       (3d-vectors:vx3 tt) (3d-vectors:vy3 tt)))))
 
 (defun animate-transform (old-transform new-transform progress)
   (m+

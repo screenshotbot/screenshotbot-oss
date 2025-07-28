@@ -11,6 +11,7 @@
                 #:m*
                 #:m=)
   (:import-from #:3d-vectors
+                #:v=
                 #:vec))
 (in-package :screenshotbot/js/test-common-ps)
 
@@ -114,6 +115,24 @@
                                10 20
                                5 10
                                2))))
+
+(test calc-transform-for-center-with-a-core-transform
+  (let ((transform
+          (calc-transform-for-center 800 500
+                                     360 360
+                                     0 0
+                                     1))
+        (core
+          (calc-core-transform 800 500
+                               360 360)))
+
+    ;; Now 0,0 should be mapped to the center
+    (log:info "Transform: ~a" transform)
+    (log:info "Core: ~a" core)
+    (is
+     (v=
+      (vec 400 250 1)
+      (m* transform core (vec 0 0 1))))))
 
 (test calc-transform-for-zoom-happy-path
   (is
