@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot-js
+                #:calc-transform-for-zoom
                 #:calc-transform-for-center
                 #:*min-zoom*
                 #:calc-core-transform)
@@ -113,3 +114,18 @@
                                10 20
                                5 10
                                2))))
+
+(test calc-transform-for-zoom-happy-path
+  (is
+   (m=
+    (mat
+     2 0 0
+     0 2 0
+     0 0 1)
+    (calc-transform-for-zoom
+     0 0
+     (mat
+      1 0 0
+      0 1 0
+      0 0 1)
+     2))))

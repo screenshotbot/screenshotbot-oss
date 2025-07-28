@@ -115,3 +115,64 @@ Once we have t, we can construct our final matrix.
        old-transform)
    (m* progress
        new-transform)))
+
+(defun calc-transform-for-zoom (client-x client-y
+                                transform
+                                delta-zoom)
+  "Calculate the delta transformation matrix such that
+new-transform*old-transform*core-transform will result in
+the (client-x, client-y) pointing to the same underlying (x,y).
+
+At time of writing, this code is duplicated in the Javascript, and is
+being only used for PixelDiff.
+
+Let q be the client point, and p be the source point.
+
+Initially q_0 = M_0Cp_0
+
+After the transform q_1 = M_1Cp_1.
+
+Since q_0 = q_1, and p_0 = p_1, we have:
+
+M_0 C p = M_1 C p
+
+
+But, M_1 = TZ, where Z is the zoom matrix from delta-zoom, and T is a
+pure translation matrix.
+
+M_0 C p = T Z C p.
+
+Since T looks like:
+
+[0 0 tx
+ 0 0 ty    + I
+ 0 0 0]
+
+We can write:
+
+ZCp + t = M_0Cp
+
+t = (M_0-Z) C p = (M_0 - Z)C C^-1 M_0^-1 q
+  = (M_0 - Z) M_0^-1 q
+  = (I - ZM_0^-1) q
+  
+
+Once we calculate that, we reconstruct T, and return T*Z, which is just
+
+z 0 qx
+0 z qy
+0 0 1.
+
+It's the callers responsibility to multiply the resulting transforms.
+"
+
+  (let ((I (3d-matrices:mat3 #(1 0 0
+                               0 1 0
+                               0 1 1)))
+        (Z (3d-matrices:mat3 `#(,delta-zoom 0 0
+                                0 ,delta-zoom 0
+                                0 0 1))))
+    (let ((t-vec (m* (m- I (m* Z (minv transform))) (vec3 client-x client-y 1))))
+      (3d-vectors:with-vec3 (x y z) t-vec
+        (make-matrix
+         delta-zoom 0 0 delta-zoom x y)))))

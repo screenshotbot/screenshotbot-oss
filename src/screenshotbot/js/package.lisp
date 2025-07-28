@@ -15,7 +15,9 @@
                 #:v-)
   (:import-from #:3d-matrices
                 #:m+
-                #:m*))
+                #:m-
+                #:m*
+                #:minv))
 
 (setf (ps:ps-package-prefix :3d-matrices) "_mat_")
 (setf (ps:ps-package-prefix :3d-vectors) "_vec_")
