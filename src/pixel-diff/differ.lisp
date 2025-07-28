@@ -42,7 +42,7 @@
   (let* ((interface (capi:element-interface pane)))
     ;;(draw-checkerboard-background pane x y width height)
     (maybe-init-core-transform interface pane (gp:port-width pane) (gp:port-height pane))
-    (log:info "Transform is ~a" (core-transform interface))
+    (log:debug "Transform is ~a" (core-transform interface))
     (assert (core-transform interface))
     (assert (image-transform interface))
     (let ((transform (gp:copy-transform (core-transform interface))))
@@ -136,7 +136,7 @@
    :width 450
    :height 350))
 
-(defun start-animation-timer (duration-seconds callback)
+(defun start-animation-timer (pane duration-seconds callback)
   "Start an animation timer that calls callback with progress from 0.0 to 1.0"
   (let ((start-time (get-internal-real-time))
         (duration-internal (* duration-seconds internal-time-units-per-second))
@@ -146,14 +146,17 @@
                       (elapsed (- current-time start-time))
                       (progress (min 1.0 (/ elapsed duration-internal))))
                  (when (> (car count-cons) 0)
-                   (funcall callback progress)
+                   (capi:apply-in-pane-process-if-alive
+                    pane
+                    (lambda ()
+                      (funcall callback progress)))
                    (when (< progress 1.0)
                      (values))
                    (when (>= progress 1.0)
                      (setf (car count-cons) -1)
                      :stop)))))
       (let ((timer (mp:make-timer #'timer-tick count-cons)))
-        (mp:schedule-timer-relative-milliseconds timer 16 16)))))
+        (mp:schedule-timer-relative-milliseconds timer 32 32)))))
 
 
 
@@ -168,7 +171,8 @@
                       (gp:image-height image)
                       x y zoom)))
       (start-animation-timer
-       1
+       (image-pane interface)
+       2
        (lambda (progress)
          (setf (image-transform interface)
                (3dmat-to-transform
@@ -185,6 +189,7 @@
              (loop for x from 0 below width do
                (let ((color (gp:image-access-pixel image-access x y)))
                  (when (= 4 (length color)) ;; #(:RGB r g b a) with alpha, and #(:RBG r g b) without alpha.
+                   (hcl:gc-generation t)
                    (return-from find-non-transparent-pixel (values x y))))))
            nil)
       (gp:free-image-access image-access))))
