@@ -320,7 +320,7 @@
          (let ((color (color:unconvert-color
                        pane
                        (gp:image-access-pixel image-access x y))))
-           (when (= 4 (length color)) ;; #(:RGB r g b a) with alpha, and #(:RBG r g b) without alpha.
+           (when (> (color:color-alpha color) 0.5)
              (hcl:gc-generation t)
              (return-from find-non-transparent-pixel (values x y))))))
      nil)))
