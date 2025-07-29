@@ -434,8 +434,8 @@
        (unwind-protect
             (loop for y from 0 below height do
               (loop for x from 0 below width do
-                (let ((before-color (gp:image-access-pixel before-access x y))
-                      (after-color (gp:image-access-pixel after-access x y)))
+                (let ((before-color (color:unconvert-color pane (gp:image-access-pixel before-access x y)))
+                      (after-color (color:unconvert-color pane (gp:image-access-pixel after-access x y))))
                   (if (color:colors= before-color after-color)
                       (setf (gp:image-access-pixel result-access x y) transparent)
                       (setf (gp:image-access-pixel result-access x y) red)))))
