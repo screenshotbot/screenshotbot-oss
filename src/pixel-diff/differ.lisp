@@ -5,6 +5,8 @@
                 #:animate-transform)
   (:import-from #:pixel-diff/about
                 #:show-about-dialog)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:create-empty-interface))
 (in-package :pixel-diff/differ)
@@ -13,6 +15,16 @@
   `(or
     ,accessor
     (setf ,accessor ,expr)))
+
+(def-easy-macro with-image-access (&binding image-access pane image &key write &fn fn)
+  (let ((image-access (gp:make-image-access pane image)))
+    (gp:image-access-transfer-from-image image-access)
+    (unwind-protect
+         (prog1
+             (fn image-access)
+           (when write
+             (gp:image-access-transfer-to-image image-access)))
+      (gp:free-image-access image-access))))
 
 (defun create-empty-pane ()
   (make-instance 'output-pane
@@ -214,12 +226,10 @@
       (when (and image 
                  (< image-x (gp:image-width image))
                  (< image-y (gp:image-height image)))
-        (let ((image-access (gp:make-image-access pane image)))
-          (unwind-protect
-               (color:unconvert-color
-                pane
-                (gp:image-access-pixel image-access image-x image-y))
-            (gp:free-image-access image-access)))))))
+        (with-image-access (image-access pane image)
+         (color:unconvert-color
+          pane
+          (gp:image-access-pixel image-access image-x image-y)))))))
 
 (defun image-pane-mouse-move (pane x y)
   "Handle mouse movement over image pane to show pixel information"
@@ -302,18 +312,16 @@
 
 
 (defmethod find-non-transparent-pixel (pane (image gp:image))
-  (let ((image-access (gp:make-image-access pane image)))
-    (unwind-protect
-         (let ((width (gp:image-width image))
-               (height (gp:image-height image)))
-           (loop for y from 0 below height do
-             (loop for x from 0 below width do
-               (let ((color (gp:image-access-pixel image-access x y)))
-                 (when (= 4 (length color)) ;; #(:RGB r g b a) with alpha, and #(:RBG r g b) without alpha.
-                   (hcl:gc-generation t)
-                   (return-from find-non-transparent-pixel (values x y))))))
-           nil)
-      (gp:free-image-access image-access))))
+  (with-image-access (image-access pane image)
+   (let ((width (gp:image-width image))
+         (height (gp:image-height image)))
+     (loop for y from 0 below height do
+       (loop for x from 0 below width do
+         (let ((color (gp:image-access-pixel image-access x y)))
+           (when (= 4 (length color)) ;; #(:RGB r g b a) with alpha, and #(:RBG r g b) without alpha.
+             (hcl:gc-generation t)
+             (return-from find-non-transparent-pixel (values x y))))))
+     nil)))
 
 (defun zoom-to-change-callback (data interface)
   "Callback function for zoom-to-change button - currently just logs"
@@ -422,26 +430,24 @@
    (image2-layer :initarg :image2-layer
                  :reader image2-layer)))
 
+
+
 (defmethod compare-images (pane (before gp:image) (after gp:image))
-  (let ((transparent (color:convert-color pane #(:rgb 0 0 0 0)))
-        (red (color:convert-color pane #(:rgb 1.0 0 0 1.0))))
+  (let ((transparent (color:convert-color pane :transparent))
+        (red (color:convert-color pane :red)))
    (let* ((width (gp:image-width before))
           (height (gp:image-height before))
           (result (gp:make-image pane width height :alpha t)))
-     (let ((before-access (gp:make-image-access pane before))
-           (after-access (gp:make-image-access pane after))
-           (result-access (gp:make-image-access pane result)))
-       (unwind-protect
-            (loop for y from 0 below height do
-              (loop for x from 0 below width do
-                (let ((before-color (color:unconvert-color pane (gp:image-access-pixel before-access x y)))
-                      (after-color (color:unconvert-color pane (gp:image-access-pixel after-access x y))))
-                  (if (color:colors= before-color after-color)
-                      (setf (gp:image-access-pixel result-access x y) transparent)
-                      (setf (gp:image-access-pixel result-access x y) red)))))
-         (gp:free-image-access before-access)
-         (gp:free-image-access after-access)
-         (gp:free-image-access result-access)))
+     (with-image-access (before-access pane before)
+       (with-image-access (after-access pane after)
+         (with-image-access (result-access pane result :write t)
+          (loop for y from 0 below height do
+            (loop for x from 0 below width do
+              (let ((before-color (color:unconvert-color pane (gp:image-access-pixel before-access x y)))
+                    (after-color (color:unconvert-color pane (gp:image-access-pixel after-access x y))))
+                (if (color:colors= before-color after-color)
+                    (setf (gp:image-access-pixel result-access x y) transparent)
+                    (setf (gp:image-access-pixel result-access x y) red))))))))
      result)))
 
 (defmethod read-image (pane (self comparison-image-layer))
