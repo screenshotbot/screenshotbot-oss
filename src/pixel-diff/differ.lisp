@@ -125,6 +125,8 @@
                                image-pane-release)
                               ((:motion :button-1)
                                image-pane-drag)
+                              ((:motion)
+                               image-pane-mouse-move)
                               (:character
                                image-pane-char-press)))
    (view-radio-panel capi:radio-button-panel
@@ -139,15 +141,17 @@
    (zoom-button push-button
                 :reader zoom-button
                 :text "Zoom to change"
-                :callback 'zoom-to-change-callback))
+                :callback 'zoom-to-change-callback)
+   (status-text display-pane
+                :reader status-text
+                :text "Ready - Move mouse over image to see pixel info"))
   (:layouts
    (main-layout
     column-layout
-    '(image-pane bottom-bar))
+    '(image-pane bottom-bar status-text))
    (bottom-bar
     row-layout
-    '(view-radio-panel nil zoom-button)
-    :internal-border 10))
+    '(view-radio-panel nil  zoom-button)))
   (:menus
    (view-menu "View"
               (("Toggle Previous/Updated" :data :toggle-previous-updated
@@ -187,6 +191,35 @@
   (gp:invalidate-rectangle (image-pane interface)))
 
 
+
+(defun image-pane-mouse-move (pane x y)
+  "Handle mouse movement over image pane to show pixel information"
+  (let ((interface (capi:element-interface pane)))
+    (when (and (core-transform interface) (image-transform interface))
+      (let ((combined-transform (gp:copy-transform (core-transform interface))))
+        (gp:postmultiply-transforms combined-transform (image-transform interface))
+        (multiple-value-bind (image-x image-y)
+            (gp:transform-point (gp:invert-transform combined-transform) x y)
+          (let ((image-x (round image-x))
+                (image-y (round image-y)))
+            (when (and (>= image-x 0) (>= image-y 0))
+              (let* ((current-view (capi:choice-selected-item (view-radio-panel interface)))
+                     (current-layer (case current-view
+                                      (:previous (image1 interface))
+                                      (:updated (image2 interface))
+                                      (:diff (comparison interface))))
+                     (image (when current-layer (read-image pane current-layer))))
+                (if (and image 
+                         (< image-x (gp:image-width image))
+                         (< image-y (gp:image-height image)))
+                    (let ((image-access (gp:make-image-access pane image)))
+                      (unwind-protect
+                           (let ((color (gp:image-access-pixel image-access image-x image-y)))
+                             (setf (capi:display-pane-text (status-text interface))
+                                   (format nil "Pixel (~d,~d): ~a" image-x image-y color)))
+                        (gp:free-image-access image-access)))
+                    (setf (capi:display-pane-text (status-text interface))
+                          "Ready - Move mouse over image to see pixel info"))))))))))
 
 
 
