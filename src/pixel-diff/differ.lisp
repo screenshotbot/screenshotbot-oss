@@ -205,6 +205,18 @@
        (format nil "~a" color))))
 
 
+(defun get-image-layer-color (pane image-layer image-x image-y)
+  "Get the color of a pixel from an image layer at the specified coordinates"
+  (when image-layer
+    (let ((image (read-image pane image-layer)))
+      (when (and image 
+                 (< image-x (gp:image-width image))
+                 (< image-y (gp:image-height image)))
+        (let ((image-access (gp:make-image-access pane image)))
+          (unwind-protect
+               (gp:image-access-pixel image-access image-x image-y)
+            (gp:free-image-access image-access)))))))
+
 (defun image-pane-mouse-move (pane x y)
   "Handle mouse movement over image pane to show pixel information"
   (let ((interface (capi:element-interface pane)))
@@ -216,24 +228,22 @@
           (let ((image-x (round image-x))
                 (image-y (round image-y)))
             (when (and (>= image-x 0) (>= image-y 0))
-              (let* ((current-view (capi:choice-selected-item (view-radio-panel interface)))
-                     (current-layer (case current-view
-                                      (:previous (image1 interface))
-                                      (:updated (image2 interface))
-                                      (:diff (comparison interface))))
-                     (image (when current-layer (read-image pane current-layer))))
-                (if (and image 
-                         (< image-x (gp:image-width image))
-                         (< image-y (gp:image-height image)))
-                    (let ((image-access (gp:make-image-access pane image)))
-                      (unwind-protect
-                           (let ((color (gp:image-access-pixel image-access image-x image-y)))
-                             (setf (capi:display-pane-text (status-text interface))
-                                   (format nil "Pixel (~d,~d): ~a" image-x image-y (render-color color))))
-                        (gp:free-image-access image-access)))
-                    (setf (capi:display-pane-text (status-text interface))
-                          "Ready - Move mouse over image to see pixel info"))))))))))
-
+              (let* ((color-before (get-image-layer-color pane (image1 interface) image-x image-y))
+                     (color-after (get-image-layer-color pane (image2 interface) image-x image-y)))
+                (setf
+                 (capi:display-pane-text (status-text interface))
+                 (cond
+                   ((and color-before color-after
+                         (equalp color-before color-after))
+                    (format nil "Identitical color: ~a" (render-color color-before)))
+                   ((and color-before color-after)
+                    (format nil "Color changed from ~a to ~a" (render-color color-before) (render-color color-after)))
+                   (color-before
+                    (format nil "Color was ~a, now out of bounds" (render-color color-before)))
+                   (color-after
+                    (format nil "Out of bounds earlier, not color is: ~a" (render-color color-after) ))
+                   (t
+                    "Ready - Move mouse over image to see pixel info")))))))))))
 
 
 
