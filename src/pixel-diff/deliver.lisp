@@ -18,7 +18,7 @@
    :restart-fn #'pixel-diff/main::main
    :deliver-level 5
    :interface :capi
-   :console nil
+   :console :input ;; only if input is attempted
    :startup-bitmap-file nil
    :keep-modules nil))
 
