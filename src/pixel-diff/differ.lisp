@@ -126,6 +126,7 @@
    (image-pane image-pane
                :reader image-pane
                :display-callback 'draw-image-callback
+               :resize-callback 'image-pane-resize-callback
                :background :white
                :visible-min-width 400
                :visible-min-height 300
@@ -476,6 +477,13 @@
                                               :image2-layer image2-layer
                                               :alpha 1))))
 
+
+(defun image-pane-resize-callback (pane x y width height)
+  "Handle resize events for the image pane"
+  (declare (ignore x y width height))
+  (gp:invalidate-rectangle pane))
+
+
 (defun open-interface (image))
 
 
@@ -483,6 +491,7 @@
   (display (create-empty-interface
             :image1 "/home/arnold/builds/fast-example/screenshots/image.png"
             :image2 "/home/arnold/builds/fast-example/screenshots-copy/image.png")))
+
 
 ;; (test-example)
 
