@@ -412,28 +412,56 @@
       (gp:invalidate-rectangle pane))))
 
 
+(defclass comparison-image-layer (image-layer)
+  ((image1-layer :initarg :image1-layer
+                 :reader image1-layer)
+   (image2-layer :initarg :image2-layer
+                 :reader image2-layer)))
+
+(defmethod compare-images (pane (before gp:image) (after gp:image))
+  (let ((transparent (color:convert-color pane #(:rgb 0 0 0 0)))
+        (red (color:convert-color pane #(:rgb 1.0 0 0 1.0))))
+   (let* ((width (gp:image-width before))
+          (height (gp:image-height before))
+          (result (gp:make-image pane width height :alpha t)))
+     (let ((before-access (gp:make-image-access pane before))
+           (after-access (gp:make-image-access pane after))
+           (result-access (gp:make-image-access pane result)))
+       (unwind-protect
+            (loop for y from 0 below height do
+              (loop for x from 0 below width do
+                (let ((before-color (gp:image-access-pixel before-access x y))
+                      (after-color (gp:image-access-pixel after-access x y)))
+                  (if (equalp before-color after-color)
+                      (setf (gp:image-access-pixel result-access x y) transparent)
+                      (setf (gp:image-access-pixel result-access x y) red)))))
+         (gp:free-image-access before-access)
+         (gp:free-image-access after-access)
+         (gp:free-image-access result-access)))
+     result)))
+
+(defmethod read-image (pane (self comparison-image-layer))
+  (util/misc:or-setf
+   (cached-image self)
+   (let* ((before-image (read-image pane (image1-layer self)))
+          (after-image (read-image pane (image2-layer self)))
+          (comparison-image (compare-images pane before-image after-image)))
+     comparison-image)))
 
 (defun create-empty-interface (&key image1 image2)
-  (uiop:with-temporary-file (:pathname comparison :keep t :type "png")
-    (uiop:run-program
-     (list "magick" "compare"
-           "-compose" "src"
-           "-define" "compare:lowlight-color=none"
-           "-define" "compare:highlight-color=red"
-           (namestring image1)
-           (namestring image2)
-           (namestring comparison))
-     :ignore-error-status t)
+  (let ((image1-layer (make-instance 'image-layer
+                                     :image image1
+                                     :alpha 0.1))
+        (image2-layer (make-instance 'image-layer
+                                     :image image2
+                                     :alpha 0)))
     (make-instance 'image-window
                    :title "Empty Interface"
-                   :image1 (make-instance 'image-layer
-                                          :image image1
-                                          :alpha 0.1)
-                   :image2 (make-instance 'image-layer
-                                          :image image2
-                                          :alpha 0)
-                   :comparison (make-instance 'image-layer
-                                              :image comparison
+                   :image1 image1-layer
+                   :image2 image2-layer
+                   :comparison (make-instance 'comparison-image-layer
+                                              :image1-layer image1-layer
+                                              :image2-layer image2-layer
                                               :alpha 1)
                    :width 400
                    :height 300)))
