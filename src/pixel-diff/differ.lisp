@@ -33,29 +33,18 @@
         (gp:draw-image pane image 0 0 :global-alpha (alpha image-layer))))))
 
 
-(defun draw-checkerboard-background (pane x y width height)
-  "Draw a checkerboard pattern background to show transparency"
-  (let ((square-size 20)
-        (light-color :gray95)
-        (dark-color :gray85))
-    (loop for row from 0 below (ceiling height square-size) do
-      (loop for col from 0 below (ceiling width square-size) do
-        (let ((rect-x (+ x (* col square-size)))
-              (rect-y (+ y (* row square-size)))
-              (rect-width (min square-size (- width (* col square-size))))
-              (rect-height (min square-size (- height (* row square-size)))))
-          (gp:draw-rectangle pane rect-x rect-y rect-width rect-height
-                             :filled t
-                             :foreground (if (evenp (+ row col))
-                                           light-color
-                                           dark-color)))))))
+(defun draw-background (pane x y width height)
+  "Draw a solid gray background. In the future we might bring back "
+  (gp:draw-rectangle pane x y width height
+                     :filled t
+                     :foreground :gray90))
 
 
 
 (defun draw-image-callback (pane x y width height)
   "Callback function to draw the image in the display pane"
   (let* ((interface (capi:element-interface pane)))
-    (draw-checkerboard-background pane x y width height)
+    (draw-background pane x y width height)
     (maybe-init-core-transform interface pane (gp:port-width pane) (gp:port-height pane))
     (log:debug "Transform is ~a" (core-transform interface))
     (assert (core-transform interface))
