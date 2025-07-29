@@ -187,7 +187,7 @@
 
 (defun view-radio-panel-callback (item interface)
   "Callback function for view radio panel selection changes"
-  (log:info "View changed to: ~a" item)
+  (log:debug "View changed to: ~a" item)
   (case item
     (:previous
      (setf (alpha (image1 interface)) 1.0)
@@ -337,7 +337,7 @@
               :finally
               (lambda ()
                 (setf (capi:button-enabled (zoom-button interface)) t))))
-  (log:info "Zoom to change button pressed for interface: ~a" interface))
+  (log:debug "Zoom to change button pressed for interface: ~a" interface))
 
 (defun zoom-in-callback (interface)
   "Callback function for zoom in menu item"
@@ -392,7 +392,7 @@
        (view-radio-panel-callback :previous interface)))))
 
 (defun image-pane-char-press (pane x y character)
-  (log:info "Got ~a for ~a,~a" character x y)
+  (log:debug "Got ~a for ~a,~a" character x y)
   (case character
     (#\+
      (process-zoom pane x y 1.3))
@@ -403,16 +403,16 @@
   "Handle mouse button press on image pane"
   (setf (press-start pane)
         (cons x y))
-  (log:info "Image pane press at (~a, ~a)" x y))
+  (log:debug "Image pane press at (~a, ~a)" x y))
 
 (defun image-pane-release (pane x y)
   "Handle mouse button release on image pane"
   (setf (press-start pane) nil)
-  (log:info "Image pane release at (~a, ~a)" x y))
+  (log:debug "Image pane release at (~a, ~a)" x y))
 
 (defun image-pane-drag (pane x y)
   "Handle mouse drag on image pane"
-  (log:info "Image pane drag at (~a, ~a)" x y)
+  (log:debug "Image pane drag at (~a, ~a)" x y)
   (when (press-start pane)
     (destructuring-bind (startx . starty)
         (press-start pane)
