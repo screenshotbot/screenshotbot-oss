@@ -17,6 +17,7 @@
    "pixel-diff"
    :restart-fn #'pixel-diff/main::main
    :deliver-level 5
+   :interface :capi
    :keep-modules nil))
 
 ;; Run delivery when this file is loaded
