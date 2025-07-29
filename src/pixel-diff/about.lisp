@@ -29,7 +29,7 @@
                                                                 :visible-min-width 300
                                                                 :visible-min-height 40)
                                                  (make-instance 'display-pane
-                                                                :text "© 2024 Pixel Diff Project"
+                                                                :text "© 2025 Modern Interpreters Inc. (Screenshotbot)"
                                                                 :visible-min-width 300
                                                                 :visible-min-height 20)
                                                  (make-instance 'row-layout
