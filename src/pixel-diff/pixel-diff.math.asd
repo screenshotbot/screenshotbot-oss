@@ -1,12 +1,17 @@
+(defsystem pixel-diff.math/package
+  :depends-on (:parenscript
+               :3d-matrices)
+  :components ((:file "package")))
+
 (defsystem pixel-diff.math
-  :depends-on (:screenshotbot.js-assets/package)
+  :depends-on (:pixel-diff.math/package)
   :serial t
   :components ((:file "lisp-stubs")
                (:file "common-ps")))
 
 (defsystem screenshotbot.math/tests
   :serial t
-  :depends-on (:screenshotbot.js-assets/lisp
+  :depends-on (:pixel-diff.math/lisp
                :util/fiveam)
   :components ((:file "test-common-ps")))
 

@@ -20,16 +20,11 @@
   :depends-on ()
   :components (("build-utils:js-file" "common")))
 
-(defsystem screenshotbot.js-assets/package
-  :depends-on (:parenscript
-               :3d-matrices)
-  :components ((:file "package")))
-
 (defsystem screenshotbot.js-assets
   :class "build-utils:js-system"
   :serial t
   :defsystem-depends-on (:build-utils)
-  :depends-on (:screenshotbot.js-assets/package
+  :depends-on (:pixel-diff.math/package
                #-screenshotbot-oss
                :sentry-js
                :bootstrap5-js
