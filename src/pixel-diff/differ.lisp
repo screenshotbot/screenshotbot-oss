@@ -191,6 +191,19 @@
   (gp:invalidate-rectangle (image-pane interface)))
 
 
+(defun render-color (color)
+  (flet ((%ref (num)
+           (floor (* 255
+                     (aref color num)))))
+    (if (vectorp color)
+       (case (length color)
+         (4 (format nil "#~2,'0x~2,'0x~2,'0xFF" 
+                    (%ref 1) (%ref 2) (%ref 3)))
+         (5 (format nil "#~2,'0x~2,'0x~2,'0x~2,'0x" 
+                    (%ref 1) (%ref 2) (%ref 3) (%ref 4)))
+         (otherwise (format nil "~a" color)))
+       (format nil "~a" color))))
+
 
 (defun image-pane-mouse-move (pane x y)
   "Handle mouse movement over image pane to show pixel information"
@@ -216,7 +229,7 @@
                       (unwind-protect
                            (let ((color (gp:image-access-pixel image-access image-x image-y)))
                              (setf (capi:display-pane-text (status-text interface))
-                                   (format nil "Pixel (~d,~d): ~a" image-x image-y color)))
+                                   (format nil "Pixel (~d,~d): ~a" image-x image-y (render-color color))))
                         (gp:free-image-access image-access)))
                     (setf (capi:display-pane-text (status-text interface))
                           "Ready - Move mouse over image to see pixel info"))))))))))
