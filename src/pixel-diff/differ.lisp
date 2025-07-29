@@ -74,7 +74,7 @@
            (core-transform interface)
            (eql width (last-width interface))
            (eql height (last-height interface)))
-    (let ((image (gp:load-image pane (image (image1 interface)))))
+    (let ((image (gp:load-image pane (image (image1 interface)) :editable t)))
       (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
         (setf (last-width interface) width)
         (setf (last-height interface) height)
@@ -98,7 +98,7 @@
 (defmethod read-image (pane (self image-layer))
   (or-setf
    (cached-image self)
-   (gp:load-image pane (image self))))
+   (gp:load-image pane (image self) :editable t)))
 
 (defclass image-pane (output-pane)
   ((press-start :initform nil
@@ -291,7 +291,7 @@
 
 (defun %zoom-to (interface x y &key (zoom 5) (finally (lambda ())))
   (let ((pane (slot-value interface 'image-pane)))
-    (let* ((image (gp:load-image pane (image (image1 interface))))
+    (let* ((image (gp:load-image pane (image (image1 interface)) :editable t))
            (start-mat (transform-to-3dmat (image-transform interface)))
            (final-mat (screenshotbot-js::calc-transform-for-center
                        (gp:port-width pane)
