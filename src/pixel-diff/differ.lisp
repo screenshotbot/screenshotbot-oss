@@ -13,9 +13,10 @@
 
 (defun draw-image-layer (pane image-layer  x y width height)
   (declare (ignore x y width height))
-  (let ((image (read-image pane image-layer)))
-    (when image
-      (gp:draw-image pane image 0 0 :global-alpha (alpha image-layer)))))
+  (when (> (alpha image-layer) 0)
+    (let ((image (read-image pane image-layer)))
+      (when image
+        (gp:draw-image pane image 0 0 :global-alpha (alpha image-layer))))))
 
 
 (defun draw-checkerboard-background (pane x y width height)
@@ -51,6 +52,7 @@
        (image-transform interface))
       (gp:with-graphics-transform (pane transform)
         (draw-image-layer pane (image1 interface) x y width height)
+        (draw-image-layer pane (image2 interface) x y width height)
         (draw-image-layer pane (comparison interface) x y width height)))))
 
 (defun maybe-init-core-transform (interface pane width height)
@@ -75,7 +77,7 @@
    (cached-image :initform nil
                  :accessor cached-image)
    (alpha :initarg :alpha
-          :reader alpha)
+          :accessor alpha)
    (name :initarg :name
          :reader image-layer-name)))
 
@@ -104,9 +106,7 @@
    (last-width :initform nil
                :accessor last-width)
    (last-height :initform nil
-                :accessor last-height)
-   (view-mode :initform :previous
-              :accessor view-mode))
+                :accessor last-height))
   (:panes
    (image-pane image-pane
                :reader image-pane
@@ -128,7 +128,9 @@
                      :print-function (lambda (item)
                                        (string-capitalize (symbol-name item)))
                      :selected-item :diff
-                     :layout-class 'row-layout)
+                     :layout-class 'row-layout
+                     :callback-type :data-interface
+                     :selection-callback 'view-radio-panel-callback)
    (zoom-button push-button
                 :reader zoom-button
                 :text "Zoom to change"
@@ -145,6 +147,28 @@
    :title "Image Display Window"
    :width 450
    :height 350))
+
+(defun view-radio-panel-callback (item interface)
+  "Callback function for view radio panel selection changes"
+  (log:info "View changed to: ~a" item)
+  (case item
+    (:previous
+     (setf (alpha (image1 interface)) 1.0)
+     (setf (alpha (image2 interface)) 0.0)
+     (setf (alpha (comparison interface)) 0.0))
+    (:diff
+     (setf (alpha (image1 interface)) 0.1)
+     (setf (alpha (image2 interface)) 0.0)
+     (setf (alpha (comparison interface)) 1.0))
+    (:updated
+     (setf (alpha (image1 interface)) 0.0)
+     (setf (alpha (image2 interface)) 1.0)
+     (setf (alpha (comparison interface)) 0.0)))
+  (gp:invalidate-rectangle (image-pane interface)))
+
+
+
+
 
 (defun start-animation-timer (pane duration-seconds callback
                               &key (finally (lambda ())))
