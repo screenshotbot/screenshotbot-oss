@@ -216,7 +216,9 @@
                  (< image-y (gp:image-height image)))
         (let ((image-access (gp:make-image-access pane image)))
           (unwind-protect
-               (gp:image-access-pixel image-access image-x image-y)
+               (color:unconvert-color
+                pane
+                (gp:image-access-pixel image-access image-x image-y))
             (gp:free-image-access image-access)))))))
 
 (defun image-pane-mouse-move (pane x y)
