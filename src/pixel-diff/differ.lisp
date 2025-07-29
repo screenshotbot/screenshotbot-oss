@@ -7,6 +7,11 @@
    #:create-empty-interface))
 (in-package :pixel-diff/differ)
 
+(defmacro or-setf (accessor expr)
+  `(or
+    ,accessor
+    (setf ,accessor ,expr)))
+
 (defun create-empty-pane ()
   (make-instance 'output-pane
                  :background :white
@@ -89,7 +94,7 @@
          :reader image-layer-name)))
 
 (defmethod read-image (pane (self image-layer))
-  (util/misc:or-setf
+  (or-setf
    (cached-image self)
    (gp:load-image pane (image self))))
 
@@ -443,7 +448,7 @@
      result)))
 
 (defmethod read-image (pane (self comparison-image-layer))
-  (util/misc:or-setf
+  (or-setf
    (cached-image self)
    (let* ((before-image (read-image pane (image1-layer self)))
           (after-image (read-image pane (image2-layer self)))
