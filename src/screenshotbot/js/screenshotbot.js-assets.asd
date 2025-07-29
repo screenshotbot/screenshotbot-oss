@@ -25,12 +25,6 @@
                :3d-matrices)
   :components ((:file "package")))
 
-(defsystem screenshotbot.js-assets/lisp
-  :depends-on (:screenshotbot.js-assets/package)
-  :serial t
-  :components ((:file "lisp-stubs")
-               (:file "common-ps")))
-
 (defsystem screenshotbot.js-assets
   :class "build-utils:js-system"
   :serial t
@@ -40,7 +34,8 @@
                :sentry-js
                :bootstrap5-js
                :screenshotbot.js-assets/headroom
-               :screenshotbot.js-assets/split)
+               :screenshotbot.js-assets/split
+               :pixel-diff.math-js)
   :components ((:module "vendor"
                 :components (("build-utils:js-file" "jquery-ui")
                              ("build-utils:js-file" "baguetteBox")
@@ -50,7 +45,6 @@
                ("build-utils:js-file" "jquery.timeago")
                ("build-utils:js-file" "default")
                ("build-utils:js-file" "js-stubs")
-               ("build-utils:ps-file" "common-ps")
                ("build-utils:js-file" "common")
                ("build-utils:js-file" "image-canvas")
                ("build-utils:js-file" "runs")
@@ -62,8 +56,3 @@
                ("build-utils:ps-file" "dummy")))
 
 
-(defsystem screenshotbot.js-assets/tests
-  :serial t
-  :depends-on (:screenshotbot.js-assets/lisp
-               :util/fiveam)
-  :components ((:file "test-common-ps")))
