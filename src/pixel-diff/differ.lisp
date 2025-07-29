@@ -3,6 +3,8 @@
         #:capi)
   (:import-from #:screenshotbot-js
                 #:animate-transform)
+  (:import-from #:pixel-diff/about
+                #:show-about-dialog)
   (:export
    #:create-empty-interface))
 (in-package :pixel-diff/differ)
@@ -172,8 +174,12 @@
                ("Zoom Out" :data :zoom-out
                            :callback-type :interface
                            :callback #'zoom-out-callback
-                           :accelerator "-"))))
-  (:menu-bar view-menu)
+                           :accelerator "-")))
+   (help-menu "Help"
+              (("About" :data :about
+                        :callback-type :interface
+                        :callback #'show-about-dialog))))
+  (:menu-bar view-menu help-menu)
   (:default-initargs
    :title "Image Display Window"
    :width 450
