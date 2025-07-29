@@ -464,9 +464,7 @@
                    :comparison (make-instance 'comparison-image-layer
                                               :image1-layer image1-layer
                                               :image2-layer image2-layer
-                                              :alpha 1)
-                   :width 400
-                   :height 300)))
+                                              :alpha 1))))
 
 (defun open-interface (image))
 
