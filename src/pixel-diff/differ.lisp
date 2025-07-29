@@ -143,6 +143,13 @@
     row-layout
     '(view-radio-panel nil zoom-button)
     :internal-border 10))
+  (:menus
+   (view-menu "View"
+              (("Toggle Previous/Updated" :data :toggle-previous-updated
+                                          :callback-type :interface
+                                          :callback #'toggle-previous-updated
+                                          :accelerator "v"))))
+  (:menu-bar view-menu)
   (:default-initargs
    :title "Image Display Window"
    :width 450
@@ -165,6 +172,7 @@
      (setf (alpha (image2 interface)) 1.0)
      (setf (alpha (comparison interface)) 0.0)))
   (gp:invalidate-rectangle (image-pane interface)))
+
 
 
 
@@ -276,10 +284,9 @@
          dm)
         (gp:invalidate-rectangle pane)))))
 
-(defun toggle-previous-updated (pane)
+(defun toggle-previous-updated (interface)
   "Toggle between showing the previous image and the updated image"
-  (let* ((interface (capi:element-interface pane))
-         (current-selection (capi:choice-selected-item (view-radio-panel interface))))
+  (let* ((current-selection (capi:choice-selected-item (view-radio-panel interface))))
     (case current-selection
       (:previous
        (setf (capi:choice-selected-item (view-radio-panel interface)) :updated)
@@ -291,8 +298,6 @@
 (defun image-pane-char-press (pane x y character)
   (log:info "Got ~a for ~a,~a" character x y)
   (case character
-    (#\v
-     (toggle-previous-updated pane))
     (#\+
      (process-zoom pane x y 1.3))
     (#\-
