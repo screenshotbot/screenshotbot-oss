@@ -18,20 +18,20 @@
                                                                 :font (gp:make-font-description
                                                                        :size 16
                                                                        :weight :bold)
-                                                                :visible-min-width 300
-                                                                :visible-min-height 30)
+                                                                :visible-min-width 600
+                                                                :visible-min-height 60)
                                                  (make-instance 'display-pane
                                                                 :text "Version 1.0"
-                                                                :visible-min-width 300
-                                                                :visible-min-height 20)
-                                                 (make-instance 'display-pane
-                                                                :text "A tool for comparing images and visualizing differences"
-                                                                :visible-min-width 300
+                                                                :visible-min-width 600
                                                                 :visible-min-height 40)
                                                  (make-instance 'display-pane
+                                                                :text "A tool for comparing images and visualizing differences"
+                                                                :visible-min-width 600
+                                                                :visible-min-height 80)
+                                                 (make-instance 'display-pane
                                                                 :text "© 2025 Modern Interpreters Inc. (Screenshotbot)"
-                                                                :visible-min-width 300
-                                                                :visible-min-height 20)
+                                                                :visible-min-width 600
+                                                                :visible-min-height 40)
                                                  (make-instance 'row-layout
                                                                 :description
                                                                 (list
@@ -43,7 +43,7 @@
                                                                                             (capi:quit-interface interface))
                                                                                 :callback-type :data-interface)
                                                                  nil))))
-                         :visible-min-width 320
-                         :visible-min-height 200
+                         :visible-min-width 640
+                         :visible-min-height 400
                          :owner parent)))
-    (capi:display dialog)))
+    (capi:display-dialog dialog)))
