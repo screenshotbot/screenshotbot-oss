@@ -2,7 +2,9 @@
   (:use #:cl
         #:capi)
   (:import-from #:screenshotbot-js
-                #:animate-transform))
+                #:animate-transform)
+  (:export
+   #:create-empty-interface))
 (in-package :pixel-diff/differ)
 
 (defun create-empty-pane ()

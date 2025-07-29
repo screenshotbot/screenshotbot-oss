@@ -2,4 +2,5 @@
   :serial t
   :depends-on (:screenshotbot.js-assets/lisp
                :util/misc)
-  :components ((:file "differ")))
+  :components ((:file "differ")
+               (:file "main")))
