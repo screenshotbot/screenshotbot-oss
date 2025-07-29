@@ -13,8 +13,13 @@
 
 (defun draw-image-layer (pane image-layer  x y width height)
   (declare (ignore x y width height))
+
   (when (> (alpha image-layer) 0)
     (let ((image (read-image pane image-layer)))
+      (when (< (alpha image-layer) 0.9) ;; not fully opaque
+        (gp:draw-rectangle pane 0 0 (gp:image-width image) (gp:image-height image)
+                          :filled t
+                          :foreground :white))
       (when image
         (gp:draw-image pane image 0 0 :global-alpha (alpha image-layer))))))
 
@@ -41,7 +46,7 @@
 (defun draw-image-callback (pane x y width height)
   "Callback function to draw the image in the display pane"
   (let* ((interface (capi:element-interface pane)))
-    ;;(draw-checkerboard-background pane x y width height)
+    (draw-checkerboard-background pane x y width height)
     (maybe-init-core-transform interface pane (gp:port-width pane) (gp:port-height pane))
     (log:debug "Transform is ~a" (core-transform interface))
     (assert (core-transform interface))
