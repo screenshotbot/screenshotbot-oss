@@ -171,8 +171,8 @@
   (:menu-bar view-menu help-menu)
   (:default-initargs
    :title "Image Display Window"
-   :width 450
-   :height 350))
+   :width (floor (capi:screen-width (capi:convert-to-screen)) 2)
+   :height (floor (capi:screen-height (capi:convert-to-screen)) 2)))
 
 (defun view-radio-panel-callback (item interface)
   "Callback function for view radio panel selection changes"
