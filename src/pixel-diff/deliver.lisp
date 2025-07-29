@@ -18,6 +18,8 @@
    :restart-fn #'pixel-diff/main::main
    :deliver-level 5
    :interface :capi
+   :console nil
+   :startup-bitmap-file nil
    :keep-modules nil))
 
 ;; Run delivery when this file is loaded
