@@ -276,9 +276,23 @@
          dm)
         (gp:invalidate-rectangle pane)))))
 
+(defun toggle-previous-updated (pane)
+  "Toggle between showing the previous image and the updated image"
+  (let* ((interface (capi:element-interface pane))
+         (current-selection (capi:choice-selected-item (view-radio-panel interface))))
+    (case current-selection
+      (:previous
+       (setf (capi:choice-selected-item (view-radio-panel interface)) :updated)
+       (view-radio-panel-callback :updated interface))
+      (otherwise
+       (setf (capi:choice-selected-item (view-radio-panel interface)) :previous)
+       (view-radio-panel-callback :previous interface)))))
+
 (defun image-pane-char-press (pane x y character)
   (log:info "Got ~a for ~a,~a" character x y)
   (case character
+    (#\v
+     (toggle-previous-updated pane))
     (#\+
      (process-zoom pane x y 1.3))
     (#\-
