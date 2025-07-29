@@ -236,7 +236,7 @@
                  (capi:display-pane-text (status-text interface))
                  (cond
                    ((and color-before color-after
-                         (equalp color-before color-after))
+                         (color:colors= color-before color-after))
                     (format nil "Identitical color: ~a" (render-color color-before)))
                    ((and color-before color-after)
                     (format nil "Color changed from ~a to ~a" (render-color color-before) (render-color color-after)))
@@ -434,7 +434,7 @@
               (loop for x from 0 below width do
                 (let ((before-color (gp:image-access-pixel before-access x y))
                       (after-color (gp:image-access-pixel after-access x y)))
-                  (if (equalp before-color after-color)
+                  (if (color:color= before-color after-color)
                       (setf (gp:image-access-pixel result-access x y) transparent)
                       (setf (gp:image-access-pixel result-access x y) red)))))
          (gp:free-image-access before-access)
