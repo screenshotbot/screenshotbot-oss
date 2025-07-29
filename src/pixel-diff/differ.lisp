@@ -153,7 +153,15 @@
               (("Toggle Previous/Updated" :data :toggle-previous-updated
                                           :callback-type :interface
                                           :callback #'toggle-previous-updated
-                                          :accelerator "v"))))
+                                          :accelerator "v")
+               ("Zoom In" :data :zoom-in
+                          :callback-type :interface
+                          :callback #'zoom-in-callback
+                          :accelerator "+")
+               ("Zoom Out" :data :zoom-out
+                           :callback-type :interface
+                           :callback #'zoom-out-callback
+                           :accelerator "-"))))
   (:menu-bar view-menu)
   (:default-initargs
    :title "Image Display Window"
@@ -261,6 +269,20 @@
               (lambda ()
                 (setf (capi:button-enabled (zoom-button interface)) t))))
   (log:info "Zoom to change button pressed for interface: ~a" interface))
+
+(defun zoom-in-callback (interface)
+  "Callback function for zoom in menu item"
+  (let ((pane (image-pane interface)))
+    (let ((center-x (/ (gp:port-width pane) 2))
+          (center-y (/ (gp:port-height pane) 2)))
+      (process-zoom pane center-x center-y 1.2))))
+
+(defun zoom-out-callback (interface)
+  "Callback function for zoom out menu item"
+  (let ((pane (image-pane interface)))
+    (let ((center-x (/ (gp:port-width pane) 2))
+          (center-y (/ (gp:port-height pane) 2)))
+      (process-zoom pane center-x center-y 0.8))))
 
 
 
