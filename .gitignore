@@ -49,3 +49,5 @@ cl-cron.log
 hubspot.config.yml
 
 screenshotbot-cli
+
+/pixel-diff

@@ -2,7 +2,7 @@
   (:use #:cl))
 (in-package :pixel-diff/main)
 
-(defun %main (&rest args)
+(defun %main (args)
   "Main entry point for the pixel-diff application"
   (when (< (length args) 2)
     (format t "Usage: pixel-diff <image1> <image2>~%")
