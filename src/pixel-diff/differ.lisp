@@ -164,6 +164,13 @@
     row-layout
     '(view-radio-panel nil  zoom-button)))
   (:menus
+   (file-menu "File"
+              (("Open (Previous)..." :data :open-previous
+                                     :callback-type :interface
+                                     :callback 'open-previous-callback)
+               ("Open (Updated)..." :data :open-updated
+                                    :callback-type :interface
+                                    :callback 'open-updated-callback)))
    (view-menu "View"
               (("Toggle Previous/Updated" :data :toggle-previous-updated
                                           :callback-type :interface
@@ -181,11 +188,41 @@
               (("About" :data :about
                         :callback-type :interface
                         :callback #'show-about-dialog))))
-  (:menu-bar view-menu help-menu)
+  (:menu-bar file-menu view-menu help-menu)
   (:default-initargs
    :title "Image Display Window"
    :width (floor (capi:screen-width (capi:convert-to-screen)) 2)
    :height (floor (capi:screen-height (capi:convert-to-screen)) 2)))
+
+(defun open-image-file (interface slot-name prompt-title)
+  "Generic function for opening image files and updating the interface"
+  (let ((image-layer (slot-value interface slot-name))
+        (file (capi:prompt-for-file prompt-title
+                                    :operation :open
+                                    :filter "*.png;*.jpg;*.jpeg;*.bmp;*.gif"
+                                    :filters '("Image files" "*.png;*.jpg;*.jpeg;*.bmp;*.gif"
+                                              "All files" "*.*"))))
+    (when file
+      (let ((new-image-layer (make-instance 'image-layer
+                                            :image (namestring file)
+                                            :alpha (alpha image-layer))))
+        (setf (slot-value interface slot-name) new-image-layer)
+        (setf (slot-value interface 'comparison)
+              (make-instance 'comparison-image-layer
+                             :image1-layer (image1 interface)
+                             :image2-layer (image2 interface)
+                             :alpha 1))
+        (gp:invalidate-rectangle (image-pane interface))))))
+
+(defun open-previous-callback (interface)
+  "Callback function for opening a previous image file"
+  (open-image-file interface 'image1 "Select Previous Image"))
+
+(defun open-updated-callback (interface)
+  "Callback function for opening an updated image file"
+  (open-image-file interface 'image2 "Select Updated Image"))
+
+
 
 (defun view-radio-panel-callback (item interface)
   "Callback function for view radio panel selection changes"
