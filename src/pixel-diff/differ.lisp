@@ -104,7 +104,8 @@
 (defclass image-pane (output-pane)
   ((press-start :initform nil
                 :accessor press-start
-                :documentation "The coordinates of an initial press start")))
+                :documentation "The coordinates of an initial press start"))
+  (:default-initargs :draw-with-buffer t))
 
 (define-interface image-window ()
   ((image1 :initarg :image1 :initform nil
