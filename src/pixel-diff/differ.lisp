@@ -506,7 +506,7 @@
                                      :image image2
                                      :alpha 0)))
     (make-instance 'image-window
-                   :title "Empty Interface"
+                   :title "Pixel Diff"
                    :image1 image1-layer
                    :image2 image2-layer
                    :comparison (make-instance 'comparison-image-layer
