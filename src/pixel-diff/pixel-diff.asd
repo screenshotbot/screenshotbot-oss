@@ -3,6 +3,7 @@
   :depends-on (:pixel-diff.math
                :easy-macros)
   :components ((:file "about")
-	       (:file "fli-templates")
+               #+darwin
+               (:file "fli-templates")
                (:file "differ")
                (:file "main")))
