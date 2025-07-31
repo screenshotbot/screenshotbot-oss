@@ -105,7 +105,14 @@
   ((press-start :initform nil
                 :accessor press-start
                 :documentation "The coordinates of an initial press start"))
-  (:default-initargs :draw-with-buffer t))
+  (:default-initargs :draw-with-buffer t
+   :create-callback 'image-pane-create-callback
+   :coordinate-origin :fixed-graphics))
+
+(defun image-pane-create-callback (pane)
+  "Callback function called when image pane is created"
+  ;;(capi:simple-pane-show-scroll-bars pane :vertical nil :horizontal nil)
+  (capi:set-vertical-scroll-parameters pane :slug-position 50000))
 
 (define-interface image-window ()
   ((image1 :initarg :image1 :initform nil
@@ -131,6 +138,10 @@
                :background :white
                :visible-min-width 400
                :visible-min-height 300
+               :scroll-height 100000
+               :scroll-initial-y 50000
+               :vertical-scroll t
+               :scroll-callback 'image-pane-scroll-callback
                :input-model `(((:button-1 :press)
                                image-pane-press)
                               ((:button-1 :release)
@@ -194,6 +205,45 @@
    :title "Image Display Window"
    :width (floor (capi:screen-width (capi:convert-to-screen)) 2)
    :height (floor (capi:screen-height (capi:convert-to-screen)) 2)))
+
+(defun get-current-zoom (image-window)
+  "Get the current zoom level from the image-transform of the image-window"
+  (when (image-transform image-window)
+    (let ((transform (image-transform image-window)))
+      (destructuring-bind (a b c d e f) transform
+        (declare (ignore b c d e f))
+        a))))
+
+(defun scroll-pos-to-expected-zoom (scroll-value)
+  (cond
+    ((<= scroll-value 50000)
+     (+ 0.1 (* (/ scroll-value 50000) 0.9)))
+    (t
+     (+ 1.0 (* (/ (- scroll-value 50000) 50000) 9.0)))))
+
+(defmethod image-pane-scroll-callback (pane (scroll-dimension (eql :vertical))
+                                       (scroll-operation (eql :move))
+                                       scroll-value
+                                       &key interactive)
+  "Handle scroll events for zooming in/out on the image pane"
+  (when interactive
+    (let ((current-zoom (get-current-zoom (capi:element-interface pane)))
+          (current-position (capi:get-vertical-scroll-parameters pane :slug-position)))
+      (log:info "Current zoom is: ~a" current-zoom)
+      (let* ((expected-zoom (scroll-pos-to-expected-zoom scroll-value)))
+        (log:info "existing slug pos: ~a" (capi:get-vertical-scroll-parameters pane :slug-position))
+        (multiple-value-bind (x y) (capi:current-pointer-position :relative-to pane)
+          (log:info "Got pos ~a, ~a " x y)
+          (process-zoom pane x (- y current-position)
+                        (/ expected-zoom current-zoom)))
+        (gp:invalidate-rectangle pane)))))
+
+(defmethod image-pane-scroll-callback (pane direction scroll-operation scroll-value &key interactive &allow-other-keys)
+  (when interactive
+    (log:info "scrolled (unhandled)  ~a ~a" scroll-value interactive)
+    (capi:set-vertical-scroll-parameters pane :slug-position 50000)))
+
+
 
 (defun open-image-file (interface slot-name prompt-title)
   "Generic function for opening image files and updating the interface"
