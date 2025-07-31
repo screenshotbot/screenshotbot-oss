@@ -104,15 +104,25 @@
 (defclass image-pane (output-pane)
   ((press-start :initform nil
                 :accessor press-start
-                :documentation "The coordinates of an initial press start"))
+                :documentation "The coordinates of an initial press start")
+   (scroll-max :initarg :scroll-max
+               :accessor scroll-max))
   (:default-initargs :draw-with-buffer t
+   :scroll-max 100000
    :create-callback 'image-pane-create-callback
-   :coordinate-origin :fixed-graphics))
+                     :coordinate-origin :fixed-graphics))
+
+(defmethod initialize-instance :around ((self image-pane) &rest args &key scroll-max &allow-other-keys)
+  (apply #'call-next-method
+         self
+         :scroll-height scroll-max
+         :scroll-initial-y (floor scroll-max 2)
+         args))
 
 (defun image-pane-create-callback (pane)
   "Callback function called when image pane is created"
   ;;(capi:simple-pane-show-scroll-bars pane :vertical nil :horizontal nil)
-  (capi:set-vertical-scroll-parameters pane :slug-position 50000))
+  (capi:set-vertical-scroll-parameters pane :slug-position (floor (scroll-max pane) 2)))
 
 (define-interface image-window ()
   ((image1 :initarg :image1 :initform nil
@@ -138,8 +148,6 @@
                :background :white
                :visible-min-width 400
                :visible-min-height 300
-               :scroll-height 100000
-               :scroll-initial-y 50000
                :vertical-scroll t
                :scroll-callback 'image-pane-scroll-callback
                :input-model `(((:button-1 :press)
@@ -214,19 +222,21 @@
         (declare (ignore b c d e f))
         a))))
 
-(defun scroll-pos-to-expected-zoom (scroll-value)
-  (cond
-    ((<= scroll-value 50000)
-     (+ 0.1 (* (/ scroll-value 50000) 0.9)))
-    (t
-     (+ 1.0 (* (/ (- scroll-value 50000) 50000) 9.0)))))
+(defun scroll-pos-to-expected-zoom (pane scroll-value)
+  (let ((half (floor (scroll-max pane) 2)))
+   (cond
+     ((<= scroll-value half)
+      (+ 0.1 (* (/ scroll-value half) 0.9)))
+     (t
+      (+ 1.0 (* (/ (- scroll-value half) half) 9.0))))))
 
-(defun zoom-to-scroll-pos (zoom)
-  (cond
-    ((<= zoom 1.0)
-     (* (/ (- zoom 0.1) 0.9) 50000))
-    (t
-     (+ 50000 (* (/ (- zoom 1.0) 9.0) 50000)))))
+(defun zoom-to-scroll-pos (pane zoom)
+  (let ((half (floor (scroll-max pane) 2)))
+    (cond
+      ((<= zoom 1.0)
+       (* (/ (- zoom 0.1) 0.9) half))
+      (t
+       (+ half (* (/ (- zoom 1.0) 9.0) half))))))
 
 (defmethod image-pane-scroll-callback (pane (scroll-dimension (eql :vertical))
                                        (scroll-operation (eql :move))
@@ -237,7 +247,7 @@
     (let ((current-zoom (get-current-zoom (capi:element-interface pane)))
           (current-position (capi:get-vertical-scroll-parameters pane :slug-position)))
       (log:info "Current zoom is: ~a" current-zoom)
-      (let* ((expected-zoom (scroll-pos-to-expected-zoom scroll-value)))
+      (let* ((expected-zoom (scroll-pos-to-expected-zoom pane scroll-value)))
         (log:info "existing slug pos: ~a" (capi:get-vertical-scroll-parameters pane :slug-position))
         (multiple-value-bind (x y) (capi:current-pointer-position :relative-to pane)
           (log:info "Got pos ~a, ~a " x y)
@@ -248,7 +258,7 @@
 (defmethod image-pane-scroll-callback (pane direction scroll-operation scroll-value &key interactive &allow-other-keys)
   (when interactive
     (log:info "scrolled (unhandled)  ~a ~a" scroll-value interactive)
-    (capi:set-vertical-scroll-parameters pane :slug-position 50000)))
+    (capi:set-vertical-scroll-parameters pane :slug-position (floor (scroll-max pane) 2))))
 
 
 
@@ -404,6 +414,7 @@
                (3dmat-to-transform
                 (animate-transform start-mat final-mat progress)))
          (capi:set-vertical-scroll-parameters pane :slug-position (zoom-to-scroll-pos
+                                                                   pane
                                                                    (get-current-zoom interface)))
          (gp:invalidate-rectangle pane))
        :finally finally))))
