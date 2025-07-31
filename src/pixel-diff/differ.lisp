@@ -257,8 +257,7 @@
 
 (defmethod image-pane-scroll-callback (pane direction scroll-operation scroll-value &key interactive &allow-other-keys)
   (when interactive
-    (log:info "scrolled (unhandled)  ~a ~a" scroll-value interactive)
-    (capi:set-vertical-scroll-parameters pane :slug-position (floor (scroll-max pane) 2))))
+    (log:info "scrolled (unhandled)  ~a ~a" scroll-value interactive)))
 
 
 
@@ -413,11 +412,15 @@
          (setf (image-transform interface)
                (3dmat-to-transform
                 (animate-transform start-mat final-mat progress)))
-         (capi:set-vertical-scroll-parameters pane :slug-position (zoom-to-scroll-pos
-                                                                   pane
-                                                                   (get-current-zoom interface)))
+         (invalidate-scroll-position interface)
          (gp:invalidate-rectangle pane))
        :finally finally))))
+
+(defmethod invalidate-scroll-position (interface)
+  (let ((pane (image-pane interface)))
+    (capi:set-vertical-scroll-parameters pane :slug-position (zoom-to-scroll-pos
+                                                              pane
+                                                              (get-current-zoom interface)))))
 
 
 (defmethod find-non-transparent-pixel (pane (image gp:image))
@@ -488,6 +491,7 @@
         (gp:postmultiply-transforms
          (image-transform interface)
          dm)
+        (invalidate-scroll-position interface)
         (gp:invalidate-rectangle pane)))))
 
 (defun toggle-previous-updated (interface)
