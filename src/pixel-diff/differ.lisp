@@ -221,6 +221,13 @@
     (t
      (+ 1.0 (* (/ (- scroll-value 50000) 50000) 9.0)))))
 
+(defun zoom-to-scroll-pos (zoom)
+  (cond
+    ((<= zoom 1.0)
+     (* (/ (- zoom 0.1) 0.9) 50000))
+    (t
+     (+ 50000 (* (/ (- zoom 1.0) 9.0) 50000)))))
+
 (defmethod image-pane-scroll-callback (pane (scroll-dimension (eql :vertical))
                                        (scroll-operation (eql :move))
                                        scroll-value
@@ -396,6 +403,8 @@
          (setf (image-transform interface)
                (3dmat-to-transform
                 (animate-transform start-mat final-mat progress)))
+         (capi:set-vertical-scroll-parameters pane :slug-position (zoom-to-scroll-pos
+                                                                   (get-current-zoom interface)))
          (gp:invalidate-rectangle pane))
        :finally finally))))
 
