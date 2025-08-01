@@ -5,6 +5,7 @@
 ![PixelDiff Logo](src/pixel-diff/full-logo.png)
 
 </div>
+
 # PixelDiff
 
 A visual image comparison tool for pixel-perfect difference
