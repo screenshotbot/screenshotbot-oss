@@ -30,6 +30,7 @@
    :restart-fn #'pixel-diff/main::main
    :deliver-level 5
    :interface :capi
+   :icon-file (asdf:system-relative-pathname :pixel-diff "logo.ico")
    :warn-on-missing-templates t
    :console :input ;; only if input is attempted
    :startup-bitmap-file nil
