@@ -121,7 +121,11 @@
 
 (defun image-pane-create-callback (pane)
   "Callback function called when image pane is created"
-  ;;(capi:simple-pane-show-scroll-bars pane :vertical nil :horizontal nil)
+
+  ;; It is safe to disable this for a second, if you're debugging any
+  ;; code releated to zooming/scrolling.
+  (capi:simple-pane-show-scroll-bars pane :vertical nil :horizontal nil)
+
   (capi:set-vertical-scroll-parameters pane :slug-position (floor (scroll-max pane) 2)))
 
 (define-interface image-window ()
