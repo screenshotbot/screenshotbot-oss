@@ -51,3 +51,6 @@ hubspot.config.yml
 screenshotbot-cli
 
 /pixel-diff
+
+.DS_Store
+pixel-diff.app

@@ -21,8 +21,10 @@
     "pixel-diff.app"
     ;; Don't copy LispWorks file associations
     :document-types nil
+    
     ;; Set your own bundle identifier
     :identifier "io.screenshotbot.pixel-diff"
+    :application-icns (asdf:system-relative-pathname :pixel-diff "PixelDiff.icns")
     ;; Set version info
     :version "1.0"
     ;; Optionally set bundle name
