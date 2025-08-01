@@ -331,17 +331,11 @@
 
 
 (defun render-color (color)
-  (flet ((%ref (num)
-           (floor (* 255
-                     (aref color num)))))
-    (if (vectorp color)
-       (case (length color)
-         (4 (format nil "#~2,'0x~2,'0x~2,'0xFF" 
-                    (%ref 1) (%ref 2) (%ref 3)))
-         (5 (format nil "#~2,'0x~2,'0x~2,'0x~2,'0x" 
-                    (%ref 1) (%ref 2) (%ref 3) (%ref 4)))
-         (otherwise (format nil "~a" color)))
-       (format nil "~a" color))))
+  (format nil "#~2,'0x~2,'0x~2,'0x~2,'0x"
+          (floor (* 255 (color:color-red color)))
+          (floor (* 255 (color:color-green color)))
+          (floor (* 255 (color:color-blue color)))
+          (floor (* 255 (color:color-alpha color)))))
 
 
 (defun get-image-layer-color (pane image-layer image-x image-y)
