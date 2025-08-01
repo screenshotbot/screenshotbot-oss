@@ -1,5 +1,7 @@
 # PixelDiff
 
+![PixelDiff Logo](src/pixel-diff/full-logo.png)
+
 A visual image comparison tool for pixel-perfect difference
 detection. Designed for use with Screenshot tests.
 
