@@ -227,20 +227,23 @@
         a))))
 
 (defun scroll-pos-to-expected-zoom (pane scroll-value)
-  (let ((half (floor (scroll-max pane) 2)))
-   (cond
-     ((<= scroll-value half)
-      (+ 0.1 (* (/ scroll-value half) 0.9)))
-     (t
-      (+ 1.0 (* (/ (- scroll-value half) half) 9.0))))))
+  (let ((scroll-value (- (scroll-max pane) scroll-value)))
+    (let ((half (floor (scroll-max pane) 2)))
+      (cond
+        ((<= scroll-value half)
+         (+ 0.1 (* (/ scroll-value half) 0.9)))
+        (t
+         (+ 1.0 (* (/ (- scroll-value half) half) 9.0)))))))
 
 (defun zoom-to-scroll-pos (pane zoom)
-  (let ((half (floor (scroll-max pane) 2)))
-    (cond
-      ((<= zoom 1.0)
-       (* (/ (- zoom 0.1) 0.9) half))
-      (t
-       (+ half (* (/ (- zoom 1.0) 9.0) half))))))
+  (-
+   (scroll-max pane)
+   (let ((half (floor (scroll-max pane) 2)))
+     (cond
+       ((<= zoom 1.0)
+        (* (/ (- zoom 0.1) 0.9) half))
+       (t
+        (+ half (* (/ (- zoom 1.0) 9.0) half)))))))
 
 (defmethod image-pane-scroll-callback (pane (scroll-dimension (eql :vertical))
                                        (scroll-operation (eql :move))
