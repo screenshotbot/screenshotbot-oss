@@ -11,6 +11,9 @@
 A visual image comparison tool for pixel-perfect difference
 detection. Designed for use with Screenshot tests.
 
+![PixelDiff Logo](src/pixel-diff/screenshot.png)
+
+
 ## Overview
 
 PixelDiff is an open source GUI application for comparing two images
