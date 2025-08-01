@@ -30,7 +30,20 @@ validate changes between image versions.
 
 ## Usage
 
-TODO
+Currently, you can pass in two arguments, which are two files and it
+compares the two:
+
+```bash
+pixel-diff file-before.png file-after.png
+```
+
+For example, in this repository we have two sample images to try this against:
+
+```bash
+pixel-diff src/pixel-diff/examples/image1.png src/pixel-diff/examples/image2.png
+```
+
+In a future version, we'll provide you the ability to compare two git branches.
 
 
 ## View Modes
