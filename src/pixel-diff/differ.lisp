@@ -358,31 +358,35 @@
 
 (defun image-pane-mouse-move (pane x y)
   "Handle mouse movement over image pane to show pixel information"
-  (let ((interface (capi:element-interface pane)))
-    (when (and (core-transform interface) (image-transform interface))
-      (let ((combined-transform (gp:copy-transform (core-transform interface))))
-        (gp:postmultiply-transforms combined-transform (image-transform interface))
-        (multiple-value-bind (image-x image-y)
-            (gp:transform-point (gp:invert-transform combined-transform) x y)
-          (let ((image-x (round image-x))
-                (image-y (round image-y)))
-            (when (and (>= image-x 0) (>= image-y 0))
-              (let* ((color-before (get-image-layer-color pane (image1 interface) image-x image-y))
-                     (color-after (get-image-layer-color pane (image2 interface) image-x image-y)))
-                (setf
-                 (capi:display-pane-text (status-text interface))
-                 (cond
-                   ((and color-before color-after
-                         (color:colors= color-before color-after))
-                    (format nil "Identical color: ~a" (render-color color-before)))
-                   ((and color-before color-after)
-                    (format nil "Color changed from ~a to ~a" (render-color color-before) (render-color color-after)))
-                   (color-before
-                    (format nil "Color was ~a, now out of bounds" (render-color color-before)))
-                   (color-after
-                    (format nil "Out of bounds earlier, not color is: ~a" (render-color color-after) ))
-                   (t
-                    "Ready - Move mouse over image to see pixel info")))))))))))
+  (let ((y (- y (capi:get-vertical-scroll-parameters pane :slug-position))))
+   (let ((interface (capi:element-interface pane)))
+     (when (and (core-transform interface) (image-transform interface))
+       (let ((combined-transform (gp:copy-transform (core-transform interface))))
+         (gp:postmultiply-transforms combined-transform (image-transform interface))
+         (setf
+          (capi:display-pane-text (status-text interface))
+          (or
+           (multiple-value-bind (image-x image-y)
+               (gp:transform-point (gp:invert-transform combined-transform) x y)
+             (let ((image-x (round image-x))
+                   (image-y (round image-y)))
+               (when (and (>= image-x 0) (>= image-y 0))
+                 (let* ((color-before (get-image-layer-color pane (image1 interface) image-x image-y))
+                        (color-after (get-image-layer-color pane (image2 interface) image-x image-y)))
+                   (cond
+                     ((and color-before color-after
+                           (color:colors= color-before color-after))
+                      (format nil "Identical color: ~a" (render-color color-before)))
+                     ((and color-before color-after)
+                      (format nil "Color changed from ~a to ~a" (render-color color-before) (render-color color-after)))
+                     (color-before
+                      (format nil "Color was ~a, now out of bounds" (render-color color-before)))
+                     (color-after
+                      (format nil "Out of bounds earlier, not color is: ~a" (render-color color-after) ))
+                     (t
+                      (log:warn "Not showing colors at (~a,~a): ~a, ~a" image-x image-y color-before color-after)
+                      nil))))))
+           "Ready - Move mouse over image to see pixel info")))))))
 
 
 
