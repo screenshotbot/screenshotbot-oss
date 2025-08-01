@@ -54,15 +54,6 @@ TODO
 - **Zoom to Change Button**: Automatically center on first detected difference
 - **Status Bar**: Shows pixel information and color values
 
-## Known Bugs
-
-- **MouseWheel does not work** Our GUI library does not propagate
-  mouse wheel events so you currently can't zoom with mouse wheel. Use
-  +/- to zoom. We have a workaround that we hope to release in the next version.
-  
-- **Zoom animations are sometimes janky** We think this should be easy to fix by
-  the next version.
-
 ## Implementation
 
 PixelDiff is implemented in Common Lisp using the CAPI (Common
