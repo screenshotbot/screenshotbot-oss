@@ -293,6 +293,7 @@
                                             :image (namestring file)
                                             :alpha (alpha image-layer))))
         (setf (slot-value interface slot-name) new-image-layer)
+        (setf (core-transform interface) nil)
         (setf (slot-value interface 'comparison)
               (make-instance 'comparison-image-layer
                              :image1-layer (image1 interface)
