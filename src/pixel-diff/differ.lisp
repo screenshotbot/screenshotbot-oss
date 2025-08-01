@@ -569,19 +569,23 @@
 (defmethod compare-images (pane (before gp:image) (after gp:image))
   (let ((transparent (color:convert-color pane :transparent))
         (red (color:convert-color pane :red)))
-   (let* ((width (gp:image-width before))
-          (height (gp:image-height before))
+   (let* ((width (max (gp:image-width before) (gp:image-width after)))
+          (height (max (gp:image-height before) (gp:image-height after)))
           (result (gp:make-image pane width height :alpha t)))
      (with-image-access (before-access pane before)
        (with-image-access (after-access pane after)
          (with-image-access (result-access pane result :write t)
-          (loop for y from 0 below height do
-            (loop for x from 0 below width do
-              (let ((before-color (color:unconvert-color pane (gp:image-access-pixel before-access x y)))
-                    (after-color (color:unconvert-color pane (gp:image-access-pixel after-access x y))))
-                (if (color:colors= before-color after-color)
-                    (setf (gp:image-access-pixel result-access x y) transparent)
-                    (setf (gp:image-access-pixel result-access x y) red))))))))
+           (flet ((safe-image-access-pixel (access x y width height)
+                    (if (and (< x width) (< y height))
+                        (gp:image-access-pixel access x y)
+                        (color:convert-color pane :transparent))))
+             (loop for y from 0 below height do
+               (loop for x from 0 below width do
+                 (let ((before-color (color:unconvert-color pane (safe-image-access-pixel before-access x y (gp:image-width before) (gp:image-height before))))
+                       (after-color (color:unconvert-color pane (safe-image-access-pixel after-access x y (gp:image-width after) (gp:image-height after)))))
+                   (if (color:colors= before-color after-color)
+                       (setf (gp:image-access-pixel result-access x y) transparent)
+                       (setf (gp:image-access-pixel result-access x y) red)))))))))
      result)))
 
 (defmethod read-image (pane (self comparison-image-layer))
