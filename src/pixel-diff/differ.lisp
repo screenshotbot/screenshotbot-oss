@@ -47,7 +47,10 @@
 
 (defun draw-background (pane x y width height)
   "Draw a solid gray background. In the future we might bring back "
-  (gp:draw-rectangle pane x y width height
+  (gp:draw-rectangle pane
+                     0 0
+                     (gp:port-width pane)
+                     (gp:port-height pane)
                      :filled t
                      :foreground :gray90))
 
