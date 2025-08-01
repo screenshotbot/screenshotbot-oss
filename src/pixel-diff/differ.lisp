@@ -260,9 +260,23 @@
                         (/ expected-zoom current-zoom)))
         (gp:invalidate-rectangle pane)))))
 
+(defmethod image-pane-scroll-callback (pane (scroll-dimension (eql :vertical))
+                                            (scroll-operation (eql :step))
+                                            delta
+                                            &key interactive)
+  ;; We've only seen :step in Windows so far
+  (capi:set-vertical-scroll-parameters
+   pane
+   :slug-position
+   (+ (capi:get-vertical-scroll-parameters pane :slug-position)
+      (* delta (/ (scroll-max pane) 100))))
+  (image-pane-scroll-callback
+   pane :vertical :move
+   (capi:get-vertical-scroll-parameters pane :slug-position) :interactive t))
+
 (defmethod image-pane-scroll-callback (pane direction scroll-operation scroll-value &key interactive &allow-other-keys)
   (when interactive
-    (log:info "scrolled (unhandled)  ~a ~a" scroll-value interactive)))
+    (log:info "scrolled (unhandled) ~a ~a ~a ~a" direction scroll-operation scroll-value interactive)))
 
 
 
