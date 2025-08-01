@@ -108,7 +108,10 @@
    (scroll-max :initarg :scroll-max
                :accessor scroll-max))
   (:default-initargs :draw-with-buffer t
-   :scroll-max 100000
+   ;; Is there a more systematic way to figure out this number? It's
+   ;; probably going to be proportional to how many pixels move with
+   ;; one typical mouse-wheel movement.
+   :scroll-max (* 4 (capi:screen-height (capi:convert-to-screen)))
    :create-callback 'image-pane-create-callback
                      :coordinate-origin :fixed-graphics))
 
