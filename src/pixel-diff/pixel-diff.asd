@@ -8,3 +8,9 @@
                (:file "fli-templates")
                (:file "differ")
                (:file "main")))
+
+#+lispworks
+(defsystem :pixel-diff/tests
+  :serial t
+  :depends-on (:pixel-diff
+               :fiveam))
