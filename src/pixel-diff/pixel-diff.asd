@@ -14,4 +14,6 @@
 (defsystem :pixel-diff/tests
   :serial t
   :depends-on (:pixel-diff
-               :fiveam))
+               :fiveam)
+  :components ((:file "suite")
+               (:file "test-differ")))
