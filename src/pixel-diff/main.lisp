@@ -69,16 +69,14 @@
    :options (list)
    :handler (lambda (cmd)
               (let ((args (clingon:command-arguments cmd)))
-                (if args
-                    (format t "Help for subcommand: ~a~%" (first args))
-                    (progn
-                      (format t "pixel-diff - Image comparison tool~%~%")
-                      (format t "Usage: pixel-diff <subcommand> [options] [args...]~%~%")
-                      (format t "Available subcommands:~%")
-                      (format t "  help      Show this help message~%")
-                      (format t "  git-diff  Compare git revisions of images~%~%")
-                      (format t "Direct usage: pixel-diff <image1> <image2>~%")
-                      (format t "  Compare two images directly~%")))
+                (format t "Help for subcommand: ~a~%" (first args))
+                (format t "pixel-diff - Image comparison tool~%~%")
+                (format t "Usage: pixel-diff <subcommand> [options] [args...]~%~%")
+                (format t "Available subcommands:~%")
+                (format t "  help      Show this help message~%")
+                (format t "  git-diff  Compare git revisions of images~%~%")
+                (format t "Direct usage: pixel-diff <image1> <image2>~%")
+                (format t "  Compare two images directly~%")
                 0))))
 
 
