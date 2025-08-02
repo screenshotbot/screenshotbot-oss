@@ -2,6 +2,7 @@
   :serial t
   :depends-on (:pixel-diff.math
                :easy-macros
+               :clingon
                :log4cl)
   :components ((:file "about")
                #+darwin
