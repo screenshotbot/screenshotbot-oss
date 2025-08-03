@@ -30,7 +30,14 @@
     '(image-selector :divider image-main-layout)
     :x-ratios `(1 nil 8)))
   (:default-initargs
+   :create-callback '%create-callback
    :title "Image Browser"))
+
+(defun %create-callback (interface)
+  (declare (ignore interface)))
+
+(defmethod open-menu-available-p ((self image-browser-window))
+  nil)
 
 (defun image-list-item-name (image-pair)
   "Returns a display name for an image pair in the list selector"

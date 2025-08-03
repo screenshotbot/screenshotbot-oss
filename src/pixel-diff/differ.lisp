@@ -198,9 +198,11 @@
    (file-menu "File"
               (("Open (Previous)..." :data :open-previous
                                      :callback-type :interface
+                                     :enabled-function 'open-menu-available-p
                                      :callback 'open-previous-callback)
                ("Open (Updated)..." :data :open-updated
                                     :callback-type :interface
+                                    :enabled-function 'open-menu-available-p
                                     :callback 'open-updated-callback)))
    (view-menu "View"
               (("Toggle Previous/Updated" :data :toggle-previous-updated
@@ -224,6 +226,9 @@
    :title "Image Display Window"
    :width (floor (capi:screen-width (capi:convert-to-screen)) 2)
    :height (floor (capi:screen-height (capi:convert-to-screen)) 2)))
+
+(defmethod open-menu-available-p (interface)
+  t)
 
 (defun get-current-zoom (image-window)
   "Get the current zoom level from the image-transform of the image-window"
