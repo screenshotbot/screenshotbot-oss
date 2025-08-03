@@ -21,11 +21,14 @@
                    :print-function #'image-list-item-name
                    :callback-type :interface-data
                    :selection-callback 'image-selector-callback
-                   :visible-min-width 200))
+                   :visible-min-width 50
+                   :visible-max-width 1000
+                   :visible-width 200))
   (:layouts
    (main-layout
     row-layout
-    '(image-selector image-main-layout)))
+    '(image-selector :divider image-main-layout)
+    :x-ratios `(1 nil 8)))
   (:default-initargs
    :title "Image Browser"))
 
