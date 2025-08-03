@@ -5,6 +5,7 @@
                :clingon
                :log4cl)
   :components ((:file "about")
+               (:file "image-pair")
                #+darwin
                (:file "fli-templates")
                (:file "differ")
