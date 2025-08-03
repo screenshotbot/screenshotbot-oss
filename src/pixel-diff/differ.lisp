@@ -134,6 +134,7 @@
 
   (capi:set-vertical-scroll-parameters pane :slug-position (floor (scroll-max pane) 2)))
 
+
 (define-interface image-window ()
   ((image1 :initarg :image1 :initform nil
            :reader image1)
@@ -187,7 +188,7 @@
                 :reader status-text
                 :text "Ready - Move mouse over image to see pixel info"))
   (:layouts
-   (main-layout
+   (image-main-layout
     column-layout
     '(image-pane bottom-bar status-text))
    (bottom-bar

@@ -9,6 +9,7 @@
                #+darwin
                (:file "fli-templates")
                (:file "differ")
+               (:file "browser")
                (:file "main")))
 
 #+lispworks
