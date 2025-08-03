@@ -2,6 +2,7 @@
   (:use #:cl
         #:capi)
   (:import-from #:pixel-diff/differ
+                #:open-menu-available-p
                 #:comparison-image-layer
                 #:image-main-layout
                 #:image-pane
@@ -14,27 +15,32 @@
                     :accessor image-pair-list)
    (current-index :initform 0
                   :accessor current-index))
-  (:panes
-   (image-selector list-panel
-                   :reader image-selector
-                   :items nil
-                   :print-function #'image-list-item-name
-                   :callback-type :interface-data
-                   :selection-callback 'image-selector-callback
-                   :visible-min-width 50
-                   :visible-max-width 1000
-                   :visible-width 200))
+  (:panes)
   (:layouts
    (main-layout
     row-layout
     '(image-selector :divider image-main-layout)
-    :x-ratios `(1 nil 8)))
+    :x-ratios `(1 nil 8))
+   (image-selector
+    column-layout
+    '()
+    :vertical-scroll t
+    :x-adjust :left
+    :reader image-selector))
   (:default-initargs
    :create-callback '%create-callback
    :title "Image Browser"))
 
 (defun %create-callback (interface)
-  (declare (ignore interface)))
+  (log:info "here")
+  (let ((selector (image-selector interface)))
+    (setf (capi:layout-description selector)
+          (loop for i from 1 to 300
+                collect (make-instance 'capi:display-pane
+                                       :text (format nil "Text View ~D" i)
+                                       :visible-max-width 450
+                                       :visible-width 200
+                                       :visible-min-width 180)))))
 
 (defmethod open-menu-available-p ((self image-browser-window))
   nil)
