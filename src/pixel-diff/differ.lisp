@@ -76,12 +76,12 @@
 (defun maybe-init-core-transform (interface pane width height)
   (unless (and
            (core-transform interface)
-           (eql width (last-width interface))
-           (eql height (last-height interface)))
+           (eql width (last-width pane))
+           (eql height (last-height pane)))
     (let ((image (gp:load-image pane (image (image1 interface)) :editable t)))
       (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
-        (setf (last-width interface) width)
-        (setf (last-height interface) height)
+        (setf (last-width pane) width)
+        (setf (last-height pane) height)
         (setf (core-transform interface)
               (screenshotbot-js::calc-core-transform
                width
@@ -109,7 +109,11 @@
                 :accessor press-start
                 :documentation "The coordinates of an initial press start")
    (scroll-max :initarg :scroll-max
-               :accessor scroll-max))
+               :accessor scroll-max)
+   (last-width :initform nil
+               :accessor last-width)
+   (last-height :initform nil
+                :accessor last-height))
   (:default-initargs :draw-with-buffer t
    ;; Is there a more systematic way to figure out this number? It's
    ;; probably going to be proportional to how many pixels move with
@@ -146,11 +150,7 @@
                     :accessor image-transform
                     :documentation "The transform for the image")
    (core-transform :initform nil
-                   :accessor core-transform)
-   (last-width :initform nil
-               :accessor last-width)
-   (last-height :initform nil
-                :accessor last-height))
+                   :accessor core-transform))
   (:panes
    (image-pane image-pane
                :reader image-pane
