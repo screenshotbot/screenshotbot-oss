@@ -150,67 +150,67 @@ use stream pools.")
                                                (verify #-(or mswindows win32) :required
                                                        #+(or mswindows win32) nil)
                               &allow-other-keys)
-  (let* ((url (fix-bad-chars url))
-         (args (a:remove-from-plist args :headers-as-hash-table
-                                    :accept-gzip
-                                    :ensure-success
-                                    :want-string
-                                    #+ccl :connection-timeout
-                                    #-lispworks :read-timeout)))
-
-    (when accept-gzip
-      (push
-       (cons :accept-encoding "gzip")
-       additional-headers))
-    (when want-string
-      (setf want-stream t))
-
-    (multiple-value-bind (res status headers)
-        (wrap-ssl-errors (:ensure-success ensure-success :want-stream want-stream)
-          (let ((drakma:*text-content-types*
-                  (list*
-                   (cons "application" "json")
-                   drakma:*text-content-types*)))
-            (apply #'low-level-request engine
-                   url
-                   :want-stream want-stream
-                   :additional-headers additional-headers
-                   :verify verify
-                   args)))
-      (flet ((maybe-ensure-success (&optional response)
-               (declare (ignore response))
-               (when (and ensure-success
-                          (not (http-success-response? status)))
-                 (error 'bad-response-code
-                        :code status
-                        :url url
-                        :body (when want-string
-                                ;; there are other cases, that we are
-                                ;; just not handling
-                                (ignore-errors
-                                 (uiop:slurp-input-stream 'string res)))))))
-        (handler-bind ((error (lambda (e)
-                                (declare (ignore e))
-                                ;; We're not going to actually return the stream
-                                (when (streamp res)
-                                  (close res)))))
-          (values
-           (cond
-             (want-string
-              (let ((response (uiop:slurp-input-stream 'string res)))
-                ;; by calling this here, we'll have the response in the
-                ;; stack trace.
-                (maybe-ensure-success response)
-                response))
-             (t
-              (maybe-ensure-success)
-              res))
-           status
-           (cond
-             (headers-as-hash-table
-              (make-header-hash-table headers))
-             (t
-              headers))))))))
+  "WANT-STRING just means we will never return a binary array, it will
+always be converted to a UTF-8 string even if the encoding format is
+not specified."
+  (let* ((old-body-format-function drakma:*body-format-function*)
+         (drakma:*body-format-function* old-body-format-function))
+    (let* ((url (fix-bad-chars url))
+           (args (a:remove-from-plist args :headers-as-hash-table
+                                      :accept-gzip
+                                           :ensure-success
+                                      :want-string
+                                           #+ccl :connection-timeout
+                                      #-lispworks :read-timeout)))
+      
+      (when accept-gzip
+        (push
+         (cons :accept-encoding "gzip")
+         additional-headers))
+      (when want-string
+        (setf drakma:*body-format-function*
+              (lambda (headers external-format-in)
+                (or
+                 (funcall old-body-format-function headers external-format-in)
+                 :utf-8))))
+      
+      (multiple-value-bind (res status headers)
+          (wrap-ssl-errors (:ensure-success ensure-success :want-stream want-stream)
+            (let ((drakma:*text-content-types*
+                    (list*
+                     (cons "application" "json")
+                     drakma:*text-content-types*)))
+              (apply #'low-level-request engine
+                     url
+                     :want-stream want-stream
+                     :additional-headers additional-headers
+                     :verify verify
+                     args)))
+        (flet ((maybe-ensure-success (&optional response)
+                 (declare (ignore response))
+                 (when (and ensure-success
+                            (not (http-success-response? status)))
+                   (log:info "headers: ~a" headers)
+                   (error 'bad-response-code
+                          :code status
+                          :url url
+                          :body (when want-string
+                                  ;; otherwise, res is a stream and we can't do much with it
+                                  res)))))
+          (handler-bind ((error (lambda (e)
+                                  (declare (ignore e))
+                                  ;; We're not going to actually return the stream
+                                  (when (streamp res)
+                                    (close res)))))
+            (maybe-ensure-success res)
+            (values
+             res
+             status
+             (cond
+               (headers-as-hash-table
+                (make-header-hash-table headers))
+               (t
+                headers)))))))))
 
 (defun http-request (url &rest args &key (engine *engine*) &allow-other-keys)
   (apply #'http-request-impl
