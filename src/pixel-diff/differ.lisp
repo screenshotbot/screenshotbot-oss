@@ -62,12 +62,12 @@
     (draw-background pane x y width height)
     (maybe-init-core-transform interface pane (gp:port-width pane) (gp:port-height pane))
     (log:debug "Transform is ~a" (core-transform interface))
-    (assert (core-transform interface))
-    (assert (image-transform interface))
-    (let ((transform (gp:copy-transform (core-transform interface))))
+    (assert (core-transform pane))
+    (assert (image-transform pane))
+    (let ((transform (gp:copy-transform (core-transform pane))))
       (gp:postmultiply-transforms
        transform
-       (image-transform interface))
+       (image-transform pane))
       (gp:with-graphics-transform (pane transform)
         (draw-image-layer pane (image1 interface) x y width height)
         (draw-image-layer pane (image2 interface) x y width height)
@@ -75,14 +75,14 @@
 
 (defun maybe-init-core-transform (interface pane width height)
   (unless (and
-           (core-transform interface)
+           (core-transform pane)
            (eql width (last-width pane))
            (eql height (last-height pane)))
     (let ((image (gp:load-image pane (image (image1 interface)) :editable t)))
       (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
         (setf (last-width pane) width)
         (setf (last-height pane) height)
-        (setf (core-transform interface)
+        (setf (core-transform pane)
               (screenshotbot-js::calc-core-transform
                width
                height
@@ -113,7 +113,12 @@
    (last-width :initform nil
                :accessor last-width)
    (last-height :initform nil
-                :accessor last-height))
+                :accessor last-height)
+   (image-transform :initform (gp:make-transform 1 0 0 1 0 0)
+                    :accessor image-transform
+                    :documentation "The transform for the image")   
+   (core-transform :initform nil
+                   :accessor core-transform))
   (:default-initargs :draw-with-buffer t
    ;; Is there a more systematic way to figure out this number? It's
    ;; probably going to be proportional to how many pixels move with
@@ -145,12 +150,7 @@
    (image2 :initarg :image2 :initform nil
            :reader image2)
    (comparison :initarg :comparison :initform nil
-               :reader comparison)
-   (image-transform :initform (gp:make-transform 1 0 0 1 0 0)
-                    :accessor image-transform
-                    :documentation "The transform for the image")
-   (core-transform :initform nil
-                   :accessor core-transform))
+               :reader comparison))
   (:panes
    (image-pane image-pane
                :reader image-pane
@@ -232,8 +232,8 @@
 
 (defun get-current-zoom (image-window)
   "Get the current zoom level from the image-transform of the image-window"
-  (when (image-transform image-window)
-    (let ((transform (image-transform image-window)))
+  (when (image-transform (image-pane image-window))
+    (let ((transform (image-transform (image-pane image-window))))
       (destructuring-bind (a b c d e f) transform
         (declare (ignore b c d e f))
         a))))
@@ -299,7 +299,7 @@
                                             :image (namestring file)
                                             :alpha (alpha image-layer))))
         (setf (slot-value interface slot-name) new-image-layer)
-        (setf (core-transform interface) nil)
+        (setf (core-transform (image-pane interface)) nil)
         (setf (slot-value interface 'comparison)
               (make-instance 'comparison-image-layer
                              :image1-layer (image1 interface)
@@ -360,9 +360,9 @@
   "Handle mouse movement over image pane to show pixel information"
   (let ((y (- y (capi:get-vertical-scroll-parameters pane :slug-position))))
    (let ((interface (capi:element-interface pane)))
-     (when (and (core-transform interface) (image-transform interface))
-       (let ((combined-transform (gp:copy-transform (core-transform interface))))
-         (gp:postmultiply-transforms combined-transform (image-transform interface))
+     (when (and (core-transform pane) (image-transform pane))
+       (let ((combined-transform (gp:copy-transform (core-transform pane))))
+         (gp:postmultiply-transforms combined-transform (image-transform pane))
          (setf
           (capi:display-pane-text (status-text interface))
           (or
@@ -422,7 +422,7 @@
 (defun %zoom-to (interface x y &key (zoom 5) (finally (lambda ())))
   (let ((pane (slot-value interface 'image-pane)))
     (let* ((image (gp:load-image pane (image (image1 interface)) :editable t))
-           (start-mat (transform-to-3dmat (image-transform interface)))
+           (start-mat (transform-to-3dmat (image-transform pane)))
            (final-mat (screenshotbot-js::calc-transform-for-center
                        (gp:port-width pane)
                        (gp:port-height pane)
@@ -433,7 +433,7 @@
        (image-pane interface)
        2
        (lambda (progress)
-         (setf (image-transform interface)
+         (setf (image-transform pane)
                (3dmat-to-transform
                 (animate-transform start-mat final-mat progress)))
          (invalidate-scroll-position interface)
@@ -510,10 +510,10 @@
     (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
       (let ((dm (screenshotbot-js::calc-transform-for-zoom x y
                                                            (transform-to-3dmat
-                                                            (image-transform interface))
+                                                            (image-transform pane))
                                                            delta)))
         (gp:postmultiply-transforms
-         (image-transform interface)
+         (image-transform pane)
          dm)
         (invalidate-scroll-position interface)
         (gp:invalidate-rectangle pane)))))
@@ -554,12 +554,11 @@
   (when (press-start pane)
     (destructuring-bind (startx . starty)
         (press-start pane)
-      (let ((interface (capi:element-interface pane)))
-        (gp:postmultiply-transforms
-         (image-transform interface)
-         (gp:make-transform 1 0 0 1 (- x startx) (- y starty)))
-        (setf (press-start pane)
-              (cons x y)))
+      (gp:postmultiply-transforms
+       (image-transform pane)
+       (gp:make-transform 1 0 0 1 (- x startx) (- y starty)))
+      (setf (press-start pane)
+            (cons x y))
       (gp:invalidate-rectangle pane))))
 
 
