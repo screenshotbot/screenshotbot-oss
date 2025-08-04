@@ -58,27 +58,25 @@
 
 (defun draw-image-callback (pane x y width height)
   "Callback function to draw the image in the display pane"
-  (let* ((interface (capi:element-interface pane)))
-    (draw-background pane x y width height)
-    (maybe-init-core-transform interface pane (gp:port-width pane) (gp:port-height pane))
-    (log:debug "Transform is ~a" (core-transform interface))
-    (assert (core-transform pane))
-    (assert (image-transform pane))
-    (let ((transform (gp:copy-transform (core-transform pane))))
-      (gp:postmultiply-transforms
-       transform
-       (image-transform pane))
-      (gp:with-graphics-transform (pane transform)
-        (draw-image-layer pane (image1 interface) x y width height)
-        (draw-image-layer pane (image2 interface) x y width height)
-        (draw-image-layer pane (comparison interface) x y width height)))))
+  (draw-background pane x y width height)
+  (maybe-init-core-transform pane (gp:port-width pane) (gp:port-height pane))
+  (assert (core-transform pane))
+  (assert (image-transform pane))
+  (let ((transform (gp:copy-transform (core-transform pane))))
+    (gp:postmultiply-transforms
+     transform
+     (image-transform pane))
+    (gp:with-graphics-transform (pane transform)
+      (draw-image-layer pane (image1 pane) x y width height)
+      (draw-image-layer pane (image2 pane) x y width height)
+      (draw-image-layer pane (comparison pane) x y width height))))
 
-(defun maybe-init-core-transform (interface pane width height)
+(defun maybe-init-core-transform (pane width height)
   (unless (and
            (core-transform pane)
            (eql width (last-width pane))
            (eql height (last-height pane)))
-    (let ((image (gp:load-image pane (image (image1 interface)) :editable t)))
+    (let ((image (gp:load-image pane (image (image1 pane)) :editable t)))
       (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
         (setf (last-width pane) width)
         (setf (last-height pane) height)
@@ -105,7 +103,13 @@
    (gp:load-image pane (image self) :editable t)))
 
 (defclass image-pane (output-pane)
-  ((press-start :initform nil
+  ((image1 :initarg :image1 :initform nil
+           :reader image1)
+   (image2 :initarg :image2 :initform nil
+           :reader image2)
+   (comparison :initarg :comparison :initform nil
+               :reader comparison)
+   (press-start :initform nil
                 :accessor press-start
                 :documentation "The coordinates of an initial press start")
    (scroll-max :initarg :scroll-max
@@ -145,12 +149,7 @@
 
 
 (define-interface image-window ()
-  ((image1 :initarg :image1 :initform nil
-           :reader image1)
-   (image2 :initarg :image2 :initform nil
-           :reader image2)
-   (comparison :initarg :comparison :initform nil
-               :reader comparison))
+  ()
   (:panes
    (image-pane image-pane
                :reader image-pane
@@ -227,6 +226,13 @@
    :width (floor (capi:screen-width (capi:convert-to-screen)) 2)
    :height (floor (capi:screen-height (capi:convert-to-screen)) 2)))
 
+(defmethod initialize-instance :after ((self image-window) &rest args &key image1 image2 comparison &allow-other-keys)
+  (declare (ignore args))
+  (when (and image1 image2 comparison (image-pane self))
+    (setf (slot-value (image-pane self) 'image1) image1)
+    (setf (slot-value (image-pane self) 'image2) image2)
+    (setf (slot-value (image-pane self) 'comparison) comparison)))
+
 (defmethod open-menu-available-p (interface)
   t)
 
@@ -288,7 +294,7 @@
 
 (defun open-image-file (interface slot-name prompt-title)
   "Generic function for opening image files and updating the interface"
-  (let ((image-layer (slot-value interface slot-name))
+  (let ((image-layer (slot-value (image-pane interface) slot-name))
         (file (capi:prompt-for-file prompt-title
                                     :operation :open
                                     :filter "*.png;*.jpg;*.jpeg;*.bmp;*.gif"
@@ -298,12 +304,12 @@
       (let ((new-image-layer (make-instance 'image-layer
                                             :image (namestring file)
                                             :alpha (alpha image-layer))))
-        (setf (slot-value interface slot-name) new-image-layer)
+        (setf (slot-value (image-pane interface) slot-name) new-image-layer)
         (setf (core-transform (image-pane interface)) nil)
-        (setf (slot-value interface 'comparison)
+        (setf (slot-value (image-pane interface) 'comparison)
               (make-instance 'comparison-image-layer
-                             :image1-layer (image1 interface)
-                             :image2-layer (image2 interface)
+                             :image1-layer (image1 (image-pane interface))
+                             :image2-layer (image2 (image-pane interface))
                              :alpha 1))
         (gp:invalidate-rectangle (image-pane interface))))))
 
@@ -320,19 +326,20 @@
 (defun view-radio-panel-callback (item interface)
   "Callback function for view radio panel selection changes"
   (log:debug "View changed to: ~a" item)
-  (case item
-    (:previous
-     (setf (alpha (image1 interface)) 1.0)
-     (setf (alpha (image2 interface)) 0.0)
-     (setf (alpha (comparison interface)) 0.0))
-    (:diff
-     (setf (alpha (image1 interface)) 0.1)
-     (setf (alpha (image2 interface)) 0.0)
-     (setf (alpha (comparison interface)) 1.0))
-    (:updated
-     (setf (alpha (image1 interface)) 0.0)
-     (setf (alpha (image2 interface)) 1.0)
-     (setf (alpha (comparison interface)) 0.0)))
+  (let ((pane (image-pane interface)))
+    (case item
+     (:previous
+      (setf (alpha (image1 pane)) 1.0)
+      (setf (alpha (image2 pane)) 0.0)
+      (setf (alpha (comparison pane)) 0.0))
+     (:diff
+      (setf (alpha (image1 pane)) 0.1)
+      (setf (alpha (image2 pane)) 0.0)
+      (setf (alpha (comparison pane)) 1.0))
+     (:updated
+      (setf (alpha (image1 pane)) 0.0)
+      (setf (alpha (image2 pane)) 1.0)
+      (setf (alpha (comparison pane)) 0.0))))
   (gp:invalidate-rectangle (image-pane interface)))
 
 
@@ -371,8 +378,8 @@
              (let ((image-x (round image-x))
                    (image-y (round image-y)))
                (when (and (>= image-x 0) (>= image-y 0))
-                 (let* ((color-before (get-image-layer-color pane (image1 interface) image-x image-y))
-                        (color-after (get-image-layer-color pane (image2 interface) image-x image-y)))
+                 (let* ((color-before (get-image-layer-color pane (image1 pane) image-x image-y))
+                        (color-after (get-image-layer-color pane (image2 pane) image-x image-y)))
                    (cond
                      ((and color-before color-after
                            (color:colors= color-before color-after))
@@ -421,7 +428,7 @@
 
 (defun %zoom-to (interface x y &key (zoom 5) (finally (lambda ())))
   (let ((pane (slot-value interface 'image-pane)))
-    (let* ((image (gp:load-image pane (image (image1 interface)) :editable t))
+    (let* ((image (gp:load-image pane (image (image1 (image-pane interface))) :editable t))
            (start-mat (transform-to-3dmat (image-transform pane)))
            (final-mat (screenshotbot-js::calc-transform-for-center
                        (gp:port-width pane)
@@ -468,7 +475,7 @@
       (find-non-transparent-pixel
        (image-pane interface)
        (read-image (image-pane interface)
-                   (comparison interface)))
+                   (comparison (image-pane interface))))
     (setf (capi:button-enabled (zoom-button interface))  nil)
     (%zoom-to interface x y
               :finally
