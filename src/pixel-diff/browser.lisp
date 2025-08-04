@@ -37,11 +37,22 @@
   (let ((selector (image-selector interface)))
     (setf (capi:layout-description selector)
           (loop for image-pair in (image-pair-list interface)
-                collect (make-instance 'capi:button
-                                       :visible-border nil
-                                       :image (image-pair:updated image-pair)
-                                       :callback-type :interface
-                                       :selection-callback 'image-selector-callback)))))
+                collect
+                (make-instance 'image-pane
+                               :visible-min-height 100
+                               :visible-max-height 200
+                               :visible-border nil
+                               :image1 (make-instance 'image-layer
+                                                      :image (image-pair:updated image-pair)
+                                                      :alpha 1)
+                               :image2 (make-instance 'image-layer
+                                                      :image nil
+                                                      :alpha 0)
+                               :comparison (make-instance' image-layer
+                                                           :image (image-pair:updated image-pair)
+                                                           :alpha 0)
+                               :callback-type :interface
+                               :selection-callback 'image-selector-callback)))))
 
 (defun image-selector-callback (interface)
   (log:Info "hello"))

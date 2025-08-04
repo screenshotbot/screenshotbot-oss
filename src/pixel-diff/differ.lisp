@@ -8,7 +8,8 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:export
-   #:create-empty-interface))
+   #:create-empty-interface
+   #:image-pane))
 (in-package :pixel-diff/differ)
 
 (defmacro or-setf (accessor expr)
@@ -127,8 +128,10 @@
    ;; Is there a more systematic way to figure out this number? It's
    ;; probably going to be proportional to how many pixels move with
    ;; one typical mouse-wheel movement.
-   :scroll-max (* 4 (capi:screen-height (capi:convert-to-screen)))
-   :create-callback 'image-pane-create-callback
+                     :scroll-max (* 4 (capi:screen-height (capi:convert-to-screen)))
+                     :display-callback 'draw-image-callback
+                     :resize-callback 'image-pane-resize-callback
+                     :create-callback 'image-pane-create-callback
                      :coordinate-origin :fixed-graphics))
 
 (defmethod initialize-instance :around ((self image-pane) &rest args &key scroll-max &allow-other-keys)
@@ -153,8 +156,6 @@
   (:panes
    (image-pane image-pane
                :reader image-pane
-               :display-callback 'draw-image-callback
-               :resize-callback 'image-pane-resize-callback
                :background :white
                :visible-min-width 400
                :visible-min-height 300
