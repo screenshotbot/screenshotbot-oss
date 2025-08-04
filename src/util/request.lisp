@@ -187,7 +187,8 @@ use stream pools.")
                         :body (when want-string
                                 ;; there are other cases, that we are
                                 ;; just not handling
-                                (uiop:slurp-input-stream 'string res))))))
+                                (ignore-errors
+                                 (uiop:slurp-input-stream 'string res)))))))
         (handler-bind ((error (lambda (e)
                                 (declare (ignore e))
                                 ;; We're not going to actually return the stream
