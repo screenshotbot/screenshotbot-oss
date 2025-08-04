@@ -7,7 +7,8 @@
                 #:image-main-layout
                 #:image-pane
                 #:image-window
-                #:image-layer))
+                #:image-layer)
+  (:local-nicknames (#:image-pair #:pixel-diff/image-pair)))
 (in-package :pixel-diff/browser)
 
 (define-interface image-browser-window (image-window)
@@ -35,12 +36,15 @@
   (log:info "here")
   (let ((selector (image-selector interface)))
     (setf (capi:layout-description selector)
-          (loop for i from 1 to 300
-                collect (make-instance 'capi:display-pane
-                                       :text (format nil "Text View ~D" i)
-                                       :visible-max-width 450
-                                       :visible-width 200
-                                       :visible-min-width 180)))))
+          (loop for image-pair in (image-pair-list interface)
+                collect (make-instance 'capi:button
+                                       :visible-border nil
+                                       :image (image-pair:updated image-pair)
+                                       :callback-type :interface
+                                       :selection-callback 'image-selector-callback)))))
+
+(defun image-selector-callback (interface)
+  (log:Info "hello"))
 
 (defmethod open-menu-available-p ((self image-browser-window))
   nil)
