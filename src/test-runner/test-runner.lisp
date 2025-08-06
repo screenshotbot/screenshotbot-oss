@@ -192,10 +192,11 @@ fails."
 (defun guess-fiveam-suite (system)
   (let ((system (str:upcase system)))
     (let ((suite-name
-            (str:replace-all "." "/"
-             (if (str:ends-with-p "/TESTS" system)
-                 (str:replace-all "/TESTS" "" system)
-                 system))))
+            (str:replace-all "BKNR/CLUSTER" "BKNR.CLUSTER"
+                             (str:replace-all "." "/"
+                                              (if (str:ends-with-p "/TESTS" system)
+                                                  (str:replace-all "/TESTS" "" system)
+                                                  system)))))
       (let ((guessed (intern suite-name "KEYWORD")))
         (format t "Guessed suite name as: ~a" guessed)
         guessed))))
