@@ -65,7 +65,7 @@
       (setf (roles:user-role user company) 'roles:admin)
       (let ((settings (make-instance 'gitlab-settings
                                      :company company)))
-        (catch 'hunchentoot::handler-done
+        (signals hex:redirected
           (save-settings "https://gitlab.example.com"
                          "test-token"
                          ""))
