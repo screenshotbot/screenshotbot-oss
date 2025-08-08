@@ -304,11 +304,15 @@ Apache log analysis tools.)"
 (defun %assert-is-intern ()
   (assert (is-intern? )))
 
+(define-condition redirected (condition)
+  ((url :initarg :url)))
+
 (defmethod safe-redirect (target &rest args)
   (let ((target (if (and target (not (equal "" target)))
                     target
                     (hunchentoot:script-name hunchentoot:*request*))))
     (let ((target (apply 'make-url target args)))
+      (signal 'redirected :url target)
       (setf (hunchentoot:header-out :location) target
             (hunchentoot:return-code*) hunchentoot:+http-moved-temporarily+)
       (hunchentoot:abort-request-handler))))

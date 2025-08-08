@@ -1,5 +1,3 @@
-(util/fiveam:def-suite)
-
 (defpackage :hunchentoot-extensions/test-better-easy-handler
   (:use :cl
         :fiveam
@@ -98,3 +96,8 @@
 (test named-url-gets-mapped
   (is (equal "/bar/car/dar/foo"
              (hex:make-url 'foo))))
+
+(test redirect-signal
+  (signals hex:redirected
+    (hex:safe-redirect "/")))
+

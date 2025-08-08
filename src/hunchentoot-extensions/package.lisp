@@ -13,6 +13,7 @@
   (:export #:base-acceptor
            #:better-easy-handler
            #:acceptor-funcall-handler
+           #:redirected
            #:make-full-url
            #:acceptor-plugin-name
            #:acceptor-plugin-prefix
