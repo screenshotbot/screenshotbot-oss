@@ -62,7 +62,7 @@
 (test save-settings
   (with-fixture state ()
     (with-test-user (:user user :company company :logged-in-p t)
-      (setf (roles:user-role user company) 'roles:admin)
+      (setf (roles:user-role company user) 'roles:admin)
       (let ((settings (make-instance 'gitlab-settings
                                      :company company)))
         (signals hex:redirected
@@ -74,19 +74,21 @@
         (assert-that (gitlab-token settings)
                      (equal-to "test-token"))))))
 
-(test save-settings-non-admin
+(screenshot-test save-settings-non-admin
   (with-fixture state ()
     (with-test-user (:user user :company company :logged-in-p t)
       (setf (roles:user-role user company) 'roles:standard-member)
       (let ((settings (make-instance 'gitlab-settings
-                                     :company company)))
-        (signals hex:redirected
-          (save-settings "https://gitlab.example.com"
-                         "test-token"
-                         ""))
-        (assert-that (gitlab-url settings)
-                     (equal-to "https://gitlab.example.com"))
-        (assert-that (gitlab-token settings)
-                     (equal-to "test-token"))))))
+                                     :company company
+                                     :url "https://example.com"
+                                     :token "foobar")))
+        (prog1
+            (save-settings "https://gitlab.example.com"
+                        "test-token"
+                        "")
+          (assert-that (gitlab-url settings)
+                       (equal-to "https://example.com"))
+          (assert-that (gitlab-token settings)
+                       (equal-to "foobar")))))))
 
 

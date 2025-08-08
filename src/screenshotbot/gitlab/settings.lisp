@@ -130,6 +130,11 @@
               (not (str:emptyp token))
               enable-webhooks)
              "Personal Access Token cannot be empty (or you must Enable Webhooks as an alternative)")
+      (check nil
+             (roles:has-role-p (auth:current-company)
+                               (auth:current-user)
+                               'roles:admin)
+             "You need admin permissions to change the access token")
       (cond
         (errors
          (with-form-errors (:gitlab-url gitlab-url
@@ -190,6 +195,7 @@
            ,(progn success)
          </div>)
       <form action=save method= "POST" >
+        <div class= "alert alert-danger d-none" />
         <div class= "card mt-3" style= "max-width: 80em">
           <div class= "card-header">
             <h3>GitLab Settings</h3>
