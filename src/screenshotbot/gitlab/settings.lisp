@@ -195,13 +195,14 @@
            ,(progn success)
          </div>)
       <form action=save method= "POST" >
-        <div class= "alert alert-danger d-none" />
         <div class= "card mt-3" style= "max-width: 80em">
           <div class= "card-header">
             <h3>GitLab Settings</h3>
           </div>
 
           <div class= "card-body">
+            <div class= "alert alert-danger mt-2 d-none" />
+            
               <div class= "mb-3">
                 <label for= "gitlab-url" class= "form-label">GitLab URL</label>
                 <input id= "gitlab-url" type= "url" name= "gitlab-url" class= "form-control"
