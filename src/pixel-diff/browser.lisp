@@ -45,12 +45,7 @@
                                :image1 (make-instance 'image-layer
                                                       :image (image-pair:updated image-pair)
                                                       :alpha 1)
-                               :image2 (make-instance 'image-layer
-                                                      :image nil
-                                                      :alpha 0)
-                               :comparison (make-instance' image-layer
-                                                           :image (image-pair:updated image-pair)
-                                                           :alpha 0)
+                               :image2 nil
                                :callback-type :interface
                                :selection-callback 'image-selector-callback)))))
 
@@ -107,10 +102,6 @@
        (make-instance 'image-browser-window
                       :image1 image-layer1
                       :image2 image-layer2
-                      :comparison (make-instance 'comparison-image-layer
-                                                 :image1-layer image-layer1
-                                                 :image2-layer image-layer2
-                                                 :alpha 1)
                       :image-pair-list image-pairs)))))
 
 

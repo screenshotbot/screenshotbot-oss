@@ -33,6 +33,10 @@
                  :width 400
                  :height 300))
 
+(defmethod alpha ((image-layer null))
+  ;; Never attempt to render a null image-layer
+  0)
+
 (defun draw-image-layer (pane image-layer  x y width height)
   (declare (ignore x y width height))
 
@@ -107,11 +111,11 @@
 
 (defclass image-pane (output-pane)
   ((image1 :initarg :image1 :initform nil
-           :reader image1)
+           :accessor image1)
    (image2 :initarg :image2 :initform nil
-           :reader image2)
+           :accessor image2)
    (comparison :initarg :comparison :initform nil
-               :reader comparison)
+               :accessor comparison)
    (press-start :initform nil
                 :accessor press-start
                 :documentation "The coordinates of an initial press start")
@@ -136,12 +140,32 @@
                      :create-callback 'image-pane-create-callback
                      :coordinate-origin :fixed-graphics))
 
-(defmethod initialize-instance :around ((self image-pane) &rest args &key scroll-max &allow-other-keys)
+(defmethod initialize-instance :around ((self image-pane) &rest args &key image1 image2 scroll-max &allow-other-keys)
   (apply #'call-next-method
          self
          :scroll-height scroll-max
          :scroll-initial-y (floor scroll-max 2)
          args))
+
+(defmethod update-comparison ((self image-pane))
+  (let ((image1 (image1 self))
+        (image2 (image2 self)))
+   (when (and image1 image2)
+     (check-type image1 image-layer)
+     (check-type image2 image-layer)
+     (setf (comparison self)
+           (make-instance 'comparison-image-layer
+                          :image1-layer image1
+                          :image2-layer image2)))))
+
+(defmethod initialize-instance :after ((self image-pane) &rest args)
+  (update-comparison self))
+
+(defmethod (setf image1) :after (val (self image-pane))
+  (update-comparison self))
+
+(defmethod (setf image2) :after (val (self image-pane))
+  (update-comparison self))
 
 (defun image-pane-create-callback (pane)
   "Callback function called when image pane is created"
@@ -229,12 +253,11 @@
    :width (floor (capi:screen-width (capi:convert-to-screen)) 2)
    :height (floor (capi:screen-height (capi:convert-to-screen)) 2)))
 
-(defmethod initialize-instance :after ((self image-window) &rest args &key image1 image2 comparison &allow-other-keys)
+(defmethod initialize-instance :after ((self image-window) &rest args &key image1 image2 &allow-other-keys)
   (declare (ignore args))
-  (when (and image1 image2 comparison (image-pane self))
-    (setf (slot-value (image-pane self) 'image1) image1)
-    (setf (slot-value (image-pane self) 'image2) image2)
-    (setf (slot-value (image-pane self) 'comparison) comparison)))
+  (when (and image1 image2 (image-pane self))
+    (setf (image1 (image-pane self)) image1)
+    (setf (image2 (image-pane self)) image2)))
 
 (defmethod open-menu-available-p (interface)
   t)
@@ -576,7 +599,9 @@
   ((image1-layer :initarg :image1-layer
                  :reader image1-layer)
    (image2-layer :initarg :image2-layer
-                 :reader image2-layer)))
+                 :reader image2-layer))
+  (:default-initargs
+   :alpha 1))
 
 
 
@@ -620,11 +645,7 @@
     (make-instance 'image-window
                    :title "Pixel Diff"
                    :image1 image1-layer
-                   :image2 image2-layer
-                   :comparison (make-instance 'comparison-image-layer
-                                              :image1-layer image1-layer
-                                              :image2-layer image2-layer
-                                              :alpha 1))))
+                   :image2 image2-layer)))
 
 
 (defun image-pane-resize-callback (pane x y width height)
@@ -634,7 +655,6 @@
 
 
 (defun open-interface (image))
-
 
 (defun test-example ()
   (display (create-empty-interface
