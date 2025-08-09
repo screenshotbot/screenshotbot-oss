@@ -88,15 +88,17 @@
                (gp:image-width image)
                (gp:image-height image)))))))
 
-(defclass image-layer ()
-  ((image :initarg :image
-          :reader image)
-   (cached-image :initform nil
+(defclass abstract-image-layer ()
+  ((cached-image :initform nil
                  :accessor cached-image)
    (alpha :initarg :alpha
           :accessor alpha)
    (name :initarg :name
-         :reader image-layer-name)))
+         :reader image-layer-name)) )
+
+(defclass image-layer (abstract-image-layer)
+  ((image :initarg :image
+          :reader image)))
 
 (defmethod read-image (pane (self image-layer))
   (or-setf
@@ -570,7 +572,7 @@
       (gp:invalidate-rectangle pane))))
 
 
-(defclass comparison-image-layer (image-layer)
+(defclass comparison-image-layer (abstract-image-layer)
   ((image1-layer :initarg :image1-layer
                  :reader image1-layer)
    (image2-layer :initarg :image2-layer
