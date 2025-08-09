@@ -129,7 +129,14 @@
                     :accessor image-transform
                     :documentation "The transform for the image")   
    (core-transform :initform nil
-                   :accessor core-transform))
+                   :accessor core-transform)
+   (last-mouse-move-pos :initform (list 0 0)
+                        :accessor last-mouse-move-pos
+                        :documentation "Used for throttling the mouse-move callback")
+   (last-mouse-move-updated-pos :initform (list 0 0)
+                                :accessor last-mouse-move-updated-pos
+                                :documentation "There might be a delay between when the mouse move was detected, and
+processed. This is the position at the time of being processed."))
   (:default-initargs :draw-with-buffer t
    ;; Is there a more systematic way to figure out this number? It's
    ;; probably going to be proportional to how many pixels move with
@@ -389,37 +396,54 @@
           pane
           (gp:image-access-pixel image-access image-x image-y)))))))
 
+
 (defun image-pane-mouse-move (pane x y)
   "Handle mouse movement over image pane to show pixel information"
   (let ((y (- y (capi:get-vertical-scroll-parameters pane :slug-position))))
-   (let ((interface (capi:element-interface pane)))
-     (when (and (core-transform pane) (image-transform pane))
-       (let ((combined-transform (gp:copy-transform (core-transform pane))))
-         (gp:postmultiply-transforms combined-transform (image-transform pane))
-         (setf
-          (capi:display-pane-text (status-text interface))
-          (or
-           (multiple-value-bind (image-x image-y)
-               (gp:transform-point (gp:invert-transform combined-transform) x y)
-             (let ((image-x (round image-x))
-                   (image-y (round image-y)))
-               (when (and (>= image-x 0) (>= image-y 0))
-                 (let* ((color-before (get-image-layer-color pane (image1 pane) image-x image-y))
-                        (color-after (get-image-layer-color pane (image2 pane) image-x image-y)))
-                   (cond
-                     ((and color-before color-after
-                           (color:colors= color-before color-after))
-                      (format nil "Identical color: ~a" (render-color color-before)))
-                     ((and color-before color-after)
-                      (format nil "Color changed from ~a to ~a" (render-color color-before) (render-color color-after)))
-                     (color-before
-                      (format nil "Color was ~a, now out of bounds" (render-color color-before)))
-                     (color-after
-                      (format nil "Out of bounds earlier, not color is: ~a" (render-color color-after) ))
-                     (t
-                      (log:warn "Not showing colors at (~a,~a): ~a, ~a" image-x image-y color-before color-after)
-                      nil))))))
-           "Ready - Move mouse over image to see pixel info")))))))
+    (setf (last-mouse-move-pos pane) (list x y))
+    (mp:schedule-timer-relative
+     (mp:make-timer
+      (lambda ()
+        (apply-in-pane-process-if-alive
+         pane
+         (lambda ()
+           (unless (equalp (last-mouse-move-pos pane)
+                           (last-mouse-move-updated-pos pane))
+             (setf (last-mouse-move-updated-pos pane)
+                   (last-mouse-move-pos pane))
+             (destructuring-bind (last-x last-y) (last-mouse-move-pos pane)
+               (handle-mouse-move pane last-x last-y)))))))
+     0.2)))
+
+(defun handle-mouse-move (pane x y)
+  (let ((interface (capi:element-interface pane)))
+   (when (and (core-transform pane) (image-transform pane))
+     (let ((combined-transform (gp:copy-transform (core-transform pane))))
+       (gp:postmultiply-transforms combined-transform (image-transform pane))
+       (setf
+        (capi:display-pane-text (status-text interface))
+        (or
+         (multiple-value-bind (image-x image-y)
+             (gp:transform-point (gp:invert-transform combined-transform) x y)
+           (let ((image-x (round image-x))
+                 (image-y (round image-y)))
+             (when (and (>= image-x 0) (>= image-y 0))
+               (let* ((color-before (get-image-layer-color pane (image1 pane) image-x image-y))
+                      (color-after (get-image-layer-color pane (image2 pane) image-x image-y)))
+                 (cond
+                   ((and color-before color-after
+                         (color:colors= color-before color-after))
+                    (format nil "Identical color: ~a" (render-color color-before)))
+                   ((and color-before color-after)
+                    (format nil "Color changed from ~a to ~a" (render-color color-before) (render-color color-after)))
+                   (color-before
+                    (format nil "Color was ~a, now out of bounds" (render-color color-before)))
+                   (color-after
+                    (format nil "Out of bounds earlier, not color is: ~a" (render-color color-after) ))
+                   (t
+                    (log:warn "Not showing colors at (~a,~a): ~a, ~a" image-x image-y color-before color-after)
+                    nil))))))
+         "Ready - Move mouse over image to see pixel info"))))))
 
 
 
