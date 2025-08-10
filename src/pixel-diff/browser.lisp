@@ -33,24 +33,30 @@
    :create-callback '%create-callback
    :title "Image Browser"))
 
+(defclass left-image-pane (image-pane)
+  ((num :initarg :num
+        :documentation "only for debugging")))
+
 (defun %create-callback (interface)
   (log:info "here")
   (let ((selector (image-selector interface)))
     (setf (capi:layout-description selector)
           (loop for image-pair in (image-pair-list interface)
+                for i from 0
                 collect
                 (let ((image-pair image-pair))
-                  (make-instance 'image-pane
-                                :visible-min-height 100
-                                :visible-max-height 200
-                                :visible-border nil
-                                :image1 (make-instance 'image-layer
-                                                       :image (image-pair:updated image-pair)
-                                                       :alpha 1)
-                                :image2 nil
-                                :input-model `(((:button-1 :release)
-                                                ,(lambda (image-pane x y)
-                                                   (image-selector-callback image-pane x y image-pair))))))))))
+                  (make-instance 'left-image-pane
+                                 :num i
+                                 :visible-min-height 100
+                                 :visible-max-height 200
+                                 :visible-border nil
+                                 :image1 (make-instance 'image-layer
+                                                        :image (image-pair:updated image-pair)
+                                                        :alpha 1)
+                                 :image2 nil
+                                 :input-model `(((:button-1 :release)
+                                                 ,(lambda (image-pane x y)
+                                                    (image-selector-callback image-pane x y image-pair))))))))))
 
 
 (defun image-selector-callback (image-pane x y image-pair)
