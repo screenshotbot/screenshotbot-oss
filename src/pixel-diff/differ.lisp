@@ -12,6 +12,10 @@
    #:image-pane))
 (in-package :pixel-diff/differ)
 
+(defun %internal-time ()
+  (/ (* (get-internal-real-time) 1000)
+     internal-time-units-per-second))
+
 (defmacro or-setf (accessor expr)
   `(or
     ,accessor
