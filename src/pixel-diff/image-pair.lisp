@@ -10,11 +10,11 @@
   ((previous :initarg :previous
              :accessor previous
              :type (or string pathname null)
-             :documentation "Path to the previous version of the image file")
+             :documentation "Image-layer of the previous file")
    (updated :initarg :updated
             :accessor updated
             :type (or string pathname null)
-            :documentation "Path to the updated version of the image file"))
+            :documentation "Image-layer of the next file"))
   (:documentation "Represents a pair of image files for comparison"))
 
 (defun make-image-pair (previous updated)

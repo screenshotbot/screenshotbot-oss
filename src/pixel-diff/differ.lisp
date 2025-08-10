@@ -85,7 +85,7 @@
            (core-transform pane)
            (eql width (last-width pane))
            (eql height (last-height pane)))
-    (let ((image (gp:load-image pane (image (image1 pane)) :editable t)))
+    (let ((image (load-image pane (image (image1 pane)) :editable t)))
       (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
         (setf (last-width pane) width)
         (setf (last-height pane) height)
@@ -95,6 +95,9 @@
                height
                (gp:image-width image)
                (gp:image-height image)))))))
+
+(defmethod load-image (pane pathname &key editable)
+  (gp:load-image pane pathname :editable editable))
 
 (defclass abstract-image-layer ()
   ((cached-image :initform nil
@@ -111,7 +114,7 @@
 (defmethod read-image (pane (self image-layer))
   (or-setf
    (cached-image self)
-   (gp:load-image pane (image self) :editable t)))
+   (load-image pane (image self) :editable t)))
 
 (defclass image-pane (output-pane)
   ((image1 :initarg :image1 :initform nil
@@ -493,7 +496,7 @@ processed. This is the position at the time of being processed."))
 
 (defun %zoom-to (interface x y &key (zoom 5) (finally (lambda ())))
   (let ((pane (slot-value interface 'image-pane)))
-    (let* ((image (gp:load-image pane (image (image1 (image-pane interface))) :editable t))
+    (let* ((image (load-image pane (image (image1 (image-pane interface))) :editable t))
            (start-mat (transform-to-3dmat (image-transform pane)))
            (final-mat (screenshotbot-js::calc-transform-for-center
                        (gp:port-width pane)

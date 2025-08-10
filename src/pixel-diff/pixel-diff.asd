@@ -9,9 +9,9 @@
                (:file "image-pair")
                #+darwin
                (:file "fli-templates")
-               (:file "git-diff")
                (:file "differ")
                (:file "browser")
+               (:file "git-diff")
                (:file "main")))
 
 #+lispworks
