@@ -21,8 +21,9 @@
 (defclass git-repo ()
   ((directory :initarg :directory
               :reader repo-directory)
-   (rev-parse-cache :initform (make-hash-table :test #'equal)
-                    :reader rev-parse-cache)))
+   (tree-cache :initform (make-hash-table :test #'equal)
+               :reader tree-cache
+               :documentation "For a given rev, the tree associated with the parsed commit")))
 
 (defmethod make-git-command ((self git-repo)
                               &rest
@@ -34,6 +35,7 @@
     args))
 
 (defmethod $git ((self git-repo) args &rest rest)
+  (log:info "Running: ~a" args)
   (apply #'uiop:run-program
    (apply #'make-git-command self args)
    :ignore-error-status nil
@@ -54,15 +56,22 @@
           collect file))
 
 (defmethod rev-parse ((self git-repo) ref)
-  (symbol-macrolet ((cache (gethash ref (rev-parse-cache self))))
+  (str:trim ($git self (list "rev-parse" ref))))
+
+(defmethod parse-tree ((self git-repo) ref)
+  
+  (symbol-macrolet ((cache (gethash ref (tree-cache self))))
     (or
      cache
      (setf
       cache
-      (str:trim ($git self (list "rev-parse" ref)))))))
+      (let ((commit (rev-parse self ref)))
+        (log:info "Uncached rev-parse")
+        (str:trim
+         ($git self (list "show" "--pretty=%T" "--no-patch" commit))))))))
 
 (defmethod open-git-file ((self git-repo) ref pathname &key (output :stream))
-  (let ((ref (rev-parse self ref)))
+  (let ((ref (parse-tree self ref)))
     (sys:run-shell-command
      (make-git-command self "show" (format nil "~a:~a" ref pathname))
      :output output
