@@ -20,7 +20,9 @@
 
 (defclass git-repo ()
   ((directory :initarg :directory
-              :reader repo-directory)))
+              :reader repo-directory)
+   (rev-parse-cache :initform (make-hash-table :test #'equal)
+                    :reader rev-parse-cache)))
 
 (defmethod make-git-command ((self git-repo)
                               &rest
@@ -52,7 +54,12 @@
           collect file))
 
 (defmethod rev-parse ((self git-repo) ref)
-  (str:trim ($git self (list "rev-parse" ref))))
+  (symbol-macrolet ((cache (gethash ref (rev-parse-cache self))))
+    (or
+     cache
+     (setf
+      cache
+      (str:trim ($git self (list "rev-parse" ref)))))))
 
 (defmethod open-git-file ((self git-repo) ref pathname &key (output :stream))
   (let ((ref (rev-parse self ref)))
@@ -78,6 +85,7 @@
                    :output p)
     (load-image pane p :editable editable)))
 
+;; (hcl:profile (Sleep 5))
 
 
 
