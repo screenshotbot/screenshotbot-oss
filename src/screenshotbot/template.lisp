@@ -301,10 +301,13 @@
       <link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
 
       <meta name= "image" property="og:image"  content= (og-image) />
+      <meta property="og:title" content="Scale up your screenshot tests, without the friction" />
       <meta property= "og:description" content= "Automated screenshot testing for Android, iOS, and web apps. Catch UI regressions in CI/CD with GitHub, GitLab integration. Better than Git LFS for screenshot storage." />
+      <meta property="og:url" content="https://screenshotbot.io" />
+      <meta property="og:type" content="website" />
       <meta property= "twitter:card" content= "summary" />
       <meta property= "twitter:site" content="@screenshotbotio" />
-      <meta property= "twitter:title" content= "Build Pixel Perfect Apps with Screenshot Testing" />
+      <meta property= "twitter:title" content= "Scale up your screenshot tests, without the friction" />
       <meta property="twitter:image"  content= (og-image) />
       <meta property= "twitter:description" content= "Build Pixel Perfect Apps with Screenshot Tests" />
 
