@@ -2,6 +2,7 @@
   (:use #:cl
         #:capi)
   (:import-from #:pixel-diff/differ
+                #:set-image-pair
                 #:open-menu-available-p
                 #:comparison-image-layer
                 #:image-main-layout
@@ -38,19 +39,25 @@
     (setf (capi:layout-description selector)
           (loop for image-pair in (image-pair-list interface)
                 collect
-                (make-instance 'image-pane
-                               :visible-min-height 100
-                               :visible-max-height 200
-                               :visible-border nil
-                               :image1 (make-instance 'image-layer
-                                                      :image (image-pair:updated image-pair)
-                                                      :alpha 1)
-                               :image2 nil
-                               :callback-type :interface
-                               :selection-callback 'image-selector-callback)))))
+                (let ((image-pair image-pair))
+                  (make-instance 'image-pane
+                                :visible-min-height 100
+                                :visible-max-height 200
+                                :visible-border nil
+                                :image1 (make-instance 'image-layer
+                                                       :image (image-pair:updated image-pair)
+                                                       :alpha 1)
+                                :image2 nil
+                                :input-model `(((:button-1 :release)
+                                                ,(lambda (image-pane x y)
+                                                   (image-selector-callback image-pane x y image-pair))))))))))
 
-(defun image-selector-callback (interface)
-  (log:Info "hello"))
+
+(defun image-selector-callback (image-pane x y image-pair)
+  (declare (ignore x y))
+  (set-image-pair
+   (image-pane (capi:element-interface image-pane))
+   image-pair))
 
 (defmethod open-menu-available-p ((self image-browser-window))
   nil)

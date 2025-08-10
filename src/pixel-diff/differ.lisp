@@ -9,7 +9,8 @@
                 #:def-easy-macro)
   (:export
    #:create-empty-interface
-   #:image-pane))
+   #:image-pane)
+  (:local-nicknames (#:image-pair #:pixel-diff/image-pair)))
 (in-package :pixel-diff/differ)
 
 (defun %internal-time ()
@@ -164,7 +165,7 @@ processed. This is the position at the time of being processed."))
     (mouse-move-blocked-until self)
     (+ duration (%internal-time)))))
 
-(defmethod initialize-instance :around ((self image-pane) &rest args &key image1 image2 scroll-max &allow-other-keys)
+(defmethod initialize-instance :around ((self image-pane) &rest args &key image1 image2 scroll-max)
   (apply #'call-next-method
          self
          :scroll-height scroll-max
@@ -709,3 +710,16 @@ processed. This is the position at the time of being processed."))
 ;; (test-example)
 
 
+
+(defun set-image-pair (image-pane image-pair)
+  (let ((interface (capi:element-interface image-pane)))
+    (let ((image1-layer (make-instance 'image-layer
+                                       :image (image-pair:previous image-pair)
+                                       :alpha 0.1))
+          (image2-layer (make-instance 'image-layer
+                                       :image (image-pair:updated image-pair)
+                                       :alpha 0)))
+      (setf (image1 (image-pane interface)) image1-layer)
+      (setf (image2 (image-pane interface)) image2-layer)
+      (setf (core-transform (image-pane interface)) nil)
+      (gp:invalidate-rectangle (image-pane interface)))))
