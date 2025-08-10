@@ -130,6 +130,9 @@
                     :documentation "The transform for the image")   
    (core-transform :initform nil
                    :accessor core-transform)
+   (mouse-move-blocked-until :initform 0
+                                  :accessor mouse-move-blocked-until
+                                  :documentation "If the internal time is less than this, then hover insights will be disabled.")
    (last-mouse-move-pos :initform (list 0 0)
                         :accessor last-mouse-move-pos
                         :documentation "Used for throttling the mouse-move callback")
@@ -146,6 +149,13 @@ processed. This is the position at the time of being processed."))
                      :resize-callback 'image-pane-resize-callback
                      :create-callback 'image-pane-create-callback
                      :coordinate-origin :fixed-graphics))
+
+(defmethod disable-mouse-move ((self image-pane) &key (duration 500))
+  (setf
+   (mouse-move-blocked-until self)
+   (max
+    (mouse-move-blocked-until self)
+    (+ duration (%internal-time)))))
 
 (defmethod initialize-instance :around ((self image-pane) &rest args &key image1 image2 scroll-max &allow-other-keys)
   (apply #'call-next-method
@@ -416,34 +426,35 @@ processed. This is the position at the time of being processed."))
      0.2)))
 
 (defun handle-mouse-move (pane x y)
-  (let ((interface (capi:element-interface pane)))
-   (when (and (core-transform pane) (image-transform pane))
-     (let ((combined-transform (gp:copy-transform (core-transform pane))))
-       (gp:postmultiply-transforms combined-transform (image-transform pane))
-       (setf
-        (capi:display-pane-text (status-text interface))
-        (or
-         (multiple-value-bind (image-x image-y)
-             (gp:transform-point (gp:invert-transform combined-transform) x y)
-           (let ((image-x (round image-x))
-                 (image-y (round image-y)))
-             (when (and (>= image-x 0) (>= image-y 0))
-               (let* ((color-before (get-image-layer-color pane (image1 pane) image-x image-y))
-                      (color-after (get-image-layer-color pane (image2 pane) image-x image-y)))
-                 (cond
-                   ((and color-before color-after
-                         (color:colors= color-before color-after))
-                    (format nil "Identical color: ~a" (render-color color-before)))
-                   ((and color-before color-after)
-                    (format nil "Color changed from ~a to ~a" (render-color color-before) (render-color color-after)))
-                   (color-before
-                    (format nil "Color was ~a, now out of bounds" (render-color color-before)))
-                   (color-after
-                    (format nil "Out of bounds earlier, not color is: ~a" (render-color color-after) ))
-                   (t
-                    (log:warn "Not showing colors at (~a,~a): ~a, ~a" image-x image-y color-before color-after)
-                    nil))))))
-         "Ready - Move mouse over image to see pixel info"))))))
+  (when (> (%internal-time) (mouse-move-blocked-until pane))
+   (let ((interface (capi:element-interface pane)))
+     (when (and (core-transform pane) (image-transform pane))
+       (let ((combined-transform (gp:copy-transform (core-transform pane))))
+         (gp:postmultiply-transforms combined-transform (image-transform pane))
+         (setf
+          (capi:display-pane-text (status-text interface))
+          (or
+           (multiple-value-bind (image-x image-y)
+               (gp:transform-point (gp:invert-transform combined-transform) x y)
+             (let ((image-x (round image-x))
+                   (image-y (round image-y)))
+               (when (and (>= image-x 0) (>= image-y 0))
+                 (let* ((color-before (get-image-layer-color pane (image1 pane) image-x image-y))
+                        (color-after (get-image-layer-color pane (image2 pane) image-x image-y)))
+                   (cond
+                     ((and color-before color-after
+                           (color:colors= color-before color-after))
+                      (format nil "Identical color: ~a" (render-color color-before)))
+                     ((and color-before color-after)
+                      (format nil "Color changed from ~a to ~a" (render-color color-before) (render-color color-after)))
+                     (color-before
+                      (format nil "Color was ~a, now out of bounds" (render-color color-before)))
+                     (color-after
+                      (format nil "Out of bounds earlier, not color is: ~a" (render-color color-after) ))
+                     (t
+                      (log:warn "Not showing colors at (~a,~a): ~a, ~a" image-x image-y color-before color-after)
+                      nil))))))
+           "Ready - Move mouse over image to see pixel info")))))))
 
 
 
@@ -490,6 +501,7 @@ processed. This is the position at the time of being processed."))
        (image-pane interface)
        2
        (lambda (progress)
+         (disable-mouse-move (image-pane interface))
          (setf (image-transform pane)
                (3dmat-to-transform
                 (animate-transform start-mat final-mat progress)))
@@ -563,6 +575,7 @@ processed. This is the position at the time of being processed."))
 
 
 (defun process-zoom (pane x y delta)
+  (disable-mouse-move pane)
   (let ((interface (capi:element-interface pane)))
     (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
       (let ((dm (screenshotbot-js::calc-transform-for-zoom x y
