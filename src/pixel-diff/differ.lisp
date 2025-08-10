@@ -85,7 +85,7 @@
            (core-transform pane)
            (eql width (last-width pane))
            (eql height (last-height pane)))
-    (let ((image (load-image pane (image (image1 pane)) :editable t)))
+    (let ((image (read-image pane (image1 pane))))
       (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
         (setf (last-width pane) width)
         (setf (last-height pane) height)
@@ -496,7 +496,7 @@ processed. This is the position at the time of being processed."))
 
 (defun %zoom-to (interface x y &key (zoom 5) (finally (lambda ())))
   (let ((pane (slot-value interface 'image-pane)))
-    (let* ((image (load-image pane (image (image1 (image-pane interface))) :editable t))
+    (let* ((image (read-image pane (image1 (image-pane interface))))
            (start-mat (transform-to-3dmat (image-transform pane)))
            (final-mat (screenshotbot-js::calc-transform-for-center
                        (gp:port-width pane)
