@@ -13,8 +13,6 @@
                :atomics
                :log4cl
                :trivial-backtrace
-               #- (or screenshotbot-oss eaase-oss)
-               :sentry
                :sentry-client
                :trivial-garbage
                :easy-macros
