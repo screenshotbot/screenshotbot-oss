@@ -9,9 +9,9 @@
   :components ((:file "lisp-stubs")
                (:file "common-ps")))
 
-(defsystem screenshotbot.math/tests
+(defsystem pixel-diff.math/tests
   :serial t
-  :depends-on (:pixel-diff.math/lisp
+  :depends-on (:pixel-diff.math
                :util/fiveam)
   :components ((:file "test-common-ps")))
 

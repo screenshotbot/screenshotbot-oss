@@ -218,8 +218,10 @@
   (setf (slot-value c 'asdf/component::additional-input-files)
         (loop for (key . values) in (slot-value c 'asdf/component::additional-input-files)
               collect (cons key (mapcar #'fix-absolute-path values))))
-  (fix-path (slot-value c 'asdf::absolute-pathname))
-  (fix-path (slot-value c 'asdf::relative-pathname)))
+  (when (slot-boundp c 'asdf::absolute-pathname)
+    (fix-path (slot-value c 'asdf::absolute-pathname)))
+  (when (slot-boundp c 'asdf::relative-pathname)
+    (fix-path (slot-value c 'asdf::relative-pathname))))
 
 
 (defun fix-absolute-registry-paths ()
