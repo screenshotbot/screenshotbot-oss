@@ -14,9 +14,12 @@
                 #:image-browser-window)
   (:import-from #:pixel-diff/differ
                 #:load-image
-                #:image-layer))
+                #:image-layer)
+  (:import-from #:util/threading
+                #:max-pool))
 (in-package :pixel-diff/git-diff)
 
+(defvar *max-pool* (make-instance 'max-pool :max 10))
 
 (defclass git-repo ()
   ((directory :initarg :directory

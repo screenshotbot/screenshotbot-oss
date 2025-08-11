@@ -3,6 +3,7 @@
   :depends-on (:pixel-diff.math
                :easy-macros
                :clingon
+               :util.threading
                :cl-fad
                :log4cl)
   :components ((:file "about")
