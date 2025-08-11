@@ -18,7 +18,7 @@
 (defsystem :nibble/tests
   :serial t
   :depends-on (:nibble
-                  :util/testing
+                  :util.testing
                 :fiveam-matchers
                 :util/fiveam
                 :fiveam)

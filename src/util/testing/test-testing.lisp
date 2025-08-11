@@ -4,13 +4,13 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util/tests/test-testing
+(defpackage :util/testing/test-testing
   (:use #:cl
         #:fiveam)
   (:import-from #:util/testing
                 #:with-global-binding)
   (:local-nicknames (#:a #:alexandria)))
-(in-package :util/tests/test-testing)
+(in-package :util/testing/test-testing)
 
 
 (util/fiveam:def-suite)

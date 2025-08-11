@@ -133,14 +133,6 @@
   :depends-on ((:require "remote-debugger-client"))
   :components ((:file "remote-debugging")))
 
-(defsystem :util/testing
-  :serial t
-  :depends-on (:fiveam
-               :cl-mock
-               :lparallel
-               :easy-macros
-               :auth)
-  :components ((:file "testing")))
 
 (defsystem :util/random-port
   :serial t
@@ -336,7 +328,7 @@
                :util/timeago
                :util/json-mop
                :util/throttler
-               :util/testing
+               :util.testing
                :util/events
                :util/request
                :util/fake-clingon
@@ -370,7 +362,6 @@
                              (:file "test-hash-lock")
                              (:file "test-cookies")
                              (:file "test-fiveam")
-                             (:file "test-testing")
                              (:file "test-sizeof")
                              (:file "test-models")
                              (:file "test-disk-size")

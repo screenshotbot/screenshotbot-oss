@@ -11,7 +11,7 @@
                #-(:or :jipr :screenshotbot-oss :eaase-oss)
                :sentry
                :graphs
-               :util/testing
+               :util.testing
                :str
                :util.misc
                :util.threading

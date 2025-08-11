@@ -177,7 +177,7 @@
 (defsystem :screenshotbot.sdk/integration-tests
   :depends-on (#:fiveam
                #:screenshotbot.sdk/deliver
-               #:util/testing
+               #:util.testing
                #:screenshotbot/testing-lib
                #:screenshotbot
                #:screenshotbot.sdk)

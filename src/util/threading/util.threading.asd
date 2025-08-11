@@ -27,7 +27,7 @@
   :depends-on (:util.threading
                :fiveam
                :fiveam-matchers
-               :util/testing
+               :util.testing
                :cl-mock
                :alexandria
                :serapeum)

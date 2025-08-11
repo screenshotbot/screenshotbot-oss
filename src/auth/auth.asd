@@ -27,7 +27,7 @@
 (defsystem "auth/tests"
   :serial t
   :depends-on (:auth
-               :util/testing
+               :util.testing
                :util.store
                :core.api
                :fiveam-matchers

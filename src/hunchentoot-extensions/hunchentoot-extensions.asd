@@ -34,7 +34,7 @@
   :depends-on (:hunchentoot-extensions
                :lparallel
                :util/request
-               :util/testing
+               :util.testing
                :util/fiveam
                :dexador
                :fiveam-matchers

@@ -16,6 +16,6 @@
 (defsystem :core.rpc/tests
   :serial t
   :depends-on (:core.rpc
-               :util/testing
+               :util.testing
                :util/fiveam)
   :components ((:file "test-rpc")))

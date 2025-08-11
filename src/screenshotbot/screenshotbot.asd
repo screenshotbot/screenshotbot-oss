@@ -331,7 +331,7 @@
   :serial t
   :depends-on (:screenshotbot
                :util/fiveam
-               :util/testing
+               :util.testing
                :alexandria
                :fiveam-matchers)
   :components ((:file "testing")))
@@ -521,7 +521,7 @@
 (defsystem :screenshotbot/store-tests
   :serial t
   :depends-on (:screenshotbot
-               :util/testing
+               :util.testing
                :fiveam)
   :components ((:file "test-store")))
 
