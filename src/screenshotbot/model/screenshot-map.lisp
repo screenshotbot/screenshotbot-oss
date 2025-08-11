@@ -22,7 +22,7 @@
                 #:screenshot-image)
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-key)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:head)
   (:import-from #:screenshotbot/model/company
                 #:company)

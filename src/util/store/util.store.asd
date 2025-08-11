@@ -1,7 +1,7 @@
 (defsystem :util.store
   :serial t
   :depends-on (:bknr.datastore
-               :util/misc
+               :util.misc
                :trivial-features
                :util/cron
                :file-lock

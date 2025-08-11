@@ -15,7 +15,7 @@
   (:import-from #:util/store/store
                 #:defindex
                 #:with-class-validation)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:with-batches))
 (in-package :screenshotbot/model/constant-string)
 

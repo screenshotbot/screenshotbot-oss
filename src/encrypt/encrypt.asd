@@ -4,7 +4,7 @@
                :secure-random
                :util.store
                :cl-intbytes
-               :util/misc
+               :util.misc
                :cl-base64)
   :components ((:file "encrypt")
                (:file "hmac")))

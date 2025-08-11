@@ -18,7 +18,7 @@
   (:import-from #:util/threading
                 #:make-thread
                 #:max-pool)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:make-batches
                 #:with-batches)
   (:import-from #:screenshotbot/sdk/active-run

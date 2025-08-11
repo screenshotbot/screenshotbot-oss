@@ -25,7 +25,7 @@
                :clingon
                :alexandria
                :auto-restart
-               :util/misc
+               :util.misc
                :util/health-check
                :cl-fad
                :zip

@@ -2,7 +2,7 @@
     :serial t
   :depends-on ("cl-pass"
                "bknr.datastore"
-               "util/misc"
+               "util.misc"
                "core.installation"
                "hunchentoot-extensions"
                "util.store"

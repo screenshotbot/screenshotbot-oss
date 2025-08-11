@@ -61,7 +61,7 @@
                "log4cl"
                "util.threading"
                "util.store"
-               "util/misc"
+               "util.misc"
                "util/html2text"
                "util/random-port"
                (:feature (:and :lispworks (:or :darwin :linux)) "util/memory")
@@ -121,14 +121,6 @@
   :depends-on ()
   :components ((:file "logrotate")))
 
-(defsystem :util/misc
-  :serial t
-  :depends-on (:local-time
-               :cl-fad
-               :easy-macros
-               :str)
-  :components ((:file "misc")
-               (:file "lists")))
 
 (defsystem :util/atomics
   :serial t
@@ -153,7 +145,7 @@
 (defsystem :util/random-port
   :serial t
   :depends-on (:usocket
-               :util/misc
+               :util.misc
                :easy-macros)
   :components ((:file "random-port")))
 
@@ -266,7 +258,7 @@
 
 (defsystem :util/native-module
   :depends-on (:util/fake-fli
-               :util/misc)
+               :util.misc)
   :components ((:file "native-module")))
 
 (defsystem :util/fake-fli
@@ -283,7 +275,7 @@
                :json-mop
                :pkg
                :util/request
-               :util/misc
+               :util.misc
                :quri)
   :components ((:module "phabricator"
                 :components ((:file "conduit")
@@ -368,7 +360,6 @@
                              (:file "test-throttler")
                              (:file "test-fake-fli" :if-feature (:not :lispworks))
                              (:file "test-logger")
-                             (:file "test-misc")
                              (:file "test-copy-file")
                              (:file "test-request")
                              (:file "test-request-integration")
@@ -380,7 +371,6 @@
                              (:file "test-cookies")
                              (:file "test-fiveam")
                              (:file "test-testing")
-                             (:file "test-lists")
                              (:file "test-sizeof")
                              (:file "test-models")
                              (:file "test-disk-size")
@@ -412,7 +402,7 @@
                :util/clsql
                :util/cron
                :core.installation
-               :util/misc
+               :util.misc
                :util/atomics
                :atomics)
   :components ((:file "events")))
@@ -425,7 +415,7 @@
 #+lispworks
 (defsystem :util/ssl
     :serial t
-    :depends-on (:util/misc)
+    :depends-on (:util.misc)
     :components ((:file "ssl")))
 
 (defsystem :util/symbol-detector

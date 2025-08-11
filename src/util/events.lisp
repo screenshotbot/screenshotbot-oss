@@ -14,7 +14,7 @@
                 #:*sql-stream*)
   (:import-from #:util/cron
                 #:def-cron)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:with-batches)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)

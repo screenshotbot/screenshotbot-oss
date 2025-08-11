@@ -8,7 +8,7 @@
   :serial t
   :depends-on (:pkg
                :util/simple-queue
-               :util/misc
+               :util.misc
                :cl-json
                :util.store/encodable
                :bknr.datastore

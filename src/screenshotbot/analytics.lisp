@@ -20,7 +20,7 @@
                 #:insert-multiple-items
                 #:db-engine
                 #:with-db)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:with-batches)
   (:import-from #:util/misc
                 #:?.)

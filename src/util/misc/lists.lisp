@@ -1,4 +1,4 @@
-(defpackage #:util/lists
+(defpackage #:util/misc/lists
   (:use #:cl)
   (:import-from #:easy-macros
                 #:def-easy-macro)
@@ -6,7 +6,7 @@
 	   #:tail
        #:make-batches
        #:with-batches))
-(in-package #:util/lists)
+(in-package #:util/misc/lists)
 
 ;; See also 'last' and 'butlast'
 
@@ -56,7 +56,7 @@ remaining elements (unfiltered)"
                  (wrapped-fn batch ctr))))
            (call-next (list ctr)
              (multiple-value-bind (batch rest)
-                 (util/lists:head list batch-size)
+                 (util/misc/lists:head list batch-size)
                (when batch
                  (wrapped-fn batch ctr)
                  (call-next rest (+ ctr (length batch)))))))

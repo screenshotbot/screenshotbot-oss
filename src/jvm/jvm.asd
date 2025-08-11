@@ -18,7 +18,7 @@
                (:feature :lispworks :jvm/lispcalls)
                (:feature :lispworks :deliver-utils)
                :log4cl
-               :util/misc
+               :util.misc
                :util/health-check
                :util
                :trivial-garbage)

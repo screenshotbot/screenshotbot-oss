@@ -101,7 +101,7 @@
                 #:store-object-id)
   (:import-from #:alexandria
                 #:when-let)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:head)
   (:local-nicknames (#:a #:alexandria)
                     (#:integration #:screenshotbot/replay/integration)

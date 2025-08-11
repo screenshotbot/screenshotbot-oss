@@ -13,7 +13,7 @@
                :graphs
                :util/testing
                :str
-               :util/misc
+               :util.misc
                :util.threading
                :tmpdir
                :cl-fad)

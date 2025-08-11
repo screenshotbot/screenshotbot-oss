@@ -4,15 +4,15 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util/tests/test-lists
+(defpackage :util/misc/tests/test-lists
   (:use #:cl
-        #:util/lists
+        #:util/misc/lists
         #:fiveam)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:with-batches
                 #:make-batches)
   (:local-nicknames (#:a #:alexandria)))
-(in-package :util/tests/test-lists)
+(in-package :util/misc/tests/test-lists)
 
 (util/fiveam:def-suite)
 

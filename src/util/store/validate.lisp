@@ -13,7 +13,7 @@
                 #:store-object-id)
   (:import-from #:alexandria
                 #:when-let)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:head)
   (:import-from #:bknr.indices
                 #:base-indexed-object

@@ -86,7 +86,7 @@ The pagination-helper doesn't handle rendering on its own, for testability purpo
            (when (< (+ start-counter num) (fset:size items))
              items))))
         (t
-         (util/lists:head items num :filter filter)))
+         (util/misc/lists:head items num :filter filter)))
     (cond
       (this-page
        (let* ((load-more (when rest

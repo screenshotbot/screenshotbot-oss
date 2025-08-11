@@ -15,7 +15,7 @@
                 #:unescaped)
   (:import-from #:nibble
                 #:nibble)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:head)
   (:import-from #:util/store/object-id
                 #:object-with-oid

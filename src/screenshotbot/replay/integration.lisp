@@ -82,7 +82,7 @@
                 #:*sdk-flags*)
   (:import-from #:util/misc
                 #:?.)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:make-batches
                 #:with-batches)
   (:import-from #:screenshotbot/plan

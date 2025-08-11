@@ -39,7 +39,7 @@
                 #:slot-index)
   (:import-from #:bknr.indices
                 #:clear-slot-indices)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:head)
   #+bknr.cluster
   (:import-from #:bknr.cluster/store

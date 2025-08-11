@@ -16,7 +16,7 @@
   (:import-from #:screenshotbot/model/api-key
                 #:generate-api-key
                 #:generate-api-secret)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:with-batches)
   (:export
    #:has-created-at

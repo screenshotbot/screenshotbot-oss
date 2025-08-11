@@ -18,7 +18,7 @@
                :sentry-client
                :trivial-garbage
                :easy-macros
-               :util/misc)
+               :util.misc)
   :serial t
   :components ((:file "fake-mp")
                (:file "threading")))

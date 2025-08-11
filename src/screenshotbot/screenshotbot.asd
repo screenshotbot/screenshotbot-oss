@@ -537,7 +537,7 @@
                :util/hunchentoot-engine
                :cl-store
                :util.threading
-               :util/misc
+               :util.misc
                :util/request
                :util/lru-cache
                :util/json-mop
@@ -608,7 +608,7 @@
 (defsystem :screenshotbot/hub
   :serial t
   :depends-on (:util/request
-               :util/misc
+               :util.misc
                :hunchentoot
                :auto-restart
                :cl-json)

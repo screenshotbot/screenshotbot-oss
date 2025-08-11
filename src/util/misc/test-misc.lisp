@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :util/tests/test-misc
+(defpackage :util/misc/tests/test-misc
   (:use #:cl
         #:fiveam)
   (:import-from #:util/misc
@@ -22,7 +22,7 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:local-nicknames (#:a #:alexandria)))
-(in-package :util/tests/test-misc)
+(in-package :util/misc/tests/test-misc)
 
 
 (util/fiveam:def-suite)

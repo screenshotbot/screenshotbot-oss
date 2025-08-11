@@ -39,7 +39,7 @@
   (:import-from #:util/store/simple-object-snapshot
                 #:simple-object-snapshot
                 #:snapshot-slot-value)
-  (:import-from #:util/lists
+  (:import-from #:util/misc/lists
                 #:with-batches)
   (:import-from #:util/store/store-version
                 #:*store-version*)
