@@ -8,7 +8,7 @@
   :serial t
   :depends-on (#:util/html2text
                #:lparallel
-               #:util/threading
+               #:util.threading
                #:easy-macros
                #:cl-smtp)
   :components ((:file "installation")

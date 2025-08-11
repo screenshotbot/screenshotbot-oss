@@ -14,7 +14,7 @@
                :util/testing
                :str
                :util/misc
-               :util/threading
+               :util.threading
                :tmpdir
                :cl-fad)
   :components ((:file "affected-systems")

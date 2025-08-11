@@ -536,7 +536,7 @@
                :easy-macros
                :util/hunchentoot-engine
                :cl-store
-               :util/threading
+               :util.threading
                :util/misc
                :util/request
                :util/lru-cache

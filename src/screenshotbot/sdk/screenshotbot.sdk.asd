@@ -31,7 +31,7 @@
                :zip
                :trivial-garbage
                :trivial-features
-               :util/threading
+               :util.threading
                :tmpdir
                :semz.decompress
                :ironclad/digests

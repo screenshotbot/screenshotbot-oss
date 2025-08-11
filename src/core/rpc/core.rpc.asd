@@ -8,7 +8,7 @@
   :serial t
   :depends-on (:core.api
                :server
-               :util/threading
+               :util.threading
                (:feature (:and :linux :lispworks) :bknr.cluster)
                :encrypt)
   :components ((:file "rpc")))

@@ -1,7 +1,7 @@
 (defsystem :control-socket
   :serial t
   :depends-on (:unix-sockets
-               :util/threading
+               :util.threading
                :log4cl
                (:feature :lispworks (:require "remote-debugger-full")))
   :components ((:file "server" :if-feature (:and :lispworks (:not :mswindows)))))

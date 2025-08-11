@@ -1,6 +1,6 @@
 (defsystem :core.cli
   :serial t
-  :depends-on (:util/threading
+  :depends-on (:util.threading
                :util/native-module
                :easy-macros)
   :components ((:file "sentry")))

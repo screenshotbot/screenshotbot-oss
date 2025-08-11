@@ -14,7 +14,7 @@
                :easy-macros
                :closer-mop
                :do-urlencode
-               :util/threading
+               :util.threading
                :log4cl)
   :components ((:file "package")
                (:file "url")

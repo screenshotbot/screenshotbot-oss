@@ -55,7 +55,7 @@
                #:util/native-module
                #:util
                #:util/health-check
-               #:util/threading)
+               #:util.threading)
   :components ((lib-source-file "ccronexpr")
                (:file "model")
                (:file "bindings")

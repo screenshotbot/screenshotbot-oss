@@ -59,7 +59,7 @@
                #-(or screenshotbot-oss eaase-oss)
                "stripe"
                "log4cl"
-               "util/threading"
+               "util.threading"
                "util.store"
                "util/misc"
                "util/html2text"
@@ -213,29 +213,11 @@
                :util/fake-fli)
   :components ((:file "sizeof")))
 
-(defsystem :util/threading
-  :depends-on (:bordeaux-threads
-               :mailbox
-               :str
-               :fset
-               :lparallel
-               :atomics
-               :log4cl
-               :trivial-backtrace
-               #- (or screenshotbot-oss eaase-oss)
-               :sentry
-               :sentry-client
-               :trivial-garbage
-               :easy-macros
-               :util/misc)
-  :serial t
-  :components ((:file "fake-mp")
-               (:file "threading")))
 
 (defsystem :util/cron
   :depends-on (:cl-cron
                :bknr.datastore
-               :util/threading)
+               :util.threading)
   :components ((:file "cron")))
 
 (defsystem :util/request
@@ -395,7 +377,6 @@
                              (:file "test-json-mop")
                              (:file "test-lparallel")
                              (:file "test-hash-lock")
-                             (:file "test-threading")
                              (:file "test-cookies")
                              (:file "test-fiveam")
                              (:file "test-testing")

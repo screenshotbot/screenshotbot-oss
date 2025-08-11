@@ -10,7 +10,7 @@
                (:feature (:and :lispworks :linux) :bknr.cluster)
                :easy-macros
                :auto-restart
-               :util/threading
+               :util.threading
                :util/copy-file
                :util/events
                :local-time

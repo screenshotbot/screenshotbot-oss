@@ -31,7 +31,7 @@
                  (:feature (:and :lispworks (:not :mswindows)) "control-socket")
                  "easy-macros"
                  "util/health-check"
-                 "util/threading"
+                 "util.threading"
                  "util/phabricator"
                  "hunchentoot-extensions"
                  "bknr.datastore"
