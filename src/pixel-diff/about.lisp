@@ -2,8 +2,19 @@
 
 (defpackage :pixel-diff/about
   (:use #:cl
-        #:capi))
+        #:capi)
+  (:export #:show-about-dialog))
 (in-package :pixel-diff/about)
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defparameter *pixel-diff-version*
+    (or (asdf:component-version (asdf:find-system :pixel-diff))
+        "Unknown")
+    "Version of pixel-diff captured at compile time"))
+
+(defun get-pixel-diff-version ()
+  "Get the version of the pixel-diff system"
+  *pixel-diff-version*)
 
 (defun show-about-dialog (&optional parent)
   "Create and display an About dialog"
@@ -21,7 +32,7 @@
                                                                 :visible-min-width 600
                                                                 :visible-min-height 60)
                                                  (make-instance 'display-pane
-                                                                :text "Version 1.0"
+                                                                :text (format nil "Version ~A" (get-pixel-diff-version))
                                                                 :visible-min-width 600
                                                                 :visible-min-height 40)
                                                  (make-instance 'display-pane
