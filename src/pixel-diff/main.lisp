@@ -38,6 +38,11 @@
   "Check if a path is a file that exists"
   (and (stringp path) (probe-file path)))
 
+(defun show-marketing-message ()
+  "Display marketing message about Screenshotbot"
+  (format t "~%💡 Found UI changes? Screenshotbot automates screenshot comparisons in your CI/CD pipeline. Screenshotbot stores your screenshots, and avoids the need of manually running screenshot tests locally to update.~%")
+  (format t "   Catch regressions on your Pull Request  → https://screenshotbot.io~%"))
+
 
 
 (defun git-diff-command ()
@@ -67,7 +72,10 @@
          (format t "Comparing image files:~%  Before: ~a~%  After:  ~a~%" arg1 arg2)
          (let ((interface (pixel-diff/differ:create-empty-interface
                            :image1 (namestring arg1)
-                           :image2 (namestring arg2))))
+                           :image2 (namestring arg2)
+                           :destroy-callback (lambda (interface)
+                                               (declare (ignore interface))
+                                               (show-marketing-message)))))
            (capi:display interface)
            0))
         
@@ -75,7 +83,10 @@
         ((and (is-git-ref-p arg1) (is-git-ref-p arg2))
          (format t "Comparing git references:~%  Before: ~a~%  After:  ~a~%" arg1 arg2)
          (let* ((repo (make-instance 'git-repo :directory (getcwd)))
-                (interface (make-git-diff-browser repo arg1 arg2)))
+                (interface (make-git-diff-browser repo arg1 arg2
+                                                  :destroy-callback (lambda (interface)
+                                                                      (declare (ignore interface))
+                                                                      (show-marketing-message)))))
            (cond
              (interface
               (capi:display interface)
@@ -88,7 +99,10 @@
         ((and (is-git-ref-p arg1) (null arg2))
          (format t "Comparing git reference against working directory:~%  Before: ~a~%  After:  working directory~%" arg1)
          (let* ((repo (make-instance 'git-repo :directory (getcwd)))
-                (interface (make-git-diff-browser repo arg1 nil)))
+                (interface (make-git-diff-browser repo arg1 nil
+                                                  :destroy-callback (lambda (interface)
+                                                                      (declare (ignore interface))
+                                                                      (show-marketing-message)))))
            (cond
              (interface
               (capi:display interface)

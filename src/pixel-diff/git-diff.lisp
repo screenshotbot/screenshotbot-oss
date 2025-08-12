@@ -136,7 +136,7 @@
 (defun test-example ()
   (capi:contain  (make-git-diff-browser (make-instance 'git-repo :directory "/home/arnold/builds/ios-oss/") "HEAD" "HEAD^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")))
 
-(defun make-git-diff-browser (repo ref1 ref2)
+(defun make-git-diff-browser (repo ref1 ref2 &rest args)
   "Create a git diff browser comparing REF1 and REF2.
    If REF2 is NIL, compares REF1 against the working directory files.
    Returns NIL if no PNG files have changed."
@@ -157,14 +157,15 @@
                                                              :pathname png)
                                               ;; Special case: compare against working directory
                                               (path:catfile (repo-directory repo) png))))))
-      (make-instance 'image-browser-window
-                     :image1 (make-instance 'image-layer
-                                            :image (previous (car image-pairs))
-                                            :alpha 0)
-                     :image2 (make-instance 'image-layer
-                                            :image (updated (car image-pairs))
-                                            :alpha 1)
-                     :image-pair-list image-pairs))))
+      (apply #'make-instance 'image-browser-window
+             :image1 (make-instance 'image-layer
+                                    :image (previous (car image-pairs))
+                                    :alpha 0)
+             :image2 (make-instance 'image-layer
+                                    :image (updated (car image-pairs))
+                                    :alpha 1)
+             :image-pair-list image-pairs
+             args))))
 
 
 

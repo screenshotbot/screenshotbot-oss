@@ -755,7 +755,7 @@ processed. This is the position at the time of being processed."))
                           (comparison-image (compare-images pane before-image after-image)))
      comparison-image)))
 
-(defun create-empty-interface (&key image1 image2)
+(defun create-empty-interface (&key image1 image2 destroy-callback)
   (let ((image1-layer (make-instance 'image-layer
                                      :image image1
                                      :alpha 0.1))
@@ -763,9 +763,10 @@ processed. This is the position at the time of being processed."))
                                      :image image2
                                      :alpha 0)))
     (make-instance 'image-window
-                   :title "Pixel Diff"
-                   :image1 image1-layer
-                   :image2 image2-layer)))
+           :title "Pixel Diff"
+           :image1 image1-layer
+           :image2 image2-layer
+           :destroy-callback destroy-callback)))
 
 
 (defun image-pane-resize-callback (pane x y width height)
