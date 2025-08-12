@@ -17,7 +17,10 @@
                 #:image-layer)
   (:import-from #:util/threading
                 #:make-thread
-                #:max-pool))
+                #:max-pool)
+  (:export
+   #:git-repo
+   #:make-git-diff-browser))
 (in-package :pixel-diff/git-diff)
 
 (defvar *max-pool* (make-instance 'max-pool :max 10))
@@ -48,16 +51,25 @@
    rest))
 
 (defmethod files-changed ((self git-repo) ref1 ref2)
+  "Return list of modified files between REF1 and REF2.
+   If REF2 is NIL, compares REF1 against the working directory.
+   Returns filenames of files that have been modified"
   (loop for line in (str:lines
                      ($git self
-                           (list "diff" "--name-status" ref1 ref2)))
-        if (eql #\M (elt line 0))
+                           (remove-if
+                            #'null
+                            (list "diff" "--name-status" ref1 ref2))))
+        for status = (elt line 0)
+        if (eql status #\M)
           collect (str:substring 2 nil line)))
 
 (defmethod pngs-changed ((self git-repo) ref1 ref2)
+  "Return list of PNG files that changed between REF1 and REF2.
+   If REF2 is NIL, compares REF1 against the working directory."
   (loop for file in (files-changed self ref1 ref2)
         if (str:ends-with-p ".png" file)
           collect file))
+
 
 (defmethod rev-parse ((self git-repo) ref)
   (str:trim ($git self (list "rev-parse" ref))))
@@ -89,6 +101,7 @@
    (pathname :initarg :pathname
              :reader git-pathname)))
 
+
 (defmethod load-image (pane (blob git-blob) callback &key editable)
   (log:debug "Loading blob: ~a:~a" (ref blob) (git-pathname blob))
   (uiop:with-temporary-file (:pathname p :type "png" :keep t)
@@ -104,6 +117,7 @@
           (load-image pane p callback :editable editable)
           (delete-file p))))
      :pool *max-pool*)))
+
 
 ;; (hcl:profile (Sleep 5))
 
@@ -121,6 +135,8 @@
   (capi:contain  (make-git-diff-browser (make-instance 'git-repo :directory "/home/arnold/builds/ios-oss/") "HEAD" "HEAD^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")))
 
 (defun make-git-diff-browser (repo ref1 ref2)
+  "Create a git diff browser comparing REF1 and REF2.
+   If REF2 is NIL, compares REF1 against the working directory files."
   (let ((pngs-changed (pngs-changed repo ref1 ref2)))
     (let ((image-pairs
             (loop for png in pngs-changed
@@ -130,10 +146,14 @@
                                                           :repo repo
                                                           :ref ref1
                                                           :pathname png)
-                                 :updated (make-instance 'git-blob
-                                                         :repo repo
-                                                         :ref ref2
-                                                         :pathname png)))))
+                                 :updated (if ref2
+                                              ;; Normal case: compare against another ref
+                                              (make-instance 'git-blob
+                                                             :repo repo
+                                                             :ref ref2
+                                                             :pathname png)
+                                              ;; Special case: compare against working directory
+                                              (path:catfile (repo-directory repo) png))))))
       (make-instance 'image-browser-window
                      :image1 (make-instance 'image-layer
                                             :image (previous (car image-pairs))

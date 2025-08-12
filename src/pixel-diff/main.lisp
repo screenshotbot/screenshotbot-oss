@@ -55,7 +55,8 @@
     (when (< (length args) 2)
       (format t "Usage: pixel-diff <image1> <image2>~%")
       (format t "       pixel-diff <ref1> <ref2>~%")
-      (format t "  Compare two images or git references and display the differences~%")
+      (format t "       pixel-diff <ref1> WORKING~%")
+      (format t "  Compare two images, git references, or git ref vs working directory~%")
       (usage-error "Could not parse command line"))
     
     (let ((arg1 (first args))
@@ -78,15 +79,23 @@
            (capi:display interface)
            0))
         
+        ;; First is git ref, second is "WORKING" - compare against working directory
+        ((and (is-git-ref-p arg1) (string-equal arg2 "WORKING"))
+         (format t "Comparing git reference against working directory:~%  Before: ~a~%  After:  working directory~%" arg1)
+         (let* ((repo (make-instance 'git-repo :directory (getcwd)))
+                (interface (make-git-diff-browser repo arg1 nil)))
+           (capi:display interface)
+           0))
+        
         ;; Mixed or invalid arguments
         (t
          (cond
            ((not (or (is-file-p arg1) (is-git-ref-p arg1)))
             (usage-error "Error: '~a' is neither a valid file nor a git reference~%" arg1))
-           ((not (or (is-file-p arg2) (is-git-ref-p arg2)))
-            (usage-error "Error: '~a' is neither a valid file nor a git reference~%" arg2))
+           ((not (or (is-file-p arg2) (is-git-ref-p arg2) (string-equal arg2 "WORKING")))
+            (usage-error "Error: '~a' is neither a valid file, git reference, nor 'WORKING'~%" arg2))
            (t
-            (usage-error "Error: Cannot mix files and git references. Both arguments must be files or both must be git references~%"))))))))
+            (usage-error "Error: Cannot mix files and git references. Use git-ref + git-ref, git-ref + WORKING, or file + file~%"))))))))
 
 (defun pixel-diff-command ()
   (clingon:make-command
@@ -115,6 +124,7 @@
                 (format t "Direct usage:~%")
                 (format t "  pixel-diff <image1> <image2>   Compare two image files~%")
                 (format t "  pixel-diff <ref1> <ref2>       Compare two git references~%")
+                (format t "  pixel-diff <ref1> WORKING      Compare git ref vs working directory~%")
                 0))))
 
 
