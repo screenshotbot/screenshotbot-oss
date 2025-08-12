@@ -16,14 +16,11 @@ detection. Designed for use with Screenshot tests.
 
 ## Overview
 
-PixelDiff is an open source GUI application for comparing two images
-side-by-side and highlighting pixel-level differences. It's designed
-for developers, designers, and QA professionals who need to visually
-validate changes between image versions.
+PixelDiff is an open source GUI application for comparing two images,
+or multiple images between Git branches.
 
 ## Features
 
-- **Side by Side Comparison**: View original and updated images simultaneously
 - **Difference Highlighting**: Visual overlay showing exactly which pixels have changed
 - **Interactive Navigation**: Pan and zoom to examine differences in detail
 - **Multiple View Modes**: Toggle between previous image, updated image, and difference overlay
@@ -33,7 +30,7 @@ validate changes between image versions.
 
 ## Usage
 
-Currently, you can pass in two arguments, which are two files and it
+You can pass in two arguments, which are two files and it
 compares the two:
 
 ```bash
@@ -46,7 +43,15 @@ For example, in this repository we have two sample images to try this against:
 pixel-diff src/pixel-diff/examples/image1.png src/pixel-diff/examples/image2.png
 ```
 
-In a future version, we'll provide you the ability to compare two git branches.
+If you're inside a Git repository, you can also pass in branches:
+
+```bash
+# Compare all the changes in the current checkout with the main branches
+pixel-diff main
+
+# Compare all the changes betweens two branches
+pixel-diff tags/release-1.0 tags/release-2.0
+```
 
 
 ## View Modes
@@ -55,10 +60,14 @@ In a future version, we'll provide you the ability to compare two git branches.
 - **Diff**: Highlights changed pixels in red overlay (default)
 - **Updated**: Shows only the new image
 
+Press `v` to toggle between Previous and Updated, which is useful to
+visuable differences in a zoomed-in version of the image.
+
 ## Controls
 
 ### Mouse Controls
 - **Click & Drag**: Pan around the image
+- **Mouse wheel**: Zoom into parts of the image
 - **Mouse Hover**: Display pixel color information
 
 ### Keyboard Shortcuts
@@ -74,10 +83,21 @@ In a future version, we'll provide you the ability to compare two git branches.
 
 PixelDiff is implemented in Common Lisp using the CAPI (Common
 Application Programmer Interface) for cross-platform GUI
-functionality. The core comparison algorithm performs pixel-by-pixel
-analysis to detect and highlight differences with sub-pixel accuracy.
+functionality.
 
 ## License
 
-Open source - see LICENSE file for details.
+Mozilla Public License v2.0
+
+## Author
+
+PixelDiff is built and maintained by
+(https://screenshotbot.io)[Screenshotbot]. 
+
+Screenshotbot is the industry standard screenshot testing SaaS
+solution that works with your existing screenshot tests. Screenshotbot
+stores screenshots, produces clean reports on Pull Requests, reduces
+overhead with scaling up your screenshot testing efforts. Much of
+image processing algorithms used by PixelDiff is available on our web
+based image comparison tools.
 
