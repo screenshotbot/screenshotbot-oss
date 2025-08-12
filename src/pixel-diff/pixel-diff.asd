@@ -8,6 +8,7 @@
                :cl-fad
                :log4cl)
   :components ((:file "about")
+               (:file "usage")
                (:file "image-pair")
                #+darwin
                (:file "fli-templates")

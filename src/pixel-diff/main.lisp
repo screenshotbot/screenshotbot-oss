@@ -3,6 +3,8 @@
   (:import-from #:pixel-diff/git-diff
                 #:git-repo
                 #:make-git-diff-browser)
+  (:import-from #:pixel-diff/usage
+                #:show-usage-dialog)
   (:import-from #:uiop
                 #:run-program
                 #:getcwd))
@@ -59,11 +61,8 @@
 (defun pixel-diff-command/handler (cmd)
   (let ((args (clingon:command-arguments cmd)))
     (when (< (length args) 1)
-      (format t "Usage: pixel-diff <image1> <image2>~%")
-      (format t "       pixel-diff <ref1> <ref2>~%")
-      (format t "       pixel-diff <ref1>~%")
-      (format t "  Compare two images, git references, or git ref vs working directory~%")
-      (usage-error "Could not parse command line"))
+      (show-usage-dialog)
+      (return-from pixel-diff-command/handler 0))
     
     (let ((arg1 (first args))
           (arg2 (second args)))
