@@ -18,6 +18,8 @@
   (:import-from #:util/threading
                 #:make-thread
                 #:max-pool)
+  (:import-from #:alexandria
+                #:when-let)
   (:export
    #:git-repo
    #:make-git-diff-browser))
@@ -136,8 +138,9 @@
 
 (defun make-git-diff-browser (repo ref1 ref2)
   "Create a git diff browser comparing REF1 and REF2.
-   If REF2 is NIL, compares REF1 against the working directory files."
-  (let ((pngs-changed (pngs-changed repo ref1 ref2)))
+   If REF2 is NIL, compares REF1 against the working directory files.
+   Returns NIL if no PNG files have changed."
+  (when-let ((pngs-changed (pngs-changed repo ref1 ref2)))
     (let ((image-pairs
             (loop for png in pngs-changed
                   collect

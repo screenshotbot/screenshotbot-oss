@@ -76,16 +76,26 @@
          (format t "Comparing git references:~%  Before: ~a~%  After:  ~a~%" arg1 arg2)
          (let* ((repo (make-instance 'git-repo :directory (getcwd)))
                 (interface (make-git-diff-browser repo arg1 arg2)))
-           (capi:display interface)
-           0))
+           (cond
+             (interface
+              (capi:display interface)
+              0)
+             (t
+              (format t "No PNG images changed between ~a and ~a~%" arg1 arg2)
+              0))))
         
         ;; Single git ref - compare against working directory
         ((and (is-git-ref-p arg1) (null arg2))
          (format t "Comparing git reference against working directory:~%  Before: ~a~%  After:  working directory~%" arg1)
          (let* ((repo (make-instance 'git-repo :directory (getcwd)))
                 (interface (make-git-diff-browser repo arg1 nil)))
-           (capi:display interface)
-           0))
+           (cond
+             (interface
+              (capi:display interface)
+              0)
+             (t
+              (format t "No PNG images changed between ~a and working directory~%" arg1)
+              0))))
         
         ;; Mixed or invalid arguments
         (t
