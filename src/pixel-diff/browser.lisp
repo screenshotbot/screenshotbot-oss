@@ -14,9 +14,7 @@
 
 (define-interface image-browser-window (image-window)
   ((image-pair-list :initarg :image-pair-list :initform nil
-                    :accessor image-pair-list)
-   (current-index :initform 0
-                  :accessor current-index))
+                    :accessor image-pair-list))
   (:panes)
   (:layouts
    (main-layout
@@ -74,24 +72,13 @@
           (file-namestring (pixel-diff/image-pair:previous image-pair))
           (file-namestring (pixel-diff/image-pair:updated image-pair))))
 
-(defun image-selector-callback (interface data)
+(defun image-selector-callback (pane x y image-pair)
   "Callback function for image selector list panel"
-  (declare (ignore data))
-  #+nil
-  (when (image-pair-list interface)
-    (let ((selected-index (choice-selected-item (image-selector interface))))
-      (when selected-index
-        (setf (current-index interface) selected-index)
-        (update-image-display interface)))))
+  (declare (ignore x y))
+  (set-image-pair
+   (image-pane (capi:element-interface pane))
+   image-pair))
 
-(defun update-image-display (interface)
-  "Updates the image display with the currently selected image pair"
-  #+nil
-  (when (and (image-pair-list interface)
-             (< (current-index interface) (length (image-pair-list interface))))
-    (let ((current-pair (nth (current-index interface) (image-pair-list interface))))
-      ;; Update image display logic would go here
-      )))
 
 (defun test-browser-window ()
   "Create a test browser window with three image pairs using the same example images"
