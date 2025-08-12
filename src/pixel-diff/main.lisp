@@ -40,8 +40,9 @@
 
 (defun show-marketing-message ()
   "Display marketing message about Screenshotbot"
-  (format t "~%💡 Found UI changes? Screenshotbot automates screenshot comparisons in your CI/CD pipeline. Screenshotbot stores your screenshots, and avoids the need of manually running screenshot tests locally to update.~%")
-  (format t "   Catch regressions on your Pull Request  → https://screenshotbot.io~%"))
+  (format t "~%~%💡 Found UI changes? Screenshotbot automates screenshot comparisons in your CI/CD pipeline.
+   Screenshotbot stores your screenshots, and no more manual \"record\"-ing.~%~%")
+  (format t "   Catch regressions on your Pull Request  → https://screenshotbot.io~%~%"))
 
 
 
@@ -69,7 +70,7 @@
       (cond
         ;; Both are files - use file comparison
         ((and (is-file-p arg1) (is-file-p arg2))
-         (format t "Comparing image files:~%  Before: ~a~%  After:  ~a~%" arg1 arg2)
+         (log:debug "Comparing image files:~%  Before: ~a~%  After:  ~a~%" arg1 arg2)
          (let ((interface (pixel-diff/differ:create-empty-interface
                            :image1 (namestring arg1)
                            :image2 (namestring arg2)
@@ -81,7 +82,7 @@
         
         ;; Both are git refs - use git comparison
         ((and (is-git-ref-p arg1) (is-git-ref-p arg2))
-         (format t "Comparing git references:~%  Before: ~a~%  After:  ~a~%" arg1 arg2)
+         (log:debug "Comparing git references:~%  Before: ~a~%  After:  ~a~%" arg1 arg2)
          (let* ((repo (make-instance 'git-repo :directory (getcwd)))
                 (interface (make-git-diff-browser repo arg1 arg2
                                                   :destroy-callback (lambda (interface)
@@ -97,7 +98,7 @@
         
         ;; Single git ref - compare against working directory
         ((and (is-git-ref-p arg1) (null arg2))
-         (format t "Comparing git reference against working directory:~%  Before: ~a~%  After:  working directory~%" arg1)
+         (log:debug "Comparing git reference against working directory:~%  Before: ~a~%  After:  working directory~%" arg1)
          (let* ((repo (make-instance 'git-repo :directory (getcwd)))
                 (interface (make-git-diff-browser repo arg1 nil
                                                   :destroy-callback (lambda (interface)
