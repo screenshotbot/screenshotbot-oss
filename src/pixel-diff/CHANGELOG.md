@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.3.0] - 2025-08-09
 
+### Added
+
+- CLI support for comparing git references: `./pixel-diff <ref1> <ref2>` or `./pixel-diff <ref>`
+
 ### Changed
 
 - Reduced CPU usage during mouse move
