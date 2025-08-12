@@ -160,10 +160,10 @@
       (apply #'make-instance 'image-browser-window
              :image1 (make-instance 'image-layer
                                     :image (previous (car image-pairs))
-                                    :alpha 0)
+                                    :alpha 0.1)
              :image2 (make-instance 'image-layer
                                     :image (updated (car image-pairs))
-                                    :alpha 1)
+                                    :alpha 0)
              :image-pair-list image-pairs
              args))))
 

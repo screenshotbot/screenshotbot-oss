@@ -97,7 +97,7 @@
                                         :alpha 0.1))
            (image-layer2 (make-instance 'image-layer
                                         :image "src/pixel-diff/examples/image2.png"
-                                        :alpha 1)))
+                                        :alpha 0)))
        (make-instance 'image-browser-window
                       :image1 image-layer1
                       :image2 image-layer2
