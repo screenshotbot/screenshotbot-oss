@@ -9,7 +9,15 @@
                 #:def-easy-macro)
   (:export
    #:create-empty-interface
-   #:image-pane)
+   #:image-pane
+   #:set-image-pair
+   #:open-menu-available-p
+   #:comparison-image-layer
+   #:abstract-image-layer
+   #:image-main-layout
+   #:image-window
+   #:image-layer
+   #:load-image)
   (:local-nicknames (#:image-pair #:pixel-diff/image-pair)))
 (in-package :pixel-diff/differ)
 
@@ -167,11 +175,6 @@ trigegred."
        (setf (loading-p self) nil)
        (gp:invalidate-rectangle pane)))))
 
-(defmethod read-image-async (pane (self comparison-image-layer) &optional (callback #'identity))
-  (when (and
-         (image-layer-ready-p (image1-layer self))
-         (image-layer-ready-p (image2-layer self)))
-    (call-next-method)))
 
 (defclass image-pane (output-pane)
   ((image1 :initarg :image1 :initform nil
@@ -715,7 +718,7 @@ processed. This is the position at the time of being processed."))
    (image1-layer self)
    (image2-layer self)
    (image-layer-ready-p (image1-layer self))
-   (image-layer-read-py (image2-layer self))))
+   (image-layer-read-p (image2-layer self))))
 
 (defmethod loading-p ((self comparison-image-layer))
   (call-next-method))
@@ -795,3 +798,9 @@ processed. This is the position at the time of being processed."))
       (setf (image2 (image-pane interface)) image2-layer)
       (setf (core-transform (image-pane interface)) nil)
       (gp:invalidate-rectangle (image-pane interface)))))
+
+(defmethod read-image-async (pane (self comparison-image-layer) &optional (callback #'identity))
+  (when (and
+         (image-layer-ready-p (image1-layer self))
+         (image-layer-ready-p (image2-layer self)))
+    (call-next-method)))

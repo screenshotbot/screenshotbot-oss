@@ -1,5 +1,11 @@
 (defpackage :pixel-diff/main
-  (:use #:cl))
+  (:use #:cl)
+  (:import-from #:pixel-diff/git-diff
+                #:git-repo
+                #:make-git-diff-browser)
+  (:import-from #:uiop
+                #:run-program
+                #:getcwd))
 (in-package :pixel-diff/main)
 
 (define-condition usage-error (error)
@@ -15,6 +21,22 @@
   (error 'usage-error 
          :format-string format-string 
          :arguments arguments))
+
+(defun is-git-ref-p (ref)
+  "Check if a string is a valid git reference"
+  (handler-case
+      (progn
+        (run-program 
+         (list "git" "rev-parse" "--verify" (format nil "~a^{commit}" ref))
+         :output :string
+         :error-output :string
+         :ignore-error-status nil)
+        t)
+    (error () nil)))
+
+(defun is-file-p (path)
+  "Check if a path is a file that exists"
+  (and (stringp path) (probe-file path)))
 
 
 
@@ -32,24 +54,39 @@
   (let ((args (clingon:command-arguments cmd)))
     (when (< (length args) 2)
       (format t "Usage: pixel-diff <image1> <image2>~%")
-      (format t "  Compare two images and display the differences~%")
+      (format t "       pixel-diff <ref1> <ref2>~%")
+      (format t "  Compare two images or git references and display the differences~%")
       (usage-error "Could not parse command line"))
     
-    (let ((image1 (first args))
-          (image2 (second args)))
-      (unless (probe-file image1)
-        (usage-error "Error: Image file not found: ~a~%" image1))
-      
-      (unless (probe-file image2)
-        (usage-error "Error: Image file not found: ~a~%" image2))
-      
-      (format t "Comparing images:~%  Before: ~a~%  After:  ~a~%" image1 image2)
-      
-      (let ((interface (pixel-diff/differ:create-empty-interface
-                        :image1 (namestring image1)
-                        :image2 (namestring image2))))
-        (capi:display interface)
-        0))))
+    (let ((arg1 (first args))
+          (arg2 (second args)))
+      (cond
+        ;; Both are files - use file comparison
+        ((and (is-file-p arg1) (is-file-p arg2))
+         (format t "Comparing image files:~%  Before: ~a~%  After:  ~a~%" arg1 arg2)
+         (let ((interface (pixel-diff/differ:create-empty-interface
+                           :image1 (namestring arg1)
+                           :image2 (namestring arg2))))
+           (capi:display interface)
+           0))
+        
+        ;; Both are git refs - use git comparison
+        ((and (is-git-ref-p arg1) (is-git-ref-p arg2))
+         (format t "Comparing git references:~%  Before: ~a~%  After:  ~a~%" arg1 arg2)
+         (let* ((repo (make-instance 'git-repo :directory (getcwd)))
+                (interface (make-git-diff-browser repo arg1 arg2)))
+           (capi:display interface)
+           0))
+        
+        ;; Mixed or invalid arguments
+        (t
+         (cond
+           ((not (or (is-file-p arg1) (is-git-ref-p arg1)))
+            (usage-error "Error: '~a' is neither a valid file nor a git reference~%" arg1))
+           ((not (or (is-file-p arg2) (is-git-ref-p arg2)))
+            (usage-error "Error: '~a' is neither a valid file nor a git reference~%" arg2))
+           (t
+            (usage-error "Error: Cannot mix files and git references. Both arguments must be files or both must be git references~%"))))))))
 
 (defun pixel-diff-command ()
   (clingon:make-command
@@ -75,8 +112,9 @@
                 (format t "Available subcommands:~%")
                 (format t "  help      Show this help message~%")
                 (format t "  git-diff  Compare git revisions of images~%~%")
-                (format t "Direct usage: pixel-diff <image1> <image2>~%")
-                (format t "  Compare two images directly~%")
+                (format t "Direct usage:~%")
+                (format t "  pixel-diff <image1> <image2>   Compare two image files~%")
+                (format t "  pixel-diff <ref1> <ref2>       Compare two git references~%")
                 0))))
 
 
