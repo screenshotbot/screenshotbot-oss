@@ -45,14 +45,16 @@
 (defun draw-image-layer (pane image-layer  x y width height)
   (declare (ignore x y width height))
 
-  (when (> (alpha image-layer) 0)
-    (let ((image (read-image pane image-layer)))
-      (when (< (alpha image-layer) 0.9) ;; not fully opaque
-        (gp:draw-rectangle pane 0 0 (gp:image-width image) (gp:image-height image)
-                          :filled t
-                          :foreground :white))
-      (when image
-        (gp:draw-image pane image 0 0 :global-alpha (alpha image-layer))))))
+  (read-image-async pane image-layer)
+  (when (image-layer-ready-p image-layer)
+    (when (> (alpha image-layer) 0)
+      (let ((image (read-image pane image-layer)))
+        (when (< (alpha image-layer) 0.9) ;; not fully opaque
+          (gp:draw-rectangle pane 0 0 (gp:image-width image) (gp:image-height image)
+                             :filled t
+                             :foreground :white))
+        (when image
+          (gp:draw-image pane image 0 0 :global-alpha (alpha image-layer)))))))
 
 
 (defun draw-background (pane x y width height)
@@ -70,9 +72,10 @@
   "Callback function to draw the image in the display pane"
   (draw-background pane x y width height)
   (maybe-init-core-transform pane (gp:port-width pane) (gp:port-height pane))
-  (assert (core-transform pane))
   (assert (image-transform pane))
-  (let ((transform (gp:copy-transform (core-transform pane))))
+  (let ((transform (gp:copy-transform (or
+                                       (core-transform pane)
+                                       (gp:make-transform 1 0 0 1 0 0)))))
     (gp:postmultiply-transforms
      transform
      (image-transform pane))
@@ -82,40 +85,93 @@
       (draw-image-layer pane (comparison pane) x y width height))))
 
 (defun maybe-init-core-transform (pane width height)
-  (unless (and
-           (core-transform pane)
-           (eql width (last-width pane))
-           (eql height (last-height pane)))
-    (let ((image (read-image pane (image1 pane))))
-      (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
-        (setf (last-width pane) width)
-        (setf (last-height pane) height)
-        (setf (core-transform pane)
-              (screenshotbot-js::calc-core-transform
-               width
-               height
-               (gp:image-width image)
-               (gp:image-height image)))))))
+  (read-image-async pane (image1 pane))
+  (when (image-layer-ready-p (image1 pane))
+    (unless (and
+             (core-transform pane)
+             (eql width (last-width pane))
+             (eql height (last-height pane)))
+      (let ((image (read-image pane (image1 pane))))
+        (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
+          (setf (last-width pane) width)
+          (setf (last-height pane) height)
+          (setf (core-transform pane)
+                (screenshotbot-js::calc-core-transform
+                 width
+                 height
+                 (gp:image-width image)
+                 (gp:image-height image))))))))
 
-(defmethod load-image (pane pathname &key editable)
-  (gp:load-image pane pathname :editable editable))
+(defmethod load-image (pane pathname callback &key editable)
+  (apply-in-pane-process
+   pane
+   (lambda ()
+     (funcall callback
+              (gp:load-image pane pathname :editable editable)))))
 
 (defclass abstract-image-layer ()
   ((cached-image :initform nil
                  :accessor cached-image)
+   (loading-p :initform nil
+              :initarg :loading-p
+              :accessor loading-p)
    (alpha :initarg :alpha
           :accessor alpha)
    (name :initarg :name
          :reader image-layer-name)) )
+
+(defmethod image-layer-ready-p ((self abstract-image-layer))
+  (not (null (cached-image self))))
+
+(defmethod image-layer-ready-p ((self null))
+  t)
+
+(defmethod read-image :before (pane self)
+  (assert (or
+           (image-layer-ready-p self)
+           (loading-p self))))
 
 (defclass image-layer (abstract-image-layer)
   ((image :initarg :image
           :reader image)))
 
 (defmethod read-image (pane (self image-layer))
-  (or-setf
-   (cached-image self)
-   (load-image pane (image self) :editable t)))
+  (cond
+    ((cached-image self)
+     (cached-image self))
+    (t
+     (load-image pane (image self)
+                 (lambda (image)
+                   (setf (cached-image self) image))
+                 :editable t))))
+
+
+(defmethod read-image-async (pane (self null) &optional callback)
+  nil)
+
+(defmethod read-image-async (pane (self abstract-image-layer) &optional (callback #'identity))
+  "If the image is not already loaded, it starts the process to load the
+image. The callback is only called if the image loading process was
+trigegred."
+  ;; TODO: don't load twice!
+  (unless (or
+           (image-layer-ready-p self)
+           (loading-p self))
+    (setf (loading-p self) t)
+    (schedule-timer-in-pane
+     pane
+     0
+     (lambda ()
+       (assert (loading-p self))
+       (funcall callback (read-image pane self))
+       (setf (loading-p self) nil)
+       (gp:invalidate-rectangle pane)))))
+
+(defmethod read-image-async (pane (self comparison-image-layer) &optional (callback #'identity))
+  (when (and
+         (image-layer-ready-p (image1-layer self))
+         (image-layer-ready-p (image2-layer self)))
+    (call-next-method)))
 
 (defclass image-pane (output-pane)
   ((image1 :initarg :image1 :initform nil
@@ -415,24 +471,30 @@ processed. This is the position at the time of being processed."))
           (gp:image-access-pixel image-access image-x image-y)))))))
 
 
+(defun schedule-timer-in-pane (pane timeout callback)
+  "Schedule a timer to run a callback in the pane's process"
+  (mp:schedule-timer-relative
+   (mp:make-timer
+    (lambda ()
+      (apply-in-pane-process-if-alive
+       pane
+       callback)))
+   timeout))
+
 (defun image-pane-mouse-move (pane x y)
   "Handle mouse movement over image pane to show pixel information"
   (let ((y (- y (capi:get-vertical-scroll-parameters pane :slug-position))))
     (setf (last-mouse-move-pos pane) (list x y))
-    (mp:schedule-timer-relative
-     (mp:make-timer
-      (lambda ()
-        (apply-in-pane-process-if-alive
-         pane
-         (lambda ()
-           (unless (equalp (last-mouse-move-pos pane)
-                           (last-mouse-move-updated-pos pane))
-             (setf (last-mouse-move-updated-pos pane)
-                   (last-mouse-move-pos pane))
-             (destructuring-bind (last-x last-y) (last-mouse-move-pos pane)
-               (handle-mouse-move pane last-x last-y)))))))
-     0.2)))
-
+    (schedule-timer-in-pane
+     pane
+     0.2
+     (lambda ()
+       (unless (equalp (last-mouse-move-pos pane)
+                       (last-mouse-move-updated-pos pane))
+         (setf (last-mouse-move-updated-pos pane)
+               (last-mouse-move-pos pane))
+         (destructuring-bind (last-x last-y) (last-mouse-move-pos pane)
+           (handle-mouse-move pane last-x last-y)))))))
 (defun handle-mouse-move (pane x y)
   (when (> (%internal-time) (mouse-move-blocked-until pane))
    (let ((interface (capi:element-interface pane)))
@@ -648,6 +710,15 @@ processed. This is the position at the time of being processed."))
   (:default-initargs
    :alpha 1))
 
+(defmethod image-layer-read-p ((self comparison-image-layer))
+  (and
+   (image1-layer self)
+   (image2-layer self)
+   (image-layer-ready-p (image1-layer self))
+   (image-layer-read-py (image2-layer self))))
+
+(defmethod loading-p ((self comparison-image-layer))
+  (call-next-method))
 
 
 (defmethod compare-images (pane (before gp:image) (after gp:image))
@@ -673,11 +744,12 @@ processed. This is the position at the time of being processed."))
      result)))
 
 (defmethod read-image (pane (self comparison-image-layer))
+  (log:info "Loading comparison for ~a" self)
   (or-setf
    (cached-image self)
-   (let* ((before-image (read-image pane (image1-layer self)))
-          (after-image (read-image pane (image2-layer self)))
-          (comparison-image (compare-images pane before-image after-image)))
+   (alexandria:when-let* ((before-image (cached-image (image1-layer self)))
+                          (after-image (cached-image (image2-layer self)))
+                          (comparison-image (compare-images pane before-image after-image)))
      comparison-image)))
 
 (defun create-empty-interface (&key image1 image2)

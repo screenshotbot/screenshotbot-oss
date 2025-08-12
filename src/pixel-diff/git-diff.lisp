@@ -16,6 +16,7 @@
                 #:load-image
                 #:image-layer)
   (:import-from #:util/threading
+                #:make-thread
                 #:max-pool))
 (in-package :pixel-diff/git-diff)
 
@@ -88,14 +89,21 @@
    (pathname :initarg :pathname
              :reader git-pathname)))
 
-(defmethod load-image (pane (blob git-blob) &key editable)
+(defmethod load-image (pane (blob git-blob) callback &key editable)
   (log:debug "Loading blob: ~a:~a" (ref blob) (git-pathname blob))
-  (uiop:with-temporary-file (:pathname p :type "png")
-    (open-git-file (repo blob)
-                   (ref blob)
-                   (git-pathname blob)
-                   :output p)
-    (load-image pane p :editable editable)))
+  (uiop:with-temporary-file (:pathname p :type "png" :keep t)
+    (make-thread
+     (lambda ()
+       (open-git-file (repo blob)
+                      (ref blob)
+                      (git-pathname blob)
+                      :output p)
+       (capi:apply-in-pane-process-if-alive
+        pane
+        (lambda ()
+          (load-image pane p callback :editable editable)
+          (delete-file p))))
+     :pool *max-pool*)))
 
 ;; (hcl:profile (Sleep 5))
 
@@ -106,8 +114,11 @@
 
 ;; (open-git-file (make-instance 'git-repo :directory "/home/arnold/builds/ios-oss/") "HEAD^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^" "Kickstarter-iOS/Features/Activities/Controller/__Snapshots__/ActivitiesViewControllerTests/testMultipleSurveys_NotFacebookConnected_YouLaunched.lang_de_device_phone4_7inch.png" :output #P"/tmp/test.png")
 
-;; (capi:contain  (make-git-diff-browser (make-instance 'git-repo :directory "/home/arnold/builds/ios-oss/") "HEAD" "HEAD^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"))
+;; 
 
+
+(defun test-example ()
+  (capi:contain  (make-git-diff-browser (make-instance 'git-repo :directory "/home/arnold/builds/ios-oss/") "HEAD" "HEAD^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")))
 
 (defun make-git-diff-browser (repo ref1 ref2)
   (let ((pngs-changed (pngs-changed repo ref1 ref2)))
