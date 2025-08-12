@@ -373,11 +373,11 @@ processed. This is the position at the time of being processed."))
   (when interactive
     (let ((current-zoom (get-current-zoom (capi:element-interface pane)))
           (current-position (capi:get-vertical-scroll-parameters pane :slug-position)))
-      (log:info "Current zoom is: ~a" current-zoom)
+      (log:debug "Current zoom is: ~a" current-zoom)
       (let* ((expected-zoom (scroll-pos-to-expected-zoom pane scroll-value)))
-        (log:info "existing slug pos: ~a" (capi:get-vertical-scroll-parameters pane :slug-position))
+        (log:debug "existing slug pos: ~a" (capi:get-vertical-scroll-parameters pane :slug-position))
         (multiple-value-bind (x y) (capi:current-pointer-position :relative-to pane)
-          (log:info "Got pos ~a, ~a " x y)
+          (log:debug "Got pos ~a, ~a " x y)
           (process-zoom pane x (- y current-position)
                         (/ expected-zoom current-zoom)))
         (gp:invalidate-rectangle pane)))))
@@ -398,7 +398,7 @@ processed. This is the position at the time of being processed."))
 
 (defmethod image-pane-scroll-callback (pane direction scroll-operation scroll-value &key interactive &allow-other-keys)
   (when interactive
-    (log:info "scrolled (unhandled) ~a ~a ~a ~a" direction scroll-operation scroll-value interactive)))
+    (log:debug "scrolled (unhandled) ~a ~a ~a ~a" direction scroll-operation scroll-value interactive)))
 
 
 
@@ -747,7 +747,7 @@ processed. This is the position at the time of being processed."))
      result)))
 
 (defmethod read-image (pane (self comparison-image-layer))
-  (log:info "Loading comparison for ~a" self)
+  (log:debug "Loading comparison for ~a" self)
   (or-setf
    (cached-image self)
    (alexandria:when-let* ((before-image (cached-image (image1-layer self)))

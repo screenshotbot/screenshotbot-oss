@@ -44,7 +44,7 @@
     args))
 
 (defmethod $git ((self git-repo) args &rest rest)
-  (log:info "Running: ~a" args)
+  (log:debug "Running: ~a" args)
   (apply #'uiop:run-program
    (apply #'make-git-command self args)
    :ignore-error-status nil
@@ -84,7 +84,7 @@
      (setf
       cache
       (let ((commit (rev-parse self ref)))
-        (log:info "Uncached rev-parse")
+        (log:debug "Uncached rev-parse")
         (str:trim
          ($git self (list "show" "--pretty=%T" "--no-patch" commit))))))))
 

@@ -36,7 +36,6 @@
         :documentation "only for debugging")))
 
 (defun %create-callback (interface)
-  (log:info "here")
   (let ((selector (image-selector interface)))
     (setf (capi:layout-description selector)
           (loop for image-pair in (image-pair-list interface)
