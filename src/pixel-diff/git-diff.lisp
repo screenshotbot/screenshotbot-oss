@@ -105,7 +105,7 @@
              :reader git-pathname)))
 
 
-(defmethod load-image (pane (blob git-blob) callback &key editable)
+(defmethod load-image (pane (blob git-blob) callback)
   (log:debug "Loading blob: ~a:~a" (ref blob) (git-pathname blob))
   (uiop:with-temporary-file (:pathname p :type "png" :keep t)
     (make-thread
@@ -117,7 +117,7 @@
        (capi:apply-in-pane-process-if-alive
         pane
         (lambda ()
-          (load-image pane p callback :editable editable)
+          (load-image pane p callback)
           #-mswindows
           (delete-file p))))
      :pool *max-pool*)))

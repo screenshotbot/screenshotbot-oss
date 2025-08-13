@@ -113,7 +113,7 @@
                  (gp:image-width image)
                  (gp:image-height image))))))))
 
-(defmethod load-image (pane pathname callback &key editable)
+(defmethod load-image (pane pathname callback)
   (let ((external-image (gp:read-external-image pathname)))
    (apply-in-pane-process
     pane
@@ -183,8 +183,7 @@ trigegred."
                    (lambda (image)
                      (setf (cached-image self) (post-process-image pane self image))
                      (setf (loading-p self) nil)
-                     (gp:invalidate-rectangle pane))
-                   :editable t)))))
+                     (gp:invalidate-rectangle pane)))))))
 
 
 (defclass image-pane (output-pane)
