@@ -27,6 +27,9 @@
   (/ (* (get-internal-real-time) 1000)
      internal-time-units-per-second))
 
+(defun make-identity ()
+  (gp:make-transform 1 0 0 1 0 0))
+
 (defmacro or-setf (accessor expr)
   `(or
     ,accessor
@@ -86,7 +89,7 @@
   (assert (image-transform pane))
   (let ((transform (gp:copy-transform (or
                                        (core-transform pane)
-                                       (gp:make-transform 1 0 0 1 0 0)))))
+                                       (make-identity)))))
     (gp:postmultiply-transforms
      transform
      (image-transform pane))
@@ -202,7 +205,7 @@ trigegred."
                :accessor last-width)
    (last-height :initform nil
                 :accessor last-height)
-   (image-transform :initform (gp:make-transform 1 0 0 1 0 0)
+   (image-transform :initform (make-identity)
                     :accessor image-transform
                     :documentation "The transform for the image")   
    (core-transform :initform nil
@@ -832,5 +835,6 @@ processed. This is the position at the time of being processed."))
       (setf (image1 (image-pane interface)) image1-layer)
       (setf (image2 (image-pane interface)) image2-layer)
       (setf (core-transform (image-pane interface)) nil)
+      (setf (image-transform (image-pane interface)) (make-identity))
       (gp:invalidate-rectangle (image-pane interface)))))
 
