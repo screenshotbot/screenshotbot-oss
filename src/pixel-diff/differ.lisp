@@ -143,16 +143,21 @@
   ((image :initarg :image
           :reader image)))
 
-
 (defmethod read-image (pane (self image-layer))
   (cond
     ((cached-image self)
      (cached-image self))
     (t
-     (load-image pane (image self)
-                 (lambda (image)
-                   (setf (cached-image self) (post-process-image pane self image)))
-                 :editable t))))
+     (start-async-image-load pane self)
+     nil)))
+
+(defmethod start-async-image-load (pane (self image-layer))
+  (load-image pane (image self)
+              (lambda (image)
+                (setf (cached-image self) (post-process-image pane self image)))
+              :editable t))
+
+
 
 (defmethod free-image-layer (pane (self abstract-image-layer))
   (when (cached-image self)
