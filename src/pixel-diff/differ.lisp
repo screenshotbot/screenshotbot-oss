@@ -40,6 +40,12 @@
              (gp:image-access-transfer-to-image image-access)))
       (gp:free-image-access image-access))))
 
+(def-easy-macro with-image-from-external (&binding image pane external-image &fn fn)
+  (let ((image (gp:load-image pane external-image :editable t)))
+    (unwind-protect
+         (fn image)
+      (gp:free-image pane image))))
+
 (defun create-empty-pane ()
   (make-instance 'output-pane
                  :background :white
@@ -56,7 +62,7 @@
   (read-image-async pane image-layer)
   (when (image-layer-ready-p image-layer)
     (when (> (alpha image-layer) 0)
-      (let ((image (read-image pane image-layer)))
+      (with-image-from-external (image pane (read-image pane image-layer))
         (when (< (alpha image-layer) 0.9) ;; not fully opaque
           (gp:draw-rectangle pane 0 0 (gp:image-width image) (gp:image-height image)
                              :filled t
@@ -99,7 +105,7 @@
              (core-transform pane)
              (eql width (last-width pane))
              (eql height (last-height pane)))
-      (let ((image (read-image pane (image1 pane))))
+      (with-image-from-external (image pane (read-image pane (image1 pane)))
         (let ((screenshotbot-js-stubs::*make-matrix-impl* #'gp:make-transform))
           (setf (last-width pane) width)
           (setf (last-height pane) height)
@@ -111,11 +117,12 @@
                  (gp:image-height image))))))))
 
 (defmethod load-image (pane pathname callback &key editable)
-  (apply-in-pane-process
-   pane
-   (lambda ()
-     (funcall callback
-              (gp:load-image pane pathname :editable editable)))))
+  (let ((external-image (gp:read-external-image pathname)))
+   (apply-in-pane-process
+    pane
+    (lambda ()
+      (funcall callback
+               external-image)))))
 
 (defclass abstract-image-layer ()
   ((cached-image :initform nil
@@ -153,7 +160,6 @@
 
 (defmethod free-image-layer (pane (self abstract-image-layer))
   (when (cached-image self)
-    (gp:free-image pane (cached-image self))
     (setf (cached-image self) nil)))
 
 
@@ -472,12 +478,12 @@ processed. This is the position at the time of being processed."))
 (defun get-image-layer-color (pane image-layer image-x image-y)
   "Get the color of a pixel from an image layer at the specified coordinates"
   (when image-layer
-    (let ((image (read-image pane image-layer)))
+    (with-image-from-external (image pane (read-image pane image-layer))
       (when (and image 
                  (< image-x (gp:image-width image))
                  (< image-y (gp:image-height image)))
         (with-image-access (image-access pane image)
-         (color:unconvert-color
+          (color:unconvert-color
           pane
           (gp:image-access-pixel image-access image-x image-y)))))))
 
@@ -570,25 +576,26 @@ processed. This is the position at the time of being processed."))
 
 (defun %zoom-to (interface x y &key (zoom 5) (finally (lambda ())))
   (let ((pane (slot-value interface 'image-pane)))
-    (let* ((image (read-image pane (image1 (image-pane interface))))
-           (start-mat (transform-to-3dmat (image-transform pane)))
-           (final-mat (screenshotbot-js::calc-transform-for-center
-                       (gp:port-width pane)
-                       (gp:port-height pane)
-                      (gp:image-width image)
-                      (gp:image-height image)
-                      x y zoom)))
-      (start-animation-timer
-       (image-pane interface)
-       2
-       (lambda (progress)
-         (disable-mouse-move (image-pane interface))
-         (setf (image-transform pane)
-               (3dmat-to-transform
-                (animate-transform start-mat final-mat progress)))
-         (invalidate-scroll-position interface)
-         (gp:invalidate-rectangle pane))
-       :finally finally))))
+    (with-image-from-external (image pane (read-image pane (image1 (image-pane interface))))
+     (let* (
+            (start-mat (transform-to-3dmat (image-transform pane)))
+            (final-mat (screenshotbot-js::calc-transform-for-center
+                        (gp:port-width pane)
+                        (gp:port-height pane)
+                        (gp:image-width image)
+                        (gp:image-height image)
+                        x y zoom)))
+       (start-animation-timer
+        (image-pane interface)
+        2
+        (lambda (progress)
+          (disable-mouse-move (image-pane interface))
+          (setf (image-transform pane)
+                (3dmat-to-transform
+                 (animate-transform start-mat final-mat progress)))
+          (invalidate-scroll-position interface)
+          (gp:invalidate-rectangle pane))
+        :finally finally)))))
 
 (defmethod invalidate-scroll-position (interface)
   (let ((pane (image-pane interface)))
@@ -614,16 +621,18 @@ processed. This is the position at the time of being processed."))
 (defun zoom-to-change-callback (data interface)
   "Callback function for zoom-to-change button - currently just logs"
   (declare (ignore data))
-  (multiple-value-bind (x y)
-      (find-non-transparent-pixel
-       (image-pane interface)
-       (read-image (image-pane interface)
-                   (comparison (image-pane interface))))
-    (setf (capi:button-enabled (zoom-button interface))  nil)
-    (%zoom-to interface x y
-              :finally
-              (lambda ()
-                (setf (capi:button-enabled (zoom-button interface)) t))))
+  (with-image-from-external (image (image-pane interface)
+                             (read-image (image-pane interface)
+                                         (comparison (image-pane interface))))
+    (multiple-value-bind (x y)
+       (find-non-transparent-pixel
+        (image-pane interface)
+        image)
+     (setf (capi:button-enabled (zoom-button interface))  nil)
+     (%zoom-to interface x y
+               :finally
+               (lambda ()
+                 (setf (capi:button-enabled (zoom-button interface)) t)))))
   (log:debug "Zoom to change button pressed for interface: ~a" interface))
 
 (defun zoom-in-callback (interface)
@@ -767,9 +776,11 @@ processed. This is the position at the time of being processed."))
       (or-setf
        (cached-image self)
        (alexandria:when-let* ((before-image (cached-image (image1-layer self)))
-                              (after-image (cached-image (image2-layer self)))
-                              (comparison-image (compare-images pane before-image after-image)))
-         comparison-image))
+                              (after-image (cached-image (image2-layer self))))
+         (with-image-from-external (before-image pane before-image)
+           (with-image-from-external (after-image pane after-image)
+             (let ((comparison-image (compare-images pane before-image after-image)))
+               comparison-image)))))
       (when (and (not last)
                  (cached-image self))
         ;; TODO: is this required? Technically this is probably

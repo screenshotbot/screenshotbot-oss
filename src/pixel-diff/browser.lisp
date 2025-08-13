@@ -37,28 +37,6 @@
   ((num :initarg :num
         :documentation "only for debugging")))
 
-(defun scale-image (pane original-image scale-factor)
-  "Creates a new gp:image that is a scaled version of the original"
-  (let* ((original-width (gp:image-width original-image))
-         (original-height (gp:image-height original-image))
-         (new-width (round (* original-width scale-factor)))
-         (new-height (round (* original-height scale-factor))))
-    
-    ;; Correct syntax: width and height as positional arguments, not keywords
-    (gp:with-pixmap-graphics-port (pixmap-port pane new-width new-height)
-      ;; Draw the original image scaled into the pixmap
-      (gp:draw-image pixmap-port original-image
-                     0 0  ; to-x to-y (destination position)
-                     :from-x 0
-                     :from-y 0
-                     :from-width original-width
-                     :from-height original-height
-                     :to-width new-width
-                     :to-height new-height)
-      
-      ;; Create an image from the pixmap contents
-      (gp:make-image-from-port pixmap-port 0 0 new-width new-height))))
-
 (defclass thumbnail-image-layer (image-layer)
   ())
 
@@ -68,9 +46,7 @@
     (/ 400 (max width height))))
 
 (defmethod post-process-image (pane (self thumbnail-image-layer) image)
-  (prog1
-      (scale-image pane image (calc-scale image))
-    (gp:free-image pane image)))
+  image)
 
 (defun %create-callback (interface)
   (let ((selector (image-selector interface)))
