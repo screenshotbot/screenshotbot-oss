@@ -757,7 +757,9 @@ processed. This is the position at the time of being processed."))
                    (if (color:colors= before-color after-color)
                        (setf (gp:image-access-pixel result-access x y) transparent)
                        (setf (gp:image-access-pixel result-access x y) red)))))))))
-     result)))
+     (unwind-protect
+          (gp:externalize-image pane result :type :png :quality 100)
+       (gp:free-image pane result)))))
 
 (defmethod read-image (pane (self comparison-image-layer))
   (log:debug "Loading comparison for ~a" self)
