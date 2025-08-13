@@ -68,6 +68,7 @@
                              :filled t
                              :foreground :white))
         (when image
+          (log:debug "drawing image ~a" image-layer)
           (gp:draw-image pane image 0 0 :global-alpha (alpha image-layer)))))))
 
 
@@ -84,7 +85,7 @@
 
 (defun draw-image-callback (pane x y width height)
   "Callback function to draw the image in the display pane"
-  (log:info "Draw callback")
+  (log:debug "Draw callback")
   (draw-background pane x y width height)
   (maybe-init-core-transform pane (gp:port-width pane) (gp:port-height pane))
   (assert (image-transform pane))
@@ -782,13 +783,7 @@ processed. This is the position at the time of being processed."))
          (with-image-from-external (before-image pane before-image)
            (with-image-from-external (after-image pane after-image)
              (let ((comparison-image (compare-images pane before-image after-image)))
-               comparison-image)))))
-      (when (and (not last)
-                 (cached-image self))
-        ;; TODO: is this required? Technically this is probably
-        ;; happening just before we're drawing, unless we add hooks to
-        ;; the layers.
-        (gp:invalidate-rectangle pane)))))
+               comparison-image))))))))
 
 (defun create-empty-interface (&key image1 image2 destroy-callback)
   (let ((image1-layer (make-instance 'image-layer
