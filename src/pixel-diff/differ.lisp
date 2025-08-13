@@ -150,9 +150,11 @@
     (t
      (load-image pane (image self)
                  (lambda (image)
-                   (setf (cached-image self) image))
+                   (setf (cached-image self) (post-process-image pane self image)))
                  :editable t))))
 
+(defmethod post-process-image (pane image-layer image)
+  image)
 
 (defmethod read-image-async (pane (self null) &optional callback)
   nil)
