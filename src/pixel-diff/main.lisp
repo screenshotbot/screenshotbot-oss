@@ -59,7 +59,13 @@
               (error "unimplemented"))))
 
 (defun pixel-diff-command/handler (cmd)
-  (let ((args (clingon:command-arguments cmd)))
+  (let ((args (clingon:command-arguments cmd))
+        (verbose (clingon:getopt cmd :verbose)))
+    
+    ;; Configure logging based on verbose flag
+    (when verbose
+      (log:config :debug))
+    
     (when (< (length args) 1)
       (show-usage-dialog)
       (return-from pixel-diff-command/handler 0))
@@ -126,7 +132,13 @@
    :name "pixel-diff"
    :description "Compare two images and display the differences"
    :usage "pixel-diff <subcommand> [options] [args...]"
-   :options (list)
+   :options (list
+             (clingon:make-option
+              :flag
+              :description "Enable verbose debug logging"
+              :short-name #\v
+              :long-name "verbose"
+              :key :verbose))
    :sub-commands (list (git-diff-command)
                        (help-command))
    :handler #'pixel-diff-command/handler))
