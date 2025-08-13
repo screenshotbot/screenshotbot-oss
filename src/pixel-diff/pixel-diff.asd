@@ -12,6 +12,7 @@
                (:file "image-pair")
                #+darwin
                (:file "fli-templates")
+               (:file "external-images")
                (:file "differ")
                (:file "browser")
                (:file "git-diff")

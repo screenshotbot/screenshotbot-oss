@@ -7,6 +7,8 @@
                 #:show-about-dialog)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:pixel-diff/external-images
+                #:with-image-from-external)
   (:export
    #:create-empty-interface
    #:image-pane
@@ -40,11 +42,6 @@
              (gp:image-access-transfer-to-image image-access)))
       (gp:free-image-access image-access))))
 
-(def-easy-macro with-image-from-external (&binding image pane external-image &fn fn)
-  (let ((image (gp:load-image pane external-image :editable t)))
-    (unwind-protect
-         (fn image)
-      (gp:free-image pane image))))
 
 (defun create-empty-pane ()
   (make-instance 'output-pane
