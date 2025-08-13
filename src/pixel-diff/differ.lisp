@@ -150,16 +150,6 @@
     (t
      nil)))
 
-(defmethod start-async-image-load (pane (self image-layer))
-  (assert (loading-p self))
-  (load-image pane (image self)
-              (lambda (image)
-                (setf (cached-image self) (post-process-image pane self image))
-                (setf (loading-p self) nil)
-                (gp:invalidate-rectangle pane))
-              :editable t))
-
-
 
 (defmethod free-image-layer (pane (self abstract-image-layer))
   (when (cached-image self)
@@ -186,7 +176,12 @@ trigegred."
      pane
      0
      (lambda ()
-       (start-async-image-load pane self)))))
+       (load-image pane (image self)
+                   (lambda (image)
+                     (setf (cached-image self) (post-process-image pane self image))
+                     (setf (loading-p self) nil)
+                     (gp:invalidate-rectangle pane))
+                   :editable t)))))
 
 
 (defclass image-pane (output-pane)
@@ -763,18 +758,24 @@ processed. This is the position at the time of being processed."))
   (log:debug "Loading comparison for ~a" self)
   (cached-image self))
 
-(defmethod start-async-image-load (pane (self comparison-image-layer))
+(defmethod read-image-async (pane (self comparison-image-layer))
   ;; Comparison-image-layer is a synchronous layer.
-  (let ((last (cached-image self)))
-    (or-setf
-     (cached-image self)
-     (alexandria:when-let* ((before-image (cached-image (image1-layer self)))
-                            (after-image (cached-image (image2-layer self)))
-                            (comparison-image (compare-images pane before-image after-image)))
-       comparison-image))
-    (when (and (not last)
-               (cached-image self))
-      (gp:invalidate-rectangle pane))))
+  (when (and
+         (image-layer-ready-p (image1-layer self))
+         (image-layer-ready-p (image2-layer self)))
+    (let ((last (cached-image self)))
+      (or-setf
+       (cached-image self)
+       (alexandria:when-let* ((before-image (cached-image (image1-layer self)))
+                              (after-image (cached-image (image2-layer self)))
+                              (comparison-image (compare-images pane before-image after-image)))
+         comparison-image))
+      (when (and (not last)
+                 (cached-image self))
+        ;; TODO: is this required? Technically this is probably
+        ;; happening just before we're drawing, unless we add hooks to
+        ;; the layers.
+        (gp:invalidate-rectangle pane)))))
 
 (defun create-empty-interface (&key image1 image2 destroy-callback)
   (let ((image1-layer (make-instance 'image-layer
@@ -824,8 +825,3 @@ processed. This is the position at the time of being processed."))
       (setf (core-transform (image-pane interface)) nil)
       (gp:invalidate-rectangle (image-pane interface)))))
 
-(defmethod read-image-async (pane (self comparison-image-layer))
-  (when (and
-         (image-layer-ready-p (image1-layer self))
-         (image-layer-ready-p (image2-layer self)))
-    (call-next-method)))
