@@ -3,11 +3,15 @@
   (:export #:image-pair
            #:previous
            #:updated
-           #:make-image-pair))
+           #:make-image-pair
+           #:image-pair-title))
 (in-package :pixel-diff/image-pair)
 
 (defclass image-pair ()
-  ((previous :initarg :previous
+  ((title :initarg :title
+          :initform nil
+          :reader image-pair-title)
+   (previous :initarg :previous
              :accessor previous
              :type (or string pathname null)
              :documentation "Image-layer of the previous file")

@@ -17,12 +17,19 @@
 (define-interface image-browser-window (image-window)
   ((image-pair-list :initarg :image-pair-list :initform nil
                     :accessor image-pair-list))
-  (:panes)
+  (:panes
+   (image-list-selector
+    list-panel
+    :items (image-pair-list interface)
+    :print-function 'image-pair:image-pair-title
+    :selection-callback 'image-list-selection-callback
+    :reader image-list-selector))
   (:layouts
    (main-layout
     row-layout
-    '(image-selector :divider image-main-layout)
+    '(image-list-selector :divider image-main-layout)
     :x-ratios `(1 nil 8))
+   ;; This is no longer being used, hopefully it doesn't use up CPU being around.
    (image-selector
     column-layout
     '()
@@ -69,6 +76,14 @@
                                                     (image-selector-callback image-pane x y image-pair))))))))))
 
 
+(defun image-list-selection-callback (selected-image-pair interface)
+  "Callback function for the image list selector panel"
+  (set-image-pair
+   (image-pane interface)
+   selected-image-pair))
+
+
+
 (defun image-selector-callback (image-pane x y image-pair)
   (declare (ignore x y))
   (set-image-pair
@@ -77,12 +92,6 @@
 
 (defmethod open-menu-available-p ((self image-browser-window))
   nil)
-
-(defun image-list-item-name (image-pair)
-  "Returns a display name for an image pair in the list selector"
-  (format nil "~A vs ~A" 
-          (file-namestring (pixel-diff/image-pair:previous image-pair))
-          (file-namestring (pixel-diff/image-pair:updated image-pair))))
 
 (defun image-selector-callback (pane x y image-pair)
   "Callback function for image selector list panel"

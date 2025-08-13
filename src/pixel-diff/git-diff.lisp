@@ -147,6 +147,7 @@
             (loop for png in pngs-changed
                   collect
                   (make-instance 'image-pair
+                                 :title png
                                  :previous (make-instance 'git-blob
                                                           :repo repo
                                                           :ref ref1

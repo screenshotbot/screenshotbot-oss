@@ -84,6 +84,7 @@
 
 (defun draw-image-callback (pane x y width height)
   "Callback function to draw the image in the display pane"
+  (log:info "Draw callback")
   (draw-background pane x y width height)
   (maybe-init-core-transform pane (gp:port-width pane) (gp:port-height pane))
   (assert (image-transform pane))
