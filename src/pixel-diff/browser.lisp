@@ -4,7 +4,6 @@
   (:import-from #:pixel-diff/differ
                 #:post-process-image
                 #:cached-image
-                #:read-image-async
                 #:set-image-pair
                 #:open-menu-available-p
                 #:comparison-image-layer

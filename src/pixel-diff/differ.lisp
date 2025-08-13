@@ -163,10 +163,10 @@
 (defmethod post-process-image (pane image-layer image)
   image)
 
-(defmethod read-image-async (pane (self null) &optional callback)
+(defmethod read-image-async (pane (self null))
   nil)
 
-(defmethod read-image-async (pane (self abstract-image-layer) &optional (callback #'identity))
+(defmethod read-image-async (pane (self abstract-image-layer))
   "If the image is not already loaded, it starts the process to load the
 image. The callback is only called if the image loading process was
 trigegred."
@@ -180,7 +180,7 @@ trigegred."
      0
      (lambda ()
        (assert (loading-p self))
-       (funcall callback (read-image pane self))
+       (read-image pane self)
        (setf (loading-p self) nil)
        (gp:invalidate-rectangle pane)))))
 
@@ -812,7 +812,7 @@ processed. This is the position at the time of being processed."))
       (setf (core-transform (image-pane interface)) nil)
       (gp:invalidate-rectangle (image-pane interface)))))
 
-(defmethod read-image-async (pane (self comparison-image-layer) &optional (callback #'identity))
+(defmethod read-image-async (pane (self comparison-image-layer))
   (when (and
          (image-layer-ready-p (image1-layer self))
          (image-layer-ready-p (image2-layer self)))
