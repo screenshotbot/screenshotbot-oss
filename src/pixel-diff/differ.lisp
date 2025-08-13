@@ -148,13 +148,15 @@
     ((cached-image self)
      (cached-image self))
     (t
-     (start-async-image-load pane self)
      nil)))
 
 (defmethod start-async-image-load (pane (self image-layer))
+  (assert (loading-p self))
   (load-image pane (image self)
               (lambda (image)
-                (setf (cached-image self) (post-process-image pane self image)))
+                (setf (cached-image self) (post-process-image pane self image))
+                (setf (loading-p self) nil)
+                (gp:invalidate-rectangle pane))
               :editable t))
 
 
@@ -184,10 +186,7 @@ trigegred."
      pane
      0
      (lambda ()
-       (assert (loading-p self))
-       (read-image pane self)
-       (setf (loading-p self) nil)
-       (gp:invalidate-rectangle pane)))))
+       (start-async-image-load pane self)))))
 
 
 (defclass image-pane (output-pane)
@@ -762,12 +761,20 @@ processed. This is the position at the time of being processed."))
 
 (defmethod read-image (pane (self comparison-image-layer))
   (log:debug "Loading comparison for ~a" self)
-  (or-setf
-   (cached-image self)
-   (alexandria:when-let* ((before-image (cached-image (image1-layer self)))
-                          (after-image (cached-image (image2-layer self)))
-                          (comparison-image (compare-images pane before-image after-image)))
-     comparison-image)))
+  (cached-image self))
+
+(defmethod start-async-image-load (pane (self comparison-image-layer))
+  ;; Comparison-image-layer is a synchronous layer.
+  (let ((last (cached-image self)))
+    (or-setf
+     (cached-image self)
+     (alexandria:when-let* ((before-image (cached-image (image1-layer self)))
+                            (after-image (cached-image (image2-layer self)))
+                            (comparison-image (compare-images pane before-image after-image)))
+       comparison-image))
+    (when (and (not last)
+               (cached-image self))
+      (gp:invalidate-rectangle pane))))
 
 (defun create-empty-interface (&key image1 image2 destroy-callback)
   (let ((image1-layer (make-instance 'image-layer
