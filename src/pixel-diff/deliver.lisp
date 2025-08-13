@@ -11,20 +11,25 @@
                 #:deliver-common))
 (in-package :pixel-diff/deliver)
 
+(defun deliver-target ()
+   "pixel-diff"
+   #+darwin
+   (if (str:s-member sys:*line-arguments-list* "--debug")
+    "pixel-diff"
+    (hcl:create-macos-application-bundle 
+     "pixel-diff.app"
+     ;; Don't copy LispWorks file associations
+     :document-types nil
+     :identifier "io.screenshotbot.pixeldiff"
+     :application-icns (asdf:system-relative-pathname :pixel-diff "PixelDiff.icns")
+     :version (asdf:component-version (asdf:find-system :pixel-diff))
+     :bundle-name "Pixel Diff")))
+
+
 (defun deliver-pixel-diff ()
   "Deliver the pixel-diff binary"
   (deliver-common 
-   #-darwin
-   "pixel-diff"
-   #+darwin
-   (hcl:create-macos-application-bundle 
-    "pixel-diff.app"
-    ;; Don't copy LispWorks file associations
-    :document-types nil
-    :identifier "io.screenshotbot.pixeldiff"
-    :application-icns (asdf:system-relative-pathname :pixel-diff "PixelDiff.icns")
-    :version "0.2"
-    :bundle-name "Pixel Diff")
+   (deliver-target)
    :restart-fn #'pixel-diff/main::main
    :deliver-level 5
    :interface :capi
