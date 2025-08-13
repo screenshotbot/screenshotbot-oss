@@ -38,6 +38,7 @@
                               &rest
                                 args)
   (list*
+   #-mswindows
    "/usr/bin/env"
     "git" "--git-dir" (namestring
                        (path:catdir (repo-directory self) ".git/"))
@@ -117,6 +118,7 @@
         pane
         (lambda ()
           (load-image pane p callback :editable editable)
+          #-mswindows
           (delete-file p))))
      :pool *max-pool*)))
 
