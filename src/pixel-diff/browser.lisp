@@ -28,14 +28,7 @@
    (main-layout
     row-layout
     '(image-list-selector :divider image-main-layout)
-    :x-ratios `(1 nil 8))
-   ;; This is no longer being used, hopefully it doesn't use up CPU being around.
-   (image-selector
-    column-layout
-    '()
-    :vertical-scroll t
-    :x-adjust :left
-    :reader image-selector))
+    :x-ratios `(1 nil 8)))
   (:default-initargs
    :create-callback '%create-callback
    :title "Image Browser"))
@@ -55,25 +48,7 @@
 (defmethod post-process-image (pane (self thumbnail-image-layer) image)
   image)
 
-(defun %create-callback (interface)
-  (let ((selector (image-selector interface)))
-    (setf (capi:layout-description selector)
-          (loop for image-pair in (image-pair-list interface)
-                for i from 0
-                collect
-                (let ((image-pair image-pair))
-                  (make-instance 'left-image-pane
-                                 :num i
-                                 :visible-min-height 100
-                                 :visible-max-height 200
-                                 :visible-border nil
-                                 :image1 (make-instance 'thumbnail-image-layer
-                                                        :image (image-pair:updated image-pair)
-                                                        :alpha 1)
-                                 :image2 nil
-                                 :input-model `(((:button-1 :release)
-                                                 ,(lambda (image-pane x y)
-                                                    (image-selector-callback image-pane x y image-pair))))))))))
+(defun %create-callback (interface))
 
 
 (defun image-list-selection-callback (selected-image-pair interface)
@@ -84,22 +59,8 @@
 
 
 
-(defun image-selector-callback (image-pane x y image-pair)
-  (declare (ignore x y))
-  (set-image-pair
-   (image-pane (capi:element-interface image-pane))
-   image-pair))
-
 (defmethod open-menu-available-p ((self image-browser-window))
   nil)
-
-(defun image-selector-callback (pane x y image-pair)
-  "Callback function for image selector list panel"
-  (declare (ignore x y))
-  (set-image-pair
-   (image-pane (capi:element-interface pane))
-   image-pair))
-
 
 (defun test-browser-window ()
   "Create a test browser window with three image pairs using the same example images"
