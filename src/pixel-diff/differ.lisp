@@ -143,6 +143,7 @@
   ((image :initarg :image
           :reader image)))
 
+
 (defmethod read-image (pane (self image-layer))
   (cond
     ((cached-image self)
@@ -152,6 +153,12 @@
                  (lambda (image)
                    (setf (cached-image self) (post-process-image pane self image)))
                  :editable t))))
+
+(defmethod free-image-layer (pane (self abstract-image-layer))
+  (when (cached-image self)
+    (gp:free-image pane (cached-image self))
+    (setf (cached-image self) nil)))
+
 
 (defmethod post-process-image (pane image-layer image)
   image)
@@ -791,6 +798,9 @@ processed. This is the position at the time of being processed."))
 
 (defun set-image-pair (image-pane image-pair)
   (let ((interface (capi:element-interface image-pane)))
+    (free-image-layer image-pane (image1 image-pane))
+    (free-image-layer image-pane (image2 image-pane))
+    (free-image-layer image-pane (comparison image-pane))
     (let ((image1-layer (make-instance 'image-layer
                                        :image (image-pair:previous image-pair)
                                        :alpha 0.1))
