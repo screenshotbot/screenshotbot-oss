@@ -7,6 +7,9 @@ DEVELOPER_ID="Developer ID Application: Modern Interpreters Inc (HQ25CUJ52L)"
 TEAM_ID="HQ25CUJ52L"
 APP_PASSWORD="${NOTARIZATION_PASSWORD}"  # Set via: export NOTARIZATION_PASSWORD="your-password"
 BUNDLE_ID="io.screenshotbot.pixeldiff"  # Matches Info.plist
+ENTITLEMENTS_FILE="src/pixel-diff/lispworks.entitlements"
+
+
 
 # Colors for output
 RED='\033[0;31m'
@@ -40,7 +43,7 @@ chmod +x "$APP_PATH/Contents/MacOS"/*
 
 # Step 3: Code signing
 echo -e "${YELLOW}Step 3: Code signing the app...${NC}"
-codesign --force --deep --options runtime --sign "$DEVELOPER_ID" "$APP_PATH"
+codesign --force --deep --entitlements $ENTITLEMENTS_FILE --options runtime --sign "$DEVELOPER_ID" "$APP_PATH"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}Error: Code signing failed${NC}"
