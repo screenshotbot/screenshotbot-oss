@@ -12,6 +12,25 @@
                 #:encode-json-to-string))
 (in-package :screenshotbot/mcp/mcp)
 
+(defun list-tools (id)
+  (encode-json-to-string
+   `((:jsonrpc . "2.0")
+     (:id . ,id)
+     (:result . ((:tools . (((:name . "list_channels")
+                             (:description . "List all channels (projects) in Screenshotbot")
+                             (:inputSchema . ((:type . "object")
+                                              (:properties . ())
+                                              (:required . ())))))))))))
+
+(defun list-resources (id)
+  (encode-json-to-string
+   `((:jsonrpc . "2.0")
+     (:id . ,id)
+     (:result . ((:resources . (((:uri . "channel://list")
+                                 (:name . "channels")
+                                 (:description . "List of all channels (projects) in Screenshotbot")
+                                 (:mimeType . "application/json")))))))))
+
 (defhandler (nil :uri "/mcp" :method :post) ()
   (setf (hunchentoot:header-out :content-type) "application/json")
   (let* ((request-body (hunchentoot:raw-post-data :force-text t))
@@ -38,16 +57,10 @@
                  (:version . "1.0.0"))))))))
       
       ((string= method "tools/list")
-       (encode-json-to-string
-         `((:jsonrpc . "2.0")
-           (:id . ,id)
-           (:result . ((:tools . ()))))))
+       (list-tools id))
       
       ((string= method "resources/list")
-       (encode-json-to-string
-         `((:jsonrpc . "2.0")
-           (:id . ,id)
-           (:result . ((:resources . ()))))))
+       (list-resources id))
       
       (t
        (encode-json-to-string
