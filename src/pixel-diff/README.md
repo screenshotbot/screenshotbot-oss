@@ -30,20 +30,7 @@ or multiple images between Git branches.
 
 ## Usage
 
-You can pass in two arguments, which are two files and it
-compares the two:
-
-```bash
-pixel-diff file-before.png file-after.png
-```
-
-For example, in this repository we have two sample images to try this against:
-
-```bash
-pixel-diff src/pixel-diff/examples/image1.png src/pixel-diff/examples/image2.png
-```
-
-If you're inside a Git repository, you can also pass in branches:
+If you're inside a Git repository, you can compare any two branches:
 
 ```bash
 # Compare all the changes in the current checkout with the main branches
@@ -52,6 +39,20 @@ pixel-diff main
 # Compare all the changes betweens two branches
 pixel-diff tags/release-1.0 tags/release-2.0
 ```
+
+
+You can also just compare any two image files, whether or not they are in Git:
+
+```bash
+pixel-diff file-before.png file-after.png
+```
+
+For example, in this repository we have two sample images to test this against:
+
+```bash
+pixel-diff src/pixel-diff/examples/image1.png src/pixel-diff/examples/image2.png
+```
+
 
 
 ## View Modes
