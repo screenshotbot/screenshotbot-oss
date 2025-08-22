@@ -92,6 +92,7 @@
                <td>,(progn peer)</td>
                <td>,(cluster:private-ip instance)</td>
                <td>,(cluster:ipv6-address instance)</td>
+               <td><timeago timestamp= (local-time:parse-timestring (cluster:launch-time instance)) /></td>
              </tr>)
   </table>)
 
