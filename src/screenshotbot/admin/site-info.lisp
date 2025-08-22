@@ -68,7 +68,7 @@
              (list
               (str:join ","
                         peers)
-              (render-peer-info peer))))
+              (render-peer-info peers))))
       </li>
 
       <li>Features: ,(progn *features*)</li>
@@ -83,12 +83,15 @@
 
 #+ (and bknr.cluster (not :screenshotbot-oss))
 (defun render-peer-info (peers)
-  <table>
+  <table class= "table border" >
     ,@(loop for peer in peers
+            for instance = (cluster:get-instance-by-ip (first (str:rsplit ":"  peer :limit 4)))
              collect
              <tr>
+               <td>,(cluster:instance-name instance)</td>
                <td>,(progn peer)</td>
-               <td>unimplemented</td>
+               <td>,(cluster:private-ip instance)</td>
+               <td>,(cluster:ipv6-address instance)</td>
              </tr>)
   </table>)
 
