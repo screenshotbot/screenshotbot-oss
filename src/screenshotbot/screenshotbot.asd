@@ -34,6 +34,8 @@
                :core.api
                :bknr.impex
                :util/logger
+               #+ (and bknr.cluster (not :screenshotbot-oss))
+               :cluster
                :util.store/raft-state
                :lparallel
                :zip

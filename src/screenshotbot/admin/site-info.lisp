@@ -15,10 +15,12 @@
   (:import-from #:alexandria
                 #:when-let)
   (:import-from #:util/timeago
-                #:timeago))
+                #:timeago)
+  #+ (and bknr.cluster (not :screenshotbot-oss))
+  (:local-nicknames (#:cluster #:cluster/cluster)))
 (in-package :screenshotbot/admin/site-info)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defvar *boot-time* (get-universal-time))
 
@@ -60,10 +62,13 @@
       </li>
 
       <li>Cluster config:
-        ,(progn
-           #+bknr.cluster
-           (str:join ","
-            (bknr.cluster/server:list-peers bknr.datastore:*store*)))
+        ,@(progn
+           #+ (and bknr.cluster (not :screenshotbot-oss))
+           (let ((peers (bknr.cluster/server:list-peers bknr.datastore:*store*)))
+             (list
+              (str:join ","
+                        peers)
+              (render-peer-info peer))))
       </li>
 
       <li>Features: ,(progn *features*)</li>
@@ -75,6 +80,17 @@
         <li><a href= "/admin/thread-list">Threads</a></li>
       </ul>
   </admin-app-template>)
+
+#+ (and bknr.cluster (not :screenshotbot-oss))
+(defun render-peer-info (peers)
+  <table>
+    ,@(loop for peer in peers
+             collect
+             <tr>
+               <td>,(progn peer)</td>
+               <td>unimplemented</td>
+             </tr>)
+  </table>)
 
 (defadminhandler (thread-list :uri "/admin/thread-list") ()
   <admin-app-template>
