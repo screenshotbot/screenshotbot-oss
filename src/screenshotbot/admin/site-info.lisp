@@ -148,7 +148,7 @@
           (when peer
            (ignore-errors (get-peer-status bknr.datastore:*store* peer)))))
     <tr>
-      <td>,(cluster:instance-name instance)</td>
+      <td><a href=(cluster:instance-url instance) >,(cluster:instance-name instance)</a></td>
       <td>,(progn peer)</td>
       <td>,(cluster:private-ip instance)</td>
       <td>,(cond
