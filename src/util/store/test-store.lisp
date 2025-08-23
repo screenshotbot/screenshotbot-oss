@@ -7,6 +7,7 @@
 (defpackage :util/store/test-store
   (:use :cl)
   (:import-from #:bknr.datastore
+                #:close-subsystem
                 #:*store*
                 #:all-store-objects
                 #:deftransaction
@@ -182,6 +183,16 @@
       (is (not (eql 'foo *store-local*)))
       (setf *store-local* 'bar)
       (is (eql 'bar *store-local*)))))
+
+(test store-locals-get-cleared-on-snapshot-load
+  (with-test-store ()
+    (setf *store-local* 'foo)
+    (is (eql 'foo *store-local*))
+    (loop for subsystem in (bknr.datastore::store-subsystems *store*)
+          do (close-subsystem bknr.datastore:*store* subsystem))
+    (is (equalp (make-hash-table) *store-local*))
+    (setf *store-local* 'bar)
+    (is (eql 'bar *store-local*))))
 
 (test store-local-with-a-store
   (signals unbound-variable *store-local*))

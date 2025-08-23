@@ -10,6 +10,8 @@
         #:bknr.datastore
         #:file-lock)
   (:import-from #:bknr.datastore
+                #:restore-subsystem
+                #:close-subsystem
                 #:deftransaction
                 #:close-store)
   (:import-from #:easy-macros
@@ -734,6 +736,24 @@ set-differences on O and the returned value from this."
      :thread-safe t))
   (defun (setf get-store-local) (value name)
     (setf (a:assoc-value place name) value)))
+
+(defclass store-local-subsystem ()
+  ()
+  (:documentation "A subsystem to keep track of store locals (in particular to get a
+callback when the store needs to reset."))
+
+(defmethod restore-subsystem ((store bknr.datastore:store)
+                              (self store-local-subsystem) &key until)
+  (clrhash *store-local-map*))
+
+(defmethod close-subsystem ((store bknr.datastore:store)
+                            (self store-local-subsystem))
+  (clrhash *store-local-map*))
+
+(defmethod bknr.datastore:snapshot-subsystem ((store bknr.datastore:store)
+                                              (self store-local-subsystem)))
+
+(defsubsystem store-local-subsystem)
 
 (defmacro def-store-local (name initform &optional documentation)
   "Defines a variable thats local to the current store. You cannot use
