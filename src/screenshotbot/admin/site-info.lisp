@@ -1,3 +1,4 @@
+;;;; -*- coding: utf-8 -*-
 ;;;; Copyright 2018-Present Modern Interpreters Inc.
 ;;;;
 ;;;; This Source Code Form is subject to the terms of the Mozilla Public
@@ -88,15 +89,19 @@
 
 #+ (and bknr.cluster (not :screenshotbot-oss))
 (defun render-peer-info (peers)
-  (let ((instances
-          (loop for peer in peers
-                collect
-                (cluster:get-instance-by-ip (first (str:rsplit ":"  peer :limit 4))))))
+  (let* ((instances
+           (loop for peer in peers
+                 collect
+                 (cluster:get-instance-by-ip (first (str:rsplit ":"  peer :limit 4)))))
+         (target-list
+           (cluster:target-group-target-list
+            (get-current-target-group instances))))
       <table class= "table border" >
     <tr>
       <th>Instance</th>
       <th>Peer</th>
       <th>Private IP</th>
+      <td>In target group</td>
       <th>IPv6</th>
       <th>Next Index</th>
       <th>Error Times</th>
@@ -105,10 +110,10 @@
     ,@(loop for peer in peers
             for instance in instances
              collect
-            (render-peer peer instance))
+            (render-peer peer instance target-list))
     ,@ (loop for instance in (list-current-security-group instances)
              collect
-             (render-peer nil instance))
+             (render-peer nil instance target-list))
   </table>))
 
 #+ (and bknr.cluster (not :screenshotbot-oss))
@@ -117,6 +122,15 @@
     (loop for sg in security-groups
           unless (equal sg "ipv6-ssh")
             return sg)))
+
+(defun get-current-target-group (instances)
+  (let ((target-groups (cluster:get-all-target-groups)))
+    (loop for tg in target-groups
+          when (some (lambda (instance)
+                      (str:s-member (cluster:target-group-target-list tg)
+                                    (cluster:instance-id instance)))
+                    instances)
+            return tg)))
 
 #+ (and bknr.cluster (not :screenshotbot-oss))
 (defun list-current-security-group (instances)
@@ -128,7 +142,7 @@
                collect new-instance)))))
 
 #+ (and bknr.cluster (not :screenshotbot-oss))
-(defun render-peer (peer instance)
+(defun render-peer (peer instance target-list)
   (let ((peer-status
           ;; This next ignore-errors can be removed once every server is restarted
           (when peer
@@ -137,6 +151,12 @@
       <td>,(cluster:instance-name instance)</td>
       <td>,(progn peer)</td>
       <td>,(cluster:private-ip instance)</td>
+      <td>,(cond
+             ((str:s-member target-list (cluster:instance-id instance))
+              "✓")
+             (t
+             "X"))
+      </td>
       <td>,(cluster:ipv6-address instance)</td>
       <!-- peer-status will be NIL for the leader -->
       <td>,(ignore-errors (peer-status-next-index peer-status)) </td>
