@@ -88,7 +88,11 @@
 
 #+ (and bknr.cluster (not :screenshotbot-oss))
 (defun render-peer-info (peers)
-  <table class= "table border" >
+  (let ((instances
+          (loop for peer in peers
+                collect
+                (cluster:get-instance-by-ip (first (str:rsplit ":"  peer :limit 4))))))
+      <table class= "table border" >
     <tr>
       <th>Instance</th>
       <th>Peer</th>
@@ -99,21 +103,46 @@
       <th>Launch Time</th>
     </tr>
     ,@(loop for peer in peers
-            for instance = (cluster:get-instance-by-ip (first (str:rsplit ":"  peer :limit 4)))
-            ;; This next ignore-errors can be removed once every server is restarted
-            for peer-status = (ignore-errors (get-peer-status bknr.datastore:*store* peer))
+            for instance in instances
              collect
-             <tr>
-               <td>,(cluster:instance-name instance)</td>
-               <td>,(progn peer)</td>
-               <td>,(cluster:private-ip instance)</td>
-               <td>,(cluster:ipv6-address instance)</td>
-               ;; peer-status will be NIL for the leader
-               <td>,(ignore-errors (peer-status-next-index peer-status)) </td>
-               <td>,(ignore-errors (peer-status-consecutive-error-times peer-status))</td>
-               <td><timeago timestamp= (local-time:parse-timestring (cluster:launch-time instance)) /></td>
-             </tr>)
-  </table>)
+            (render-peer peer instance))
+    ,@ (loop for instance in (list-current-security-group instances)
+             collect
+             (render-peer nil instance))
+  </table>))
+
+#+ (and bknr.cluster (not :screenshotbot-oss))
+(defun get-current-security-group (instances)
+  (let ((security-groups (cluster:security-group-names (car instances))))
+    (loop for sg in security-groups
+          unless (equal sg "ipv6-ssh")
+            return sg)))
+
+#+ (and bknr.cluster (not :screenshotbot-oss))
+(defun list-current-security-group (instances)
+  (let ((old-ids (mapcar #'cluster:instance-id instances)))
+   (let ((sg (get-current-security-group instances)))
+     (let ((all-instances (cluster:list-security-group sg)))
+       (loop for new-instance in all-instances
+             unless (str:s-member old-ids (cluster:instance-id new-instance))
+               collect new-instance)))))
+
+#+ (and bknr.cluster (not :screenshotbot-oss))
+(defun render-peer (peer instance)
+  (let ((peer-status
+          ;; This next ignore-errors can be removed once every server is restarted
+          (when peer
+           (ignore-errors (get-peer-status bknr.datastore:*store* peer)))))
+    <tr>
+      <td>,(cluster:instance-name instance)</td>
+      <td>,(progn peer)</td>
+      <td>,(cluster:private-ip instance)</td>
+      <td>,(cluster:ipv6-address instance)</td>
+      <!-- peer-status will be NIL for the leader -->
+      <td>,(ignore-errors (peer-status-next-index peer-status)) </td>
+      <td>,(ignore-errors (peer-status-consecutive-error-times peer-status))</td>
+      <td><timeago timestamp= (local-time:parse-timestring (cluster:launch-time instance)) /></td>
+    </tr>))
 
 (defadminhandler (thread-list :uri "/admin/thread-list") ()
   <admin-app-template>
