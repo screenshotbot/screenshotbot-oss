@@ -123,6 +123,7 @@
           unless (equal sg "ipv6-ssh")
             return sg)))
 
+#+ (and bknr.cluster (not :screenshotbot-oss))
 (defun get-current-target-group (instances)
   (let ((target-groups (cluster:get-all-target-groups)))
     (loop for tg in target-groups
