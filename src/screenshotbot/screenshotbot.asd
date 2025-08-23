@@ -320,7 +320,6 @@
     :serial t
     :components ((:file "core")
                  (:file "index")
-                 (:file "site-info")
                  (:file "test-writes")))
    (:module "tasks"
     :serial t
