@@ -16,6 +16,11 @@
                 #:when-let)
   (:import-from #:util/timeago
                 #:timeago)
+  #+ (and bknr.cluster (not :screenshotbot-oss))  
+  (:import-from #:bknr.cluster/server
+                #:peer-status-consecutive-error-times
+                #:peer-status-next-index
+                #:get-peer-status)
   #+ (and bknr.cluster (not :screenshotbot-oss))
   (:local-nicknames (#:cluster #:cluster/cluster)))
 (in-package :screenshotbot/admin/site-info)
@@ -84,14 +89,28 @@
 #+ (and bknr.cluster (not :screenshotbot-oss))
 (defun render-peer-info (peers)
   <table class= "table border" >
+    <tr>
+      <th>Instance</th>
+      <th>Peer</th>
+      <th>Private IP</th>
+      <th>IPv6</th>
+      <th>Next Index</th>
+      <th>Error Times</th>
+      <th>Launch Time</th>
+    </tr>
     ,@(loop for peer in peers
             for instance = (cluster:get-instance-by-ip (first (str:rsplit ":"  peer :limit 4)))
+            ;; This next ignore-errors can be removed once every server is restarted
+            for peer-status = (ignore-errors (get-peer-status bknr.datastore:*store* peer))
              collect
              <tr>
                <td>,(cluster:instance-name instance)</td>
                <td>,(progn peer)</td>
                <td>,(cluster:private-ip instance)</td>
                <td>,(cluster:ipv6-address instance)</td>
+               ;; peer-status will be NIL for the leader
+               <td>,(ignore-errors (peer-status-next-index peer-status)) </td>
+               <td>,(ignore-errors (peer-status-consecutive-error-times peer-status))</td>
                <td><timeago timestamp= (local-time:parse-timestring (cluster:launch-time instance)) /></td>
              </tr>)
   </table>)
