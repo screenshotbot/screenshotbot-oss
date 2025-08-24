@@ -234,6 +234,7 @@
           ;; Safety measure. Once we verify this is not happening, we
           ;; can safely delete the use of old-val and just always
           ;; return nil
+          (log:warn "Old user: ~a, new user: ~a" old-val user)
           (warn "The new index did not match the new-index for ~a" email))
         old-val)))))
 

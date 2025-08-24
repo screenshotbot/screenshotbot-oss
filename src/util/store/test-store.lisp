@@ -194,6 +194,41 @@
     (setf *store-local* 'bar)
     (is (eql 'bar *store-local*))))
 
+(defclass test-instance (store-object)
+  ()
+  (:metaclass persistent-class))
+
+(defmethod bknr.datastore:initialize-transient-instance :after ((self test-instance))
+  (log:info "Calling initialize transi...")
+  (setf (gethash self *store-local*) t))
+
+(test ensure-initialize-transient-instance-is-reset
+  (with-test-store ()
+    (finishes (make-instance 'test-instance))
+    (is (eql 1 (hash-table-count *store-local*))))
+  (with-test-store ()
+    (is (eql 0 (hash-table-count *store-local*)))))
+
+(test 3-ensure-initialize-transient-instance-is-not-lost
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (log:info "Subsystems: ~S" (bknr.datastore::store-subsystems *store*))
+      (make-instance 'test-instance)
+      (is (eql 1 (hash-table-count *store-local*))))
+    (with-test-store (:dir dir)
+      (is (eql 1 (hash-table-count *store-local*))))))
+
+(test ensure-initialize-transient-instance-is-not-lost-even-with-snapshot
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (log:info "Subsystems: ~S" (bknr.datastore::store-subsystems *store*))
+      (make-instance 'test-instance)
+      (is (eql 1 (hash-table-count *store-local*)))
+      (util:safe-snapshot "..."))
+    (with-test-store (:dir dir)
+      (is (eql 1 (hash-table-count *store-local*))))))
+
+
 (test store-local-with-a-store
   (signals unbound-variable *store-local*))
 
@@ -356,3 +391,4 @@
    (object-neighbors '(1 2 3))
    (contains-in-any-order
     1 2 3)))
+

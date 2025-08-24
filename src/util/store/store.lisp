@@ -283,6 +283,23 @@ uses sane defaults."))
                        (bknr.datastore:blob-subsystem 11)))
 
 (defmacro defsubsystem (name &key (priority 15))
+  "Define a subsystem with the specified priority for store operations.
+
+Priority determines the order of subsystem operations:
+
+In bknr.cluster:
+- Lower priority numbers are processed first during initialization, restoration, and snapshotting
+- Higher priority numbers are processed first during closing (reverse order)
+- Default priority is 15
+
+Example priority ordering:
+  :priority -1  -> processed first during init/restore, last during close
+  :priority 15  -> processed second during init/restore, second-to-last during close  
+  :priority 20  -> processed last during init/restore, first during close
+
+In original bknr.datastore:
+- Lower priorities numbers are processed first, even during closing.
+"
   `(progn
      (setf (assoc-value *subsystems* ',name)
            (list ,priority))))
@@ -744,16 +761,19 @@ callback when the store needs to reset."))
 
 (defmethod restore-subsystem ((store bknr.datastore:store)
                               (self store-local-subsystem) &key until)
+  (assert (= 0 (hash-table-count *store-local-map*)))
+  (log:info "Restoring store-local-subsystem")
   (clrhash *store-local-map*))
 
 (defmethod close-subsystem ((store bknr.datastore:store)
                             (self store-local-subsystem))
+  (log:info "closing store-local-subsystem")  
   (clrhash *store-local-map*))
 
 (defmethod bknr.datastore:snapshot-subsystem ((store bknr.datastore:store)
                                               (self store-local-subsystem)))
 
-(defsubsystem store-local-subsystem)
+(defsubsystem store-local-subsystem :priority -1000)
 
 (defmacro def-store-local (name initform &optional documentation)
   "Defines a variable thats local to the current store. You cannot use
