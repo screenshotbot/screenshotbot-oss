@@ -80,7 +80,8 @@
   #-screenshotbot-oss
   (or
    (equal "localhost" (uiop:hostname))
-   (equal "prod1.screenshotbot.io" (uiop:hostname))))
+   (equal "prod1.screenshotbot.io" (uiop:hostname))
+   (equal "prod1.intern.screenshotbot.io" (uiop:hostname))))
 
 (defvar *replay-proxy* nil)
 

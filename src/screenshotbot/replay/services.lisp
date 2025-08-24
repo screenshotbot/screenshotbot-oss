@@ -54,6 +54,7 @@
     (or
      (equal "localhost" (uiop:hostname))
      (equal "prod1.screenshotbot.io" (uiop:hostname))
+     (equal "prod1.intern.screenshotbot.io" (uiop:hostname))
      ;; TODO(T2022): fix this:
      (equal "ip-172-30-5-43" (uiop:hostname)))))
 
