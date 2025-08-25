@@ -104,7 +104,7 @@
       <select class="form-select" name= "type" id= "type">
         <option value= "chrome">Google Chrome</option>
         <option value= "firefox">Firefox</option>
-        <option value= "safari">Safari</option>
+        <!-- <option value= "safari">Safari</option> -->
       </select>
     </div>
 
