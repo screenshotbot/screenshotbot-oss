@@ -135,6 +135,11 @@
                                (auth:current-user)
                                'roles:admin)
              "You need admin permissions to change the access token")
+      (multiple-value-bind (validp error)
+          (validate-token :gitlab-url gitlab-url :token token)
+        (check :token
+               validp
+               error))
       (cond
         (errors
          (with-form-errors (:gitlab-url gitlab-url
@@ -146,11 +151,11 @@
         (t
          (finish-save-settings gitlab-url token enable-webhooks))))))
 
-(defun validate-token (&rest args &key endpoint token)
+(defun validate-token (&rest args &key gitlab-url token)
   "Validate the given token against the endpoint, and returns two values:
 T if the token is valid, and if it's not valid, a second value will be
 the list of reasons why it's not valid."
-  (declare (ignore endpoint token))
+  (declare (ignore gitlab-url token))
   (with-audit-log (audit-log (make-instance 'check-personal-access-token
                                              :company (current-company)))
    (multiple-value-bind (body code)

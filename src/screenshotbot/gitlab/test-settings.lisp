@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/gitlab/settings
+                #:validate-token
                 #:gitlab-request
                 #:gitlab-url
                 #:gitlab-token
@@ -32,7 +33,10 @@
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:alexandria
-                #:assoc-value))
+                #:assoc-value)
+  (:import-from #:cl-mock
+                #:if-called
+                #:answer))
 (in-package :screenshotbot/gitlab/test-settings)
 
 
@@ -42,6 +46,9 @@
   (cl-mock:with-mocks ()
    (with-installation ()
      (with-test-store ()
+       (if-called 'validate-token
+                  (lambda (&rest args)
+                    t))
        (let* ((company (make-instance 'company))
               (plugin (make-instance 'gitlab-plugin)))
          (&body))))))
