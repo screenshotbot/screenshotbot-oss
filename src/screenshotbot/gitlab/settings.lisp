@@ -146,6 +146,9 @@
         (t
          (finish-save-settings gitlab-url token enable-webhooks))))))
 
+
+(defun get-scopes (token))
+
 (defun test-gitlab-settings ()
   (flet ((settings-page (&rest args)
            (hex:safe-redirect
@@ -251,15 +254,19 @@
   :handler 'settings-page)
 
 (defun gitlab-request (repo-or-company url &key (method :get) content
+                                             token
+                                             gitlab-url
                                              (ensure-success t))
+  "If GITLAB-URL or TOKEN is provided we use it, otherwise we use the
+information saved in the settings"
   (let* ((company (if (typep repo-or-company 'company)
                       repo-or-company
                       (company repo-or-company)))
         (settings (gitlab-settings-for-company company)))
     (util/request:http-request
-     (format nil "~a/api/v4~a" (gitlab-url settings) url)
+     (format nil "~a/api/v4~a" (or gitlab-url (gitlab-url settings)) url)
      :method method
-     :additional-headers `(("PRIVATE-TOKEN" . ,(gitlab-token settings)))
+     :additional-headers `(("PRIVATE-TOKEN" . ,(or token (gitlab-token settings))))
      :want-string t
      :content-type "application/json"
      :ensure-success ensure-success

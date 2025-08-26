@@ -19,6 +19,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/gitlab/settings
+                #:gitlab-request
                 #:gitlab-url
                 #:gitlab-token
                 #:save-settings
@@ -29,18 +30,21 @@
                 #:with-installation
                 #:screenshot-test)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:alexandria
+                #:assoc-value))
 (in-package :screenshotbot/gitlab/test-settings)
 
 
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-installation ()
-   (with-test-store ()
-     (let* ((company (make-instance 'company))
-            (plugin (make-instance 'gitlab-plugin)))
-       (&body)))))
+  (cl-mock:with-mocks ()
+   (with-installation ()
+     (with-test-store ()
+       (let* ((company (make-instance 'company))
+              (plugin (make-instance 'gitlab-plugin)))
+         (&body))))))
 
 (test gitlab-plugin-parse-repo
   (with-fixture state ()
@@ -91,4 +95,20 @@
           (assert-that (gitlab-token settings)
                        (equal-to "foobar")))))))
 
-
+(test gitlab-request-uses-token
+  (with-fixture state ()
+    (let ((saved-additional-headers))
+     (with-test-user (:company company)
+       (cl-mock:if-called
+        'util/request:http-request
+        (lambda (url &key additional-headers &allow-other-keys)
+          (setf saved-additional-headers additional-headers)))
+       (gitlab-request company
+                       "/api/foo"
+                       :token "fOObARDummyToken"
+                       :gitlab-url "https://example.com")
+       (is
+        (equal "fOObARDummyToken"
+               (assoc-value saved-additional-headers
+                            "PRIVATE-TOKEN"
+                            :test #'equal)))))))
