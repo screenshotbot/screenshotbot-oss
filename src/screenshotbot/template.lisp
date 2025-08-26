@@ -86,10 +86,11 @@
    (boundp 'hunchentoot:*request*) ;; for tests
    (call-next-method)))
 
+(defmethod google-analytics-impl ((self installation))
+  nil)
+
 (markup:deftag google-analytics ()
-  #-screenshotbot-oss
-  (when (analyticsp (installation))
-    <:script data-domain= (quri:uri-host (quri:uri (installation-domain (installation))))  data-api="/api/event" src="/js/script.js" defer ></:script>))
+  (google-analytics-impl (installation)))
 
 (deftag og-details ()
   <markup:merge-tag>

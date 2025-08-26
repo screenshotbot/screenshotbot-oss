@@ -80,15 +80,5 @@
      (auth:with-sessions ()
        (no-access-error-page)))))
 
-(defclass my-installation (installation)
-  ((analyticsp :initform t
-               :reader analyticsp)))
 
-#-screenshotbot-oss
-(test analytics
-  (with-installation (:installation (make-instance 'my-installation :domain "https://foo.screenshotbot.io"))
-    (with-fake-request ()
-     (let ((tag (google-analytics)))
-       (is-true tag)
-       (is (equal "foo.screenshotbot.io"
-                  (mquery:attr tag "data-domain")))))))
+
