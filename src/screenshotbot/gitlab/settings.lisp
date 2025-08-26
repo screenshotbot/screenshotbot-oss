@@ -234,6 +234,7 @@ the list of reasons why it's not valid."
                 <input id= "token" type= "password" name= "token" class= "form-control"
                        value= (when (and settings (not (str:emptyp (gitlab-token settings)))) +unchanged+)
                        oninput= disable-test-settings />
+                <div class= "text-muted mt-1">User must have <em>Maintainer</em> or <em>Owner</em> role on projects integrated with Screenshotbot. Access token needs the <tt>api</tt> scope.</div>
               </div>
 
               <div class= "form-check">
@@ -246,7 +247,7 @@ the list of reasons why it's not valid."
               </div>
               <div class= "">
                 <p class= "text-muted">
-                  You can provide either a Personal Access Token, or use webhooks for your GitLab integration. Usually, you probably should use the Personal Access Token, but look at the documentation for more details.
+                  Using a Personal Access Token is easier, but you can also use webhooks for your GitLab integration. <a href= "https://screenshotbot.io/documentation/code-review/gitlab#webhook-integration">Read More</a>
                 </p>
               </div>
           </div>
