@@ -146,34 +146,45 @@
         (t
          (finish-save-settings gitlab-url token enable-webhooks))))))
 
+(defun validate-token (&rest args &key endpoint token)
+  "Validate the given token against the endpoint, and returns two values:
+T if the token is valid, and if it's not valid, a second value will be
+the list of reasons why it's not valid."
+  (declare (ignore endpoint token))
+  (with-audit-log (audit-log (make-instance 'check-personal-access-token
+                                             :company (current-company)))
+   (multiple-value-bind (body code)
+       (apply #'gitlab-request (current-company)
+              "/personal_access_tokens/self"
+              :ensure-success nil
+              args)
+     (cond
+       ((> code 400)
+        (let ((error (format nil "The token appears to be invalid, GitLab responded with ~a" code)))
+          (setf (audit-log-error audit-log) error)
+          (values nil error)))
+       (t
+        (let ((json (json:decode-json-from-string body)))
+          (let ((scopes (assoc-value json :scopes)))
+            (cond
+              ((str:s-member scopes "api")
+               (values t nil))
+              (t
+               (values nil "The access token does not have the `api` scope."))))))))))
 
-(defun get-scopes (token))
 
 (defun test-gitlab-settings ()
   (flet ((settings-page (&rest args)
            (hex:safe-redirect
             (nibble ()
               (apply #'settings-page args)))))
-   (with-audit-log (audit-log (make-instance 'check-personal-access-token
-                                             :company (current-company)))
-     (multiple-value-bind (body code)
-         (gitlab-request (current-company)
-                         "/personal_access_tokens/self"
-                         :ensure-success nil)
-       (cond
-         ((> code 400)
-          (let ((error (format nil "The token appears to be invalid, GitLab responded with ~a" code)))
-            (setf (audit-log-error audit-log) error)
-            (settings-page :error
-                           error)))
-         (t
-          (let ((json (json:decode-json-from-string body)))
-            (let ((scopes (assoc-value json :scopes)))
-              (cond
-                ((str:s-member scopes "api")
-                 (settings-page :success "Access token validated successfully."))
-                (t
-                 (settings-page :error "The access token does not have the `api` scope.")))))))))))
+   (multiple-value-bind (validp error)
+       (validate-token)
+     (cond
+       (validp
+        (settings-page :success "Access token validated successfully."))
+       (t
+        (settings-page :error error))))))
 
 (defun settings-page (&key error success)
   (let* ((settings (gitlab-settings-for-company (current-company)))
