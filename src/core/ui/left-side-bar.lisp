@@ -24,7 +24,7 @@
   (declare (ignore target))
   (let ((activep (str:starts-with-p href script-name)))
     <li class= "nav-item"  >
-      <a href= href class= (format nil "nav-link ~a text-white" (if activep "active" "")) >
+      <a href= href class= (format nil "nav-link ~a text-dark" (if activep "active" "")) >
         <mdi name=image-class />
         <span class= "text">,@children </span>
       </a>
@@ -33,7 +33,7 @@
 (deftag left-side-bar-container (children &key logo-small-src
                                  logo-src
                                  logo-alt)
-    <div class="d-flex flex-column text-white bg-dark leftside-menu collapse" >
+    <div class="d-flex flex-column leftside-menu collapse" >
 
     <div class= "text-center p-3" >
       <button type= "button" href= "#" class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".leftside-menu" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">

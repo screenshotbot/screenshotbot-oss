@@ -704,11 +704,11 @@ body.dashboard {
         position: fixed;
 
         .nav-link:hover {
-            background: $gray-700;
+            background: $gray-200;
         }
 
         .nav-link.active {
-            background: none;
+            background: white;
             font-weight: 900;
         }
 
@@ -755,7 +755,7 @@ body.dashboard {
 
     .navbar-toggler {
         display: none;
-        color: white;
+        color: black;
 
         &:focus {
             outline: none;
@@ -807,7 +807,7 @@ body.dashboard {
 
             .navbar-toggler {
                 display: inline-block;
-                color: white;
+                color: black;
             }
 
             .nav-link {
@@ -1287,4 +1287,16 @@ screenshot-image-badge {
 
 .image-container {
     max-width: 100%;
+}
+
+.leftside-menu {
+    hr {
+        visibility: hidden;
+    }
+
+}
+
+.leftside-menu.collapse.show {
+    background: $body-background;
+    border-right: 1px solid $card-border-color;
 }

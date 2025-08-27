@@ -65,8 +65,8 @@
 (deftag left-side-bar (&key user company script-name)
   (declare (optimize (speed 0) (debug 3)))
   <left-side-bar-container
-    logo-small-src="/assets/images/logo-small-light-scaled.webp"
-    logo-src="/assets/images/logo-light.svg"
+    logo-small-src="/assets/images/logo-small-dark-scaled.webp"
+    logo-src="/assets/images/logo-dark.svg"
     logo-alt="Screenshotbot logo" >
     ,(render-menu-items (installation) :user user :company company :script-name script-name)
     ,(render-user-menu (installation) :user user :company company)
@@ -148,19 +148,6 @@
         Documentation
   </left-nav-item>
 
-      <li class= "nav-item github"  >
-         <a href= "https://github.com/screenshotbot/screenshotbot-oss" class= (format nil "nav-link text-white" ) title= "Screenshotbot is Open-Source. Support our work on GitHub!"
-           target= "_blank" >
-          <img src= "/assets/images/github-mark-white.svg" />
-          <span class= "text">Source Code</span>
-        </a>
-      </li>
-
-      <left-nav-item href= "https://testimonial.to/screenshotbot" image-class= "thumb_up"
-                     script-name=script-name >
-        Testimonials
-      </left-nav-item>
-
     </ul>
 
     <hr class= "mb-0" />
@@ -170,7 +157,7 @@
 (defmethod render-user-menu (installation &key user company)
   (when user
     <div class="dropdown p-3">
-      <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
+      <a href="#" class="d-flex align-items-center text-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
         <img src= (user-image-url user) alt="mdo" width="32" height="32" class="rounded-circle me-2" />
         <strong class= "user-full-name" > ,(cond
                                              ((or (not company) (singletonp company) (personalp company))
