@@ -22,9 +22,12 @@
 (markup:enable-reader)
 
 (deftag settings-menu-item (children &key href)
-  <li class= "settings-nav-item" >
-    <a class= (if (equal (hunchentoot:script-name*) href)  "active")
-       href= href >,@children </a></li>)
+  <li class= "nav-item" >
+    <a class= (format nil "nav-link text-dark rounded ~a" (if (equal (hunchentoot:script-name*) href) "active bg-primary text-white" ""))
+       href= href >
+      <span class= "text">,@children </span>
+    </a>
+  </li>)
 
 (defun settings-list-sections ()
   (remove-duplicates
@@ -34,7 +37,9 @@
 (deftag settings-render-section (&key title
                                  section)
   <markup:merge-tag>
-  <li class= "settings-nav-title settings-nav-item">,(progn title)</li>
+  <li class= "nav-item settings-section-title">
+    <h6 class= "text-muted text-uppercase small fw-bold py-2">,(progn title)</h6>
+  </li>
   ,@ (loop for (nil . x)  in (reverse (all-settings (installation)))
            if (eql (settings-section x) section)
              collect <settings-menu-item href= (format nil "/settings/~a" (settings-name x))>,(settings-title x)</settings-menu-item>)
@@ -51,21 +56,31 @@
                                     "/assets/js/settings.js")
                           title= (or title "Screenshotbot: Settings")
                       >
-
+    
     <div class= "main-content">
+      <!-- Mobile settings menu toggle -->
+      <div class= "d-md-none bg-light border-bottom p-3">
+        <button class= "btn btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#settingsNavbar" aria-controls="settingsNavbar" aria-expanded="false" aria-label="Toggle settings navigation">
+          <i class= "bi bi-list"></i> Settings Menu
+        </button>
+      </div>
+
       <div class= "row" style= "min-height: 100vh" >
-        <div class= "col-md-2 border-right settings-nav-bar">
-          <ul class= "settings-nav" >
-            <settings-render-section title= "Account" section=nil />
-            <settings-render-section title= "Organization" section=:organization />
-            <settings-render-section title= "VCS" section=:vcs />
-            <settings-render-section title= "Tasks" section=:tasks />
-            <settings-render-section title= "Developers" section=:developers />
-          </ul>
+        <div class= "col-lg-3 col-md-4 collapse d-md-block" id="settingsNavbar">
+          <div class= "settings-sidebar p-3 m-3">
+            <h5 class= "mb-3 text-dark d-none d-md-block">Settings</h5>
+            <ul class= "nav nav-pills flex-column">
+              <settings-render-section title= "Account" section=nil />
+              <settings-render-section title= "Organization" section=:organization />
+              <settings-render-section title= "VCS" section=:vcs />
+              <settings-render-section title= "Tasks" section=:tasks />
+              <settings-render-section title= "Developers" section=:developers />
+            </ul>
+          </div>
         </div>
 
-        <div class= "col-md-10">
-          <div class= "settings-conten">
+        <div class= "col-lg-9 col-md-8">
+          <div class= "settings-content p-4 m-3">
             ,@children
           </div>
         </div>

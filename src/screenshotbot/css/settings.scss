@@ -1,0 +1,52 @@
+.settings-sidebar {
+    position: sticky;
+    top: 1rem;
+    max-height: calc(100vh - 2rem);
+    overflow-y: auto;
+}
+
+.settings-sidebar .nav-link {
+    margin-bottom: 4px;
+    transition: all 0.2s ease-in-out;
+    font-size: 0.9rem;
+}
+
+.settings-sidebar .nav-link:hover:not(.active) {
+    background-color: rgba(0,0,0,0.05);
+    transform: translateX(2px);
+}
+
+.settings-sidebar .nav-link.active {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.settings-section-title h6 {
+    margin-bottom: 8px;
+    margin-top: 16px;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.settings-section-title:first-child h6 {
+    margin-top: 0;
+}
+
+.settings-content {
+    min-height: calc(100vh - 6rem);
+}
+
+@media (max-width: 767.98px) {
+    .settings-sidebar {
+        position: static;
+        max-height: none;
+        margin: 1rem !important;
+        margin-top: 0 !important;
+    }
+    
+    .settings-content {
+        margin: 1rem !important;
+        margin-top: 0 !important;
+        padding: 1rem !important;
+        min-height: auto;
+    }
+}
