@@ -53,6 +53,7 @@
                (:file "bundle")
                (:file "firebase")
                (:file "android")
+               (:file "xcresult")
                (:file "git")
                #+lispworks
                (:file "git-pack")
