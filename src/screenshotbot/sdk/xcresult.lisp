@@ -40,7 +40,9 @@
     (str:join "/"
      (reverse
       (list*
-       (cl-ppcre:regex-replace-all "_[0-9A-Z-]*.png$" suggested-name "")
+       (cl-ppcre:regex-replace-all "^SnapshotTest_"
+                                   (cl-ppcre:regex-replace-all "_[0-9A-Z-]*.png$" suggested-name "")
+                                   "")
        (cdr parts))))))
 
 (defmethod list-images ((self xcresults-attachment-bundle))
@@ -52,7 +54,9 @@
           (loop for attachment in (assoc-value entry :attachments)
                 for suggested-name = (assoc-value attachment :suggested-human-readable-name)
                 for exported-file-name = (assoc-value attachment :exported-file-name)
-                if (str:ends-with-p ".png" suggested-name)
+                if (and
+                    (str:starts-with-p "SnapshotTest_" suggested-name)
+                    (str:ends-with-p ".png" suggested-name))
                 collect
                 (make-instance 'xcresults-attachment
                                :bundle self

@@ -35,8 +35,7 @@
 (test simple-parsing
   (with-fixture state ()
     (assert-that (list-images bundle)
-                 ;; We want this to be 2 actually, 4 of the snapshots are from UITests.
-                 (has-length 6))))
+                 (has-length 2))))
 
 
 (test parse-suggested-name
@@ -44,12 +43,12 @@
    (equal "SimpleProjectTests/testLoginViewSnapshot.1_0"
     (parse-name
      ;; see manifest.json
-     "testLoginViewSnapshot.1_0_FA32D8D3-B6A9-4B7E-A958-921F53BBC2FE.png"
+     "SnapshotTest_testLoginViewSnapshot.1_0_FA32D8D3-B6A9-4B7E-A958-921F53BBC2FE.png"
      "SimpleProjectTests/testLoginViewSnapshot()"))))
 
 (test image-name-works
   (with-fixture state ()
     (assert-that (mapcar #'image-name (list-images bundle))
-                 (has-item "SimpleProjectTests/SnapshotTest_testLoginViewSnapshot.1_0"))))
+                 (has-item "SimpleProjectTests/testLoginViewSnapshot.1_0"))))
 
 
