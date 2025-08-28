@@ -177,19 +177,16 @@
   :components ((:file "posix")))
 
 (defsystem :util/digests
-  :depends-on ((:feature (:not (:and :lispworks (:or :linux :darwin))) "md5")
-               (:feature (:not (:and :lispworks (:or :linux :darwin))) "ironclad")
+  :depends-on ((:feature (:not (:and :lispworks (:or :linux))) "md5")
+               (:feature (:not (:and :lispworks (:or :linux))) "ironclad")
                :util/health-check
                :easy-macros)
   :serial t
   :components ((lib-source-file
                 "digest"
-                :extra-args
-                (#+darwin "-I/opt/homebrew/opt/openssl/include/"
-                 #+mswindows "-IC:\\Program Files\\OpenSSL-Win64\\include\\")
-                :if-feature (:and :lispworks (:or :linux :darwin :mswindows)))
-               (:file "digests" :if-feature (:and :lispworks (:or :linux :darwin :mswindows)))
-               (:file "digests-non-lw" :if-feature (:not (:and :lispworks (:or :linux :darwin :mswindows))))))
+                :if-feature (:and :lispworks (:or :linux)))
+               (:file "digests" :if-feature (:and :lispworks (:or :linux)))
+               (:file "digests-non-lw" :if-feature (:not (:and :lispworks (:or :linux))))))
 
 (defsystem :util/sizeof
   :serial t
