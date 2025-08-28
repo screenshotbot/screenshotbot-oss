@@ -11,11 +11,17 @@
                 #:parse-name
                 #:xcresults-attachment-bundle)
   (:import-from #:screenshotbot/sdk/bundle
+                #:image-name
                 #:list-images)
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
   (:import-from #:fiveam-matchers/has-length
-                #:has-length))
+                #:has-length)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
+  (:import-from #:fiveam-matchers/lists
+                #:has-item
+                #:contains))
 (in-package :screenshotbot/sdk/test-xcresult)
 
 
@@ -29,6 +35,7 @@
 (test simple-parsing
   (with-fixture state ()
     (assert-that (list-images bundle)
+                 ;; We want this to be 2 actually, 4 of the snapshots are from UITests.
                  (has-length 6))))
 
 
@@ -39,3 +46,10 @@
      ;; see manifest.json
      "testLoginViewSnapshot.1_0_FA32D8D3-B6A9-4B7E-A958-921F53BBC2FE.png"
      "SimpleProjectTests/testLoginViewSnapshot()"))))
+
+(test image-name-works
+  (with-fixture state ()
+    (assert-that (mapcar #'image-name (list-images bundle))
+                 (has-item "SimpleProjectTests/testLoginViewSnapshot.1_0"))))
+
+

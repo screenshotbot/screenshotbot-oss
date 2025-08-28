@@ -1,6 +1,7 @@
 (defpackage :screenshotbot/sdk/xcresult
   (:use :cl)
   (:import-from #:screenshotbot/sdk/bundle
+                #:image-name
                 #:list-images)
   (:import-from #:alexandria
                 #:assoc-value)
@@ -16,7 +17,7 @@
   ((bundle :initarg :bundle
            :reader bundle)
    (name :initarg :name
-         :reader name)
+         :reader image-name)
    (file-name :initarg :file-name
               :reader file-name)))
 
