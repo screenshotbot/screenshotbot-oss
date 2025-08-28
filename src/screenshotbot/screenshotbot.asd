@@ -446,7 +446,8 @@
                              (:file "test-flaky-screenshots")
                              (:file "test-history")
                              (:file "test-bisect")
-                             (:file "test-notices")))
+                             (:file "test-notices")
+                             (:file "test-dashboard")))
                (:module "webdriver"
                 :components ((:file "test-screenshot")))
                (:module "github"
