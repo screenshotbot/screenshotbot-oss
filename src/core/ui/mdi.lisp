@@ -12,5 +12,5 @@
 
 (markup:enable-reader)
 
-(markup:deftag mdi (&key name class)
-  <i class= (format nil "material-icons ~a" class) >,(progn name)</i>)
+(markup:deftag mdi (&key name class style)
+  <i class= (format nil "material-icons ~a" class) style=style >,(progn name)</i>)

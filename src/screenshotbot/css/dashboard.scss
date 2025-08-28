@@ -1,0 +1,192 @@
+/* Dashboard-specific styles */
+
+.dashboard-overview {
+  margin-top: 2rem;
+}
+
+.dashboard-overview .card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.dashboard-overview .card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.dashboard-overview .card-body {
+  padding: 1.5rem;
+}
+
+.dashboard-overview .card-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0.5rem 0;
+}
+
+.recent-activity-feed .list-group-item {
+  border-left: none;
+  border-right: none;
+  border-top: 1px solid rgba(0,0,0,0.125);
+  border-bottom: none;
+  transition: background-color 0.2s ease;
+}
+
+.recent-activity-feed .list-group-item:last-child {
+  border-bottom: 1px solid rgba(0,0,0,0.125);
+}
+
+.recent-activity-feed .list-group-item:hover {
+  background-color: #f8f9fa;
+}
+
+/* Activity Feed Specific Styling */
+.recent-activity-feed .mdi {
+  font-size: 1.25rem;
+}
+
+.recent-activity-feed .fw-normal {
+  font-weight: 400 !important;
+}
+
+.recent-activity-feed h6 {
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.activity-accepted {
+  border-left: 3px solid #28a745;
+}
+
+.activity-rejected {
+  border-left: 3px solid #dc3545;
+}
+
+.activity-timeline-icon {
+  background-color: #f8f9fa;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recent-activity-feed .rounded-circle {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.activity-avatar {
+  position: relative;
+  display: inline-block;
+}
+
+.activity-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  z-index: 10;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.activity-badge .mdi {
+  font-size: 10px;
+}
+
+.channel-status-grid .progress {
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.channel-status-grid .progress .progress-bar {
+  transition: width 0.3s ease;
+}
+
+.channel-health-item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.channel-health-item:last-child {
+  border-bottom: none;
+}
+
+.attention-required .alert {
+  border-left: 4px solid;
+}
+
+.attention-required .alert-warning {
+  border-left-color: #ffc107;
+  background-color: #fff8e1;
+}
+
+.status-icon-success {
+  color: #28a745;
+}
+
+.status-icon-danger {
+  color: #dc3545;
+}
+
+.status-icon-warning {
+  color: #ffc107;
+}
+
+.dashboard-metric-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.channel-grid-card {
+  height: 100%;
+}
+
+.dashboard-section-header {
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.health-badge {
+  font-size: 0.875rem;
+  min-width: 3rem;
+  text-align: center;
+}
+
+.empty-state {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+.empty-state .mdi {
+  opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+  .dashboard-overview .card-title {
+    font-size: 2rem;
+  }
+  
+  .recent-activity-feed .d-flex {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  
+  .recent-activity-feed .d-flex .d-flex:last-child {
+    margin-top: 0.5rem;
+    width: 100%;
+    justify-content: space-between;
+  }
+}

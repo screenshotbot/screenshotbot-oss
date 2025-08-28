@@ -184,6 +184,7 @@
                  (:file "ensure-company")
                  (:file "review-link")
                  (:file "run-page")
+                 (:file "dashboard")
                  (:file "image")
                  (:file "compare")
                  (:file "compare-branches")
