@@ -130,6 +130,7 @@
                (:file "test-clingon-api-context")
                (:file "test-version-check")
                (:file "test-main")
+               (:file "test-xcresult")
                (:file "test-active-run")
                (:file "test-api-context")
                (:file "test-flags")
