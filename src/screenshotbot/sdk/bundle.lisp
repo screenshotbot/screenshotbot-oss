@@ -96,6 +96,7 @@
          (parse-directory (bundle-directory bundle) "")
       (log:debug "Done parsing directory"))))
 
+
 (defmethod image-stream ((im local-image))
   (open (image-pathname im) :direction :input
                             :element-type 'flexi-streams:octet))

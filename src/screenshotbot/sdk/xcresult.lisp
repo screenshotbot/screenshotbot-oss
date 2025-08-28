@@ -1,6 +1,7 @@
 (defpackage :screenshotbot/sdk/xcresult
   (:use :cl)
   (:import-from #:screenshotbot/sdk/bundle
+                #:image-stream
                 #:image-name
                 #:list-images)
   (:import-from #:alexandria
@@ -62,6 +63,12 @@
                                :bundle self
                                :name (parse-name suggested-name test-identifier)
                                :file-name exported-file-name)))))
+
+(defmethod image-stream ((self xcresults-attachment))
+  (let ((file-name (path:catfile
+                    (%directory (bundle self))
+                    (file-name self))))
+    (open file-name :element-type '(unsigned-byte 8) :direction :input)))
 
 
 
