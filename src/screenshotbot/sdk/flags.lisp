@@ -57,7 +57,8 @@
    #:*merge-base-commit-hash*
    #:*shard*
    #:*image-file-types*
-   #:*release-branch-regex*))
+   #:*release-branch-regex*
+   #:*xcresult*))
 
 (in-package :screenshotbot/sdk/flags)
 
@@ -397,3 +398,9 @@ extensions with a comma.")
   :default-value nil
   :type (or null string)
   :help "Author for this run. Either in the form of \"Full Name <email@example.com>\" or just \"email@example.com\". The email is used to enforce review rules. ")
+
+(define-flag *xcresult*
+  :selector "xcresult"
+  :default-value nil
+  :type (or null string)
+  :help "Path to an xcresult file to extract screenshots from. When provided, screenshots will be extracted from the xcresult bundle instead of scanning a directory.")

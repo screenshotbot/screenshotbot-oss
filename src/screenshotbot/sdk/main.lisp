@@ -61,6 +61,8 @@
                 #:engine)
   (:import-from #:util/reused-ssl
                 #:with-reused-ssl)
+  (:import-from #:screenshotbot/sdk/xcresult
+                #:xcresults-attachment-bundle)
   (:export
    #:main))
 
@@ -214,6 +216,12 @@
       (flags:*finalize*
        (with-defaults (api-context)
          (finalize-commit api-context)))
+      (flags:*xcresult*
+       (when flags:*directory*
+         (log:warn "Ignoring --directory since xcresult is provided"))
+       (with-defaults (api-context)
+         (let ((directory (make-instance 'xcresults-attachment-bundle :directory flags:*xcresult*)))
+           (sdk:single-directory-run api-context directory :channel flags:*channel*))))
       (flags:*directory*
        (with-defaults (api-context)
          (sdk:run-prepare-directory-toplevel api-context)))
