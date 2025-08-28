@@ -3,35 +3,12 @@
     "attachments" : [
       {
         "configurationName" : "Test Scheme Action",
-        "deviceId" : "4C62D412-90CE-453F-97C4-D2025E3C08F0",
+        "deviceId" : "CE4A7935-27C3-4F4E-8F6C-769DBDCF4B12",
         "deviceName" : "iPhone 16",
-        "exportedFileName" : "A3BA7ECC-479D-4D3E-B330-C8EE8E02B9E1.txt",
+        "exportedFileName" : "BF65B0E7-0E2B-4C2C-B067-4F3DE913F10E.png",
         "isAssociatedWithFailure" : false,
-        "suggestedHumanReadableName" : "testDataSnapshot.1_0_DF071A21-F89E-46CE-80EF-318915AFF4A7.txt",
-        "timestamp" : 1756405153.831
-      },
-      {
-        "configurationName" : "Test Scheme Action",
-        "deviceId" : "4C62D412-90CE-453F-97C4-D2025E3C08F0",
-        "deviceName" : "iPhone 16",
-        "exportedFileName" : "AB011E7B-2DCF-4715-A7EA-30499A6E9982.txt",
-        "isAssociatedWithFailure" : true,
-        "suggestedHumanReadableName" : "Complete Issue Description.txt"
-      }
-    ],
-    "testIdentifier" : "SimpleProjectTests/testDataSnapshot()",
-    "testIdentifierURL" : "test://com.apple.xcode/SimpleProject/SimpleProjectTests/SimpleProjectTests/testDataSnapshot"
-  },
-  {
-    "attachments" : [
-      {
-        "configurationName" : "Test Scheme Action",
-        "deviceId" : "4C62D412-90CE-453F-97C4-D2025E3C08F0",
-        "deviceName" : "iPhone 16",
-        "exportedFileName" : "9F0959AB-ABC3-4FFA-9F20-465AA3A0535B.png",
-        "isAssociatedWithFailure" : false,
-        "suggestedHumanReadableName" : "testExample.1_0_F751C61A-96AF-4569-BDE4-15E941AF335A.png",
-        "timestamp" : 1756405156.924
+        "suggestedHumanReadableName" : "SnapshotTest_testExample.1_0_400D40FA-F90A-4990-85C2-F59E138AB122.png",
+        "timestamp" : 1756421363.48
       }
     ],
     "testIdentifier" : "SimpleProjectTests/testExample()",
@@ -41,12 +18,12 @@
     "attachments" : [
       {
         "configurationName" : "Test Scheme Action",
-        "deviceId" : "4C62D412-90CE-453F-97C4-D2025E3C08F0",
+        "deviceId" : "CE4A7935-27C3-4F4E-8F6C-769DBDCF4B12",
         "deviceName" : "iPhone 16",
-        "exportedFileName" : "5D260980-B730-4FC6-988D-51BC4053ED4E.png",
+        "exportedFileName" : "CE85A51E-5309-4968-BB1A-333BA6E9E9C2.png",
         "isAssociatedWithFailure" : false,
-        "suggestedHumanReadableName" : "testLoginViewSnapshot.1_0_FA32D8D3-B6A9-4B7E-A958-921F53BBC2FE.png",
-        "timestamp" : 1756405157.423
+        "suggestedHumanReadableName" : "SnapshotTest_testLoginViewSnapshot.1_0_9AFD3FA0-250A-4D8A-B601-32B2E46F6011.png",
+        "timestamp" : 1756421364.301
       }
     ],
     "testIdentifier" : "SimpleProjectTests/testLoginViewSnapshot()",
@@ -60,12 +37,12 @@
           "1"
         ],
         "configurationName" : "Test Scheme Action",
-        "deviceId" : "4C62D412-90CE-453F-97C4-D2025E3C08F0",
+        "deviceId" : "CE4A7935-27C3-4F4E-8F6C-769DBDCF4B12",
         "deviceName" : "iPhone 16",
-        "exportedFileName" : "D82F9B3D-EF18-4039-8027-6E60FCE4A96C.png",
+        "exportedFileName" : "407D5DE6-2912-4CD7-893A-1D201CB84CFD.png",
         "isAssociatedWithFailure" : false,
-        "suggestedHumanReadableName" : "Launch Screen_0_517B90B1-AECF-43D1-AB48-C7752184C32C.png",
-        "timestamp" : 1756405202.14
+        "suggestedHumanReadableName" : "Launch Screen_0_975448AB-2D84-4E03-97C8-3B4F33383DC5.png",
+        "timestamp" : 1756421409.515
       },
       {
         "arguments" : [
@@ -73,12 +50,12 @@
           "1"
         ],
         "configurationName" : "Test Scheme Action",
-        "deviceId" : "4C62D412-90CE-453F-97C4-D2025E3C08F0",
+        "deviceId" : "CE4A7935-27C3-4F4E-8F6C-769DBDCF4B12",
         "deviceName" : "iPhone 16",
-        "exportedFileName" : "EF8F96BC-8BD8-47A5-8091-D6A09F72CACB.png",
+        "exportedFileName" : "FCE05EAF-FC0D-4355-94A7-30C6F1EDD229.png",
         "isAssociatedWithFailure" : false,
-        "suggestedHumanReadableName" : "Launch Screen_0_0AD5A730-A3F5-46FA-B96D-75C4476FBE04.png",
-        "timestamp" : 1756405211.539
+        "suggestedHumanReadableName" : "Launch Screen_0_11EEFAA4-B256-42AC-BD2C-4D1DDD957E82.png",
+        "timestamp" : 1756421420.387
       },
       {
         "arguments" : [
@@ -86,12 +63,12 @@
           "2"
         ],
         "configurationName" : "Test Scheme Action",
-        "deviceId" : "4C62D412-90CE-453F-97C4-D2025E3C08F0",
+        "deviceId" : "CE4A7935-27C3-4F4E-8F6C-769DBDCF4B12",
         "deviceName" : "iPhone 16",
-        "exportedFileName" : "3B5AD258-A428-49C0-B76F-CFBFDFEBFE82.png",
+        "exportedFileName" : "37DC35ED-9993-49AB-97B9-F21AE046D54C.png",
         "isAssociatedWithFailure" : false,
-        "suggestedHumanReadableName" : "Launch Screen_0_A7D4CA77-965F-422A-B9FE-89EB71865422.png",
-        "timestamp" : 1756405221.773
+        "suggestedHumanReadableName" : "Launch Screen_0_A5E062EA-661E-4FEF-AC25-BF78568EB190.png",
+        "timestamp" : 1756421431.197
       },
       {
         "arguments" : [
@@ -99,12 +76,12 @@
           "4"
         ],
         "configurationName" : "Test Scheme Action",
-        "deviceId" : "4C62D412-90CE-453F-97C4-D2025E3C08F0",
+        "deviceId" : "CE4A7935-27C3-4F4E-8F6C-769DBDCF4B12",
         "deviceName" : "iPhone 16",
-        "exportedFileName" : "6A23BCD0-426B-49D7-932D-44256D94F24D.png",
+        "exportedFileName" : "64991D8E-D140-4DCD-9E8F-BB937EF0AFFC.png",
         "isAssociatedWithFailure" : false,
-        "suggestedHumanReadableName" : "Launch Screen_0_491A8338-9988-4DAC-9FDD-FC1466F24B44.png",
-        "timestamp" : 1756405229.826
+        "suggestedHumanReadableName" : "Launch Screen_0_A5026E8B-F398-444E-806A-F42C4D9C2B20.png",
+        "timestamp" : 1756421439.224
       }
     ],
     "testIdentifier" : "SimpleProjectUITestsLaunchTests/testLaunch",

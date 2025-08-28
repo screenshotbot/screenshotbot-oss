@@ -1,5 +1,0 @@
-failed - No reference was found on disk. Automatically recorded snapshot: …
-
-open "file:///Volumes/workspace/repository/SimpleProjectTests/__Snapshots__/SimpleProjectTests/testDataSnapshot.1.txt"
-
-Re-run "testDataSnapshot" to assert against the newly-recorded snapshot.

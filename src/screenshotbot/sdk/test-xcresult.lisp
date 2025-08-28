@@ -50,6 +50,6 @@
 (test image-name-works
   (with-fixture state ()
     (assert-that (mapcar #'image-name (list-images bundle))
-                 (has-item "SimpleProjectTests/testLoginViewSnapshot.1_0"))))
+                 (has-item "SimpleProjectTests/SnapshotTest_testLoginViewSnapshot.1_0"))))
 
 
