@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.16.0 - 2025-08-28 
+
+### Added
+
+- Support for Xcode cloud Environment variables
+- Support for parsing images from .xcresults
+
+### Changed
+
+- We're not using OpenSSL/LibreSSL anymore for hash functions. This
+  might be a minor performance regression (by a few seconds at
+  most). But it's more reliable.
+
 ## 2.15.17 - 2025-06-02
 
 ### Changed
