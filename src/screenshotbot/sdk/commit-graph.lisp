@@ -65,6 +65,11 @@ to cache the refs."))
   #-lispworks
   nil)
 
+(defmethod update-commit-graph-old-style ((self commit-graph-updater)
+                                          (repo null-repo)
+                                          branch)
+  (log:info "No repo to update commit graph"))
+
 (defmethod update-commit-graph-old-style ((self commit-graph-updater) repo branch)
   "Update commit-graph by pulling, and then always push the top 1000 or
 so changes."
