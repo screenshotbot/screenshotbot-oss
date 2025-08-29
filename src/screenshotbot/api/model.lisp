@@ -88,7 +88,10 @@
              #:git-ref
              #:git-ref-name
              #:git-ref-sha
-             #:api-features))
+             #:api-features
+             #:build-info
+             #:build-info-build-url
+             #:build-info-repo-url))
 
 (in-package :screenshotbot/api/model)
 
@@ -567,3 +570,18 @@ response back from /api/screenshot."))
          :json-key "refs"
          :json-type (:list git-ref)))
   (:metaclass ext-json-serializable-class))
+
+(defclass build-info ()
+  ((build-url :initarg :build-url
+              :json-key "buildUrl"
+              :json-type (or null :string)
+              :reader build-info-build-url
+              :documentation "The URL of the build job")
+   (repo-url :initarg :repo-url
+             :json-key "repoUrl"
+             :json-type (or null :string)
+             :reader build-info-repo-url
+             :documentation "The repository URL associated with the build"))
+  (:metaclass ext-json-serializable-class)
+  (:documentation "DTO for build information across CI steps"))
+
