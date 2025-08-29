@@ -1,6 +1,9 @@
 (defpackage :screenshotbot/sdk/xcresult
   (:use :cl)
   (:import-from #:screenshotbot/sdk/bundle
+                #:local-image
+                #:abstract-image
+                #:close-bundle
                 #:image-stream
                 #:image-name
                 #:list-images)
@@ -14,7 +17,7 @@
   ((directory :initarg :directory
               :reader %directory)))
 
-(defclass xcresults-attachment ()
+(defclass xcresults-attachment (local-image)
   ((bundle :initarg :bundle
            :reader bundle)
    (name :initarg :name
@@ -29,6 +32,9 @@
     (export-all-attachments xcresult dir)
     (make-instance 'xcresults-attachment-bundle
                    :directory dir)))
+
+(defmethod close-bundle ((self xcresults-attachment-bundle))
+  (tmpdir::%delete-directory (%directory self)))
 
 (defun export-all-attachments (xcresult-path output-path)
   "Export all attachments from the xcresult file to the given output directory.
@@ -69,15 +75,10 @@
                 collect
                 (make-instance 'xcresults-attachment
                                :bundle self
-                               :name (parse-name suggested-name test-identifier)
-                               :file-name exported-file-name)))))
-
-(defmethod image-stream ((self xcresults-attachment))
-  (let ((file-name (path:catfile
-                    (%directory (bundle self))
-                    (file-name self))))
-    (open file-name :element-type '(unsigned-byte 8) :direction :input)))
-
+                               :pathname (path:catfile
+                                                (%directory self)
+                                                exported-file-name)
+                               :name (parse-name suggested-name test-identifier))))))
 
 
 ;; Example usage:

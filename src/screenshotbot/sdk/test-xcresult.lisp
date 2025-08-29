@@ -12,6 +12,8 @@
                 #:parse-name
                 #:xcresults-attachment-bundle)
   (:import-from #:screenshotbot/sdk/bundle
+                #:close-image
+                #:close-bundle
                 #:image-stream
                 #:image-name
                 #:list-images)
@@ -59,7 +61,8 @@
     (let ((bundle (make-xcresults-bundle (asdf:system-relative-pathname :screenshotbot.sdk
                                                                         "fixture/result12.xcresult"))))
       (assert-that (mapcar #'image-name (list-images bundle))
-                   (has-item "SimpleProjectTests/testLoginViewSnapshot.1_0")))))
+                   (has-item "SimpleProjectTests/testLoginViewSnapshot.1_0"))
+      (close-bundle bundle))))
 
 (defun find-image (bundle name)
   (loop for image in (list-images bundle)
@@ -68,11 +71,13 @@
 
 (test image-stream
   (with-fixture state ()
-    (with-open-stream (stream (image-stream (find-image bundle "SimpleProjectTests/testLoginViewSnapshot.1_0")))
+    (let* ((image (find-image bundle "SimpleProjectTests/testLoginViewSnapshot.1_0"))
+           (stream (image-stream image)))
       (is
        (equal
         "32143da99ce89207d2aa0ecf85843349"
         (str:downcase
-         (ironclad:byte-array-to-hex-string (md5:md5sum-stream stream))))))))
+         (ironclad:byte-array-to-hex-string (md5:md5sum-stream stream)))))
+      (close-image image))))
 
 

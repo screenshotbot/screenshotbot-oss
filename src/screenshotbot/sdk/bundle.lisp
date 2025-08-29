@@ -8,7 +8,8 @@
   (:use #:cl
         #:alexandria)
   (:export
-   #:image-stream))
+   #:image-stream
+   #:close-bundle))
 (in-package :screenshotbot/sdk/bundle)
 
 
@@ -29,6 +30,10 @@
          :accessor image-name)
    (stream :initarg :stream
            :accessor image-stream)))
+
+(defmethod close-bundle (bundle)
+  (values))
+
 
 (defmethod close-image ((local-image local-image)))
 
