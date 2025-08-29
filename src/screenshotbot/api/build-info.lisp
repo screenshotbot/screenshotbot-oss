@@ -29,9 +29,8 @@
 (defapi (%get-build-info :uri "/api/build-info" :method :get
                          :use-yason t) (build-url)
   (let ((build-info (find-build-info
-                     (list
-                      build-url
-                      (auth:current-company)))))
+                     (auth:current-company)
+                     build-url)))
     (when build-info
       (to-dto build-info))))
 

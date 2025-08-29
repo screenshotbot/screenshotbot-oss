@@ -75,7 +75,7 @@
         (is (not (null result)))
         (is (string= "https://ci.example.com/build/789" (build-info-build-url result)))
         (is (string= "https://github.com/example/repo3" (dto:build-info-repo-url result)))
-        (let ((stored (find-build-info (list "https://ci.example.com/build/789" company))))
+        (let ((stored (find-build-info company "https://ci.example.com/build/789")))
           (is (not (null stored)))
           (is (string= "https://github.com/example/repo3" (build-info-repo-url stored))))))))
 

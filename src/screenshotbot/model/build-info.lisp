@@ -14,13 +14,15 @@
                 #:defindex)
   (:import-from #:util/store/fset-index
                 #:fset-unique-index
-                #:fset-set-index))
+                #:fset-set-index)
+  (:import-from #:bknr.indices
+                #:index-get))
 (in-package :screenshotbot/model/build-info)
 
 
-(defindex +build-url-index+
+(defindex +build-url-index-v2+
   'fset-unique-index
-  :slots '(build-url company))
+  :slots '(company build-url))
 
 (unintern '+build-url-index+)
 
@@ -36,16 +38,18 @@
                :accessor build-info-repo-url))
     (:metaclass persistent-class)
     (:class-indices (company-build-url-index
-                     :index +build-url-index+
-                     :index-reader find-build-info))
+                     :index +build-url-index-v2+))
     (:documentation "On some CI systems (Xcode cloud!) we might need to store some
 information across steps, because it might not be available in a
 future step. This is just a way of storing that information.")))
 
+(defun find-build-info (company build-url)
+  (index-get +build-url-index-v2+ (list company build-url)))
+
 (defun find-or-create-build-info (company build-url)
   (bt:with-lock-held (*lock*)
     (or
-     (find-build-info (list build-url company))
+     (find-build-info company build-url)
      (make-instance 'build-info :build-url build-url :company company))))
 
 
