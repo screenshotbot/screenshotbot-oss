@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.16.1 - 2025-08-28
+
+### Changed
+
+- Fixed `ci upload-commit-graph` subcommand. This was crashing.
+
 ## 2.16.0 - 2025-08-28 
 
 ### Added
