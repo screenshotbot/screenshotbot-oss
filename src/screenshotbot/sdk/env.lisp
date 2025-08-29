@@ -486,6 +486,32 @@ running in Docker."))
 (defmethod work-branch ((self teamcity-env-reader))
   (teamcity-config-prop self "teamcity.build.branch"))
 
+(defclass xcode-cloud-env-reader (base-env-reader)
+  ()
+  (:documentation "https://developer.apple.com/documentation/xcode/environment-variable-reference"))
+
+(defmethod validp ((self xcode-cloud-env-reader))
+  (not (null (getenv self "CI_XCODE_CLOUD"))))
+
+(defmethod pull-request-url ((self xcode-cloud-env-reader))
+  (getenv self "CI_PULL_REQUEST_HTML_URL"))
+
+(defmethod pull-request-base-branch ((self xcode-cloud-env-reader))
+  (getenv self "CI_PULL_REQUEST_TARGET_BRANCH"))
+
+(defmethod sha1 ((self xcode-cloud-env-reader))
+  (getenv self "CI_COMMIT"))
+
+(defmethod build-url ((self xcode-cloud-env-reader))
+  (getenv self "CI_BUILD_URL"))
+
+(defmethod repo-url ((self xcode-cloud-env-reader))
+  ;; Hopefully we can figure this out from the git repo directly
+  nil)
+
+(defmethod work-branch ((self xcode-cloud-env-reader))
+  (getenv self "CI_BRANCH"))
+
 
 (defparameter *all-readers*
   '(circleci-env-reader
@@ -496,7 +522,8 @@ running in Docker."))
     buildkite-env-reader
     gitlab-ci-env-reader
     github-actions-env-reader
-    teamcity-env-reader))
+    teamcity-env-reader
+    xcode-cloud-env-reader))
 
 
 (defun make-env-reader (&key overrides)

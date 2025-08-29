@@ -12,6 +12,7 @@
                 #:pull-request-base-branch
                 #:read-java-property
                 #:teamcity-env-reader
+                #:xcode-cloud-env-reader
                 #:remove-.git
                 #:*all-readers*
                 #:gitlab-ci-env-reader
@@ -182,6 +183,36 @@
 (test teamcity
   (finishes (test-happy-fns (make-instance 'teamcity-env-reader
                                            :overrides nil))))
+
+(test xcode-cloud
+  (finishes (test-happy-fns (make-instance 'xcode-cloud-env-reader
+                                           :overrides nil))))
+
+(test xcode-cloud-pull-request-url
+  (let ((reader (make-instance 'xcode-cloud-env-reader
+                               :overrides `(("CI_PULL_REQUEST_NUMBER" . "42")))))
+    ;; Without repo-url, pull-request-url should return nil
+    (is (equal nil (pull-request-url reader))))
+  ;; Note: Xcode Cloud doesn't provide CI_REPOSITORY_URL, so pull-request-url
+  ;; will be nil unless repo-url is provided through other means
+  )
+
+(test xcode-cloud-environment-variables
+  (let ((reader (make-instance 'xcode-cloud-env-reader
+                               :overrides `(("CI_BUILD_ID" . "12345")
+                                            ("CI_XCODE_CLOUD" . "true")
+                                            ("CI_COMMIT" . "abc123def456")
+                                            ("CI_BRANCH" . "feature/new-feature")
+                                            ("CI_PULL_REQUEST_NUMBER" . "42")))))
+    (is (equal t (validp reader)))
+    (is (equal "abc123def456" (sha1 reader)))
+    (is (equal "feature/new-feature" (work-branch reader)))
+    ;; pull-request-url returns nil without repo-url
+    (is (equal nil (pull-request-url reader)))
+    ;; build-url is not provided by Xcode Cloud
+    (is (equal nil (build-url reader)))
+    ;; repo-url is not provided by Xcode Cloud
+    (is (equal nil (repo-url reader)))))
 
 (test read-java-property
   (let ((input (asdf:system-relative-pathname :screenshotbot.sdk
