@@ -117,3 +117,17 @@ carbar" s)
   (is (equal "https://example.com"
              (tracked-stream-key
               (puri:uri "https://example.com/dfdf/sdfd")))))
+
+(test want-string-test
+  (with-fixture network-state ()
+    (with-reused-ssl (engine)
+      (multiple-value-bind (response status-code)
+          (http-request
+           "https://screenshotbot.io/raft-state"
+           :want-string t
+           :engine engine)
+        (is (stringp response))
+        (is (equal "leader" response))
+        (is (= 200 status-code))))))
+
+
