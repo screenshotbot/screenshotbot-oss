@@ -1,12 +1,5 @@
 # Changelog
 
-## 2.16.2 - 2025-08-29
-
-### Changed
-
-- Fixed issue with re-using SSL connections (blames to 2.16.0, from
-  changes in dependencies.)
-
 ## 2.16.1 - 2025-08-28
 
 ### Changed
