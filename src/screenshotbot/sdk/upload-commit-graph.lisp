@@ -18,6 +18,8 @@
                 #:make-option)
   (:import-from #:screenshotbot/sdk/env
                 #:make-env-reader)
+  (:import-from #:screenshotbot/sdk/commit-graph
+                #:commit-graph-updater)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)))
 (in-package :screenshotbot/sdk/upload-commit-graph)
 
@@ -55,7 +57,7 @@
       (unless (run-context:repo-url run-context)
         (error "Could not determine repository URL, please pass the --repo-url argument"))
       (log:info "Updating commit graph for ~a" (run-context:repo-url run-context))
-      (update-commit-graph api-context
+      (update-commit-graph (make-instance 'commit-graph-updater :api-context api-context)
                            (run-context:git-repo run-context)
                            (run-context:main-branch run-context)))))
 
