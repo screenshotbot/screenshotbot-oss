@@ -147,13 +147,6 @@
     (t
      (call-next-method))))
 
-(defun push-connection (reuse-context domain stream)
-  (push
-   (make-instance 'connection
-                  :domain domain
-                  :stream stream)
-   (gethash domain (connections reuse-context))))
-
 (defmethod close ((self tracked-stream) &key abort)
   (declare (ignore abort))
   ;; Rather than really closing, push connection
@@ -161,10 +154,11 @@
     ((not (closedp self))
      (log:debug "Closing a tracked-stream")
      (setf (closedp self) t)
-     (push-connection
-      (reuse-context self)
-      (domain self)
-      (delegate self)))
+     (push
+      (make-instance 'connection
+                     :domain (domain self)
+                     :stream (delegate self))
+      (gethash (domain self) (connections (reuse-context self)))))
     (t
      (log:debug "The tracked-stream is already closed"))))
 
@@ -187,6 +181,11 @@
     (cond
      ((not reuse-context)
       (warn "no reuse-context available")
+      (call-next-method))
+     ((not want-stream)
+      ;; We don't have a way of wrapping this response for now
+      (warn "Don't know how to save this stream ~a"
+            loggable-args)
       (call-next-method))
      (t
       (multiple-value-bind (stream code headers
@@ -223,24 +222,15 @@
            (unless reuse-context
              (error "Could not find reuse-context in ~s"
                     *reuse-contexts*))
-           (prog1
-               (values
-                (cond
-                  (want-stream
-                   (make-instance 'tracked-stream
-                                  :reuse-context reuse-context
-                                  :bytes-left (parse-integer (assoc-value headers :content-length))
-                                  :reusable-stream underlying-stream
-                                  :domain (tracked-stream-key uri)
-                                  :delegate stream))
-                  (t
-                   (push-connection reuse-context
-                                (tracked-stream-key uri)
-                                underlying-stream)
-                   ;; will be an object!
-                   stream))
-                code
-                headers)))))))))
+           (values
+            (make-instance 'tracked-stream
+                           :reuse-context reuse-context
+                           :bytes-left (parse-integer (assoc-value headers :content-length))
+                           :reusable-stream underlying-stream
+                           :domain (tracked-stream-key uri)
+                           :delegate stream)
+            code
+            headers))))))))
 
 (defun tracked-stream-key (uri)
   (format nil "~a://~a"
@@ -250,21 +240,8 @@
 #+nil
 (hcl:profile
  (with-reused-ssl (*default-reused-ssl-engine*)
-   (time
-    (loop for i from 0 to 10
-          collect (http-request
-                   "http://ident.me"
-                   :want-string t
-                   :engine *default-reused-ssl-engine*)))))
-
-#+nil
-(hcl:profile
- (with-reused-ssl (*default-reused-ssl-engine*)
-   (time
-    (loop for i from 0 to 10
-          collect (uiop:slurp-input-stream
-                   'string
-                   (http-request
-                    "http://ident.me"
-                    :want-stream t
-                    :engine *default-reused-ssl-engine*))))))
+   (loop for i from 0 to 5
+         collect (http-request
+                  "http://ident.me"
+                  :want-string t
+                  :engine *default-reused-ssl-engine*))))
