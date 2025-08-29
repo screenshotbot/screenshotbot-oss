@@ -22,6 +22,14 @@
    (file-name :initarg :file-name
               :reader file-name)))
 
+(defun make-xcresults-bundle (xcresult)
+  ;; TODO: close-bundle. But we have to fix the tests to not
+  ;; accidently delete hardcoded directories.
+  (let ((dir (tmpdir:mkdtemp)))
+    (export-all-attachments xcresult dir)
+    (make-instance 'xcresults-attachment-bundle
+                   :directory dir)))
+
 (defun export-all-attachments (xcresult-path output-path)
   "Export all attachments from the xcresult file to the given output directory.
    Creates a manifest.json and all attachment files (PNGs, logs, etc.)."

@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/xcresult
+                #:make-xcresults-bundle
                 #:parse-name
                 #:xcresults-attachment-bundle)
   (:import-from #:screenshotbot/sdk/bundle
@@ -51,6 +52,14 @@
   (with-fixture state ()
     (assert-that (mapcar #'image-name (list-images bundle))
                  (has-item "SimpleProjectTests/testLoginViewSnapshot.1_0"))))
+
+#+darwin
+(test image-name-works-for-actual-xcresult
+  (with-fixture state ()
+    (let ((bundle (make-xcresults-bundle (asdf:system-relative-pathname :screenshotbot.sdk
+                                                                        "fixture/result12.xcresult"))))
+      (assert-that (mapcar #'image-name (list-images bundle))
+                   (has-item "SimpleProjectTests/testLoginViewSnapshot.1_0")))))
 
 (defun find-image (bundle name)
   (loop for image in (list-images bundle)
