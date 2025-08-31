@@ -37,6 +37,7 @@
    :warn-on-missing-templates t
    :console :input ;; only if input is attempted
    :startup-bitmap-file nil
+   :prepare-asdf nil
    :keep-modules nil))
 
 ;; Run delivery when this file is loaded
