@@ -1,5 +1,5 @@
 (defsystem :pixel-diff
-  :version "1.0.0"
+  :version "1.0.2"
   :serial t
   :depends-on (:pixel-diff.math
                :easy-macros
