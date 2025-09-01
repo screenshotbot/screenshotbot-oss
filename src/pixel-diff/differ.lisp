@@ -447,7 +447,6 @@ processed. This is the position at the time of being processed."))
   (open-image-file interface 'image2 "Select Updated Image"))
 
 
-
 (defun view-radio-panel-callback (item interface)
   "Callback function for view radio panel selection changes"
   (log:debug "View changed to: ~a" item)
@@ -832,5 +831,8 @@ processed. This is the position at the time of being processed."))
       (setf (image2 (image-pane interface)) image2-layer)
       (setf (core-transform (image-pane interface)) nil)
       (setf (image-transform (image-pane interface)) (make-identity))
+      (view-radio-panel-callback
+       (capi:choice-selected-item (view-radio-panel interface))
+       interface)
       (gp:invalidate-rectangle (image-pane interface)))))
 
