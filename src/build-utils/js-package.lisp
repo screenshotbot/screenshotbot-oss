@@ -100,8 +100,8 @@
                (namestring (car (output-files o j)))
                "--create_source_map"
                (namestring (cadr (output-files o j))))
-              (mapcar 'namestring
-                       input-files))
+              (loop for filename in input-files
+                    appending (list "--js" (namestring filename))))
              :output 'string
              :error-output 'string
              :ignore-error-status t)
