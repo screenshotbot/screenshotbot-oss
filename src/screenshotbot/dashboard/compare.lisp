@@ -260,6 +260,7 @@
   <picture>
     <source srcset= (image-public-url image :size :full-page :type :webp) type= "image/webp" />
     <img class= (format nil "screenshot-image change-image ~a" class) src= (image-public-url image :size :full-page :type :png)
+         data-hj-suppress= "true"
          loading= "lazy"
          alt=alt
          width= (?. dimension-width dimensions)
@@ -347,9 +348,12 @@
                           after-image
                           comp-image)
   <div class="change-image-row change-image-row-triple">
-    <img class= "screenshot-image change-image change-image-left" src= before-image />
-    <img class= "screenshot-image change-image change-image-right" src= after-image />
+    <img class= "screenshot-image change-image change-image-left" src= before-image
+         data-hj-suppress="true" />
+    <img class= "screenshot-image change-image change-image-right" src= after-image
+         data-hj-suppress= "true" />
     <:img data-src= comp-image
+          data-hj-suppress= "true"
       class= "bg-primary image-comparison-modal-image screenshot-image change-image" alt= "Image Difference" />
   </div>)
 
