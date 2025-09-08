@@ -26,15 +26,19 @@
   id=id
   href= (util.cdn:make-cdn href) />)
 
+(defun image-url-p (src)
+  (str:starts-with-p "/image/blob/" src))
+
 (defun cdn-for-image-url (src)
   (let ((util.cdn:*cdn-cache-key* "i6" ))
-    (if (str:starts-with-p "/image/blob/" src)
+    (if (image-url-p src)
         src
         (util.cdn:make-cdn src))))
 
 (markup:deftag img (&key src (alt "Image") srcset class style height width id loading)
   (let ((dims (image-dimensions src)))
     <:img src= (cdn-for-image-url src)  alt=alt srcset=srcset class=class style=style
+          data-hj-suppress=(when (image-url-p src) "true")
           width= (or width (first dims))
           height= (or height (second dims))
           id=id
