@@ -65,6 +65,8 @@
 ;; remove if this has been merged by the next QL release.
 (register-tdrhq "zpb-ttf" "6e0eaec06c123f53b07d93200a8288d820487e0c")
 
+(register-tdrhq "esrap" "96f4d59905a7ffdcf9073572c748883b558db0d2")
+
 ;; TODO: automatically generate hashes
 #+(or screenshotbot-oss eaase-oss)
 (progn
