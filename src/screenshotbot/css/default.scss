@@ -890,7 +890,11 @@ a {
 
     .card-body {
         padding: 1.5rem !important;
+        @include media-breakpoint-down(sm) {
+            padding: 0rem !important;
+        }
     }
+
 }
 
 .error-500 {
