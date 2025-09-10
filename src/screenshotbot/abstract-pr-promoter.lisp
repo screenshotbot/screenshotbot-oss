@@ -429,7 +429,7 @@ reviewable.)"
                            :title "Base SHA not available for comparison, please check CI setup"
                            :summary "Screenshots unavailable for base commit, perhaps the build was red? Try rebasing."))
                          (t
-                          (format-log run :info "Base run is available, preparing notification from diff-report")
+                          (format-log run :info "Base run is ~a, preparing notification from diff-report" base-run)
                           (when base-run
                             (warn-if-not-merge-base promoter run base-run))
                           (make-check-result-from-diff-report
