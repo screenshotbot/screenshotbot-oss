@@ -38,6 +38,9 @@
 (defapi (%post-unchanged-run :uri "/api/unchanged-run" :method :post
          :use-yason t) ()
   (assert (current-company))
+  (log:debug "Unchanged run: ~a to ~a"
+             (dto:unchanged-run-commit input)
+             (dto:unchanged-run-other-commit input))
   (let ((input (parse-body 'dto:unchanged-run)))
     (let ((unchanged-run
             (make-instance 'unchanged-run
