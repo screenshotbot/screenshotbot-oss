@@ -12,7 +12,8 @@
    #:log-event
    #:get-config
    #:get-layer
-   #:make-statsig-user))
+   #:make-statsig-user)
+  (:nicknames :statsig))
 (in-package :util/statsig)
 
 (defclass statsig-client ()
