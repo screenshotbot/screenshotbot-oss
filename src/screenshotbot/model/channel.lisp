@@ -322,29 +322,32 @@
                                &key commit
                                  (seen (fset:empty-set)))
   ;; currently returns the oldest run for a given commit
-  (let ((unchanged-run (unchanged-run-for-commit
-                        channel commit)))
-    (cond
-      ((fset:contains? seen commit)
-       nil)
-      (unchanged-run
-       (production-run-for channel
-                           :commit (unchanged-run-other-commit unchanged-run)
-                           :seen (fset:with seen commit)))
-      (t
-       (let ((large-int most-positive-fixnum))
-         (reduce
-          (lambda (x y)
-            (if (< (if x (store-object-id x) large-int)
-                   (if y (store-object-id y) large-int))
-                x
-                y))
-          (fset:filter
-           #'trunkp
-           (fset:lookup
-            (commit-to-run-map channel)
-            commit))
-          :initial-value nil))))))
+  (or
+   (%find-direct-production-run channel :commit commit)
+   (let ((unchanged-run (unchanged-run-for-commit
+                         channel commit)))
+     (cond
+       ((fset:contains? seen commit)
+        nil)
+       (unchanged-run
+        (production-run-for channel
+                            :commit (unchanged-run-other-commit unchanged-run)
+                            :seen (fset:with seen commit)))))))
+
+(defun %find-direct-production-run (channel &key commit)
+  (let ((large-int most-positive-fixnum))
+    (reduce
+     (lambda (x y)
+       (if (< (if x (store-object-id x) large-int)
+              (if y (store-object-id y) large-int))
+           x
+           y))
+     (fset:filter
+      #'trunkp
+      (fset:lookup
+       (commit-to-run-map channel)
+       commit))
+     :initial-value nil)))
 
 (defmethod channel-active-run ((channel channel))
   (loop for run in (company-runs (channel-company channel))

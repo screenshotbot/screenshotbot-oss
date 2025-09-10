@@ -120,6 +120,19 @@
        (is (eql bar-run (production-run-for channel :commit "foo")))
        (is (eql bar-run (production-run-for channel :commit "bar")))))))
 
+(test finds-production-run-if-theres-also-an-unchanged-run-for-that-commit
+  (with-fixture state ()
+   (let* ((channel (make-instance 'channel))
+          (unchanged-run (make-instance 'unchanged-run
+                                  :channel channel
+                                  :commit "bar"
+                                  :other-commit "bar"))
+          (bar-run (make-recorder-run :channel channel
+                                      :commit-hash "bar"
+                                      :trunkp t)))
+     (is (eql bar-run (production-run-for channel :commit "bar")))
+     (is (eql nil (production-run-for channel :commit "foo"))))))
+
 (test detect-infinite-loops-in-unchanged-run
   (with-fixture state ()
    (let* ((channel (make-instance 'channel))
