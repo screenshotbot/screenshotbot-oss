@@ -186,3 +186,7 @@
     (encode-json
      (make-instance 'dto:report
                     :reviewer-name nil))))
+
+(test compare-pixel-tolerance-is-always-a-numer
+  (is (eql 1 (dto:compare-pixel-tolerance (make-instance 'dto:run :compare-pixel-tolerance 1))))
+  (is (eql 0 (dto:compare-pixel-tolerance (make-instance 'dto:run :compare-pixel-tolerance nil)))))

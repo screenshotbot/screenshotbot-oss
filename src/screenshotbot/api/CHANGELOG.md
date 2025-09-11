@@ -1,6 +1,7 @@
 
 Version
 
+* 20: Added comparePixelTolerance to runs
 * Version unchanged
   - Added "features" to /api/version for server side control of features
 * 19: Added /api/commit-graph/check-wants API

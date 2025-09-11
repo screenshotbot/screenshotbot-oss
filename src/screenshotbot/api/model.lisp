@@ -91,12 +91,13 @@
              #:api-features
              #:build-info
              #:build-info-build-url
-             #:build-info-repo-url))
+             #:build-info-repo-url
+             #:compare-pixel-tolerance))
 
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 19)
+(defparameter *api-version* 20)
 
 (defclass version ()
   ((version :initarg :version
@@ -416,6 +417,13 @@ information on runs.")
                       :initform nil
                       :reader compare-threshold
                       :documentation "The comparison threshold used for comparisons associated with this run.")
+   (compare-pixel-tolerance :initarg :compare-pixel-tolerance
+                            :json-key "comparePixelTolerance"
+                            :json-type (or null :number)
+                            :initform 0
+                            :reader compare-pixel-tolerance
+                            :documentation "The square of the euclidian distance between two pixels when
+considering them different or not.")
    (url :initarg :url
         :json-key "url"
         :json-type (or null :string)
@@ -447,6 +455,12 @@ runs, but only for debugging.")
                :json-type (or null shard-spec)
                :documentation "An optional shard-spec. This information is not present when reading a run. When creating a run, the presence of a shard-spec might delay the actual creation until all of the shards are available."))
   (:metaclass ext-json-serializable-class))
+
+(defmethod compare-pixel-tolerance :around ((self run))
+  (or
+   (call-next-method)
+   0))
+
 
 (defclass report ()
   ((id :initarg :id
