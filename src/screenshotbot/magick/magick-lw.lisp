@@ -487,8 +487,8 @@
      (dist :int))
   :result-type :int)
 
-(defun screenshotbot-inplace-compare (dest src)
-  (screenshotbot-inplace-compare-v2 dest src 0))
+(defun screenshotbot-inplace-compare (dest src &key (pixel-tolerance 0))
+  (screenshotbot-inplace-compare-v2 dest src pixel-tolerance))
 
 (defun set-wand-alpha-channel (wand)
   (check-boolean (magick-set-image-alpha-channel wand 'SetAlphaChannel)
@@ -500,6 +500,7 @@
                                              in-place-p
                                              (highlight-color "red")
                                              (lowlight-color "none")
+                                             (pixel-tolerance 0)
                                              &fn fn)
   (assert (not (fli:null-pointer-p wand1)))
   (assert (not (fli:null-pointer-p wand2)))
@@ -510,7 +511,7 @@
 
      (flet ((inner (wand1 wand2)
               (set-wand-alpha-channel wand1)
-              (let ((res (screenshotbot-inplace-compare wand1 wand2)))
+              (let ((res (screenshotbot-inplace-compare wand1 wand2 :pixel-tolerance pixel-tolerance)))
                 (when (< res 0)
                   (error "Error calling inplace-compare: ~a" res))
                 (funcall fn wand1 (= res 0)))))

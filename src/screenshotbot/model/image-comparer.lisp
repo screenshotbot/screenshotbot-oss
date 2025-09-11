@@ -48,6 +48,7 @@
   ((threshold :initarg :threshold
               :reader compare-threshold)
    (tolerance :initarg :tolerance
+              :initform 0
               :reader compare-tolerance)))
 
 (defmethod make-image-comparer (run)
@@ -99,8 +100,10 @@
                                   (magick-get-image-height before)
                                   (magick-get-image-width before)))))
              (with-wand (after :file file2)
+               (check-type (compare-tolerance self) number)
                (with-image-comparison (before after
                                        :result result
+                                       :pixel-tolerance (compare-tolerance self)
                                        :in-place-p t)
                  ;; TODO(T844): factor in tolerance
                  (let ((bad-pixels (get-non-alpha-pixels
