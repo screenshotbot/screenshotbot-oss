@@ -57,36 +57,42 @@
     (loop for report in (fast-reports-for-run run) do
       (fn run report))))
 
-(defun pr-to-actions (company)
+(defun pr-to-actions (company &key (num-days 30))
   (let ((actions (make-hash-table :test #'equal))
-        (runs (runs-for-last-60-days company :num-days 30)))
+        (runs (runs-for-last-60-days company :num-days num-days))
+        (failure-examples (make-hash-table :test #'equal)))
     (loop for run in runs
           if (safe-pr run)
           do (setf (gethash (safe-pr run) actions)
                    :none))
-    (do-run-report (run report company :num-days 30)
+    (do-run-report (run report company :num-days num-days)
       (when (eql :none (gethash (safe-pr run) actions))
         (setf (gethash (safe-pr run) actions)
-              :changed))
+              :changed)
+        (setf (gethash (safe-pr run) failure-examples) report))
       (when-let ((acceptable (report-acceptable report)))
         (case (acceptable-state acceptable)
           (:rejected
            (setf (gethash (safe-pr run) actions)
-                 :rejected))
+                 :rejected)
+           (setf (gethash (safe-pr run) failure-examples) report))
           (:accepted
            (when (eql :changed #| should not be :none |#
                       (gethash (safe-pr run) actions))
              (setf (gethash (safe-pr run) actions)
                    :accepted))))))
-    actions))
+    (values actions failure-examples)))
 
-(defun pr-to-actions-to-csv (company output)
+(defun pr-to-actions-to-csv (company output &key (num-days 60))
   "Meant to sending over this data manually to customers"
-  (with-open-file (output output :direction :output)
-    (loop for pr being the hash-keys of (pr-to-actions company)
-            using (hash-value state)
-          do
-             (format output "~a,~a~%" pr (string-downcase state)))))
+  (with-open-file (output output :direction :output :if-exists :supersede)
+    (multiple-value-bind (actions failure-examples)
+        (pr-to-actions company :num-days num-days)
+     (loop for pr being the hash-keys of actions
+             using (hash-value state)
+           do
+              (format output "~a,~a,~a~%" pr (string-downcase state)
+                      (util/misc:?. util/store/object-id:oid (gethash pr failure-examples)))))))
 
 (defun user-reviews-last-30-days (company)
   (let ((result (make-hash-table)))
