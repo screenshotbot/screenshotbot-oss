@@ -58,6 +58,7 @@
    #:*shard*
    #:*image-file-types*
    #:*release-branch-regex*
+   #:*pixel-tolerance*
    #:*xcresult*))
 
 (in-package :screenshotbot/sdk/flags)
@@ -367,6 +368,22 @@ Keep in mind that this value will typically be very low. e.g., a
 pixel changes which might be too high for most practical uses. You
 probably want to choose this so that no more than 10-20 pixels are
 allowed to be different at a time.")
+
+(define-flag *pixel-tolerance*
+  :selector "pixel-tolerance"
+  :default-value 0
+  :type (or null integer)
+  :help "The square of the Euclidean distance between two pixels when
+considering them different or not. This is different from --compare-threshold
+which specifies the fraction of pixels that can be different.
+
+This value controls the sensitivity of individual pixel comparison. When
+comparing two pixels, if the square of the Euclidean distance in RGB color
+space between them is less than or equal to this value, they are considered
+the same.
+
+In most cases --pixel-tolerance=1 will be good enough for your needs
+if you are not able to achieve pixel-perfect images.")
 
 (define-flag *finalize*
   :selector "finalize"

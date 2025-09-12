@@ -333,3 +333,11 @@ making sure that the doc is giving a good example."
           (assert-that
            (fix-commit-hash run-context (str:substring 0 10 head))
            (is-equal-to head)))))))
+
+(test pixel-tolerance-flag-propagated-to-flags-run-context
+  "Test that the --pixel-tolerance flag is properly accessible in flags-run-context"
+  (with-fixture state ()
+    (let ((flags:*pixel-tolerance* 3))
+      (let ((run-context (make-instance 'flags-run-context)))
+        (assert-that (run-context:pixel-tolerance run-context)
+                     (is-equal-to 3))))))

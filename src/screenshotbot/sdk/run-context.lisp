@@ -37,6 +37,7 @@
    #:work-branch
    #:build-url
    #:compare-threshold
+   #:pixel-tolerance
    #:batch
    #:gitlab-merge-request-iid
    #:phabricator-diff-id
@@ -172,6 +173,11 @@
                        :reader compare-threshold
                        :json-type :number
                        :json-key "compareThreshold")
+    (pixel-tolerance :initarg :pixel-tolerance
+                     :initform nil
+                     :reader pixel-tolerance
+                     :json-type :number
+                     :json-key "pixelTolerance")
     (batch :initarg :batch
            :initform nil
            :reader batch
@@ -431,6 +437,7 @@ pull-request looks incorrect."
    :release-branch-regex flags:*release-branch-regex*
    :author flags:*author*
    :compare-threshold flags:*compare-threshold*
+   :pixel-tolerance flags:*pixel-tolerance*
    :batch flags:*batch*
    :shard-spec (parse-shard-spec flags:*shard*)
    :tags (parse-tags flags:*tags*))
@@ -455,6 +462,7 @@ pull-request looks incorrect."
         (flags:*channel* (channel self))
         (flags:*override-commit-hash* (override-commit-hash self))
         (flags:*compare-threshold* (compare-threshold self))
+        (flags:*pixel-tolerance* (pixel-tolerance self))
         (flags:*batch* (batch self))
         (flags:*shard* (format-shard-spec (shard-spec self))))
     (fn)))
