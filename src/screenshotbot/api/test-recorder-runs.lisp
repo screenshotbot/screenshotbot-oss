@@ -55,6 +55,7 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
+                #:compare-tolerance
                 #:release-branch-p
                 #:recorder-run-work-branch
                 #:recorder-run-branch
@@ -772,3 +773,22 @@ storing release-branch-p, we'll update this test."
         :channel "zoidberg"
         :commit "0011")
        (has-typep 'dto:run)))))
+
+(test pixel-tolerance-is-propagated-to-recorder-run
+  "Test that compare-pixel-tolerance from DTO is properly passed to the recorder-run model"
+  (with-fixture state ()
+    (assert company)
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :commit-hash "deadbeef"
+                             :compare-pixel-tolerance 5
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1))))
+              :api-key api-key)
+    (let ((run (car (last (class-instances 'recorder-run)))))
+      (is-true run)
+      (assert-that (compare-tolerance run)
+                   (is-equal-to 5)))))

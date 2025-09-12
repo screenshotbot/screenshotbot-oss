@@ -490,7 +490,8 @@ computed differently if we're using sharding."
                         :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
                         :github-repo (dto:run-repo run)
                         :tags (dto:run-tags run)
-                        :compare-threshold (dto:compare-threshold run))))
+                        :compare-threshold (dto:compare-threshold run)
+                        :compare-tolerance (dto:compare-pixel-tolerance run))))
 
     (with-transaction ()
       (setf (channel-branch channel) (dto:main-branch run)))
