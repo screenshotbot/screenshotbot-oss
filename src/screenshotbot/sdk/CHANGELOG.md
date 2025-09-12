@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.16.3 - 2025-09-12
+
+### Added
+
+- Added `--pixel-tolerance` flag to help with flakiness to some
+  degree.
+
 ## 2.16.2 - 2025-08-29
 
 ### Changed
