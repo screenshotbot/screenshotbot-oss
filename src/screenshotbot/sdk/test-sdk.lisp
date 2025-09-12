@@ -55,6 +55,7 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/sdk
+                #:run-context-to-dto
                 #:put-run-with-run-context
                 #:empty-run-error
                 #:find-existing-images
@@ -564,3 +565,10 @@
   ;; encoded differently.
   (is (equal "82142-AE-81-CABA-45-BB-76-AA-21-FB-6-ACF-16"
              (keyword-except-md5 "82142ae81caba45bb76aa21fb6acf16"))))
+
+(test adds-pixel-tolerance
+  (is (eql 2 (dto:compare-pixel-tolerance
+              (run-context-to-dto
+               (make-instance 'run-context:run-context
+                              :pixel-tolerance 2)
+               nil #| screenshots |#)))))

@@ -259,6 +259,35 @@ run-context that was created here."
           :cleanp (cleanp repo)
           :periodic-job-p periodic-job-p))))))
 
+(defun run-context-to-dto (run-context screenshots &key periodic-job-p cleanp)
+  (make-instance 'dto:run
+                 :channel (run-context:channel run-context)
+                 :screenshots screenshots
+                 :metadata (run-context:run-context-metadata run-context)
+                 :main-branch (run-context:main-branch run-context)
+                 :shard-spec (run-context:shard-spec run-context)
+                 :work-branch (run-context:work-branch run-context)
+                 :release-branch-p (run-context:work-branch-is-release-branch-p run-context)
+                 :main-branch-hash (run-context:main-branch-hash run-context)
+                 :github-repo (run-context:repo-url run-context)
+                 :merge-base (run-context:merge-base run-context)
+                 :author (run-context:author run-context)
+                 :periodic-job-p periodic-job-p
+                 :build-url (run-context:build-url run-context)
+                 :compare-threshold (run-context:compare-threshold run-context)
+                 :compare-pixel-tolerance (run-context:pixel-tolerance run-context)
+                 :batch (run-context:batch run-context)
+                 :pull-request (run-context:pull-request-url run-context)
+                 :commit-hash (run-context:commit-hash run-context)
+                 :override-commit-hash (run-context:override-commit-hash run-context)
+                 :cleanp cleanp
+                 :tags (run-context:tags run-context)
+                 :gitlab-merge-request-iid (safe-parse-int
+                                            (run-context:gitlab-merge-request-iid run-context))
+                 :phabricator-diff-id (safe-parse-int
+                                       (run-context:phabricator-diff-id run-context))
+                 :trunkp (run-context:productionp run-context)))
+
 (defmethod put-run-with-run-context (api-context run-context screenshots
                                      &key
                                        ;; periodic-job is only set
@@ -267,32 +296,8 @@ run-context that was created here."
                                        periodic-job-p
                                        ;; TODO: make cleanp come from the run-context instead.
                                        cleanp)
-  (let* ((run (make-instance 'dto:run
-                             :channel (run-context:channel run-context)
-                             :screenshots screenshots
-                             :metadata (run-context:run-context-metadata run-context)
-                             :main-branch (run-context:main-branch run-context)
-                             :shard-spec (run-context:shard-spec run-context)
-                             :work-branch (run-context:work-branch run-context)
-                             :release-branch-p (run-context:work-branch-is-release-branch-p run-context)
-                             :main-branch-hash (run-context:main-branch-hash run-context)
-                             :github-repo (run-context:repo-url run-context)
-                             :merge-base (run-context:merge-base run-context)
-                             :author (run-context:author run-context)
-                             :periodic-job-p periodic-job-p
-                             :build-url (run-context:build-url run-context)
-                             :compare-threshold (run-context:compare-threshold run-context)
-                             :batch (run-context:batch run-context)
-                             :pull-request (run-context:pull-request-url run-context)
-                             :commit-hash (run-context:commit-hash run-context)
-                             :override-commit-hash (run-context:override-commit-hash run-context)
-                             :cleanp cleanp
-                             :tags (run-context:tags run-context)
-                             :gitlab-merge-request-iid (safe-parse-int
-                                                        (run-context:gitlab-merge-request-iid run-context))
-                             :phabricator-diff-id (safe-parse-int
-                                                   (run-context:phabricator-diff-id run-context))
-                             :trunkp (run-context:productionp run-context))))
+  (let* ((run (run-context-to-dto run-context screenshots :periodic-job-p periodic-job-p
+                                  :cleanp cleanp)))
     (if (remote-supports-put-run api-context)
         (put-run api-context run)
         (put-run-via-old-api api-context run))))
