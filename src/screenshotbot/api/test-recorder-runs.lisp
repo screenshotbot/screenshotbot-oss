@@ -792,3 +792,17 @@ storing release-branch-p, we'll update this test."
       (is-true run)
       (assert-that (compare-tolerance run)
                    (is-equal-to 5)))))
+
+(test validate-pixel-tolerance-too-bid
+  (with-fixture state ()
+    (validate-dto
+     (make-instance 'dto:run
+                    :compare-pixel-tolerance 1))
+    (signals
+        validation-error
+      (validate-dto
+       (make-instance 'dto:run
+                      :compare-pixel-tolerance 100)))
+    (validate-dto
+     (make-instance 'dto:run
+                    :compare-pixel-tolerance 0))))

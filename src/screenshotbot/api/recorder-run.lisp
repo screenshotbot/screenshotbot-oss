@@ -329,6 +329,10 @@
     (when (dto:run-author run)
       (verify (< (length (dto:run-author run)) 100)
               "Author name too long"))
+
+    (when (dto:compare-pixel-tolerance run)
+      (verify (<= 0 (dto:compare-pixel-tolerance run) 16)
+              "pixel-threshold must be between 0 and 16."))
     (when-let ((shard (dto:shard-spec run)))
       (verify (< (length (dto:shard-spec-key shard)) 200)
               "Shard key too long")
