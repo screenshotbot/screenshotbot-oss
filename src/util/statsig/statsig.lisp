@@ -97,13 +97,18 @@
                       :ensure-success t)
       (values (json:parse response) status response-headers))))
 
-(defun check-gate (client gate-name user)
+(defun check-gate-impl (client gate-name user)
   "Check if a feature gate is enabled for the given user.
    Returns a hash table with gate evaluation result."
   (let ((payload (make-hash-table :test 'equal)))
-    (setf (gethash "gateName" payload) gate-name)
+    (setf (gethash "gateName" payload) (string-downcase gate-name))
     (setf (gethash "user" payload) user)
     (make-api-request client "check_gate" payload)))
+
+(defun check-gate (gate-name
+                   &key (client (statsig-client *installation*))
+                     (user (make-ip-user)))
+  (check-gate-impl client gate-name user))
 
 (defun make-event (event-name user &key value metadata)
   "Create an event object for Statsig analytics.
