@@ -2,6 +2,8 @@
   :depends-on (:util/request
                :yason
                :core.installation
+               :auth
+               :atomics
                :log4cl
                :alexandria)
   :serial t
@@ -9,4 +11,5 @@
 
 (defsystem :util.statsig/tests
   :depends-on (:util.statsig
-               :util/fiveam))
+               :util/fiveam)
+  :components ((:file "test-statsig")))

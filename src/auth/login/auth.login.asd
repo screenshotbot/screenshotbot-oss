@@ -2,6 +2,7 @@
   :serial t
   :depends-on (:auth
                :auth.model
+               :util.statsig
                :hunchentoot-extensions
                :nibble
                :core.installation

@@ -3,7 +3,6 @@
   :depends-on ("cl-pass"
                "bknr.datastore"
                "util.misc"
-               "util.statsig"
                "core.installation"
                "hunchentoot-extensions"
                "util.store"

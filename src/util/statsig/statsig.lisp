@@ -5,6 +5,7 @@
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:core/installation/installation
+                #:installation-domain
                 #:*installation*)
   (:local-nicknames (#:json #:yason))
   (:export
@@ -101,14 +102,13 @@
     (setf (gethash "user" payload) user)
     (make-api-request client "check_gate" payload)))
 
-(defun log-event-now (client event-name user &key value metadata)
-  "Log an event to Statsig analytics.
+(defun make-event (event-name user &key value metadata)
+  "Create an event object for Statsig analytics.
    EVENT-NAME: Name of the event
    USER: Statsig user object
    VALUE: Optional numeric value 
    METADATA: Optional hash table of additional properties"
-  (let* ((event (make-hash-table :test 'equal))
-         (events (make-hash-table :test 'equal)))
+  (let ((event (make-hash-table :test 'equal)))
     (setf (gethash "eventName" event) event-name)
     (setf (gethash "user" event) user)
     (setf (gethash "time" event) (round (/ (- (get-universal-time) 2208988800) 1)))
@@ -116,6 +116,16 @@
       (setf (gethash "value" event) value))
     (when metadata
       (setf (gethash "metadata" event) metadata))
+    event))
+
+(defun log-event-now (client event-name user &key value metadata)
+  "Log an event to Statsig analytics.
+   EVENT-NAME: Name of the event
+   USER: Statsig user object
+   VALUE: Optional numeric value 
+   METADATA: Optional hash table of additional properties"
+  (let ((events (make-hash-table :test 'equal))
+        (event (make-event event-name user :value value :metadata metadata)))
     (setf (gethash "events" events) (list event))
     (make-api-request client "log_event" events :use-events-url t)))
 
@@ -140,9 +150,26 @@
   (:method (installation)
     nil))
 
+(defvar *events* nil)
+
+(defun make-ip-user ()
+  (make-statsig-user
+   :ip (ignore-errors (hunchentoot:real-remote-addr))
+   :user-id (when (auth:current-user)
+              (format nil
+                      "~a.~a"
+                      (installation-domain *installation*)
+                      (bknr.datastore:store-object-id (auth:current-user ))))))
 
 (defun push-event (event-name &key (client (statsig-client *installation*))
-                                user)
+                                user
+                                value
+                                metadata)
   (when client
-    ;; impl
-    ))
+    (atomics:atomic-push
+     (make-event
+      (string-downcase event-name)
+      (or user (make-ip-user))
+      :value value
+      :metadata metadata)
+     *events*)))
