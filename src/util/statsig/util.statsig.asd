@@ -3,6 +3,8 @@
                :yason
                :core.installation
                :auth
+               :util/atomics
+               :util/cron
                :atomics
                :log4cl
                :alexandria)

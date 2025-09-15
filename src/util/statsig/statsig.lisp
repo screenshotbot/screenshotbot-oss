@@ -3,10 +3,13 @@
   (:import-from #:util/request
                 #:http-request)
   (:import-from #:alexandria
+                #:when-let
                 #:assoc-value)
   (:import-from #:core/installation/installation
                 #:installation-domain
                 #:*installation*)
+  (:import-from #:util/cron
+                #:def-cron)
   (:local-nicknames (#:json #:yason))
   (:export
    #:statsig-client
@@ -118,16 +121,22 @@
       (setf (gethash "metadata" event) metadata))
     event))
 
+(defun log-events (client events)
+  "Log a list of events to Statsig analytics.
+   CLIENT: Statsig client instance
+   EVENTS: List of event objects"
+  (let ((payload (make-hash-table :test 'equal)))
+    (setf (gethash "events" payload) events)
+    (make-api-request client "log_event" payload :use-events-url t)))
+
 (defun log-event-now (client event-name user &key value metadata)
   "Log an event to Statsig analytics.
    EVENT-NAME: Name of the event
    USER: Statsig user object
    VALUE: Optional numeric value 
    METADATA: Optional hash table of additional properties"
-  (let ((events (make-hash-table :test 'equal))
-        (event (make-event event-name user :value value :metadata metadata)))
-    (setf (gethash "events" events) (list event))
-    (make-api-request client "log_event" events :use-events-url t)))
+  (let ((event (make-event event-name user :value value :metadata metadata)))
+    (log-events client (list event))))
 
 (defun get-config (client config-name user)
   "Get dynamic config values for the given user.
@@ -173,3 +182,11 @@
       :value value
       :metadata metadata)
      *events*)))
+
+(defun flush-events ()
+  (when-let ((events (util/atomics:atomic-exchange *events* nil)))
+    (when-let ((client (statsig-client *installation*)))
+      (log-events client events))))
+
+(def-cron flush-events ()
+  (flush-events))
