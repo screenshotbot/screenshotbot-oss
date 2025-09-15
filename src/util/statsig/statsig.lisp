@@ -4,6 +4,8 @@
                 #:http-request)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:local-nicknames (#:json #:yason))
   (:export
    #:statsig-client
@@ -12,7 +14,8 @@
    #:log-event
    #:get-config
    #:get-layer
-   #:make-statsig-user)
+   #:make-statsig-user
+   #:push-event)
   (:nicknames :statsig))
 (in-package :util/statsig)
 
@@ -98,7 +101,7 @@
     (setf (gethash "user" payload) user)
     (make-api-request client "check_gate" payload)))
 
-(defun log-event (client event-name user &key value metadata)
+(defun log-event-now (client event-name user &key value metadata)
   "Log an event to Statsig analytics.
    EVENT-NAME: Name of the event
    USER: Statsig user object
@@ -132,4 +135,14 @@
     (setf (gethash "user" payload) user)
     (make-api-request client "get_layer" payload)))
 
+(defgeneric statsig-client (installation)
+  (:documentation "Expected to set on installations")
+  (:method (installation)
+    nil))
 
+
+(defun push-event (event-name &key (client (statsig-client *installation*))
+                                user)
+  (when client
+    ;; impl
+    ))

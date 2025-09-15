@@ -356,6 +356,8 @@
   (when (logged-in-p)
     (hex:safe-redirect (default-login-redirect hunchentoot:*request*)))
 
+  (statsig:push-event :signup-page)
+
   (signup-get :plan plan))
 
 (defun valid-email-address-p (string)

@@ -1,6 +1,7 @@
 (defsystem :util.statsig
   :depends-on (:util/request
                :yason
+               :core.installation
                :log4cl
                :alexandria)
   :serial t
