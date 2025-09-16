@@ -6,7 +6,7 @@
 
 SBCL_C_FLAGS=--dynamic-space-size 2048
 sbcl=build/sbcl-console
-CACHE_KEY=9
+CACHE_KEY=8
 SBCL_CORE=sbcl $(SBCL_C_FLAGS) --no-userinit
 CCL_DEFAULT_DIRECTORY?=/opt/software/ccl
 CCL_CORE=$(CCL_DEFAULT_DIRECTORY)/lx86cl64
