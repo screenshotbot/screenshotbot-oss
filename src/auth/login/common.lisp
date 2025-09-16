@@ -192,7 +192,7 @@
 
 (defgeneric auth-template-impl (installation children &key body-class simple))
 
-(markup:deftag auth-template (children &key body-class simple full-width)
+(markup:deftag auth-template (children &key body-class (simple t) full-width)
   (auth-template-impl *installation*
                       children :body-class body-class
                       :full-width full-width

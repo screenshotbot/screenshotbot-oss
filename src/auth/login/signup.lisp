@@ -175,15 +175,11 @@
       <div class="account-pages mb-5">
         <div class="container">
 
-          <div class= "row g-4">
-            <div class= "col-1" />
+          <div class= "row g-4 justify-content-center">
             <div class= "col-md-10 col-lg-5">
               ,@children
             </div>
 
-            <div class= "col-5 d-none d-lg-block">
-              <sales-pitch />
-            </div>
           </div>
         </div>
       </div>
@@ -322,7 +318,7 @@
 
         <div class= "card-header">
           <auth-common-header>
-            Enter your credentials to create your account
+            Let's get you signed up!
           </auth-common-header>
         </div>
 
