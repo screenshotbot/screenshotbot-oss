@@ -140,6 +140,22 @@
      (let* ((page-content (when page
                             (funcall (page-generator page)))))
        <div class= "remarks" >
+         <!-- Mobile Navigation Offcanvas -->
+         <div class="offcanvas offcanvas-start" tabindex="-1" id="docsOffcanvas" aria-labelledby="docsOffcanvasLabel">
+           <div class="offcanvas-header">
+             <h5 class="offcanvas-title" id="docsOffcanvasLabel">
+               ,(cond
+                  (section (section-title section))
+                  (t "Documentation"))
+             </h5>
+             <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+           </div>
+           <div class="offcanvas-body">
+             ,(render-table-of-contents toplevel (toplevel-prefix toplevel) page
+                                        :staging? staging?)
+           </div>
+         </div>
+
          <div class= "remark-toc">
            <div class= "remark-toc-dropdown">
              <button type= "button" data-bs-toggle= "collapse"
@@ -152,15 +168,6 @@
                 (t "Documentation"))
            </div>
            <div class= "content">
-             ,(unless (hunchentoot:parameter "search")
-                <div class="input-group doc-search">
-                  <input class="form-control border-end-0 border" type="search" placeholder="Search..." id="example-search-input" name= "query" data-search= (nibble (query) (%search toplevel query)) />
-                  <span class="input-group-append">
-                    <button class="btn btn-outline-secondary bg-white border-start-0 border ms-n5" type="button" >
-                      <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 -960 960 960" width="24"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
-                    </button>
-                  </span>
-                </div>)
              ,(render-table-of-contents toplevel (toplevel-prefix toplevel) page
                                         :staging? staging?)
            </div>
