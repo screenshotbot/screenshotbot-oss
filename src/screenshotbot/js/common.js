@@ -344,7 +344,7 @@ $(document).on("click", "a.screenshot-run-image", function (e) {
     var src = canvas.data("src");
     canvas.data("image-number", $(this).data("image-number"));
 
-    (new Modal(modal.get(0), {})).show();
+    (new bootstrap.Modal(modal.get(0), {})).show();
 });
 
 $(document).on("show.bs.modal", ".single-screenshot-modal", function () {
@@ -466,7 +466,7 @@ setupLiveOnAttach(".modal-link", function () {
                 console.log("got data", data);
                 var modal = $(data);
                 $("body").append(modal);
-                (new Modal(modal.get(0), {})).show();
+                (new bootstrap.Modal(modal.get(0), {})).show();
                 $(modal).on("data.bs.dismiss", function () {
                     $(modal).remove();
                 });

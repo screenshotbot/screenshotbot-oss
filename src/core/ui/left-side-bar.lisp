@@ -48,7 +48,7 @@
                              alt= logo-alt
                              loading= "lazy" />
         </span>
-        <span class="logo logo-sm fs-4">
+        <span class="logo logo-sm fs-4 ms-2">
           <img src= logo-small-src
                alt= logo-alt
                loading= "lazy" />
