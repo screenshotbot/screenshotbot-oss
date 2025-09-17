@@ -56,6 +56,20 @@
       :name (format nil "~a--sources-copy" name)
       :type "store"))))
 
+(defmethod asdf:operation-done-p ((o copy-sources-op) (c css-library))
+  "Check if the operation is done by comparing timestamps of output vs both input files and the system definition"
+  (let ((output-files (asdf:output-files o c))
+        (input-files (asdf:input-files o c))
+        (system-file (asdf:system-source-file c)))
+    (and output-files
+         (every #'uiop:file-exists-p output-files)
+         (let ((output-time (reduce #'max output-files :key #'file-write-date)))
+           (and (every (lambda (input)
+                         (< (file-write-date input) output-time))
+                       input-files)
+                ;; Also check that system definition hasn't changed
+                (< (file-write-date system-file) output-time))))))
+
 (defun rel-path (child root)
   (assert child)
   (assert root)
