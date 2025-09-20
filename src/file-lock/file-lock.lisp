@@ -77,6 +77,11 @@
                  (filename self))
                 :if-does-not-exist :create
                 :if-exists :append
+
+                #+lispworks
+                :external-format
+                #+lispworks
+                :latin-1
                 :direction :output))))
 
 (defmethod acquire-file-lock ((self file-lock) &key (sharedp nil)
