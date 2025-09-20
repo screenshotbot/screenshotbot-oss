@@ -59,7 +59,10 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:util.cdn
-                #:make-cdn))
+                #:make-cdn)
+  (:import-from #:screenshotbot/mailer
+                #:mailer*
+                #:send-mail))
 
 (named-readtables:in-readtable markup:syntax)
 
@@ -318,6 +321,21 @@
       ,@children
   </head>)
 
+(defun send-escalation-email (user url)
+  (send-mail
+  (mailer*)
+  :from "arnold@screenshotbot.io"
+  :to "arnold@screenshotbot.io"
+  :subject (format nil "~a has escalated privileges"
+                   user)
+  :html-message
+  <html>
+    <body>
+      Escalated privilegs on this page: ,(progn url)
+    </body>
+  </html>))
+
+
 (defun screenshotbot/server:no-access-error-page ()
   <dashboard-template>
     <div class= "main-content">
@@ -330,6 +348,8 @@
                (let* ((url (hunchentoot:request-uri*))
                       (escalate (nibble ()
                                   (assert (adminp (auth:current-user)))
+                                  (send-escalation-email (auth:current-user)
+                                                         url)
                                   (setf (auth:session-value :site-admin-privileges-enabled
                                                             :expires-in 3600)
                                         t)
