@@ -513,7 +513,8 @@
                              (:file "test-version")))
                (:module "web-build"
                 :components ((:file "test-scheduler")
-                             (:file "test-project")))))
+                             (:file "test-project")))
+               (:file "test-cdn")))
 
 (defsystem :screenshotbot/secrets
   :serial t

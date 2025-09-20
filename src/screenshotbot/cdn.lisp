@@ -30,10 +30,10 @@
   (str:starts-with-p "/image/blob/" src))
 
 (defun cdn-for-image-url (src)
-  (let ((util.cdn:*cdn-cache-key* "i6" ))
-    (if (image-url-p src)
-        src
-        (util.cdn:make-cdn src))))
+  (if (image-url-p src)
+      (let ((util.cdn:*cdn-cache-key* "i6" ))
+        (util.cdn:make-cdn src))
+      (util.cdn:make-cdn src)))
 
 (markup:deftag img (&key src (alt "Image") srcset class style height width id loading)
   (let ((dims (image-dimensions src)))
