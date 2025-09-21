@@ -285,6 +285,9 @@
 
 (deftag landing-head (children &key
                       (title "Screenshotbot")
+                      social-title
+                      social-description
+                      social-url
                       (simple nil)
                       (style))
   (setf style (or style
@@ -294,6 +297,13 @@
                       "/assets/css/extended-dashboard.css"
                       #+screenshotbot-oss
                       "/assets/css/default.css")))
+
+  (setf social-title (or social-title
+                         "Scale up your screenshot tests, without the friction"))
+
+  (setf social-description (or social-description
+                               "Automated screenshot testing for Android, iOS, and web apps. Catch UI regressions in CI/CD with GitHub, GitLab integration. Better than Git LFS for screenshot storage."))
+
   <head>
     <meta charset="utf-8" />
     <title>,(progn title)</title>
@@ -305,15 +315,18 @@
       <link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
 
       <meta name= "image" property="og:image"  content= (og-image) />
-      <meta property="og:title" content="Scale up your screenshot tests, without the friction" />
-      <meta property= "og:description" content= "Automated screenshot testing for Android, iOS, and web apps. Catch UI regressions in CI/CD with GitHub, GitLab integration. Better than Git LFS for screenshot storage." />
-      <meta property="og:url" content="https://screenshotbot.io" />
+      <meta property="og:title" content=social-title />
+      <meta property= "og:description" content= social-description />
+
+      ,(when social-url
+         <meta property="og:url" content=social-url />)
+      
       <meta property="og:type" content="website" />
       <meta property= "twitter:card" content= "summary" />
       <meta property= "twitter:site" content="@screenshotbotio" />
-      <meta property= "twitter:title" content= "Scale up your screenshot tests, without the friction" />
+      <meta property= "twitter:title" content= social-title />
       <meta property="twitter:image"  content= (og-image) />
-      <meta property= "twitter:description" content= "Build Pixel Perfect Apps with Screenshot Tests" />
+      <meta property= "twitter:description" content= social-description />
 
       <!-- App css -->
       <link href=style rel="stylesheet" type="text/css" id="light-style" />
