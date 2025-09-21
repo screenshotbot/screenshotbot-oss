@@ -318,7 +318,8 @@ Disallow: /active-run
                           "staging.screenshotbot.io"
                           "kickstarter.screenshotbot.io"
                           "mx.tdrhq.com"
-                          "api.screenshotbot.io")
+                          "api.screenshotbot.io"
+                          "blog.screenshotbot.io")
 
 (defun make-thread (fn &rest args)
   (apply
