@@ -288,6 +288,7 @@
                       social-title
                       social-description
                       social-url
+                      published-at
                       (simple nil)
                       (style))
   (setf style (or style
@@ -320,6 +321,9 @@
 
       ,(when social-url
          <meta property="og:url" content=social-url />)
+
+      ,(when published-at
+         <meta property= "article:published_time" content=published-at />)
       
       <meta property="og:type" content="website" />
       <meta property= "twitter:card" content= "summary" />
