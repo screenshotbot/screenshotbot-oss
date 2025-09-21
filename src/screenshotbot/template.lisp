@@ -288,6 +288,7 @@
                       social-title
                       social-description
                       social-url
+                      canonical-url
                       published-at
                       (simple nil)
                       (style))
@@ -305,6 +306,8 @@
   (setf social-description (or social-description
                                "Automated screenshot testing for Android, iOS, and web apps. Catch UI regressions in CI/CD with GitHub, GitLab integration. Better than Git LFS for screenshot storage."))
 
+  (setf social-url (or social-url canonical-url))
+
   <head>
     <meta charset="utf-8" />
     <title>,(progn title)</title>
@@ -313,7 +316,7 @@
       <meta content="Modern Interpreters Inc." name="author" />
       <google-analytics />
       <!-- App favicon -->
-      <link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
+      <:link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
 
       <meta name= "image" property="og:image"  content= (og-image) />
       <meta property="og:title" content=social-title />
@@ -321,6 +324,9 @@
 
       ,(when social-url
          <meta property="og:url" content=social-url />)
+
+      ,(when canonical-url
+         <:link rel= "canonical" href= canonical-url />)
 
       ,(when published-at
          <meta property= "article:published_time" content=published-at />)
