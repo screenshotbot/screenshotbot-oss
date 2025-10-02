@@ -62,31 +62,31 @@
                first-line))
             second-line)))
 
-
 (defmethod send-task ((inst slack-task-integration) report)
   (let ((company (task-integration-company inst))
         (seen (make-hash-table :test #'equal)))
     (assert (enabledp inst))
     (let ((it (default-slack-config company)))
       (flet ((post-on-channel (channel)
-               (unless (gethash channel seen)
-                 (setf (gethash channel seen) t)
-                 (unless (str:emptyp channel)
-                   (when-let ((token (?. access-token (?. access-token it))))
-                     (handler-case
-                         (slack-post-on-channel
-                          :channel channel
-                          :company company
-                          :token token
-                          :blocks `#(
-                                     ,(alexandria:alist-hash-table
-                                       `((:type . "section")
-                                         (:text . (("type" . "mrkdwn")
-                                                   ("text" . ,(render-text report))))))))
-                       (slack-error (e)
-                         ;; the slack API error has already been logged, so we should
-                         ;; not propagate this.
-                         (values))))))))
+               (symbol-macrolet ((key (gethash (str:ensure-prefix "#" channel) seen)))
+                 (unless key
+                   (setf key t)
+                   (unless (str:emptyp channel)
+                     (when-let ((token (?. access-token (?. access-token it))))
+                       (handler-case
+                           (slack-post-on-channel
+                            :channel channel
+                            :company company
+                            :token token
+                            :blocks `#(
+                                       ,(alexandria:alist-hash-table
+                                         `((:type . "section")
+                                           (:text . (("type" . "mrkdwn")
+                                                     ("text" . ,(render-text report))))))))
+                         (slack-error (e)
+                           ;; the slack API error has already been logged, so we should
+                           ;; not propagate this.
+                           (values)))))))))
         (when (enabledp it)
           (post-on-channel (slack-config-channel it)))
 

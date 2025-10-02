@@ -153,3 +153,13 @@
       (send-task self report))
     (assert-that posts
                  (has-length 1))))
+
+(test dont-send-duplicates-for-#-too
+  (with-fixture state ()
+    (setf (channel-slack-channels channel) (list "foobar"))
+    (setf (enabledp (default-slack-config company)) t)
+    (setf (slack-config-channel (default-slack-config company)) "#foobar")
+    (finishes
+      (send-task self report))
+    (assert-that posts
+                 (has-length 1))))
