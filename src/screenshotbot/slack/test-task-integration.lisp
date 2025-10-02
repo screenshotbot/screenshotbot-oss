@@ -26,6 +26,7 @@
                 #:enabledp
                 #:send-task)
   (:import-from #:screenshotbot/model/company
+                #:slack-config-channel
                 #:default-slack-config
                 #:company)
   (:import-from #:bknr.datastore
@@ -138,6 +139,16 @@
   (with-fixture state ()
     (setf (channel-slack-channels channel) (list "foobar"))
     (setf (enabledp (default-slack-config company)) nil)
+    (finishes
+      (send-task self report))
+    (assert-that posts
+                 (has-length 1))))
+
+(test dont-send-duplicates
+  (with-fixture state ()
+    (setf (channel-slack-channels channel) (list "foobar"))
+    (setf (enabledp (default-slack-config company)) t)
+    (setf (slack-config-channel (default-slack-config company)) "foobar")
     (finishes
       (send-task self report))
     (assert-that posts
