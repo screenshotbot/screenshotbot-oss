@@ -309,7 +309,8 @@
                  (:file "teams-api")
                  (:file "audit-log")
                  (:file "channel-card")
-                 (:file "task-integration")))
+                 (:file "task-integration")
+                 (:file "settings")))
    (:module "slack"
     :serial t
     :components ((:file "plugin")
