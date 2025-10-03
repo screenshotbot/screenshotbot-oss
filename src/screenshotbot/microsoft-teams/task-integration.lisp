@@ -22,7 +22,10 @@
   (:import-from #:screenshotbot/microsoft-teams/model
                 #:teams-workflows-for-channel
                 #:webhook-url
+                #:workflow-name
                 #:teams-workflow)
+  (:import-from #:screenshotbot/microsoft-teams/audit-log
+                #:post-to-workflow-audit-log)
   (:import-from #:screenshotbot/model/channel
                 #:channel-teams-workflows)
   (:import-from #:screenshotbot/model/company
@@ -33,7 +36,9 @@
                 #:recorder-run-tags
                 #:recorder-run-work-branch)
   (:import-from #:util/misc
-                #:?.))
+                #:?.)
+  (:import-from #:screenshotbot/audit-log
+                #:with-audit-log))
 (in-package :screenshotbot/microsoft-teams/task-integration)
 
 (defclass teams-task-integration (task-integration)
@@ -73,10 +78,15 @@
 (defmethod send-task ((inst teams-task-integration) report)
   (let ((company (task-integration-company inst)))
     (assert (enabledp inst))
-    (let ((card-payload (make-adaptive-card :text (render-text report))))
+    (let ((card-payload (make-adaptive-card :text (render-text report)))
+          (text (render-text report)))
       (let ((workflows (teams-workflows-for-channel (report-channel report))))
-        (cerror "here" "here")
         (fset:do-set (workflow workflows)
-          (teams-post-adaptive-card
-           :webhook-url (webhook-url workflow)
-           :card-payload card-payload))))))
+          (with-audit-log (audit-log (make-instance 'post-to-workflow-audit-log
+                                                    :company company
+                                                    :workflow-name (workflow-name workflow)
+                                                    :text text))
+            (declare (ignore audit-log))
+            (teams-post-adaptive-card
+             :webhook-url (webhook-url workflow)
+             :card-payload card-payload)))))))

@@ -307,6 +307,7 @@
     :serial t
     :components ((:file "model")
                  (:file "teams-api")
+                 (:file "audit-log")
                  (:file "channel-card")
                  (:file "task-integration")))
    (:module "slack"
