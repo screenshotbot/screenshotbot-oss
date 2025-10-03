@@ -9,6 +9,7 @@
         #:alexandria)
   (:export
    #:teams-post-adaptive-card
+   #:make-adaptive-card
    #:teams-error
    #:teams-error-response))
 (in-package :screenshotbot/microsoft-teams/teams-api)

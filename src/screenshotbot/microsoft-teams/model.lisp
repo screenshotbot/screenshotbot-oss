@@ -13,7 +13,11 @@
                 #:persistent-class
                 #:store-object)
   (:import-from #:util/store/fset-index
-                #:fset-set-index))
+                #:fset-set-index)
+  (:export
+   #:teams-workflows-for-channel
+   #:workflow-name
+   #:webhook-url))
 (in-package :screenshotbot/microsoft-teams/model)
 
 
@@ -28,5 +32,6 @@
      (%webhook-url :initarg :webhook-url
                    :reader webhook-url)
      (%channel :initarg :channel
-               :index +channel-index+))
+               :index +channel-index+
+               :index-reader teams-workflows-for-channel))
     (:metaclass persistent-class)))

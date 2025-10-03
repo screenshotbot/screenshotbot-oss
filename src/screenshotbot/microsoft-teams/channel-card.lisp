@@ -4,7 +4,7 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/dashboard/microsoft-teams
+(defpackage :screenshotbot/microsoft-teams/channel-card
   (:use #:cl)
   (:import-from #:markup
                 #:deftag)
@@ -17,18 +17,37 @@
   (:import-from #:screenshotbot/user-api
                 #:channel-name)
   (:import-from #:screenshotbot/microsoft-teams/model
-                #:teams-workflow))
-(in-package :screenshotbot/dashboard/microsoft-teams)
+                #:teams-workflow
+                #:teams-workflows-for-channel
+                #:workflow-name)
+  (:import-from #:screenshotbot/dashboard/channels
+                #:microsoft-teams-card))
+(in-package :screenshotbot/microsoft-teams/channel-card)
 
 (named-readtables:in-readtable markup:syntax)
 
 
-(deftag microsoft-teams-card (&key channel)
+(defmethod microsoft-teams-card (channel)
   <div class= "card mt-3">
     <div class= "card-body">
       <h4 class= "card-title mb-3">
-        Microsoft Teams worfklows
+        Microsoft Teams workflows
       </h4>
+
+      ,(let ((workflows (fset:convert 'list (teams-workflows-for-channel channel))))
+         (cond
+           (workflows
+            <div>
+              <ul class= "list-group mb-3">
+                ,@(loop for workflow in workflows
+                        collect
+                        <li class= "list-group-item">
+                          ,(workflow-name workflow)
+                        </li>)
+              </ul>
+            </div>)
+           (t
+            <p class= "text-muted">No Teams workflows configured for this channel.</p>)))
 
       <div class= "d-flex gap-2">
         <a href= (nibble () (add-workflow channel)) class= "btn btn-primary">Add Workflow Webhook</a>
@@ -63,6 +82,7 @@
 (defun add-workflow/post (channel &key name url)
   (make-instance 'teams-workflow
                  :name name
+                 :channel channel
                  :webhook-url url)
   (hex:safe-redirect
    "/channels/:id" :id (bknr.datastore:store-object-id channel)))

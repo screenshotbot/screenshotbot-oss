@@ -178,10 +178,6 @@
     :components ((:file "figma")
                  (:file "view")
                  (:file "dropdown")))
-   (:module "microsoft-teams"
-    :serial t
-    :components ((:file "model")
-                 (:file "teams-api")))
    (:module "dashboard"
     :serial t
     :components ((:file "explain")
@@ -198,7 +194,6 @@
                  (:file "notices")
                  (:file "flaky-screenshots")
                  (:file "api-key-impl")
-                 (:file "microsoft-teams")
                  (:file "channels")
                  (:file "reports")
                  (:file "bisect")
@@ -308,6 +303,12 @@
                  (:file "members")
                  (:file "request")
                  (:file "rename")))
+   (:module "microsoft-teams"
+    :serial t
+    :components ((:file "model")
+                 (:file "teams-api")
+                 (:file "channel-card")
+                 (:file "task-integration")))
    (:module "slack"
     :serial t
     :components ((:file "plugin")

@@ -85,12 +85,14 @@
                 #:view-flaky-screenshots)
   (:import-from #:util/copying
                 #:copying)
-  (:import-from #:screenshotbot/dashboard/microsoft-teams
-                #:microsoft-teams-card))
+  (:export
+   #:microsoft-teams-card))
 (in-package :screenshotbot/dashboard/channels)
 
 (named-readtables:in-readtable markup:syntax)
 
+
+(defgeneric microsoft-teams-card (channel))
 
 (deftag subscription-card (&key channel)
   (let ((subscribe (nibble (:method :post)
@@ -313,7 +315,7 @@
         <settings-card channel=channel />
 
         ,(when (gk:check :microsoft-teams (auth:current-company))
-           <microsoft-teams-card channel=channel />)
+           (microsoft-teams-card channel))
         
 
         <div class= "card mt-3">
