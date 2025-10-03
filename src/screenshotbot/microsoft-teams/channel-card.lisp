@@ -13,7 +13,8 @@
   (:import-from #:screenshotbot/template
                 #:app-template)
   (:import-from #:core/ui/simple-card-page
-                #:simple-card-page)
+                #:simple-card-page
+                #:confirmation-page)
   (:import-from #:screenshotbot/user-api
                 #:channel-name)
   (:import-from #:screenshotbot/microsoft-teams/model
@@ -23,7 +24,9 @@
   (:import-from #:screenshotbot/dashboard/channels
                 #:microsoft-teams-card)
   (:import-from #:util/form-errors
-                #:with-error-builder))
+                #:with-error-builder)
+  (:import-from #:core/ui/mdi
+                #:mdi))
 (in-package :screenshotbot/microsoft-teams/channel-card)
 
 (named-readtables:in-readtable markup:syntax)
@@ -43,8 +46,13 @@
               <ul class= "list-group mb-3">
                 ,@(loop for workflow in workflows
                         collect
-                        <li class= "list-group-item">
-                          ,(workflow-name workflow)
+                        <li class= "list-group-item d-flex justify-content-between align-items-center">
+                          <span>,(workflow-name workflow)</span>
+                          <a href= (nibble () (delete-workflow channel workflow))
+                             class= "btn btn-sm btn-danger"
+                             title= "Delete workflow">
+                            <mdi name= "delete" /> Remove
+                          </a>
                         </li>)
               </ul>
             </div>)
@@ -101,6 +109,17 @@
            "Invalid URL")
     (check :url (str:ends-with-p "powerplatform.com" (quri:uri-host (quri:uri url)))
            "This doesn't look like a Microsoft teams URI")))
+
+(defun delete-workflow (channel workflow)
+  (confirmation-page
+   :yes (nibble ()
+          (bknr.datastore:delete-object workflow)
+          (hex:safe-redirect
+           "/channels/:id" :id (bknr.datastore:store-object-id channel)))
+   :no (format nil "/channels/~a" (bknr.datastore:store-object-id channel))
+   <div>
+     <p>Are you sure you want to delete the workflow <strong>,(workflow-name workflow)</strong>?</p>
+   </div>))
 
 
 
