@@ -21,7 +21,9 @@
                 #:teams-workflows-for-channel
                 #:workflow-name)
   (:import-from #:screenshotbot/dashboard/channels
-                #:microsoft-teams-card))
+                #:microsoft-teams-card)
+  (:import-from #:util/form-errors
+                #:with-error-builder))
 (in-package :screenshotbot/microsoft-teams/channel-card)
 
 (named-readtables:in-readtable markup:syntax)
@@ -79,13 +81,26 @@
     </div>
   </simple-card-page>)
 
-(defun add-workflow/post (channel &key name url)
+(defun add-workflow/post-validated (channel &key name url)
   (make-instance 'teams-workflow
                  :name name
                  :channel channel
                  :webhook-url url)
   (hex:safe-redirect
    "/channels/:id" :id (bknr.datastore:store-object-id channel)))
+
+(defun add-workflow/post (channel &key name url)
+  (with-error-builder (:check check
+                       :form-builder (add-workflow channel)
+                       :form-args (:name name :url url)
+                       :errors errors
+                       :success (add-workflow/post-validated channel :name name :url url))
+    (check :name (>= (length name) 0)
+           "Name can't be blank")
+    (check :url (ignore-errors (quri:uri url))
+           "Invalid URL")
+    (check :url (str:ends-with-p "powerplatform.com" (quri:uri-host (quri:uri url)))
+           "This doesn't look like a Microsoft teams URI")))
 
 
 
