@@ -90,6 +90,8 @@
                     :channel channel
                     :company company))
               (channel-2 (find-or-create-channel company "foobar-2")))
+         (gk:create :microsoft-teams)
+         (gk:enable :microsoft-teams)
          (setf (active-run channel "master") run)
          (cl-mock:if-called 'can-view!
                             (lambda (x) t))

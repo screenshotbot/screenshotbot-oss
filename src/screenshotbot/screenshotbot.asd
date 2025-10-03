@@ -194,6 +194,7 @@
                  (:file "notices")
                  (:file "flaky-screenshots")
                  (:file "api-key-impl")
+                 (:file "microsoft-teams")
                  (:file "channels")
                  (:file "reports")
                  (:file "bisect")

@@ -84,7 +84,9 @@
                 #:view-noisy-screenshots
                 #:view-flaky-screenshots)
   (:import-from #:util/copying
-                #:copying))
+                #:copying)
+  (:import-from #:screenshotbot/dashboard/microsoft-teams
+                #:microsoft-teams-card))
 (in-package :screenshotbot/dashboard/channels)
 
 (named-readtables:in-readtable markup:syntax)
@@ -247,7 +249,6 @@
        (hex:safe-redirect 'run-page :id (oid run))))))
 
 
-
 (defun single-channel-view (channel)
   <app-template >
     <div class= "main-content channel-view">
@@ -310,6 +311,10 @@
         <subscription-card channel=channel />
 
         <settings-card channel=channel />
+
+        ,(when (gk:check :microsoft-teams (auth:current-company))
+           <microsoft-teams-card channel=channel />)
+        
 
         <div class= "card mt-3">
           <div class= "card-body">
