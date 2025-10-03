@@ -178,6 +178,10 @@
     :components ((:file "figma")
                  (:file "view")
                  (:file "dropdown")))
+   (:module "microsoft-teams"
+    :serial t
+    :components ((:file "model")
+                 (:file "teams-api")))
    (:module "dashboard"
     :serial t
     :components ((:file "explain")
@@ -311,10 +315,6 @@
                  (:file "task-integration")
                  (:file "settings")
                  (:file "all")))
-   (:module "microsoft-teams"
-    :serial t
-    :components ((:file "model")
-                 (:file "teams-api")))
    (:module "email-tasks"
     :components ((:file "settings")
                  (:file "task-integration")))
