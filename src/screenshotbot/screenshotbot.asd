@@ -310,6 +310,9 @@
                  (:file "task-integration")
                  (:file "settings")
                  (:file "all")))
+   (:module "microsoft-teams"
+    :serial t
+    :components ((:file "teams-api")))
    (:module "email-tasks"
     :components ((:file "settings")
                  (:file "task-integration")))
