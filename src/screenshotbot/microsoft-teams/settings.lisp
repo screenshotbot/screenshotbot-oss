@@ -10,7 +10,6 @@
                 #:deftag)
   (:import-from #:screenshotbot/settings-api
                 #:defsettings
-                #:should-show-settings-p
                 #:settings-template)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
@@ -63,6 +62,3 @@
   :title "Microsoft Teams"
   :section :tasks
   :handler 'get-settings-teams)
-
-(defmethod should-show-settings-p (installation (name (eql 'teams)))
-  (gk:check :microsoft-teams (auth:current-company)))

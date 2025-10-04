@@ -314,9 +314,7 @@
 
         <settings-card channel=channel />
 
-        ,(when (gk:check :microsoft-teams (auth:current-company))
-           (microsoft-teams-card channel))
-        
+        ,(microsoft-teams-card channel)
 
         <div class= "card mt-3">
           <div class= "card-body">
