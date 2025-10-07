@@ -50,7 +50,8 @@
    #:make-transient-key
    #:render-api-token
    #:company-api-keys
-   #:api-key-for-secret))
+   #:api-key-for-secret
+   #:validate-api-key-secret))
 (in-package :core/api/model/api-key)
 
 (defvar *lock* (bt:make-lock "random-string"))
@@ -259,6 +260,11 @@
           key)
     key))
 
+(defun validate-api-key-secret (api-key provided-secret)
+  "Validates that the provided secret matches the api-key's secret.
+Returns T if valid, NIL otherwise."
+  (equal provided-secret (api-key-secret-key api-key)))
+
 
 (defmethod render-api-token ((self api-key))
   (format nil "cli-~a:~a"
@@ -312,4 +318,3 @@ need a better deletion model in the future."
       (unless (slot-boundp api-key '%permissions)
         (setf (api-key-permissions api-key)
               defaults)))))
-

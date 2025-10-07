@@ -11,7 +11,7 @@
   (:import-from #:screenshotbot/model/api-key
                 #:mark-api-key-used
                 #:%find-api-key
-                #:api-key-secret-key)
+                #:validate-api-key-secret)
   (:import-from #:screenshotbot/user-api
                 #:api-key-company
                 #:api-key-user
@@ -78,7 +78,7 @@ user. The intention of this flag is to set to NIL for some tests.")
                :message (format nil "No such API key: ~a" api-key)))
       (unless (or
                (not key) ;; setings api
-               (equal api-secret-key (api-key-secret-key key)))
+               (validate-api-key-secret key api-secret-key))
         (error 'api-error
                :message "API secret key doesn't match what we have on record"))
       (mark-api-key-used key)
