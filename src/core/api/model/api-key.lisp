@@ -156,11 +156,17 @@
                     (:v . 1)
                     (:h . ,(api-hostname *installation*))
                     (:s . ,(api-key-secret-key self))))))
-     (concatenate
-      'string
-      result
-      (loop for i below (- 3 (mod (length result) 3))
-            collect #\Space)))))
+     (let ((result (concatenate
+                    'string
+                    result
+                    (loop for i below (- 3 (mod (length result) 3))
+                          collect #\Space))))
+       (assert (not
+                (or
+                 (str:containsp "+" result)
+                 (str:containsp "/" result)
+                 (str:containsp "=" result))))
+       result))))
 
 (defmethod expires-at ((self api-key))
   nil)

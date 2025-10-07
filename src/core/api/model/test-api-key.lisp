@@ -213,3 +213,18 @@
       (is (equal (list api-key-2) (company-api-keys company-2)))
       (is (not (equal (list api-key-1) (company-api-keys company-2))))
       (is (not (equal (list api-key-2) (company-api-keys company-1)))))))
+
+(defparameter *all-chars*
+  (loop for x across ".abcdefghijklmnopqrstuvwxyz0987654321}ABCDEFGHIJKLMNOPQRSTUVWXYZ\": +/,"
+        collect x))
+
+(test demonstrate-that-/-or+-will-never-show-up!
+  (dolist (a *all-chars*)
+    (dolist (b *all-chars*)
+      (dolist (c *all-chars*)
+        (let* ((str (format nil "~a~a~a" a b c))
+               (base (base64:string-to-base64-string str)))
+          (when (or
+                 (str:containsp "/" base)
+                 (str:containsp "+" base))
+            (error "Failed invariant! ~a ~a~%" str base)))))))
