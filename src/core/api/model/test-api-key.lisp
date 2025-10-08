@@ -41,6 +41,7 @@
   (:import-from #:util/store/store-migrations
                 #:run-migrations)
   (:import-from #:core/api/model/api-key
+                #:validate-api-key-secret
                 #:encode-api-secret
                 #:user-api-keys
                 #:api-key-permissions
@@ -237,3 +238,14 @@
     (finishes
       (encode-api-secret
        (make-instance 'api-key)))))
+
+(test validate-api-key-secret
+  (with-fixture state ()
+    (let ((api-key (make-instance 'api-key)))
+      (is-true (validate-api-key-secret api-key (api-key-secret-key api-key)))
+      (is-false (validate-api-key-secret api-key "wrong-secret"))
+      (is-false (validate-api-key-secret api-key "abcd"))      
+      (is-false (validate-api-key-secret api-key ""))
+      (is-false (validate-api-key-secret api-key nil)))))
+
+

@@ -320,4 +320,4 @@ need a better deletion model in the future."
         (setf (api-key-permissions api-key)
               defaults)))))
 
-;; (encode-api-secret (elt (bknr.datastore:class-instances 'api-key) 89))
+;; (encode-api-secret (elt (bknr.datastore:class-instances 'api-key) 10))
