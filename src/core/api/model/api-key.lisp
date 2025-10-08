@@ -261,10 +261,21 @@
           key)
     key))
 
+(defun decode-api-token (token)
+  (destructuring-bind (key version url secret)
+      (str:split "," (base64:base64-string-to-string token))
+    (values key secret url)))
+
+
 (defun validate-api-key-secret (api-key provided-secret)
   "Validates that the provided secret matches the api-key's secret.
 Returns T if valid, NIL otherwise."
-  (equal provided-secret (api-key-secret-key api-key)))
+  (or
+   (equal provided-secret (api-key-secret-key api-key))
+   (ignore-errors
+    (multiple-value-bind (key secret) (decode-api-token provided-secret)
+      (declare (ignore key))
+      (equal secret (api-key-secret-key api-key))))))
 
 
 (defmethod render-api-token ((self api-key))

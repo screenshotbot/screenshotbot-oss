@@ -248,4 +248,13 @@
       (is-false (validate-api-key-secret api-key ""))
       (is-false (validate-api-key-secret api-key nil)))))
 
+(test validate-api-key-secret-allows-token
+  (with-fixture state ()
+    (let* ((api-key (make-instance 'api-key))
+           (token (encode-api-secret api-key))
+           (api-key-2 (make-instance 'api-key)))
+      (is-true (validate-api-key-secret api-key (api-key-secret-key api-key)))
+      (is-true (validate-api-key-secret api-key token))
+      (is-false (validate-api-key-secret api-key (encode-api-secret api-key-2))))))
+
 
