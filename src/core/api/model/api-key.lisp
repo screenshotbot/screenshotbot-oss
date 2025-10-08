@@ -149,25 +149,26 @@
   (installation-domain installation))
 
 (defmethod encode-api-secret ((self api-key))
-  (base64:string-to-base64-string
-   (let ((result (json:encode-json-to-string
-                  ;; The order here helps to keep the "constant" part
-                  ;; of the key in the middle.
-                  `((:i . ,(bknr.datastore:store-object-id self))
-                    (:v . 1)
-                    (:h . ,(api-hostname *installation*))
-                    (:s . ,(api-key-secret-key self))))))
-     (let ((result (concatenate
-                    'string
-                    result
-                    (loop for i below (- 3 (mod (length result) 3))
-                          collect #\Space))))
-       (assert (not
-                (or
-                 (str:containsp "+" result)
-                 (str:containsp "/" result)
-                 (str:containsp "=" result))))
-       result))))
+  (flet ((make-encoded (&key (padding ""))
+           (str:join
+           ","
+           (list
+            (api-key-key self)
+            (format nil "~a1" padding)
+            (api-hostname *installation*)
+            (api-key-secret-key self)))))
+   (let ((result-pre (make-encoded
+                      :padding
+                      (str:join
+                       ""
+                       (loop for i below (- 3 (mod (length (make-encoded)) 3))
+                             collect " ")))))
+     (let ((result (base64:string-to-base64-string
+                    result-pre)))
+       (assert (not (str:containsp "+" result)))
+       (assert (not (str:containsp "/" result)))
+       (assert (not (str:containsp "=" result)))
+       (values result result-pre)))))
 
 (defmethod expires-at ((self api-key))
   nil)
@@ -318,3 +319,5 @@ need a better deletion model in the future."
       (unless (slot-boundp api-key '%permissions)
         (setf (api-key-permissions api-key)
               defaults)))))
+
+;; (encode-api-secret (elt (bknr.datastore:class-instances 'api-key) 89))

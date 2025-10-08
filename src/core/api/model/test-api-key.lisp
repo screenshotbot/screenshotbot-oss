@@ -41,11 +41,13 @@
   (:import-from #:util/store/store-migrations
                 #:run-migrations)
   (:import-from #:core/api/model/api-key
+                #:encode-api-secret
                 #:user-api-keys
                 #:api-key-permissions
                 #:company-api-keys
                 #:%permissions)
   (:import-from #:core/installation/installation
+                #:installation
                 #:abstract-installation
                 #:*installation*))
 (in-package :core/api/model/test-api-key)
@@ -58,8 +60,9 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (&body)))
+  (let ((*installation* (make-instance 'abstract-installation)))
+   (with-test-store ()
+     (&body))))
 
 
 (test simple-creation
@@ -228,3 +231,9 @@
                  (str:containsp "/" base)
                  (str:containsp "+" base))
             (error "Failed invariant! ~a ~a~%" str base)))))))
+
+(test encode-api-secret
+  (with-fixture state ()
+    (finishes
+      (encode-api-secret
+       (make-instance 'api-key)))))
