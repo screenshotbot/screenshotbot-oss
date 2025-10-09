@@ -243,8 +243,9 @@
         :row-generator (lambda (api-key)
                          (let* ((coded-secret (format nil
                                                       "~a~a"
-                                                      (str:repeat 36 "*")
-                                                      (str:substring  36 nil (api-key-secret-key api-key))))
+                                                      "****"
+                                                      (let ((secret-key (api-key-secret-key api-key)))
+                                                        (str:substring (- (length secret-key) 4) nil secret-key))))
                                 (api-key-creator (api-key-user api-key))
                                 (delete-api-key (nibble ()
                                                   (%confirm-delete api-key))))
