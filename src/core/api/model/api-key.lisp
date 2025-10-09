@@ -148,7 +148,7 @@
 (defmethod api-hostname (installation)
   (installation-domain installation))
 
-(defmethod encode-api-secret ((self api-key))
+(defmethod encode-api-token ((self api-key))
   (flet ((make-encoded (&key (padding ""))
            (str:join
            ","
@@ -331,4 +331,4 @@ need a better deletion model in the future."
         (setf (api-key-permissions api-key)
               defaults)))))
 
-;; (encode-api-secret (elt (bknr.datastore:class-instances 'api-key) 10))
+;; (encode-api-token (elt (bknr.datastore:class-instances 'api-key) 10))

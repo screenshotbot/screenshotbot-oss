@@ -42,7 +42,7 @@
                 #:run-migrations)
   (:import-from #:core/api/model/api-key
                 #:validate-api-key-secret
-                #:encode-api-secret
+                #:encode-api-token
                 #:user-api-keys
                 #:api-key-permissions
                 #:company-api-keys
@@ -233,10 +233,10 @@
                  (str:containsp "+" base))
             (error "Failed invariant! ~a ~a~%" str base)))))))
 
-(test encode-api-secret
+(test encode-api-token
   (with-fixture state ()
     (finishes
-      (encode-api-secret
+      (encode-api-token
        (make-instance 'api-key)))))
 
 (test validate-api-key-secret
@@ -251,10 +251,10 @@
 (test validate-api-key-secret-allows-token
   (with-fixture state ()
     (let* ((api-key (make-instance 'api-key))
-           (token (encode-api-secret api-key))
+           (token (encode-api-token api-key))
            (api-key-2 (make-instance 'api-key)))
       (is-true (validate-api-key-secret api-key (api-key-secret-key api-key)))
       (is-true (validate-api-key-secret api-key token))
-      (is-false (validate-api-key-secret api-key (encode-api-secret api-key-2))))))
+      (is-false (validate-api-key-secret api-key (encode-api-token api-key-2))))))
 
 
