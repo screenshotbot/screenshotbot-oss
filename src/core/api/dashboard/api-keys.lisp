@@ -27,7 +27,6 @@
   (:import-from #:screenshotbot/api-key-api
                 #:api-key
                 #:api-key-key
-                #:api-key-secret-key
                 #:delete-api-key)
   (:import-from #:screenshotbot/login/common
                 #:with-login)
@@ -55,6 +54,7 @@
                 #:installation-domain
                 #:*installation*)
   (:import-from #:core/api/model/api-key
+                #:encode-api-token
                 #:api-key-permissions
                 #:api-key-user
                 #:api-key-company))
@@ -152,7 +152,9 @@
 
 (defun %render-api-key (api-key)
   (let ((result-api-key (api-key-key api-key))
-        (result-api-key-secret (api-key-secret-key api-key)))
+        (result-api-key-secret
+          ;; Externally, it's a secret, but internally it's been replace with the token
+          (encode-api-token api-key)))
       <simple-card-page max-width= "80em" >
      <div class= "card-header">
      <h3>New API Key</h3>
@@ -163,7 +165,7 @@
         ((api-token-mode-p hunchentoot:*acceptor*)
          <div>
            <b>API Token</b>:
-           ,(api-key-secret-key api-key)
+           ,(encode-api-token api-key)
          </div>)
         (t
          <div>
@@ -244,7 +246,7 @@
                          (let* ((coded-secret (format nil
                                                       "~a~a"
                                                       "****"
-                                                      (let ((secret-key (api-key-secret-key api-key)))
+                                                      (let ((secret-key (encode-api-token api-key)))
                                                         (str:substring (- (length secret-key) 4) nil secret-key))))
                                 (api-key-creator (api-key-user api-key))
                                 (delete-api-key (nibble ()
