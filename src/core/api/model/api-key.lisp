@@ -58,6 +58,8 @@
 
 (defvar *generator* (make-instance 'secure-random::open-ssl-generator))
 
+(defparameter +secret-length+ 40)
+
 (defun %all-alpha (&optional (from #\a) (to #\z))
   (let ((From (char-code from))
         (to (char-code to)))
@@ -79,10 +81,10 @@
                                           (%all-alpha #\0 #\9))))
 
 (Defun generate-api-secret ()
-  (generate-random-string 40 (concatenate 'string
-                                          (%all-alpha #\A #\Z)
-                                          (%all-alpha #\a #\z)
-                                          (%all-alpha #\0 #\9))))
+  (generate-random-string +secret-length+ (concatenate 'string
+                                                       (%all-alpha #\A #\Z)
+                                                       (%all-alpha #\a #\z)
+                                                       (%all-alpha #\0 #\9))))
 
 (defindex +expires-index+
   'fset-set-index
@@ -156,7 +158,9 @@
             (api-key-key self)
             (format nil "~a1" padding)
             (api-hostname *installation*)
-            (api-key-secret-key self)))))
+            ;; Add a trailing comma to make it easier to decode if
+            ;; +secret-length+ changes
+            ""))))
    (let ((result-pre (make-encoded
                       :padding
                       (str:join
@@ -168,7 +172,8 @@
        (assert (not (str:containsp "+" result)))
        (assert (not (str:containsp "/" result)))
        (assert (not (str:containsp "=" result)))
-       (values result result-pre)))))
+       (values (format nil "~a~a" result (api-key-secret-key self)) result-pre)))))
+
 
 (defmethod expires-at ((self api-key))
   nil)
@@ -262,9 +267,12 @@
     key))
 
 (defun decode-api-token (token)
-  (destructuring-bind (key version url secret)
-      (str:split "," (base64:base64-string-to-string token))
-    (values key secret url)))
+  (let ((encoded (str:substring 0 (- (length token) +secret-length+) token))
+        (secret (str:substring (- (length token) +secret-length+) nil token)))
+   (destructuring-bind (key version url empty-string)
+       (str:split "," (base64:base64-string-to-string encoded))
+     (assert (equal  "" empty-string))
+     (values key secret url))))
 
 
 (defun validate-api-key-secret (api-key provided-secret)

@@ -41,6 +41,7 @@
   (:import-from #:util/store/store-migrations
                 #:run-migrations)
   (:import-from #:core/api/model/api-key
+                #:decode-api-token
                 #:validate-api-key-secret
                 #:encode-api-token
                 #:user-api-keys
@@ -256,5 +257,15 @@
       (is-true (validate-api-key-secret api-key (api-key-secret-key api-key)))
       (is-true (validate-api-key-secret api-key token))
       (is-false (validate-api-key-secret api-key (encode-api-token api-key-2))))))
+
+(test decode-api-token
+  (with-fixture state ()
+    (let* ((api-key (make-instance 'api-key))
+           (token (encode-api-token api-key)))
+      (multiple-value-bind (key secret url)
+          (decode-api-token token)
+        (is (equal (api-key-key api-key) key))
+        (is (equal (api-key-secret-key api-key) secret))
+        (is (equal "https://example.com" url))))))
 
 
