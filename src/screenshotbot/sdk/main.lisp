@@ -117,8 +117,7 @@
         (error "No --api-secret provided. ~a" *api-key-info*))
       (let ((hostname (api-hostname
                        :hostname (or (emptify *hostname*)
-                                     (emptify (e:api-hostname env))
-                                     "https://api.screenshotbot.io"))))
+                                     (emptify (e:api-hostname env))))))
         (log:debug "Using hostname: ~a" hostname)
         (make-instance 'api-context
                        :key key

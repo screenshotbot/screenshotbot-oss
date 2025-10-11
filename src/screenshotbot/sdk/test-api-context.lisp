@@ -6,8 +6,35 @@
 
 (defpackage :screenshotbot/sdk/test-api-context
   (:use #:cl
-        #:fiveam))
+        #:fiveam)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:hostname
+                #:api-context))
 (in-package :screenshotbot/sdk/test-api-context)
 
 (util/fiveam:def-suite)
 
+(def-fixture state ()
+  (&body))
+
+(test default-api-hostname
+
+  (is
+   (equal "https://api.screenshotbot.io"
+          (hostname
+           (make-instance 'api-context
+                          :hostname nil))))
+  (is
+   (equal "https://api.screenshotbot.io"
+          (hostname
+           (make-instance 'api-context
+                          :hostname ""))))  
+  (is
+   (equal "https://api.screenshotbot.io"
+          (hostname
+           (make-instance 'api-context))))
+  (is
+   (equal "https://example.com"
+          (hostname
+           (make-instance 'api-context
+                          :hostname "https://example.com")))))

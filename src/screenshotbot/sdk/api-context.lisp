@@ -68,10 +68,15 @@
            :reader secret)
    (hostname :initarg :hostname
              :reader hostname
+             :writer (setf %hostname)
              :documentation "A URL like https://screenshotbot.io")
    (engine :initarg :engine
            :reader engine
            :initform *api-engine*)))
+
+(defmethod initialize-instance :after ((self api-context) &rest args &key hostname)
+  (when (str:emptyp hostname)
+    (setf (%hostname self) "https://api.screenshotbot.io")))
 
 (defclass json-api-context (api-context)
   ((hostname :initarg :hostname
