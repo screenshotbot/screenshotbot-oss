@@ -27,6 +27,8 @@
                 #:ignore-and-log-errors)
   (:import-from #:screenshotbot/api/model
                 #:*api-version*)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-feature-enabled-p)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
                     (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/commit-graph)
@@ -54,13 +56,15 @@ to cache the refs."))
    (not override-commit-hash)
    (equal override-commit-hash (git:current-commit repo))))
 
-(defun new-flow-enabled-p (repo &key override-commit-hash)
+(defun new-flow-enabled-p (commit-graph-updater repo &key override-commit-hash)
   (declare (ignorable repo override-commit-hash))
   #+lispworks
   (and
    (>= *api-version* 19)
    (?. supported-remote-repo-p (git:get-remote-url repo))
-   (equal "true" (uiop:getenv "SCREENSHOTBOT_ENABLE_UPLOAD_PACK"))
+   (api-feature-enabled-p
+    (api-context commit-graph-updater)
+    :cli-shallow-clones)
    (locally-rebased-p repo :override-commit-hash override-commit-hash))
   #-lispworks
   nil)
@@ -187,7 +191,7 @@ commits that are needed."
   (fetch-remote-branch repo branch)
   (log:info "Updating commit graph")
   (cond
-    ((new-flow-enabled-p repo :override-commit-hash override-commit-hash)
+    ((new-flow-enabled-p self repo :override-commit-hash override-commit-hash)
      (or
       (ignore-and-log-errors ()
         (trivial-timeout:with-timeout (600)

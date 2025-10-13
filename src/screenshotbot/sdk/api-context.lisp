@@ -24,7 +24,8 @@
    #:hostname
    #:remote-version
    #:fetch-version
-   #:engine)
+   #:engine
+   #:api-feature-enabled-p)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/api-context)
 
@@ -39,6 +40,9 @@
              :initform nil
              :initarg api-features
              :accessor api-features)))
+
+(defmethod api-context-prepared-p ((self base-api-context))
+  (slot-value self 'remote-version))
 
 (defmethod fetch-remote-information ((self base-api-context))
   (let ((prev (slot-value self 'remote-version)))

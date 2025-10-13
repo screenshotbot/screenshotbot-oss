@@ -36,6 +36,10 @@
                 #:local-upload-pack)
   (:import-from #:screenshotbot/api/core
                 #:*wrap-internal-errors*)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-context-prepared-p
+                #:api-feature-enabled-p
+                #:api-features)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
                     (#:test-git #:screenshotbot/sdk/test-git)
                     (#:git #:screenshotbot/sdk/git)))
@@ -49,6 +53,7 @@
     (let ((*wrap-internal-errors* nil)
           (auto-restart:*global-enable-auto-retries-p* nil))
       (with-sdk-integration (api-context :company company)
+        (gk:create :cli-shallow-clones)
         (let ((self (make-instance 'commit-graph-updater :api-context api-context)))
           (&body))))))
 
@@ -86,26 +91,32 @@
                             repo
                             "main")))))
 
+(test gk-is-propagated--validating-assumption
+  (with-fixture state ()
+    (gk:enable :cli-shallow-clones)
+    (is-false (api-context-prepared-p api-context))
+    (is-true (api-feature-enabled-p api-context :cli-shallow-clones))))
 
 (test new-flow-enabled-p-happy-path
   (with-fixture state ()
-    (answer (uiop:getenv "SCREENSHOTBOT_ENABLE_UPLOAD_PACK") "true")
+    (gk:enable :cli-shallow-clones)
+    (is-true (api-feature-enabled-p api-context :cli-shallow-clones))
     (test-git:with-git-repo (repo :dir dir)
-      (is-false (new-flow-enabled-p repo))
+      (is-false (new-flow-enabled-p self repo))
       (git::$ (git-command repo) "remote" "add" "origin" "git@github.com:tdrhq/fast-example.git")
-      (#+lispworks is-true #-lispworks is-false (new-flow-enabled-p repo)))))
+      (#+lispworks is-true #-lispworks is-false (new-flow-enabled-p self repo)))))
 
 (test new-flow-disabled-with-override-commit-hash
   (with-fixture state ()
-    (answer (uiop:getenv "SCREENSHOTBOT_ENABLE_UPLOAD_PACK") "true")
+    (gk:enable :cli-shallow-clones)
     (test-git:with-git-repo (repo :dir dir)
       (test-git:make-commit repo "foo")
       (git::$ (git-command repo) "remote" "add" "origin" "git@github.com:tdrhq/fast-example.git")
       (is-false
-       (new-flow-enabled-p repo
+       (new-flow-enabled-p self repo
                            :override-commit-hash "abcd"))
      (#+lispworks is-true #-lispworks is-false
-       (new-flow-enabled-p repo
+       (new-flow-enabled-p self repo
                            :override-commit-hash (git:current-commit repo))))))
 
 #+lispworks
