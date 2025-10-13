@@ -10,6 +10,7 @@
 ### Changed
 
 - /api/version is now authenticated
+- Updgraded to Lispworks 8.1.1
 
 ## 2.16.3 - 2025-09-12
 
