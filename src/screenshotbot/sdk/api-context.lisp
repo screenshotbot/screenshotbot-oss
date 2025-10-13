@@ -56,6 +56,12 @@
 (defmethod api-features :before ((self base-api-context))
   (fetch-remote-information self))
 
+(defmethod api-feature-enabled-p ((self base-api-context)
+                                  feature)
+  (str:s-member
+   (api-features self)
+   (str:downcase feature)))
+
 (defclass api-engine (reused-ssl-mixin engine)
   ())
 

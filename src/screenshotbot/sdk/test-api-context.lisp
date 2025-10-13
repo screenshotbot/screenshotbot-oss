@@ -8,6 +8,9 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/api-context
+                #:fetch-remote-information
+                #:base-api-context
+                #:api-feature-enabled-p
                 #:hostname
                 #:api-context))
 (in-package :screenshotbot/sdk/test-api-context)
@@ -16,6 +19,12 @@
 
 (def-fixture state ()
   (&body))
+
+(defclass test-api-context (base-api-context)
+  ())
+
+(defmethod fetch-remote-information ((self test-api-context))
+  (values))
 
 (test default-api-hostname
 
@@ -38,3 +47,15 @@
           (hostname
            (make-instance 'api-context
                           :hostname "https://example.com")))))
+
+(test api-feature-enabled-p
+  (is-true
+   (api-feature-enabled-p
+    (make-instance 'test-api-context
+                   :features (list "foobar"))
+    :foobar))
+  (is-false
+   (api-feature-enabled-p
+    (make-instance 'test-api-context
+                   :features (list "carbar"))
+    :foobar)))
