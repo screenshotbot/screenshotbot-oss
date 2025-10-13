@@ -55,6 +55,9 @@ might get logged in the webserver logs."
      (multiple-value-bind (body ret)
          (http-request
           (format-api-url api-context "/api/version")
+          :basic-authorization (list
+                                (api-context:key api-context)
+                                (api-context:secret api-context))
           :want-string t
           :engine (api-context:engine api-context))
        (maybe-retry-request

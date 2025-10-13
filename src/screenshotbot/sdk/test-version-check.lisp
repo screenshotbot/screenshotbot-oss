@@ -37,6 +37,7 @@
 (test get-version
   (with-fixture state ()
     (answer (http-request "https://api.screenshotbot.io/api/version"
+                          :basic-authorization (list "" "")
                           :want-string t
                           :engine *engine*)
       (values "{\"version\":1}" 200))
@@ -50,6 +51,7 @@
 (test get-version-404
   (with-fixture state ()
     (answer (http-request "https://www.google.com/api/version"
+                          :basic-authorization (list "" "")                          
                           :want-string t
                           :engine *engine*)
       (values "" 404))
