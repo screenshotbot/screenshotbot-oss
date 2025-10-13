@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.16.4 - 2025-10-13
+
+### Added
+
+- Server side flag to control the new commit-graph workflow that was
+  last disabled in 2.15.4. The plan is to slowly roll out.
+  
+### Changed
+
+- /api/version is now authenticated
+
 ## 2.16.3 - 2025-09-12
 
 ### Added
