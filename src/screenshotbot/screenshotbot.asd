@@ -261,6 +261,7 @@
                  (:file "analytics-event")
                  (:file "build-info")
                  (:file "failed-run")
+                 (:file "cli-log")
                  (:file "finalized-commit")
                  (:file "batch")
                  (:file "image")
