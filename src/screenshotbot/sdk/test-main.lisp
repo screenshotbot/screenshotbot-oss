@@ -15,6 +15,7 @@
                 #:make-api-context
                 #:%main)
   (:import-from #:screenshotbot/sdk/env
+                #:env-reader
                 #:api-hostname
                 #:make-env-reader)
   (:import-from #+lispworks #:screenshotbot/sdk/common-flags
@@ -75,6 +76,16 @@
           (*api-secret* "bleh"))
       (finishes
         (make-api-context)))))
+
+(test make-api-context-without-hostname
+  (with-fixture state ()
+    (let ((*api-key* "foo")
+          (*api-secret* "bleh"))
+      (let ((ctx (make-api-context
+                  :env (make-instance 'env-reader
+                                      :overrides `((:screenshotbot_api_hostname . nil))))))
+        (is (equal "https://api.screenshotbot.io"
+                   (api-context:hostname ctx)))))))
 
 (test simple-make-api-context-domain
   (with-fixture state ()

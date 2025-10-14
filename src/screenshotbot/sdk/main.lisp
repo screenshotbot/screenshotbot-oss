@@ -105,24 +105,28 @@
 
 (defvar *api-key-info* "You can also use $SCREENSHOTBOT_API_KEY and $SCREENSHOTBOT_API_SECRET environment variable in CI.")
 
-(defun make-api-context ()
-  (let ((env (make-env-reader)))
-    (let ((key (or (emptify *api-key*)
-                   (e:api-key env)))
-          (secret (or (emptify *api-secret*)
-                      (e:api-secret env))))
-      (when (str:emptyp key)
-        (error "No --api-key provided. ~a" *api-key-info* ))
-      (when(str:emptyp secret)
-        (error "No --api-secret provided. ~a" *api-key-info*))
-      (let ((hostname (api-hostname
-                       :hostname (or (emptify *hostname*)
-                                     (emptify (e:api-hostname env))))))
-        (log:debug "Using hostname: ~a" hostname)
-        (make-instance 'api-context
-                       :key key
-                       :secret secret
-                       :hostname hostname)))))
+(defun make-api-context (&key (env (make-env-reader)))
+  (let ((key (or (emptify *api-key*)
+                 (e:api-key env)))
+        (secret (or (emptify *api-secret*)
+                    (e:api-secret env))))
+    (when (str:emptyp key)
+      (error "No --api-key provided. ~a" *api-key-info* ))
+    (when(str:emptyp secret)
+      (error "No --api-secret provided. ~a" *api-key-info*))
+    (let ((hostname (let ((found-hostname (or (emptify *hostname*)
+                                              (emptify (e:api-hostname env)))))
+                      (cond
+                        ((str:emptyp found-hostname)
+                         nil)
+                        (t
+                         (api-hostname
+                          :hostname found-hostname))))))
+      (log:debug "Using hostname: ~a" hostname)
+      (make-instance 'api-context
+                     :key key
+                     :secret secret
+                     :hostname hostname))))
 
 (defun try-clingon (argv)
   (clingon:run (root/command) (cdr argv)))

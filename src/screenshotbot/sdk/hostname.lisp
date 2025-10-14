@@ -14,6 +14,7 @@
 (in-package :screenshotbot/sdk/hostname)
 
 (defun api-hostname (&key (hostname (error "must provide :hostname")))
+  (assert (str:non-empty-string-p hostname))
   (cond
     ((not (str:containsp "/" hostname))
      (format nil "https://~a" hostname))
