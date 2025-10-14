@@ -114,19 +114,11 @@
       (error "No --api-key provided. ~a" *api-key-info* ))
     (when(str:emptyp secret)
       (error "No --api-secret provided. ~a" *api-key-info*))
-    (let ((hostname (let ((found-hostname (or (emptify *hostname*)
-                                              (emptify (e:api-hostname env)))))
-                      (cond
-                        ((str:emptyp found-hostname)
-                         nil)
-                        (t
-                         (api-hostname
-                          :hostname found-hostname))))))
-      (log:debug "Using hostname: ~a" hostname)
-      (make-instance 'api-context
-                     :key key
-                     :secret secret
-                     :hostname hostname))))
+    (make-instance 'api-context
+                   :key key
+                   :secret secret
+                   :hostname (or (emptify *hostname*)
+                                 (emptify (e:api-hostname env))))))
 
 (defun try-clingon (argv)
   (clingon:run (root/command) (cdr argv)))

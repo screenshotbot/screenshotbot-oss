@@ -17,6 +17,9 @@
                 #:reused-ssl-mixin)
   (:import-from #:util/misc
                 #:?.)
+  (:import-from #:screenshotbot/sdk/hostname
+                #:format-api-url
+                #:api-hostname)
   (:export
    #:api-context
    #:key
@@ -84,9 +87,28 @@
            :reader engine
            :initform *api-engine*)))
 
+(defun %fix-hostname (found-hostname)
+  (cond
+    ((str:emptyp found-hostname)
+     nil)
+    (t
+     (api-hostname
+      :hostname found-hostname))))
+
+(defun format-api-url (api-context api)
+  (quri:render-uri
+   (quri:merge-uris
+    api
+    (api-hostname :hostname (hostname api-context)))))
+
 (defmethod initialize-instance :after ((self api-context) &rest args &key hostname)
-  (when (str:emptyp hostname)
-    (setf (%hostname self) "https://api.screenshotbot.io")))
+  (cond
+    ((str:emptyp hostname)
+     (setf (%hostname self) "https://api.screenshotbot.io"))
+    (t
+     (setf (%hostname self)
+           (%fix-hostname (hostname self)))))
+  (log:debug "Using hostname: ~a" (hostname self)))
 
 (defclass json-api-context (api-context)
   ((hostname :initarg :hostname

@@ -6,8 +6,7 @@
 
 (defpackage :screenshotbot/sdk/hostname
   (:use #:cl)
-  (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
-                    (#:api-context #:screenshotbot/sdk/api-context))
+  (:local-nicknames (#:flags #:screenshotbot/sdk/flags))
   (:export
    #:api-hostname
    #:format-api-url))
@@ -22,8 +21,3 @@
      hostname)))
 
 
-(defun format-api-url (api-context api)
-  (quri:render-uri
-   (quri:merge-uris
-    api
-    (api-hostname :hostname (api-context:hostname api-context)))))

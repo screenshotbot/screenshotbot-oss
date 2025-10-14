@@ -59,3 +59,10 @@
     (make-instance 'test-api-context
                    :features (list "carbar"))
     :foobar)))
+
+(test fixes-api-hostname
+  (is
+   (equal "https://foo.screenshotbot.io"
+          (hostname
+           (make-instance 'api-context
+                          :hostname "foo.screenshotbot.io")))))
