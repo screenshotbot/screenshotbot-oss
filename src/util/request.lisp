@@ -49,7 +49,7 @@ server failures."))
      (funcall fn))
     (t
      (flet ((handle-error (e)
-              (declare (ignore e))
+              (log:warn "Got error: ~a" e)
               (values
                (cond
                  (want-stream
