@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.16.5 - 2025-10-14
+
+### Changed
+
+- Fixed crash when using default API hostname (T2077, T2076, T2075, T2074)
+
 ## 2.16.4 - 2025-10-13
 
 ### Added
