@@ -18,6 +18,8 @@
   (:import-from #:util/threading
                 #:make-thread
                 #:max-pool)
+  (:import-from #:util/reused-ssl
+                #:with-reused-ssl)
   (:local-nicknames (#:api-context #:screenshotbot/sdk/api-context)))
 (in-package :screenshotbot/sdk/server-log-appender)
 
@@ -61,14 +63,15 @@
         buffer)))))
 
 (defun %write-log (api-context body)
-  (http-request
-   (format-api-url api-context  "/api/cli-log")
-   :method :post
-   :basic-authorization (list (api-context:key api-context)
-                              (api-context:secret api-context))
-   :content body
-   :engine (api-context:engine api-context )
-   :content-type "application/text"))
+  (with-reused-ssl ((api-context:engine api-context)) ;; avoid a warning when called from background threads
+    (http-request
+     (format-api-url api-context  "/api/cli-log")
+     :method :post
+     :basic-authorization (list (api-context:key api-context)
+                                (api-context:secret api-context))
+     :content body
+     :engine (api-context:engine api-context )
+     :content-type "application/text")))
 
 
 

@@ -31,6 +31,7 @@
   (:import-from #:screenshotbot/sdk/finalized-commit
                 #:finalize-commit)
   (:import-from #:screenshotbot/sdk/api-context
+                #:api-feature-enabled-p
                 #:remote-version
                 #:api-context)
   (:import-from #:screenshotbot/sdk/hostname
@@ -66,6 +67,8 @@
                 #:xcresults-attachment-bundle)
   (:import-from #:screenshotbot/sdk/bundle
                 #:close-bundle)
+  (:import-from #:screenshotbot/sdk/server-log-appender
+                #:make-server-log-appender)
   (:export
    #:main))
 
@@ -97,6 +100,9 @@
     (with-reused-ssl ((engine api-context))
       (let ((version (remote-version api-context)))
         (log:debug "Remote version is ~a" version))
+      (when (api-feature-enabled-p api-context :server-cli-logs)
+        (log4cl:add-appender log4cl:*root-logger*
+                             (make-server-log-appender api-context)))
       (funcall fn api-context))))
 
 (defun emptify (s)
