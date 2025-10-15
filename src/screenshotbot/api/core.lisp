@@ -238,6 +238,7 @@ function fn for the purpose of tests."
 
 (define-condition api-error (error)
   ((message :initarg :message
+            :initform "[api-error]"
             :reader api-error-msg)
    (code :initarg :code
          :initform 400
