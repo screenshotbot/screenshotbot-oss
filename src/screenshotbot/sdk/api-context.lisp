@@ -11,6 +11,8 @@
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
   (:import-from #:util/request
+                #:http-request-impl
+                #:http-request
                 #:engine
                 #:*engine*)
   (:import-from #:util/reused-ssl
@@ -28,7 +30,8 @@
    #:remote-version
    #:fetch-version
    #:engine
-   #:api-feature-enabled-p)
+   #:api-feature-enabled-p
+   #:session-id)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/api-context)
 
@@ -42,7 +45,12 @@
    (features :initarg :features
              :initform nil
              :initarg api-features
-             :accessor api-features)))
+             :accessor api-features)
+   (session-id :initform (format nil "~a-~a-~a"
+                                 (uiop:hostname)
+                                 (local-time:now)
+                                 (random 1000000))
+               :reader session-id)))
 
 (defmethod api-context-prepared-p ((self base-api-context))
   (slot-value self 'remote-version))
@@ -70,7 +78,18 @@
    (str:downcase feature)))
 
 (defclass api-engine (reused-ssl-mixin engine)
-  ())
+  ((session-id :initarg :session-id
+               :reader session-id)))
+
+(defmethod http-request-impl ((self api-engine) url &rest args &key additional-headers)
+  (apply #'call-next-method
+         self
+         url
+         :additional-headers
+         (list*
+          (cons :x-cli-session-id (session-id self))
+          additional-headers)
+         args))
 
 (defvar *api-engine* (make-instance 'api-engine))
 
@@ -85,9 +104,11 @@
              :reader hostname
              :writer (setf %hostname)
              :documentation "A URL like https://screenshotbot.io")
-   (engine :initarg :engine
-           :reader engine
-           :initform *api-engine*)))
+   (engine :accessor engine
+           :initform nil
+           :initarg :engine)))
+
+
 
 (defun %fix-hostname (found-hostname)
   (cond
@@ -110,7 +131,11 @@
     (t
      (setf (%hostname self)
            (%fix-hostname (hostname self)))))
-  (log:debug "Using hostname: ~a" (hostname self)))
+  (log:debug "Using hostname: ~a" (hostname self))
+  (unless (engine self)
+    (setf (engine self)
+          (make-instance 'api-engine
+                         :session-id (session-id self)))))
 
 (defclass json-api-context (api-context)
   ((hostname :initarg :hostname

@@ -27,6 +27,7 @@
         "application/json; charset=utf-8")
   (when (hunchentoot:authorization)
     (authenticate-api-request hunchentoot:*request*))
+  (log:debug "Got session id as: ~a" (hunchentoot:header-in* :x-cli-session-id))
   (encode-json
    (make-instance 'version
                   :version *api-version*
