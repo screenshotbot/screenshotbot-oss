@@ -52,11 +52,15 @@
                                                               :force-text t)))
     (t
      (%update-commit-graph-v2 repo-url graph-json)
-     (when (str:non-empty-string-p refs)
-       (log:info "Using new commit graph api")
-       (push-event :commit-graph-api-with-refs :company (format nil "~a" (auth:current-company)))
-       (update-refs :repo-url repo-url
-                    :refs refs))
+     
+     (cond
+       ((str:non-empty-string-p refs)
+        (log:info "Using new commit graph api")
+        (push-event :commit-graph-api-with-refs :company (format nil "~a" (auth:current-company)))
+        (update-refs :repo-url repo-url
+                     :refs refs))
+       (t
+        (push-event :commit-graph-old-flow)))
      "OK")))
 
 (defapi (get-refs :uri "/api/commit-graph/refs" :method :get :wrap-success nil) (repo-url)
