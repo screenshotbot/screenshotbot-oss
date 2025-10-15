@@ -34,7 +34,8 @@
                   :features
                   (%build-features (auth:current-company)))))
 
-(defparameter *gk-list* (list :cli-shallow-clones))
+(defparameter *gk-list* (list :cli-shallow-clones
+                              :server-cli-logs))
 
 (defmethod %build-features ((company company))
   (loop for gk in *gk-list*

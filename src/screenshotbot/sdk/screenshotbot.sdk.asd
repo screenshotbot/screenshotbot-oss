@@ -62,6 +62,7 @@
                (:file "request")
                (:file "commit-graph")
                (:file "sdk")
+               (:file "server-log-appender")
                (:file "active-run")
                (:file "health-checks")
                (:file "sentry")
