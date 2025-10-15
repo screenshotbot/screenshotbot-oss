@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.16.6 - 2025-10-14
+
+### Changed
+
+- Added the ability to store logs, to make it easier to debug CI-side issues
+
 ## 2.16.5 - 2025-10-14
 
 ### Changed
