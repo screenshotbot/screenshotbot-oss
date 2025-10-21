@@ -37,21 +37,32 @@
 (test get-version
   (with-fixture state ()
     (answer (http-request "https://api.screenshotbot.io/api/version"
-                          :basic-authorization (list "" "")
+                          :basic-authorization nil
                           :want-string t
                           :engine *engine*)
       (values "{\"version\":1}" 200))
     (is (eql 1 (fetch-version
                 (make-instance 'api-context
-                               :key ""
-                               :secret ""
+                               :hostname "https://api.screenshotbot.io"))))))
+
+(test get-version-with-key-secret
+  (with-fixture state ()
+    (answer (http-request "https://api.screenshotbot.io/api/version"
+                          :basic-authorization (list "foo" "bar")
+                          :want-string t
+                          :engine *engine*)
+      (values "{\"version\":1}" 200))
+    (is (eql 1 (fetch-version
+                (make-instance 'api-context
+                               :key "foo"
+                               :secret "bar"
                                :hostname "https://api.screenshotbot.io"))))))
 
 #-sbcl ;; See D7222. Temporary fix until we can see what's going on with this.
 (test get-version-404
   (with-fixture state ()
     (answer (http-request "https://www.google.com/api/version"
-                          :basic-authorization (list "" "")                          
+                          :basic-authorization nil
                           :want-string t
                           :engine *engine*)
       (values "" 404))

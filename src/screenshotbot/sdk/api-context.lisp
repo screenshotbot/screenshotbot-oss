@@ -76,8 +76,10 @@
 
 (defclass api-context (base-api-context)
   ((key :initarg :key
+        :initform nil
         :reader key)
    (secret :initarg :secret
+           :initform nil
            :reader secret)
    (hostname :initarg :hostname
              :reader hostname
