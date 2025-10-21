@@ -11,6 +11,8 @@
 (in-package :screenshotbot/api/cli-log)
 
 (defapi (nil :uri "/api/cli-log" :method :post) ()
-  (log:info "CLI logs: ~a" (hunchentoot:raw-post-data :force-text t))
+  (log:info "CLI logs (session: ~a): ~a"
+            (hunchentoot:header-in* :x-cli-session-id)
+            (hunchentoot:raw-post-data :force-text t))
   nil)
 
