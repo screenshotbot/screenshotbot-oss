@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.16.9 - 
+
+### Added
+
+- Added X-Cli-session-id
+
 ## 2.16.8 - 2025-10-21
 
 ### Changed
