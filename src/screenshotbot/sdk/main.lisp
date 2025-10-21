@@ -68,6 +68,7 @@
   (:import-from #:screenshotbot/sdk/bundle
                 #:close-bundle)
   (:import-from #:screenshotbot/sdk/server-log-appender
+                #:flush-server-appender
                 #:make-server-log-appender)
   (:export
    #:main))
@@ -100,10 +101,15 @@
     (with-reused-ssl ((engine api-context))
       (let ((version (remote-version api-context)))
         (log:debug "Remote version is ~a" version))
-      (when (api-feature-enabled-p api-context :server-cli-logs)
-        (log4cl:add-appender log4cl:*root-logger*
-                             (make-server-log-appender api-context)))
-      (funcall fn api-context))))
+      (let ((server-appender (make-server-log-appender api-context)))
+        (when (api-feature-enabled-p api-context :server-cli-logs)
+          (log4cl:add-appender log4cl:*root-logger*
+                               server-appender))
+        (unwind-protect
+            (funcall fn api-context)
+          (when (api-feature-enabled-p api-context :server-cli-logs)
+            (flush-server-appender server-appender)))))))
+
 
 (defun emptify (s)
   "If the string is empty, return nil"

@@ -20,7 +20,9 @@
                 #:max-pool)
   (:import-from #:util/reused-ssl
                 #:with-reused-ssl)
-  (:local-nicknames (#:api-context #:screenshotbot/sdk/api-context)))
+  (:local-nicknames (#:api-context #:screenshotbot/sdk/api-context))
+  (:export
+   #:flush-server-appender))
 (in-package :screenshotbot/sdk/server-log-appender)
 
 
@@ -31,8 +33,6 @@
 (defun make-server-log-appender (api-context)
   (make-instance 'server-log-appender
                  :stream (make-instance 'cli-log-stream :api-context api-context)))
-
-(defvar *in-append* nil)
 
 (defclass cli-log-stream (trivial-gray-streams:fundamental-character-output-stream)
   ((api-context :initarg :api-context
@@ -54,13 +54,20 @@
 (defmethod trivial-gray-streams:stream-line-column ((self cli-log-stream))
   nil)
 
-(defmethod trivial-gray-streams:stream-finish-output ((self cli-log-stream))
-  (bt:with-lock-held ((lock self))
-   (let ((buffer (get-output-stream-string (buffer self))))
+(defmethod trivial-gray-streams:stream-finish-output ((self cli-log-stream)))
+
+
+(defmethod %flush-stream ((self cli-log-stream))
+  (ignore-errors
+   (let ((buffer (bt:with-lock-held ((lock self))
+                   (get-output-stream-string (buffer self)))))
      (unless (str:emptyp buffer)
        (%write-log
         (api-context self)
         buffer)))))
+
+(defmethod flush-server-appender ((self server-log-appender))
+  (%flush-stream (log4cl:appender-stream self)))
 
 (defun %write-log (api-context body)
   (with-reused-ssl ((api-context:engine api-context)) ;; avoid a warning when called from background threads
@@ -72,7 +79,6 @@
      :content body
      :engine (api-context:engine api-context )
      :content-type "application/text")))
-
 
 
 (defparameter *stream*
@@ -87,7 +93,8 @@
    (make-instance 'api-context
                   :key (uiop:getenv "SCREENSHOTBOT_API_KEY")
                   :secret (uiop:getenv "SCREENSHOTBOT_API_SECRET")
-                  :hostname "https://staging.screenshotbot.io")))
+                  :hostname (uiop:getenv "SCREENSHOTBOT_API_HOSTNAME"))))
+
 
 
 #+nil
@@ -96,7 +103,11 @@
 
 ;; (log:info "hello")
 ;; (dotimes (i 10) (log:info "hello"))
+;; (flush-server-appender *test-appender*)
+;; (dotimes (i 1000) (format *stream* "hello~%"))
+;; (finish-output *stream*)
 ;; (log4cl:flush-all-appenders)
+;; (log:config :debug)
 
 ;; (format *stream* "hello world~%")
 ;; (finish-output *stream*)

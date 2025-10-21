@@ -125,6 +125,7 @@
                :util/fiveam)
   :components ((:file "integration-fixture")
                (:file "test-bundle")
+               (:file "test-server-log-appender")
                (:file "test-backoff")
                (:file "test-installer")
                (:file "test-unchanged-run")

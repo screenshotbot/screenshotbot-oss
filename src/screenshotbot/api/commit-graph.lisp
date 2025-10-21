@@ -61,6 +61,9 @@
                      :refs refs))
        (t
         (push-event :commit-graph-old-flow :session-id (hunchentoot:header-in* :x-cli-session-id)
+                                           :branch (hunchentoot:parameter :branch)
+                                           :repo-url repo-url
+                    :refs refs
                     :client-version (hunchentoot:header-in* :x-client-version))))
      "OK")))
 
