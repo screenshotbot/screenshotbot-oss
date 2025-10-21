@@ -1,6 +1,13 @@
 # Changelog
 
-## 2.16.6 - 2025-10-15
+## 2.16.8 - 2025-10-21
+
+### Changed
+
+- Fixed `dev install` command (T2086)
+
+
+## 2.16.7 - 2025-10-15
 
 ### Changed
 
