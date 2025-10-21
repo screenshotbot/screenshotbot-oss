@@ -87,6 +87,15 @@
       :format "json"
       :refs "[]"))))
 
+(test update-commit-graph-without-refs
+  (with-fixture state ()
+    (finishes
+     (update-commit-graph
+      :repo-url ""
+      :graph-json "{}"
+      :format "json"
+      :refs nil))))
+
 (defvar *repo* "https://github.com/tdrhq/fast-example.git")
 
 (test update-refs

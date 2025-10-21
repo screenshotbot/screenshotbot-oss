@@ -60,7 +60,7 @@
         (update-refs :repo-url repo-url
                      :refs refs))
        (t
-        (push-event :commit-graph-old-flow)))
+        (push-event :commit-graph-old-flow :session-id (hunchentoot:header-in* :x-cli-session-id))))
      "OK")))
 
 (defapi (get-refs :uri "/api/commit-graph/refs" :method :get :wrap-success nil) (repo-url)
