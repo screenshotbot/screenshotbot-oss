@@ -1,10 +1,14 @@
 # Changelog
 
-## 2.16.9 - 
+## 2.16.9 - 2025-10-21
 
 ### Added
 
 - Added X-Cli-session-id
+
+### Changed
+
+- Fixed server-cli-logs
 
 ## 2.16.8 - 2025-10-21
 
