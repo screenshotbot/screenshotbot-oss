@@ -113,8 +113,7 @@
     (test-git:with-git-repo (repo :dir dir)
       (test-git:make-commit repo "foo")
       (git::$ (git-command repo) "remote" "add" "origin" "git@github.com:tdrhq/fast-example.git")
-      (#+lispworks is-true
-       #-lispworks is-false
+      (is-false
        (new-flow-enabled-p self repo
                            :override-commit-hash "abcd"))
      (#+lispworks is-true #-lispworks is-false

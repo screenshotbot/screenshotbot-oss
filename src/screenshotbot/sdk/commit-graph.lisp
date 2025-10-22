@@ -64,18 +64,18 @@ to cache the refs."))
    (?. supported-remote-repo-p (git:get-remote-url repo))
    (api-feature-enabled-p
     (api-context commit-graph-updater)
-    :cli-shallow-clones))
+    :cli-shallow-clones)
+   (not
+    (locally-rebased-p repo :override-commit-hash override-commit-hash)))
   #-lispworks
   nil)
 
 (defmethod update-commit-graph-old-style ((self commit-graph-updater)
                                           (repo null-repo)
-                                          branch &key (reason "default-reason"))
-  (declare (ignore reason))
+                                          branch)
   (log:info "No repo to update commit graph"))
 
-(defmethod update-commit-graph-old-style ((self commit-graph-updater) repo branch
-                                          &key (reason "default-reason"))
+(defmethod update-commit-graph-old-style ((self commit-graph-updater) repo branch)
   "Update commit-graph by pulling, and then always push the top 1000 or
 so changes."
   (log:info "Updating commit graph")
@@ -89,7 +89,6 @@ so changes."
      :parameters (list
                   (cons "repo-url" (repo-link repo))
                   (cons "branch" branch)
-                  (cons "reason" reason)
                   (cons "graph-json" json)))))
 
 (defmethod filter-wanted-commits (api-context repo-url commits)
@@ -199,18 +198,15 @@ commits that are needed."
         (trivial-timeout:with-timeout (600)
           (update-commit-graph-new-style self repo branch))
         (log:debug "New commit graph uploaded successfully")
-        (when (locally-rebased-p repo :override-commit-hash override-commit-hash)
-          ;; We have local commits that we're still interested in
-          (update-commit-graph-old-style self repo branch :reason "local-rebase"))
         t)
       (progn
         (warn "Reverting to old commit-graph flow")
-        (update-commit-graph-old-style self repo branch :reason "old-flow-failure"))))
+        (update-commit-graph-old-style self repo branch))))
     (t
      (log:info "Using old flow for commit-graph")
      #+nil
      (warn "Using the old commit-graph flow for ~a" (git:get-remote-url repo))
-     (update-commit-graph-old-style self repo branch :reason "new-flow-disabled"))))
+     (update-commit-graph-old-style self repo branch))))
 
 (defmethod update-commit-graph (self (repo null-repo) branch &key &allow-other-keys)
   (log:info "Not updating the commit graph, since there's no repo"))
