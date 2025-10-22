@@ -52,9 +52,9 @@ to cache the refs."))
    '(:list dto:git-ref)))
 
 (defun locally-rebased-p (repo &key override-commit-hash)
-  (or
-   (not override-commit-hash)
-   (equal override-commit-hash (git:current-commit repo))))
+  (and
+   override-commit-hash
+   (not (equal override-commit-hash (git:current-commit repo)))))
 
 (defun new-flow-enabled-p (commit-graph-updater repo &key override-commit-hash)
   (declare (ignorable repo override-commit-hash))
@@ -65,7 +65,8 @@ to cache the refs."))
    (api-feature-enabled-p
     (api-context commit-graph-updater)
     :cli-shallow-clones)
-   (locally-rebased-p repo :override-commit-hash override-commit-hash))
+   (not
+    (locally-rebased-p repo :override-commit-hash override-commit-hash)))
   #-lispworks
   nil)
 
