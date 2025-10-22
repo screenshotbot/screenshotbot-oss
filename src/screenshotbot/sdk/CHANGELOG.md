@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.16.10 - 2025-10-22
+
+### Changed
+
+- Use the new commit-graph flow even for what we were calling
+  "locally-rebased". In reality, it wasn't being locally rebased, it
+  was Bitrise using the `refs/pull/*merge` commit, which should be
+  part of the remote repository.
+
 ## 2.16.9 - 2025-10-21
 
 ### Added
