@@ -32,18 +32,24 @@
      ;;(log:info "Got ~S for ~S" y ',x)
      y))
 
+(defvar *node-id-cache* (make-hash-table :test #'equal #+sbcl :synchronized #+sbcl t))
+
 (defun commit-node-id (x)
-  "The node id used for cl-graph queries."
+  "The node id used for queries. This is a historical artifact of when we
+used cl-graph. In the future, we should move to using the string as
+the node-id directly."
   (check-type x string)
   (assert (> (length x) 0))
   (assert x)
-  (let ((arr
-          (ironclad:hex-string-to-byte-array x)))
-    (let ((ret 0))
-      (loop for i across arr do
-        (setf ret
-              (+ (ash ret 8) i)))
-      ret)))
+  (util/misc:or-setf
+   (gethash x *node-id-cache*)
+   (let ((arr
+           (ironclad:hex-string-to-byte-array x)))
+     (let ((ret 0))
+       (loop for i across arr do
+         (setf ret
+               (+ (ash ret 8) i)))
+       ret))))
 
 (defclass dag (encodable)
   ((commits :initform (make-hash-table :test 'equal)
@@ -107,6 +113,7 @@ changes."
                    (setf (gethash parent seen) t)
                    (push parent stack)))))
     nil))
+
 
 (defmethod ancestorp ((dag dag) (sha-old string) (sha-new string))
   (bfs-search
