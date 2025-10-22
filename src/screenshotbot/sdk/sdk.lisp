@@ -568,11 +568,11 @@ is used up, we update md5-to-response to remove that upload URL."
     (make-directory-run api-context directory
                         :channel channel
                         :before (lambda (run-context)
+                                  (declare (ignore run-context))
+                                  ;; TODO[tidy]: this doesn't need to be in a :before anymore.
                                   (when (and flags:*production*
                                              (> flags:*commit-limit* 0))
-                                    (update-commit-graph commit-graph-updater repo branch
-                                                         :override-commit-hash
-                                                         (run-context:override-commit-hash run-context))))
+                                    (update-commit-graph commit-graph-updater repo branch)))
                         :repo repo
                         :is-trunk flags:*production*
                         :branch branch)))

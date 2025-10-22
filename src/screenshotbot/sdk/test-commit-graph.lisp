@@ -16,7 +16,6 @@
                 #+lispworks
                 #:update-from-pack
                 #:new-flow-enabled-p
-                #:locally-rebased-p
                 #:update-commit-graph
                 #:get-commit-graph-refs)
   (:import-from #:screenshotbot/git-repo
@@ -107,19 +106,6 @@
       (git::$ (git-command repo) "remote" "add" "origin" "git@github.com:tdrhq/fast-example.git")
       (#+lispworks is-true #-lispworks is-false (new-flow-enabled-p self repo)))))
 
-(test new-flow-disabled-with-override-commit-hash
-  (with-fixture state ()
-    (gk:enable :cli-shallow-clones)
-    (test-git:with-git-repo (repo :dir dir)
-      (test-git:make-commit repo "foo")
-      (git::$ (git-command repo) "remote" "add" "origin" "git@github.com:tdrhq/fast-example.git")
-      (is-false
-       (new-flow-enabled-p self repo
-                           :override-commit-hash "abcd"))
-     (#+lispworks is-true #-lispworks is-false
-       (new-flow-enabled-p self repo
-                           :override-commit-hash (git:current-commit repo))))))
-
 #+lispworks
 (test update-from-pack
   (with-fixture state ()
@@ -204,35 +190,3 @@
     "abcd"
     "refs/heads/master")))
 
-(test locally-rebased-p-with-no-override
-  "When no override-commit-hash is provided, locally-rebased-p should return false"
-  (test-git:with-git-repo (repo :dir dir)
-    (test-git:make-commit repo "foo")
-    (is-false (locally-rebased-p repo))))
-
-(test locally-rebased-p-with-matching-override
-  "When override-commit-hash matches current commit, locally-rebased-p should return false"
-  (test-git:with-git-repo (repo :dir dir)
-    (test-git:make-commit repo "foo")
-    (let ((current-commit (git:current-commit repo)))
-      (is-false (locally-rebased-p repo :override-commit-hash current-commit)))))
-
-(test locally-rebased-p-with-non-matching-override
-  "When override-commit-hash does not match current commit, locally-rebased-p should return true"
-  (test-git:with-git-repo (repo :dir dir)
-    (test-git:make-commit repo "foo")
-    (is-true (locally-rebased-p repo :override-commit-hash "abcd1234"))))
-
-(test locally-rebased-p-after-local-commit
-  "After making a local commit, override-commit-hash from before should no longer match"
-  (test-git:with-git-repo (repo :dir dir)
-    (test-git:make-commit repo "foo")
-    (let ((first-commit (git:current-commit repo)))
-      ;; First commit matches
-      (is-false (locally-rebased-p repo :override-commit-hash first-commit))
-      ;; Make another commit
-      (test-git:make-commit repo "bar")
-      ;; Now the old commit hash should not match
-      (is-true (locally-rebased-p repo :override-commit-hash first-commit))
-      ;; But the new current commit should match
-      (is-false (locally-rebased-p repo :override-commit-hash (git:current-commit repo))))))

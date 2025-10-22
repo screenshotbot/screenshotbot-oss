@@ -51,22 +51,16 @@ to cache the refs."))
                  (cons "repo-url" repo)))
    '(:list dto:git-ref)))
 
-(defun locally-rebased-p (repo &key override-commit-hash)
-  (and
-   override-commit-hash
-   (not (equal override-commit-hash (git:current-commit repo)))))
-
-(defun new-flow-enabled-p (commit-graph-updater repo &key override-commit-hash)
-  (declare (ignorable repo override-commit-hash))
+(defun new-flow-enabled-p (commit-graph-updater repo)
+  #-lispworks
+  (declare (ignorable repo))
   #+lispworks
   (and
    (>= *api-version* 19)
    (?. supported-remote-repo-p (git:get-remote-url repo))
    (api-feature-enabled-p
     (api-context commit-graph-updater)
-    :cli-shallow-clones)
-   (not
-    (locally-rebased-p repo :override-commit-hash override-commit-hash)))
+    :cli-shallow-clones))
   #-lispworks
   nil)
 
@@ -185,14 +179,13 @@ commits that are needed."
                        (cons "refs" (dto:encode-json (or refs #()))))))))))
 
 
-(defmethod update-commit-graph ((self commit-graph-updater) repo branch
-                                &key override-commit-hash)
+(defmethod update-commit-graph ((self commit-graph-updater) repo branch &key)
   ;; TODO: we don't need to fetch-remote branch in the new flow, but
   ;; for now keep this here. (See: T1928)
   (fetch-remote-branch repo branch)
   (log:info "Updating commit graph")
   (cond
-    ((new-flow-enabled-p self repo :override-commit-hash override-commit-hash)
+    ((new-flow-enabled-p self repo)
      (or
       (ignore-and-log-errors ()
         (trivial-timeout:with-timeout (600)
