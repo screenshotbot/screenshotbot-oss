@@ -19,6 +19,7 @@
                 #:update-commit-graph
                 #:get-commit-graph-refs)
   (:import-from #:screenshotbot/git-repo
+                #:commit-graph-dag
                 #:commit-graph)
   (:import-from #:fiveam-matchers/lists
                 #:contains)
@@ -40,6 +41,8 @@
                 #:api-context-prepared-p
                 #:api-feature-enabled-p
                 #:api-features)
+  (:import-from #:fiveam-matchers/misc
+                #:is-not-null)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
                     (#:test-git #:screenshotbot/sdk/test-git)
                     (#:git #:screenshotbot/sdk/git)))
@@ -118,7 +121,12 @@
           self
           upload-pack
           "git@github.com:tdrhq/fast-example.git"
-          (list (git:current-branch repo))))))))
+          (list (git:current-branch repo))))
+
+        (let* ((commit-graph (first (bknr.datastore:class-instances 'commit-graph)))
+               (dag (commit-graph-dag commit-graph)))
+          (assert-that (dag:get-commit dag (git:current-commit repo))
+                       (is-not-null)))))))
 
 #+lispworks
 (test update-from-pack-twice

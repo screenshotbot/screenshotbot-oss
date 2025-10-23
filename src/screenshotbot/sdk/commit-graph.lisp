@@ -175,7 +175,9 @@ commits that are needed."
           :method :post
           :parameters (list
                        (cons "repo-url" repo-url)
-                       (cons "graph-json" (dto:encode-json (or commits #())))
+                       (cons "graph-json" (dto:encode-json
+                                           (make-instance 'dto:commit-graph
+                                                          :commits commits)))
                        (cons "refs" (dto:encode-json (or refs #()))))))))))
 
 
