@@ -88,6 +88,13 @@ checks and on the commit graph debug page."
     (log:debug "Commit id for ~a is ~a" sha id)
     (gethash id (commit-map dag))))
 
+(defmethod get-commit-with-parent ((dag dag) (parent-sha string))
+  "Find a commit that has the given parent-sha as one of its parents. For
+debugging only."
+  (loop for commit being the hash-values of (commit-map dag)
+        when (member parent-sha (parents commit) :test #'equal)
+          return commit))
+
 (defmethod bfs-search ((dag dag) start end)
   "This is technically an iterative DFS. We could replace this with
 REACHABLE-NODES, or use a simple-queue instead of the stack, but for

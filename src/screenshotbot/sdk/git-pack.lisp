@@ -429,6 +429,9 @@
 
 (defun calculate-wants (headers features wants)
   (log:debug "Got features: ~a" features)
+  (unless (str:s-member features "allow-tip-sha1-in-want")
+    (warn "Git server doesn't support allow-tip-sha1-in-want, features: ~s" features))
+  
   (unless (or
            (str:s-member features "allow-tip-sha1-in-want")
            (str:s-member features "allow-reachable-sha1-in-want"))
