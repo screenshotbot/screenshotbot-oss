@@ -148,7 +148,7 @@
       <button class= (format nil "btn btn-sm ~a dropdown-toggle" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ,(progn title)
       </button>
-      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999; position: static" >
+      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999" >
         ,@(progn children)
       </div>
     </div>))
