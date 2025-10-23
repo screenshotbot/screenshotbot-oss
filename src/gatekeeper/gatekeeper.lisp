@@ -75,8 +75,10 @@
            :accessor acl-type)
      (objects :initarg :objects
               :accessor access-control-objects
-              :documentation "All the objects on which this ACL applies"))
-    (:metaclass persistent-class)))
+              :documentation "All the objects on which this ACL applies")
+     (created-at :initarg :created-at))
+    (:metaclass persistent-class)
+    (:default-initargs :created-at (get-universal-time))))
 
 (defun check (name object &key (default nil default-provided-p))
   (let ((gk (gk-with-name name)))
