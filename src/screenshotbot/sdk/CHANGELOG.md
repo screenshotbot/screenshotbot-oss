@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.16.11 - 2025-10-22
+
+### Changed
+
+- We were sending the wrong data format to /api/commit-graph in the
+  new flow (T2092)
+
+
 ## 2.16.10 - 2025-10-22
 
 ### Changed
