@@ -24,7 +24,9 @@
    #:author
    #:get-remote-url
    #:repo-dir
-   #:rev-parse-local)
+   #:rev-parse-local
+   #:$
+   #:extra-header)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
@@ -203,3 +205,16 @@ rev-parse compares against the remote branch :/"
     #+windows
     (uiop:run-program (list "attrib" "-r" (format nil "~a\\*.*" (namestring dir)) "/s"))))
 
+
+(defmethod extra-header ((repo git-repo))
+  (ignore-errors
+   (loop for line in (str:lines
+                      ($ (git-command repo)
+                        "config" "--local" "--get-urlmatch"
+                        "http.extraheader"
+                        (get-remote-url repo)))
+         collect
+         (destructuring-bind (key value)
+             (mapcar #'str:trim
+                     (str:split ":" line))
+           (cons (str:downcase key) value)))))

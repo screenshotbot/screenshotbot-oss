@@ -39,6 +39,9 @@
 (defclass http-upload-pack (abstract-upload-pack)
   ((repo :initarg :repo
          :reader http-url)
+   (extra-headers :initarg :extra-headers
+                  :initform nil
+                  :reader extra-headers)
    (stream :initarg :stream
            :accessor %stream)))
 
@@ -120,6 +123,7 @@
        (str:starts-with-p "http://" repo-url)
        (str:starts-with-p "https://" repo-url))
       (make-instance 'http-upload-pack
+                     :extra-headers (git:extra-header repo)
                      :repo repo-url))
      (t
       (local-upload-pack
@@ -354,6 +358,7 @@
                                  (read-netrc
                                   (quri:uri-host
                                    (quri:uri (http-url p)))))
+           :additional-headers (extra-headers p)
            :want-stream t
            :ensure-success t
            :read-timeout 45
@@ -608,6 +613,7 @@ a second value the headers that were initially provided (sha and refs)
 ;; (read-commits "https://github.com/tdrhq/alisp.git" :wants (list "master") :depth nil)
 ;; (read-commits "git@gitlab.com:tdrhq/fast-example.git" :wants (list "master") :depth 30)
 ;; (read-commits "git@bitbucket.org:tdrhq/fast-example.git" :wants (list "master") :depth 30)
+;; (read-commits (make-remote-upload-pack (make-instance 'git:git-repo :dir "/tmp/alisp/")) :wants (list "master"))
 
 ;; Azure features: ( multi_ack thin-pack side-band side-band-64k no-progress multi_ack_detailed no-done shallow allow-tip-sha1-in-want filter symref=HEAD:refs/heads/master)
 ;; Azure also requires clients to support multi-ack :/
@@ -616,7 +622,7 @@ a second value the headers that were initially provided (sha and refs)
 ;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "master" :parse-parents t))
 ;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master") :extra-wants (list "4ec592fc02c8bf200e4e2b9902e9a71fd8de3aec") :depth 100)
 ;; (read-commits "/home/arnold/builds/web/.git" :wants (list "master") :depth 2)
-
+;; (read-commits "https://github.com/tdrhq/alisp.git" :git-config "/tmp/alisp/.git/config" :wants (list "master") :depth nil)
 
 (def-health-check can-compute-sha1 ()
   "The first time we tried to do this, sha1 was removed out of the delivered image"
@@ -624,3 +630,5 @@ a second value the headers that were initially provided (sha and refs)
                                                              (flex:string-to-octets "hello world")))))
 
 
+
+;; (git:extra-header (make-instance 'git:git-repo :dir "/tmp/alisp/"))
