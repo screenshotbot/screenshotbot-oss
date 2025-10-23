@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.16.12 - 2025-10-23
+
+### Added
+
+- Added support for using Authorization header from .git/config when
+  making HTTP requests. (T2082)
+
+
 ## 2.16.11 - 2025-10-22
 
 ### Changed
