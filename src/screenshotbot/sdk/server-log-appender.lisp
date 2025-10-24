@@ -28,7 +28,10 @@
 
 (defclass server-log-appender (log4cl:stream-appender)
   ((stream :initarg :stream
-           :reader log4cl:appender-stream)))
+           :reader log4cl:appender-stream))
+  (:default-initargs
+   :layout (make-instance 'log4cl:pattern-layout
+                          :conversion-pattern "[%D{%H:%M:%S}] %p - %m%n")))
 
 (defun make-server-log-appender (api-context)
   (make-instance 'server-log-appender
