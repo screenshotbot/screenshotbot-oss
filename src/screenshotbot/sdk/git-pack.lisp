@@ -455,7 +455,7 @@
         do (log:debug "Ignoring: ~a" line)))
 
 (defun write-wants-and-haves (p wants haves &key depth filter-blobs features http?)
-  (want p (format nil "~a filter allow-tip-sha1-in-want allow-reachable-sha1-in-want agent=screenshotbot-cli" (car wants)))
+  (want p (format nil "~a filter allow-tip-sha1-in-want allow-reachable-sha1-in-want shallow agent=screenshotbot-cli" (car wants)))
   (dolist (want (cdr wants))
     (want p want))
 
