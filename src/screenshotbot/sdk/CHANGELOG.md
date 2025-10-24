@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.16.15 - 2025-10-24
+
+### Changed
+
+- Advertise "shallow" feature in the git-pack protocol (potential fix
+  for T2093)
+
 ## 2.16.14 - 2025-10-24
 
 ### Changed
