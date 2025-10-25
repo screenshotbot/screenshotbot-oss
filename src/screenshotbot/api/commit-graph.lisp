@@ -91,6 +91,9 @@
 in the repo. The `want` is a reference to the git-upload-pack API."
   (let* ((commit-graph (find-or-create-commit-graph (current-company) repo-url))
          (dag (commit-graph-dag commit-graph)))
-    (loop for sha in (json:decode-json-from-string shas)
-          unless (dag:get-commit dag sha)
-            collect sha)))
+    (let ((shas (json:decode-json-from-string shas)))
+      (unless shas
+        (push-event :check-wants-with-empty-shas))
+      (loop for sha in shas
+            unless (dag:get-commit dag sha)
+              collect sha))))
