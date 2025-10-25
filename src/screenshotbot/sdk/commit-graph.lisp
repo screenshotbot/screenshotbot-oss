@@ -94,6 +94,9 @@ so changes."
 (defmethod filter-wanted-commits (api-context repo-url commits)
   "Check if the server needs these commits, and returns the list of
 commits that are needed."
+  ;; TODO: only make this call if COMMITS is NIL. For now we're
+  ;; avoiding code branches to keep it easier to test, but this should
+  ;; be an easy optimization.
   (let ((commits (remove-duplicates commits :test #'equal)))
     (json:decode-json-from-string
      (request
@@ -152,7 +155,10 @@ commits that are needed."
                              branches
                              &key current-commit)
   (log:info "Getting known refs from Screenshotbot server")
-  (let ((known-refs (get-commit-graph-refs self repo-url)))
+  (let ((known-refs
+          ;; Technically we could combine this with the /check-wants
+          ;; if we do it carefully
+          (get-commit-graph-refs self repo-url)))
     (check-type known-refs list)
     (log:info "Getting git graph via git-upload-pack")
     (let ((commits (read-commits
