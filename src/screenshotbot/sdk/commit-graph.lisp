@@ -38,7 +38,10 @@
                 :reader api-context)
    (all-remote-refs :initform (make-hash-table :test #'equal)
                     :reader all-remote-refs
-                    :documentation "A store of all the remote refs sent from the server"))
+                    :documentation "A store of all the remote refs sent from the server")
+   (refs-to-update :initform nil
+                   :accessor refs-to-update
+                   :documentation "A list of git-refs that will be sent to the server"))
   (:documentation "The commit graph updater will eventually be stateful, in particular
 to cache the refs."))
 
@@ -135,6 +138,13 @@ commits that are needed."
   (loop for  (sha . ref) in refs
         do (setf (gethash ref (all-remote-refs self)) sha)))
 
+(defmethod maybe-push-ref-to-update ((self commit-graph-updater) sha ref)
+  (when (str:starts-with-p "refs/heads/" ref)
+    (push (make-instance 'dto:git-ref
+                         :name (str:substring (length "refs/heads/") nil ref)
+                         :sha sha)
+          (refs-to-update self))))
+
 #+lispworks
 (defmethod update-from-pack ((self commit-graph-updater)
                              (upload-pack abstract-upload-pack)
@@ -142,52 +152,56 @@ commits that are needed."
                              branches
                              &key current-commit)
   (log:info "Getting known refs from Screenshotbot server")
-  (let ((known-refs (get-commit-graph-refs self repo-url))
-        (refs nil))
+  (let ((known-refs (get-commit-graph-refs self repo-url)))
     (check-type known-refs list)
     (log:info "Getting git graph via git-upload-pack")
-    (flet ((maybe-push-ref (sha ref)
-             (when (str:starts-with-p "refs/heads/" ref)
-               (push (make-instance 'dto:git-ref
-                                    :name (str:substring (length "refs/heads/") nil ref)
-                                    :sha sha)
-                     refs))))
-     (let ((commits (read-commits
-                     upload-pack
-                     ;; TODO: also do release branches, but that will need a regex here
-                     :wants (lambda (list)
-                              (save-refs self list)
-                              (filter-wanted-commits
-                               (api-context self)
-                               repo-url
-                               (remove-if
-                                #'null
-                                (list*
-                                 current-commit
-                                 (loop for (sha . ref) in list
-                                       if (want-remote-ref known-refs branches
-                                                           sha ref)
-                                         collect (progn
-                                                   (maybe-push-ref sha ref)
-                                                   sha))))))
-                     :haves (loop for known-ref in known-refs
-                                  collect (dto:git-ref-sha known-ref))
-                     :parse-parents t)))
-       (let ((commits (loop for (sha . parents) in commits
-                            collect (make-instance 'dto:commit
-                                                   :sha sha
-                                                   :parents parents))))
-         (log:info "Updating git commit-graph")
-         (request
-          (api-context self)
-          "/api/commit-graph"
-          :method :post
-          :parameters (list
-                       (cons "repo-url" repo-url)
-                       (cons "graph-json" (dto:encode-json
-                                           (make-instance 'dto:commit-graph
-                                                          :commits commits)))
-                       (cons "refs" (dto:encode-json (or refs #()))))))))))
+    (let ((commits (read-commits
+                    upload-pack
+                    ;; TODO: also do release branches, but that will need a regex here
+                    :wants (lambda (list)
+                             (save-refs self list)
+                             (let ((shas (remove-if
+                                          #'null
+                                          (list*
+                                           current-commit
+                                           (loop for (sha . ref) in list
+                                                 if (want-remote-ref known-refs branches
+                                                                     sha ref)
+                                                   collect (progn
+                                                             (maybe-push-ref-to-update self sha ref)
+                                                             sha))))))
+                               ;; This will make a network call
+                               (filter-wanted-commits
+                                (api-context self)
+                                repo-url
+                                shas)))
+                    :haves (loop for known-ref in known-refs
+                                 collect (dto:git-ref-sha known-ref))
+                    :parse-parents t)))
+      (%finish-update-commit-graph self
+                                   :commits commits
+                                   :repo-url repo-url
+                                   :refs (refs-to-update self)))))
+
+(defmethod %finish-update-commit-graph ((self commit-graph-updater)
+                                        &key commits
+                                          repo-url
+                                          refs)
+  (let ((commits (loop for (sha . parents) in commits
+                       collect (make-instance 'dto:commit
+                                              :sha sha
+                                              :parents parents))))
+    (log:info "Updating git commit-graph")
+    (request
+     (api-context self)
+     "/api/commit-graph"
+     :method :post
+     :parameters (list
+                  (cons "repo-url" repo-url)
+                  (cons "graph-json" (dto:encode-json
+                                      (make-instance 'dto:commit-graph
+                                                     :commits commits)))
+                  (cons "refs" (dto:encode-json (or refs #())))))))
 
 
 (defmethod update-commit-graph ((self commit-graph-updater) repo branch &key)
