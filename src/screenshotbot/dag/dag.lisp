@@ -497,6 +497,14 @@ parents. If COMMIT-1 is empty, then we always return NIL.
 If EXCLUDE-COMMIT-2 is true, then we'll exclude any node that's only
 an ancestor of COMMIT-1 via COMMIT-2. This is useful for pull-requests
 that might've already merged."
+
+  (flet ((check-commit (commits)
+           (loop for commit in (listify commits)
+                 do
+                    (unless (dag:get-commit dag commit)
+                      (warn "The commit ~a is not in the dag. Potentially an issue with the commit-graph flow." commit)))))
+    (check-commit commit-1)
+    (check-commit commit-2))
   (let ((commit-1 (listify commit-1)))
    (cond
      ((equal commit-1 (list commit-2))
