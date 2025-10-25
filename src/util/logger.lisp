@@ -45,6 +45,7 @@
       ;; While the log is held, avoid crashes
       (format stream "~a: " level)
       (write-string time stream)
+      (write-string " " stream)
       (write-string str stream)
       (format stream "~%"))))
 
