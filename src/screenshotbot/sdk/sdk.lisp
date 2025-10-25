@@ -562,17 +562,22 @@ is used up, we update md5-to-response to remove that upload URL."
   ;; Heads up! This logic is not unit-tested. If you're modifying this
   ;; code, run `make sdk-integration-tests`.
   (let ((repo (git-repo))
-        (commit-graph-updater (make-instance 'commit-graph-updater :api-context api-context))
         (branch flags:*main-branch*))
     (log:info "Uploading images from: ~a" directory)
     (make-directory-run api-context directory
                         :channel channel
                         :before (lambda (run-context)
                                   (declare (ignore run-context))
-                                  ;; TODO[tidy]: this doesn't need to be in a :before anymore.
+                                  ;; TODO[tidy]: this doesn't need to
+                                  ;; be in a :before anymore. But
+                                  ;; there's a chance we might need
+                                  ;; some more information from the
+                                  ;; run-context in the future (for
+                                  ;; the Pull-Request merge base)
                                   (when (and flags:*production*
                                              (> flags:*commit-limit* 0))
-                                    (update-commit-graph commit-graph-updater repo branch)))
+                                    (let ((commit-graph-updater (make-instance 'commit-graph-updater :api-context api-context)))
+                                      (update-commit-graph commit-graph-updater repo branch))))
                         :repo repo
                         :is-trunk flags:*production*
                         :branch branch)))
