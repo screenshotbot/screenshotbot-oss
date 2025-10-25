@@ -240,43 +240,46 @@ accessing the urls or sitemap slot."
   (restart-case
       (let* ((api-key (make-transient-key :user (user run)
                                           :company (company run)))
-             (request (integration:original-request run))
-
-             ;; There are two situations we could be here: we could be
-             ;; here from the static website code from the SDK, or we
-             ;; could be here from the web based replay jobs. We need
-             ;; to set the flags manually for the web-based replay
-             ;; jobs, but for the static website code, the
-             ;; `with-sdk-flags` will propagate the flags.
-             (flags:*pull-request* (?. replay:pull-request request))
-             (flags:*main-branch* (?. replay:main-branch request))
-             (flags:*repo-url* (?. replay:repo-url request)))
-        (with-sdk-flags (:flags (?. snapshot-request-sdk-flags request))
-          (let ((api-context (make-instance 'api-context
-                                            :key (api-key-key api-key)
-                                            :secret (api-key-secret-key api-key)
-                                            :hostname (host run)
-                                            :engine engine)))
-            (with-reused-ssl ((engine api-context))
-              (let ((images
-                      ;; In this case it's not really uploading, we
-                      ;; should not depend on this method and just
-                      ;; construct the dto objects directly.
-                      (sdk:upload-image-directory api-context results)))
-                (log:debug "Creating run")
-                ;; TODO: replace with put-run-with-run-context instead.
-                (sdk:make-run
-                 api-context
-                 images
-                 :repo (make-instance 'null-repo)
-                 :branch "master"
-                 :commit (when request (replay:commit request))
-                 :merge-base (when request (replay:merge-base request))
-                 :branch-hash (when request (replay:branch-hash request))
-                 :github-repo (when request (replay:repo-url request))
-                 :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
-                 :is-trunk t
-                 :channel (channel run)))))))
+             (request (integration:original-request run)))
+        ;; There are two situations we could be here: we could be
+        ;; here from the static website code from the SDK, or we
+        ;; could be here from the web based replay jobs. We need
+        ;; to set the flags manually for the web-based replay
+        ;; jobs, but for the static website code, the
+        ;; `with-sdk-flags` will propagate the flags.
+        (cond
+          ((gk:check :fixed-run-context (company run))
+           (error "unimplemented"))
+          (t
+           (let ((flags:*pull-request* (?. replay:pull-request request))
+                 (flags:*main-branch* (?. replay:main-branch request))
+                 (flags:*repo-url* (?. replay:repo-url request)))
+             (with-sdk-flags (:flags (?. snapshot-request-sdk-flags request))
+               (let ((api-context (make-instance 'api-context
+                                                 :key (api-key-key api-key)
+                                                 :secret (api-key-secret-key api-key)
+                                                 :hostname (host run)
+                                                 :engine engine)))
+                 (with-reused-ssl ((engine api-context))
+                   (let ((images
+                           ;; In this case it's not really uploading, we
+                           ;; should not depend on this method and just
+                           ;; construct the dto objects directly.
+                           (sdk:upload-image-directory api-context results)))
+                     (log:debug "Creating run")
+                     ;; TODO: replace with put-run-with-run-context instead.
+                     (sdk:make-run
+                      api-context
+                      images
+                      :repo (make-instance 'null-repo)
+                      :branch "master"
+                      :commit (when request (replay:commit request))
+                      :merge-base (when request (replay:merge-base request))
+                      :branch-hash (when request (replay:branch-hash request))
+                      :github-repo (when request (replay:repo-url request))
+                      :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
+                      :is-trunk t
+                      :channel (channel run))))))))))
     (retry-process-results ()
       (process-results run results))))
 
