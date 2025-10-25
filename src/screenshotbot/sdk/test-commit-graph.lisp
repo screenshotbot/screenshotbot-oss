@@ -10,6 +10,7 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/commit-graph
+                #:all-remote-refs
                 #:commit-graph-updater
                 #+lispworks
                 #:want-remote-ref
@@ -198,3 +199,25 @@
     "abcd"
     "refs/heads/master")))
 
+
+(test stores-refs-after-updating
+  #+lispworks
+  (with-fixture state ()
+    (test-git:with-git-repo (repo :dir dir)
+      (test-git:make-commit repo "foo")
+      (test-git:enable-server-features repo)
+      (let ((upload-pack (local-upload-pack repo)))
+        (update-from-pack
+         self
+         upload-pack
+         (namestring dir)
+         (list (git:current-branch repo))))
+      (assert-that
+       (get-commit-graph-refs
+        self
+        (namestring dir))
+       (contains
+        (has-typep 'dto:git-ref)))
+
+      (is (equal (git:current-commit repo)
+                 (gethash "refs/heads/master" (all-remote-refs self)))))))

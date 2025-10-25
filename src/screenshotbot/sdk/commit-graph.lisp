@@ -35,7 +35,10 @@
 
 (defclass commit-graph-updater ()
   ((api-context :initarg :api-context
-                :reader api-context))
+                :reader api-context)
+   (all-remote-refs :initform (make-hash-table :test #'equal)
+                    :reader all-remote-refs
+                    :documentation "A store of all the remote refs sent from the server"))
   (:documentation "The commit graph updater will eventually be stateful, in particular
 to cache the refs."))
 
@@ -127,6 +130,11 @@ commits that are needed."
         if (remote-ref-equals branch ref)
           return (not (ref-in-sync-p known-refs sha ref))))
 
+(defun save-refs (self refs)
+  "Save the refs for reading in the future"
+  (loop for  (sha . ref) in refs
+        do (setf (gethash ref (all-remote-refs self)) sha)))
+
 #+lispworks
 (defmethod update-from-pack ((self commit-graph-updater)
                              (upload-pack abstract-upload-pack)
@@ -148,6 +156,7 @@ commits that are needed."
                      upload-pack
                      ;; TODO: also do release branches, but that will need a regex here
                      :wants (lambda (list)
+                              (save-refs self list)
                               (filter-wanted-commits
                                (api-context self)
                                repo-url
