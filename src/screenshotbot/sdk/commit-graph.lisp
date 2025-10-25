@@ -166,21 +166,12 @@ commits that are needed."
                     ;; TODO: also do release branches, but that will need a regex here
                     :wants (lambda (list)
                              (save-refs self list)
-                             (let ((shas (remove-if
-                                          #'null
-                                          (list*
-                                           current-commit
-                                           (loop for (sha . ref) in list
-                                                 if (want-remote-ref known-refs branches
-                                                                     sha ref)
-                                                   collect (progn
-                                                             (maybe-push-ref-to-update self sha ref)
-                                                             sha))))))
-                               ;; This will make a network call
-                               (filter-wanted-commits
-                                (api-context self)
-                                repo-url
-                                shas)))
+                             ;; This might make a network call
+                             (build-wants self
+                                          :current-commit current-commit
+                                          :known-refs known-refs
+                                          :branches branches
+                                          :repo-url repo-url))
                     :haves (loop for known-ref in known-refs
                                  collect (dto:git-ref-sha known-ref))
                     :parse-parents t)))
@@ -188,6 +179,35 @@ commits that are needed."
                                    :commits commits
                                    :repo-url repo-url
                                    :refs (refs-to-update self)))))
+
+(defmethod build-wants ((self commit-graph-updater) &key current-commit
+                                                      known-refs
+                                                      branches
+                                                      repo-url)
+  "Build a list of commit SHAs that the server wants by filtering remote refs
+against known refs and branches, then checking with the server which commits
+are actually needed.
+
+This function does have a side effect: it stores the the refs need to
+be updated in the REFS-TO-UPDATE slot.
+
+Returns a list of commit SHAs that should be included in the commit graph update."
+  (let ((shas (remove-if
+               #'null
+               (list*
+                current-commit
+                (loop for ref being the hash-keys of (all-remote-refs self)
+                        using (hash-value sha)
+                      if (want-remote-ref known-refs branches
+                                          sha ref)
+                        collect (progn
+                                  (maybe-push-ref-to-update self sha ref)
+                                  sha))))))
+    ;; This will make a network call
+    (filter-wanted-commits
+     (api-context self)
+     repo-url
+     shas)))
 
 (defmethod %finish-update-commit-graph ((self commit-graph-updater)
                                         &key commits
