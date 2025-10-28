@@ -268,18 +268,20 @@ accessing the urls or sitemap slot."
                            (sdk:upload-image-directory api-context results)))
                      (log:debug "Creating run")
                      ;; TODO: replace with put-run-with-run-context instead.
-                     (sdk:make-run
-                      api-context
-                      images
-                      :repo (make-instance 'null-repo)
-                      :branch "master"
-                      :commit (when request (replay:commit request))
-                      :merge-base (when request (replay:merge-base request))
-                      :branch-hash (when request (replay:branch-hash request))
-                      :github-repo (when request (replay:repo-url request))
-                      :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))
-                      :is-trunk t
-                      :channel (channel run))))))))))
+                     (let ((run-context (make-instance 'replay-run-context
+                                           :repo-url (when request (replay:repo-url request))
+                                           :channel (channel run)
+                                           :productionp t
+                                           :main-branch "master"
+                                           :commit-hash (when request (replay:commit request))
+                                           :merge-base (when request (replay:merge-base request))
+                                           :main-branch-hash (when request (replay:branch-hash request)))))
+                       (sdk:make-run
+                        api-context
+                        images
+                        :run-context run-context
+                        :repo (make-instance 'null-repo)
+                        :periodic-job-p (or (not request) (str:emptyp (replay:commit request)))))))))))))
     (retry-process-results ()
       (process-results run results))))
 
