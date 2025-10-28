@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.16.17 - 2025-10-28
+
+### Changed
+ 
+- Fix an issue with duplicate hashes in the `haves` during the
+  git-pack protocol. This leads to undocumented behavior on
+  upload-pack servers (T1907)
+
 ## 2.16.16 - 2025-10-28
 
 No expected changes, only refactoring
