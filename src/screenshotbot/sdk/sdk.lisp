@@ -194,6 +194,38 @@ error."
   ()
   (:report "No screenshots were detected in this this run. Perhaps you wanted to use the --recursive flag?"))
 
+(defun create-run-context-from-args (&key repo channel is-trunk branch 
+                                          github-repo commit has-commit-p
+                                          merge-base has-merge-base-p
+                                          branch-hash has-branch-hash-p)
+  "Creates a run context from the given arguments, building extra args as needed."
+  (let ((extra-run-context-args nil))
+    (flet ((push-extra-arg (key value)
+             (setf extra-run-context-args
+                   (list* key value extra-run-context-args))))
+      (when has-commit-p
+        #+nil ;; T1708
+        (warn ":has-commit-p is still being used")
+        (push-extra-arg :commit-hash commit))
+
+      (when has-merge-base-p
+        #+nil ;; T1708
+        (warn ":has-merge-base-p is still being used")
+        (push-extra-arg :merge-base merge-base))
+
+      (when has-branch-hash-p
+        (push-extra-arg :main-branch-hash branch-hash))
+
+      ;; TODO: move out of make-run:
+      (apply #'make-instance 'run-context:flags-run-context
+             :repo-url (or (?. repo-link repo)
+                           github-repo)
+             :channel channel
+             :productionp is-trunk
+             :main-branch branch
+             :env (e:make-env-reader)
+             extra-run-context-args))))
+
 (auto-restart:with-auto-restart ()
  (defun make-run (api-context
                   screenshots &rest args
@@ -215,50 +247,36 @@ run-context that was created here."
    (loop for screenshot in screenshots
          ;; We expect it to be a dto:screenshot with name and image-id
          do (check-type screenshot dto:screenshot))
-   (let ((extra-run-context-args nil))
-     (flet ((push-extra-arg (key value)
-              (setf extra-run-context-args
-                    (list* key value extra-run-context-args))))
-       (when has-commit-p
-         #+nil ;; T1708
-         (warn ":has-commit-p is still being used")
-         (push-extra-arg :commit-hash commit))
+   
+   (let ((run-context (or
+                       run-context
+                       (create-run-context-from-args 
+                        :repo repo
+                        :channel channel
+                        :is-trunk is-trunk
+                        :branch branch
+                        :github-repo github-repo
+                        :commit commit
+                        :has-commit-p has-commit-p
+                        :merge-base merge-base
+                        :has-merge-base-p has-merge-base-p
+                        :branch-hash branch-hash
+                        :has-branch-hash-p has-branch-hash-p))))
+     (funcall before run-context)
+     (unless (or screenshots (run-context:shard-spec run-context))
+       (error 'empty-run-error))
 
-       (when has-merge-base-p
-         #+nil ;; T1708
-         (warn ":has-merge-base-p is still being used")
-         (push-extra-arg :merge-base merge-base))
-
-       (when has-branch-hash-p
-         (push-extra-arg :main-branch-hash branch-hash))
-
-       (let ((run-context (or
-                           run-context
-                           ;; TODO: move out of make-run:
-                           (apply #'make-instance 'run-context:flags-run-context
-                                  :repo-url (or (?. repo-link repo)
-                                                github-repo)
-                                  :channel channel
-                                  :productionp is-trunk
-                                  :main-branch branch
-                                  :env (e:make-env-reader)
-                                  extra-run-context-args))))
-         (funcall before run-context)
-         (unless (or screenshots (run-context:shard-spec run-context))
-           (error 'empty-run-error))
-
-         (unless (str:emptyp branch)
-           (unless (equal branch (run-context:main-branch run-context))
-             (warn "branch does not match run-context: ~a vs ~a" branch (run-context:main-branch run-context))))
-     
-         ;;(log:info "screenshot records: ~s" screenshots)
-         (put-run-with-run-context
-          api-context
-          run-context
-          screenshots
-          :cleanp (cleanp repo)
-          :periodic-job-p periodic-job-p))))))
-
+     (unless (str:emptyp branch)
+       (unless (equal branch (run-context:main-branch run-context))
+         (warn "branch does not match run-context: ~a vs ~a" branch (run-context:main-branch run-context))))
+ 
+     ;;(log:info "screenshot records: ~s" screenshots)
+     (put-run-with-run-context
+      api-context
+      run-context
+      screenshots
+      :cleanp (cleanp repo)
+      :periodic-job-p periodic-job-p))))
 (defun run-context-to-dto (run-context screenshots &key periodic-job-p cleanp)
   (make-instance 'dto:run
                  :channel (run-context:channel run-context)
