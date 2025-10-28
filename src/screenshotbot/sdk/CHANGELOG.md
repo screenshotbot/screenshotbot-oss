@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.16.16 - 2025-10-28
+
+No expected changes, only refactoring
+
 ## 2.16.15 - 2025-10-24
 
 ### Changed
