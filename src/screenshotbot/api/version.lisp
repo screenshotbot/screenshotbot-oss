@@ -19,14 +19,20 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/api/core
-                #:authenticate-api-request))
+                #:authenticate-api-request)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors))
 (in-package :screenshotbot/api/version)
 
 (defhandler (api-version :uri "/api/version") ()
   (setf (hunchentoot:content-type*)
         "application/json; charset=utf-8")
   (when (hunchentoot:authorization)
-    (authenticate-api-request hunchentoot:*request*))
+    (ignore-and-log-errors ()
+      ;; We don't need to be authenticated for this endpoint. In
+      ;; particular the client may not be handling failure
+      ;; properly. So we always return.
+      (authenticate-api-request hunchentoot:*request*)))
   (log:debug "Got session id as: ~a" (hunchentoot:header-in* :x-cli-session-id))
   (encode-json
    (make-instance 'version
