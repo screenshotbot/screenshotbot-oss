@@ -476,8 +476,10 @@
     ;; These should be "shallow ~a" or "unshallow ~a" lines
     ;; We don't care for them really
     (read-shallow-lines p))
-         
-  (dolist (have haves)
+
+  ;; We must remove duplicate haves, otherwise upload-pack misbehaves
+  ;; in the response
+  (fset:do-set (have (fset:convert 'fset:set haves))
     (write-packet p "have ~a" have))
   (when (and haves (not http?))
     (write-flush p))
@@ -611,8 +613,9 @@ a second value the headers that were initially provided (sha and refs)
 ;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
 ;; (read-commits "https://github.com/tdrhq/fast-example.git" :wants (list "master") :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b") :depth 300)
 ;; (read-commits "https://github.com/tdrhq/alisp.git" :wants (list "master") :depth nil)
-;; (read-commits "git@gitlab.com:tdrhq/fast-example.git" :wants (list "master") :depth 30)
-;; (read-commits "git@bitbucket.org:tdrhq/fast-example.git" :wants (list "master") :depth 30)
+;; (read-commits "git@gitlab.com:tdrhq/fast-example.git" :wants (list "master") :depth 30 :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b" "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b"))
+;; (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30 :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b"  "3be209da6b797a6821d8c43b13c8b2ce64cf4a5b"))
+;; (read-commits "git@bitbucket.org:tdrhq/fastq-example.git" :wants (list "master") :depth 30)
 ;; (read-commits (make-remote-upload-pack (make-instance 'git:git-repo :dir "/tmp/alisp/")) :wants (list "master"))
 
 ;; Azure features: ( multi_ack thin-pack side-band side-band-64k no-progress multi_ack_detailed no-done shallow allow-tip-sha1-in-want filter symref=HEAD:refs/heads/master)
