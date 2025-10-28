@@ -20,7 +20,8 @@
                 #:make-upload-pack-command)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
-  (:local-nicknames (#:test-git #:screenshotbot/sdk/test-git)))
+  (:local-nicknames (#:test-git #:screenshotbot/sdk/test-git)
+                    (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/test-git-pack)
 
 (util/fiveam:def-suite)
@@ -85,6 +86,31 @@ set st to idle when block timeout"))))
       (assert-that
        commits
        (has-length 2)))))
+
+(test simple-repo-get-commits-with-one-have
+  (test-git:with-git-repo (repo :dir dir)
+    (test-git:make-commit repo "foo")
+    (test-git:make-commit repo "bar")
+    (test-git:enable-server-features repo)
+    (let ((commits
+            (read-commits (namestring dir) :wants (list "main" "master")
+                          :haves (list (git:current-commit repo)))))
+      (assert-that
+       commits
+       (has-length 0)))))
+
+(test simple-repo-get-commits-with-duplicate-haves
+  (test-git:with-git-repo (repo :dir dir)
+    (test-git:make-commit repo "foo")
+    (test-git:make-commit repo "bar")
+    (test-git:enable-server-features repo)
+    (let ((commits
+            (read-commits (namestring dir) :wants (list "main" "master")
+                                           :haves (list (git:current-commit repo)
+                                                        (git:current-commit repo)))))
+      (assert-that
+       commits
+       (has-length 0)))))
 
 (test azure-is-not-supported
   (is-false (supported-remote-repo-p "git@ssh.dev.azure.com:v3/testsbot/fast-example/fast-example"))
