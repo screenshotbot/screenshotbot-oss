@@ -31,7 +31,8 @@
    #:fetch-version
    #:engine
    #:api-feature-enabled-p
-   #:session-id)
+   #:session-id
+   #:extract-hostname-from-secret)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/api-context)
 
@@ -118,6 +119,21 @@
      (api-hostname
       :hostname found-hostname))))
 
+(defun extract-hostname-from-secret (api-secret)
+  "Extract the hostname from an encoded API token/secret if possible.
+Returns NIL if the secret doesn't contain hostname information."
+  (when (and api-secret (> (length api-secret) 40))
+    (handler-case
+        (let* ((encoded (str:substring 0 (- (length api-secret) 40) api-secret))
+               (decoded (base64:base64-string-to-string encoded))
+               (parts (str:split "," decoded)))
+          (when (>= (length parts) 3)
+            (third parts)))
+      (error (e)
+        ;; If decoding fails, log a warning since the secret is longer than expected
+        (log:warn "The API secret might be invalid, did you copy it in full?")
+        nil))))
+
 (defun format-api-url (api-context api)
   (quri:render-uri
    (quri:merge-uris
@@ -127,7 +143,14 @@
 (defmethod initialize-instance :after ((self api-context) &rest args &key hostname)
   (cond
     ((str:emptyp hostname)
-     (setf (%hostname self) "https://api.screenshotbot.io"))
+     ;; Try to extract hostname from the secret first
+     (let ((extracted-hostname (extract-hostname-from-secret (secret self))))
+       (cond
+         ((and extracted-hostname (not (str:emptyp extracted-hostname)))
+          (log:debug "Extracted hostname from API secret: ~a" extracted-hostname)
+          (setf (%hostname self) (%fix-hostname extracted-hostname)))
+         (t
+          (setf (%hostname self) "https://api.screenshotbot.io")))))
     (t
      (setf (%hostname self)
            (%fix-hostname (hostname self)))))

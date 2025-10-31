@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/api-context
+                #:extract-hostname-from-secret
                 #:fetch-remote-information
                 #:base-api-context
                 #:api-feature-enabled-p
@@ -67,4 +68,53 @@
            (make-instance 'api-context
                           :hostname "foo.screenshotbot.io")))))
 
+(test extract-hostname-from-secret
+  ;; Test extracting hostname from a valid encoded token
+  (let* ((encoded-part (base64:string-to-base64-string "TESTKEY123,  1,https://custom.example.com,"))
+         (secret "1234567890123456789012345678901234567890") ;; 40 chars
+         (full-token (format nil "~a~a" encoded-part secret)))
+    (is (= 40 (length secret)))
+    (is (not (str:containsp "=" full-token)))
+    (is (equal "https://custom.example.com"
+               (extract-hostname-from-secret full-token))))
+
+  ;; Test that plain secrets (without encoding) return nil
+  (is (equal nil
+             (extract-hostname-from-secret "plainSecretKey1234567890123456789012")))
+
+  ;; Test nil secret
+  (is (equal nil
+             (extract-hostname-from-secret nil)))
+
+  ;; Test empty secret
+  (is (equal nil
+             (extract-hostname-from-secret ""))))
+
+(test api-context-uses-hostname-from-secret
+  ;; Test that api-context extracts hostname from the secret when no hostname is provided
+  (let* ((encoded-part (base64:string-to-base64-string "TESTKEY123, 1,https://abcd.example.com,"))
+         (secret "1234567890123456789012345678901234567890")
+         (full-token (format nil "~a~a" encoded-part secret)))
+    (is (= 40 (length secret)))
+    (is (not (str:containsp "=" full-token)))
+    (is (equal "https://abcd.example.com"
+               (hostname
+                (make-instance 'api-context
+                               :key "TESTKEY123"
+                               :secret full-token
+                               :hostname ""))))))
+
+(test api-context-prefers-explicit-hostname
+    ;; Test that explicit hostname takes precedence
+  (let* ((encoded-part (base64:string-to-base64-string "TESTKEY123, 1,https://abcd.example.com,"))
+         (secret "1234567890123456789012345678901234567890")
+         (full-token (format nil "~a~a" encoded-part secret)))
+    (is (= 40 (length secret)))
+    (is (not (str:containsp "=" full-token)))
+    (is (equal "https://override.example.com"
+               (hostname
+                (make-instance 'api-context
+                               :key "TESTKEY123"
+                               :secret full-token
+                               :hostname "https://override.example.com"))))))
 
