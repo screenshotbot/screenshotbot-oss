@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.16.18 - 2025-10-31
+
+### Changed
+
+- Automatically detect API hostname from API secret when --api-hostname is not provided
+
 ## 2.16.17 - 2025-10-28
 
 ### Changed
