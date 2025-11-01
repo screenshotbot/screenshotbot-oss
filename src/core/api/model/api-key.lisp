@@ -51,7 +51,8 @@
    #:render-api-token
    #:company-api-keys
    #:api-key-for-secret
-   #:validate-api-key-secret))
+   #:validate-api-key-secret
+   #:make-encoded-secret))
 (in-package :core/api/model/api-key)
 
 (defvar *lock* (bt:make-lock "random-string"))
@@ -150,14 +151,16 @@
 (defmethod api-hostname (installation)
   (installation-domain installation))
 
-(defmethod encode-api-token ((self api-key))
+(defun make-encoded-secret (api-key-string hostname secret)
+  "Create an encoded secret from the api-key string, hostname, and secret.
+Returns the full encoded secret string."
   (flet ((make-encoded (&key (padding ""))
            (str:join
            ","
            (list
-            (api-key-key self)
+            api-key-string
             (format nil "~a1" padding)
-            (api-hostname *installation*)
+            hostname
             ;; Add a trailing comma to make it easier to decode if
             ;; +secret-length+ changes
             ""))))
@@ -172,7 +175,13 @@
        (assert (not (str:containsp "+" result)))
        (assert (not (str:containsp "/" result)))
        (assert (not (str:containsp "=" result)))
-       (values (format nil "~a~a" result (api-key-secret-key self)) result-pre)))))
+       (format nil "~a~a" result secret)))))
+
+(defmethod encode-api-token ((self api-key))
+  (make-encoded-secret
+   (api-key-key self)
+   (api-hostname *installation*)
+   (api-key-secret-key self)))
 
 
 (defmethod expires-at ((self api-key))

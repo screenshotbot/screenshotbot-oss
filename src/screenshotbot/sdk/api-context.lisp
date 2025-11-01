@@ -97,10 +97,12 @@
 (defclass api-context (base-api-context)
   ((key :initarg :key
         :initform nil
-        :reader key)
+        :reader key
+        :writer (setf %key))
    (secret :initarg :secret
            :initform nil
-           :reader secret)
+           :reader secret
+           :writer (setf %secret))
    (hostname :initarg :hostname
              :reader hostname
              :writer (setf %hostname)
@@ -119,20 +121,31 @@
      (api-hostname
       :hostname found-hostname))))
 
-(defun extract-hostname-from-secret (api-secret)
-  "Extract the hostname from an encoded API token/secret if possible.
-Returns NIL if the secret doesn't contain hostname information."
+(defun extract-info-from-secret (api-secret)
+  "Extract the api-key, secret, and hostname from an encoded API secret.
+Returns three values: (api-key actual-secret hostname), or NIL for all if decoding fails."
   (when (and api-secret (> (length api-secret) 40))
     (handler-case
-        (let* ((encoded (str:substring 0 (- (length api-secret) 40) api-secret))
+        (let* ((secret-start (- (length api-secret) 40))
+               (encoded (str:substring 0 secret-start api-secret))
+               (actual-secret (str:substring secret-start nil api-secret))
                (decoded (base64:base64-string-to-string encoded))
                (parts (str:split "," decoded)))
           (when (>= (length parts) 3)
-            (third parts)))
+            (values (first parts) actual-secret (third parts))))
       (error (e)
         ;; If decoding fails, log a warning since the secret is longer than expected
-        (log:warn "The API secret might be invalid, did you copy it in full?")
-        nil))))
+        (log:warn "Failed to decode API secret (length: ~a): ~a. The API secret might be invalid, did you copy it in full?"
+                  (length api-secret) e)
+        (values nil nil nil)))))
+
+(defun extract-hostname-from-secret (api-secret)
+  "Extract the hostname from an encoded API secret if possible.
+Returns NIL if the secret doesn't contain hostname information."
+  (multiple-value-bind (key secret hostname)
+      (extract-info-from-secret api-secret)
+    (declare (ignore key secret))
+    hostname))
 
 (defun format-api-url (api-context api)
   (quri:render-uri
@@ -141,6 +154,15 @@ Returns NIL if the secret doesn't contain hostname information."
     (api-hostname :hostname (hostname api-context)))))
 
 (defmethod initialize-instance :after ((self api-context) &rest args &key hostname)
+  ;; Try to extract api-key from the provided secret if key is not provided
+  (when (str:emptyp (key self))
+    (multiple-value-bind (extracted-key extracted-secret extracted-hostname)
+        (extract-info-from-secret (secret self))
+      (declare (ignore extracted-secret extracted-hostname))
+      (when extracted-key
+        (log:debug "Extracted API key from API secret")
+        (setf (%key self) extracted-key))))
+
   (cond
     ((str:emptyp hostname)
      ;; Try to extract hostname from the secret first

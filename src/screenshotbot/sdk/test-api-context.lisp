@@ -13,7 +13,11 @@
                 #:base-api-context
                 #:api-feature-enabled-p
                 #:hostname
-                #:api-context))
+                #:key
+                #:secret
+                #:api-context)
+  (:import-from #:core/api/model/api-key
+                #:make-encoded-secret))
 (in-package :screenshotbot/sdk/test-api-context)
 
 (util/fiveam:def-suite)
@@ -69,14 +73,12 @@
                           :hostname "foo.screenshotbot.io")))))
 
 (test extract-hostname-from-secret
-  ;; Test extracting hostname from a valid encoded token
-  (let* ((encoded-part (base64:string-to-base64-string "TESTKEY123,  1,https://custom.example.com,"))
-         (secret "1234567890123456789012345678901234567890") ;; 40 chars
-         (full-token (format nil "~a~a" encoded-part secret)))
+  ;; Test extracting hostname from a valid encoded secret
+  (let* ((secret "1234567890123456789012345678901234567890") ;; 40 chars
+         (full-secret (make-encoded-secret "TESTKEY123" "https://custom.example.com" secret)))
     (is (= 40 (length secret)))
-    (is (not (str:containsp "=" full-token)))
     (is (equal "https://custom.example.com"
-               (extract-hostname-from-secret full-token))))
+               (extract-hostname-from-secret full-secret))))
 
   ;; Test that plain secrets (without encoding) return nil
   (is (equal nil
@@ -92,29 +94,51 @@
 
 (test api-context-uses-hostname-from-secret
   ;; Test that api-context extracts hostname from the secret when no hostname is provided
-  (let* ((encoded-part (base64:string-to-base64-string "TESTKEY123, 1,https://abcd.example.com,"))
-         (secret "1234567890123456789012345678901234567890")
-         (full-token (format nil "~a~a" encoded-part secret)))
+  (let* ((secret "1234567890123456789012345678901234567890")
+         (full-secret (make-encoded-secret "TESTKEY123" "https://abcd.example.com" secret)))
     (is (= 40 (length secret)))
-    (is (not (str:containsp "=" full-token)))
     (is (equal "https://abcd.example.com"
                (hostname
                 (make-instance 'api-context
                                :key "TESTKEY123"
-                               :secret full-token
+                               :secret full-secret
                                :hostname ""))))))
 
 (test api-context-prefers-explicit-hostname
     ;; Test that explicit hostname takes precedence
-  (let* ((encoded-part (base64:string-to-base64-string "TESTKEY123, 1,https://abcd.example.com,"))
-         (secret "1234567890123456789012345678901234567890")
-         (full-token (format nil "~a~a" encoded-part secret)))
+  (let* ((secret "1234567890123456789012345678901234567890")
+         (full-secret (make-encoded-secret "TESTKEY123" "https://abcd.example.com" secret)))
     (is (= 40 (length secret)))
-    (is (not (str:containsp "=" full-token)))
     (is (equal "https://override.example.com"
                (hostname
                 (make-instance 'api-context
                                :key "TESTKEY123"
-                               :secret full-token
+                               :secret full-secret
                                :hostname "https://override.example.com"))))))
+
+(test api-context-extracts-key-from-secret
+  ;; Test that api-context extracts api-key from the secret when no key is provided
+  (let* ((actual-secret "1234567890123456789012345678901234567890")
+         (full-secret (make-encoded-secret "TESTKEY123" "https://custom.example.com" actual-secret)))
+    (is (= 40 (length actual-secret)))
+    (let ((ctx (make-instance 'api-context
+                              :secret full-secret
+                              :hostname "")))
+      (is (equal "TESTKEY123" (key ctx)))
+      ;; The secret should remain the full encoded secret, not just the 40-char part
+      (is (equal full-secret (secret ctx)))
+      (is (equal "https://custom.example.com" (hostname ctx))))))
+
+(test api-context-prefers-explicit-key
+  ;; Test that explicit key takes precedence
+  (let* ((actual-secret "1234567890123456789012345678901234567890")
+         (full-secret (make-encoded-secret "TESTKEY123" "https://custom.example.com" actual-secret)))
+    (is (= 40 (length actual-secret)))
+    (let ((ctx (make-instance 'api-context
+                              :key "OVERRIDE_KEY"
+                              :secret full-secret
+                              :hostname "")))
+      (is (equal "OVERRIDE_KEY" (key ctx)))
+      ;; When key is provided, we don't extract, so secret stays as-is
+      (is (equal full-secret (secret ctx))))))
 
