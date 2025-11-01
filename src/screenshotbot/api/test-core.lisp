@@ -31,7 +31,9 @@
                 #:with-installation
                 #:with-test-user)
   (:import-from #:core/api/model/api-key
-                #:api-key)
+                #:encode-api-token
+                #:api-key
+                #:api-key-secret-key)
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:auth/model/roles
@@ -168,3 +170,37 @@
       (finishes
         (authenticate-request-from-key hunchentoot:*request*
                                        api-key)))))
+
+(test authenticate-api-request-extracts-key-from-secret
+  "Test that API key is automatically extracted from API secret when not provided"
+  (with-fixture state ()
+    (with-fake-request ()
+      (with-mocks ()
+        ;; Provide empty api-key but full encoded token as api-secret
+        (let ((encoded-token (encode-api-token api-key)))
+          (answer (hunchentoot:authorization) (values "" encoded-token))
+          (finishes
+            (authenticate-api-request hunchentoot:*request*)))))))
+
+(test authenticate-api-request-fails-with-mismatched-key
+  "Test that authentication fails when encoded secret has mismatched API key"
+  (with-fixture state ()
+    (with-fake-request ()
+      (with-mocks ()
+        ;; Provide a different api-key than what's in the encoded token
+        (let ((encoded-token (encode-api-token api-key)))
+          (answer (hunchentoot:authorization) (values "wrong-key" encoded-token))
+          (signals api-error
+            (authenticate-api-request hunchentoot:*request*)))))))
+
+(test authenticate-api-request-fails-without-key-and-plain-secret
+  "Test that authentication fails when using plain secret without API key"
+  (with-fixture state ()
+    (with-fake-request ()
+      (with-mocks ()
+        ;; Provide empty api-key and plain (non-encoded) secret
+        ;; This should fail because we can't extract key from plain secret
+        (let ((plain-secret (api-key-secret-key api-key)))
+          (answer (hunchentoot:authorization) (values "" plain-secret))
+          (signals api-error
+            (authenticate-api-request hunchentoot:*request*)))))))

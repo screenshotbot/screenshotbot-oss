@@ -11,7 +11,8 @@
   (:import-from #:screenshotbot/model/api-key
                 #:mark-api-key-used
                 #:%find-api-key
-                #:validate-api-key-secret)
+                #:validate-api-key-secret
+                #:decode-api-token)
   (:import-from #:screenshotbot/user-api
                 #:api-key-company
                 #:api-key-user
@@ -69,26 +70,34 @@ user. The intention of this flag is to set to NIL for some tests.")
 (defmethod authenticate-api-request ((request auth:authenticated-request))
   "Like auth:authenticate-request, but for API handling, and modifies the request"
   (with-api-key (api-key api-secret-key)
-    (let ((key (%find-api-key  api-key)))
-      (unless key
-        ;; Remove some noise from sdk-integration-tests
-        (unless (equal "deliver-sdk" api-key)
-          (warn "No such API key: ~a" api-key))
-        (error 'api-error
-               :message (format nil "No such API key: ~a" api-key)))
-      (unless (or
-               (not key) ;; setings api
-               (validate-api-key-secret key api-secret-key))
-        (error 'api-error
-               :message "API secret key doesn't match what we have on record"))
-      (mark-api-key-used key)
-      (prog1
-          (authenticate-request-from-key request key)
-
-        ;; TODO: this probably never happens
-        (unless (current-user)
+    ;; If api-key is not provided, try to extract it from api-secret
+    (let ((api-key (if (or (null api-key) (equal "" api-key))
+                       (ignore-errors
+                        (multiple-value-bind (extracted-key extracted-secret)
+                            (decode-api-token api-secret-key)
+                          (declare (ignore extracted-secret))
+                          extracted-key))
+                       api-key)))
+      (let ((key (%find-api-key  api-key)))
+        (unless key
+          ;; Remove some noise from sdk-integration-tests
+          (unless (equal "deliver-sdk" api-key)
+            (warn "No such API key: ~a" api-key))
           (error 'api-error
-                 :message (format nil "API key appears to be invalid or non-existant, got: ~a" api-key)))))))
+                 :message (format nil "No such API key: ~a" api-key)))
+        (unless (or
+                 (not key) ;; setings api
+                 (validate-api-key-secret key api-secret-key))
+          (error 'api-error
+                 :message "API secret key doesn't match what we have on record"))
+        (mark-api-key-used key)
+        (prog1
+            (authenticate-request-from-key request key)
+
+          ;; TODO: this probably never happens
+          (unless (current-user)
+            (error 'api-error
+                   :message (format nil "API key appears to be invalid or non-existant, got: ~a" api-key))))))))
 
 (defmethod authenticate-request-from-key ((request auth:authenticated-request) key)
   (let ((user (api-key-user key)))
