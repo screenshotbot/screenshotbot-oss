@@ -205,22 +205,41 @@ fails."
   "Ensure we're showing the backtrace on error"
   (setf fiveam:*on-error* :backtrace))
 
+(defun parse-system-and-suite-args (args)
+  "Parse command-line arguments into (system suite) pairs.
+   Args can be: system-name [suite-name] system-name2 [suite-name2] ...
+   Returns a list of (system . suite) cons cells."
+  (let (result)
+    (loop while args
+          do (let* ((system (pop args))
+                    ;; Check if next arg exists and doesn't start with -
+                    (suite (when (and args (not (eql #\- (elt (car args) 0))))
+                             (pop args))))
+               (push (cons system suite) result)))
+    (nreverse result)))
+
 (defun image-main ()
   "The main function when called the test-runner is saved to build/t"
   (call-with-main-wrapper
    (lambda ()
      #+lispworks
-     (let ((systems (loop for name in (cdr system:*line-arguments-list*)
-                          if (not (eql #\- (elt name 0)))
-                            collect name)))
+     (let* ((non-flag-args (loop for name in (cdr system:*line-arguments-list*)
+                                 if (not (eql #\- (elt name 0)))
+                                   collect name))
+            (system-suite-pairs (parse-system-and-suite-args non-flag-args))
+            (systems (mapcar #'car system-suite-pairs)))
        (setup-backtrace)
        (format t "Running tests: ~S~%" systems)
        (dolist (system systems)
          (ql:quickload (fix-system-name system)))
        (format t "Loaded tests~%" systems)
        (maybe-hide-outputs)
-       (loop for system in systems
-             collect (fiveam:run (guess-fiveam-suite system))
+       (loop for (system . suite) in system-suite-pairs
+             for suite-to-run = (if suite
+                                    (intern (str:upcase suite) "KEYWORD")
+                                    (guess-fiveam-suite system))
+             do (format t "Running suite ~a for system ~a~%" suite-to-run system)
+             collect (fiveam:run suite-to-run)
              into all-results
              finally
                 (unless (fiveam:explain! (alexandria:flatten all-results))
