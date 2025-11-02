@@ -339,6 +339,7 @@ monthly-active."
   (throttle! *throttler* :key (auth:current-company))
   <script async= "async" type= "text/javascript" src=
           (nibble ()
+                    (setf (hunchentoot:content-type*) "application/javascript")
                     (fn))
           />)
 
