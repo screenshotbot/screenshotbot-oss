@@ -99,6 +99,10 @@
   'fset-unique-index
   :slot-name 'singletonp)
 
+(defindex +slug-index+
+  'fset-unique-index
+  :slot-name '%slug)
+
 (with-class-validation
   (defclass company (object-with-oid)
     ((name
@@ -169,9 +173,15 @@
       :accessor emails-enabled-by-default-p)
      (invitation-role
       :initarg :invitation-role
-      :accessor company-invitation-role))
+      :accessor company-invitation-role)
+     (%slug
+      :initarg :company-slug
+      :index +slug-index+
+      :index-reader company-for-slug
+      :accessor company-slog))
     (:metaclass persistent-class)
     (:default-initargs :redirect-url nil
+                       :company-slug nil
                        :invitation-role 'roles:standard-member
                        :emails-enabled-by-default-p t)))
 
