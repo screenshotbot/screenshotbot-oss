@@ -178,7 +178,7 @@
       :initarg :company-slug
       :index +slug-index+
       :index-reader company-for-slug
-      :accessor company-slog))
+      :accessor company-slug))
     (:metaclass persistent-class)
     (:default-initargs :redirect-url nil
                        :company-slug nil
