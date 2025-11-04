@@ -12,3 +12,8 @@
                #:str)
   :components ((:file "package")
                (:file "hunchentoot-multi-acceptor")))
+
+(defsystem #:hunchentoot-multi-acceptor/tests
+  :depends-on (#:fiveam
+               #:hunchentoot-multi-acceptor)
+  :components ((:file "test-hunchentoot-multi-acceptor")))

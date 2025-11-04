@@ -61,6 +61,24 @@ top-level acceptor (e.g. you might want to get the acceptor-port)")
                   :headers-in nil
                   :content-stream nil)) (make-instance 'acceptor))
 
+(defun %compute-start2 (expression host)
+  "Compute the position of the suffix for the wildcard expression (see
+DOMAIN-MATCHES, extracted only for testability)"
+  (1+ (- (length host) (length expression))))
+
+(defun domain-matches (expression host)
+  (or
+   (equal expression host)
+   (when (eql #\* (aref expression 0))
+     ;; doing this without allocation
+     (let ((start2 (%compute-start2 expression host)))
+       (when (>= start2 0)
+        (string=
+         expression
+         host
+         :start1 1
+         :start2 start2))))))
+
 (defmethod process-request ((request multi-request))
    (flet ((dispatch-acceptor (acceptor)
             (return-from process-request
@@ -72,7 +90,7 @@ top-level acceptor (e.g. you might want to get the acceptor-port)")
    (let ((acceptor (request-acceptor request)))
      (let ((host (car (str:split ":" (host request)))))
        (loop for sub in (sub-acceptors acceptor)
-             if (equal (car sub) host)
+             if (domain-matches (car sub) host)
                do (dispatch-acceptor (cdr sub)))
 
        (dispatch-acceptor (default-acceptor acceptor))))))
