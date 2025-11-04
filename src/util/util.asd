@@ -332,6 +332,7 @@
                :util/fiveam
                :util/benchmark
                :util/fset
+               (:feature :lispworks :util/ssl)
                :serapeum)
   :defsystem-depends-on (:trivial-features)
   :serial t
@@ -359,6 +360,7 @@
                              (:file "test-hash-lock")
                              (:file "test-cookies")
                              (:file "test-fiveam")
+                             (:file "test-mock-recording")
                              (:file "test-sizeof")
                              (:file "test-models")
                              (:file "test-disk-size")
@@ -377,6 +379,8 @@
                              (:file "test-make-instance-with-accessors")
                              (:file "test-digests")
                              (:file "test-benchmark")
+                             #+(and lispworks (not darwin))
+                             (:file "test-ssl")
                              #+lispworks
                              (:file "test-lispworks")))
                (:module "phabricator"

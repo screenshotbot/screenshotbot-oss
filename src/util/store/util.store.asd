@@ -65,6 +65,7 @@
   :components ((:file "test-store-version")
                (:file "test-store")
                (:file "test-objectid")
+               (:file "test-single")
                (:file "test-migrations")
                (:file "test-simple-object-snapshot")
                (:file "test-delayed-accessors")
