@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/gitlab/merge-request-promoter
+                #:with-noop-prevention
+                #:*last-state-update*
                 #:make-gitlab-args
                 #:base-sha
                 #:gitlab-request
@@ -77,33 +79,34 @@
 (def-fixture state ()
   (with-test-store ()
     (cl-mock:with-mocks ()
-     (with-installation (:installation
-                         (make-instance 'installation
-                                        :plugins
-                                        (list
-                                         (make-instance 'gitlab-plugin))))
-       (let* ((company (make-instance 'company))
-              (channel (make-instance 'channel
-                                      :name "gitlab-test-channel"
-                                      :company company
-                                      :github-repo "https://gitlab.com/tdrhq/fast-example"))
-              (settings (make-instance 'gitlab-settings
+      (clrhash *last-state-update*)
+      (with-installation (:installation
+                          (make-instance 'installation
+                                         :plugins
+                                         (list
+                                          (make-instance 'gitlab-plugin))))
+        (let* ((company (make-instance 'company))
+               (channel (make-instance 'channel
+                                       :name "gitlab-test-channel"
                                        :company company
-                                       :url "https://gitlab.com"
-                                       :token "foobar"))
-              (run (make-recorder-run :company company
-                                      :commit-hash "baa"
-                                      :merge-base "aaa"
-                                      :channel channel
-                                      :github-repo "https://gitlab.com/tdrhq/fast-example"
-                                      :gitlab-merge-request-iid 7))
-              (another-run (make-recorder-run))
-              (*base-run* (make-recorder-run :company company))
-              (last-build-status))
-         (cl-mock:if-called 'post-build-status
-                            (lambda (&rest args)
-                              (setf last-build-status args)))
-         (&body))))))
+                                       :github-repo "https://gitlab.com/tdrhq/fast-example"))
+               (settings (make-instance 'gitlab-settings
+                                        :company company
+                                        :url "https://gitlab.com"
+                                        :token "foobar"))
+               (run (make-recorder-run :company company
+                                       :commit-hash "baa"
+                                       :merge-base "aaa"
+                                       :channel channel
+                                       :github-repo "https://gitlab.com/tdrhq/fast-example"
+                                       :gitlab-merge-request-iid 7))
+               (another-run (make-recorder-run))
+               (*base-run* (make-recorder-run :company company))
+               (last-build-status))
+          (cl-mock:if-called 'post-build-status
+                             (lambda (&rest args)
+                               (setf last-build-status args)))
+          (&body))))))
 
 (test valid-repo
   (with-fixture state ()
@@ -176,3 +179,19 @@
            (args (make-gitlab-args run check)))
       (is (equal "Screenshotbot: gitlab-test-channel" (getf args :name))))))
 
+
+(test noop-prevention
+  (let ((var :unset))
+    (with-noop-prevention (:company 'foo :commit "abcd" :project-path "car" :name "Screenshotbot" :state "pending")
+      (setf var :first-set))
+    (is (eql :first-set var))
+    (with-noop-prevention (:company 'foo :commit "abcd" :project-path "car" :name "Screenshotbot" :state "pending")
+      (setf var :second-set))
+    (is (eql :first-set var))
+    (with-noop-prevention (:company 'foo :commit "abcd" :project-path "car" :name "Screenshotbot" :state "success")
+      (setf var :third-set))
+    (is (eql :third-set var))
+    ;; Different name should not be prevented
+    (with-noop-prevention (:company 'foo :commit "abcd" :project-path "car" :name "Screenshotbot: Batch-2" :state "success")
+      (setf var :fourth-set))
+    (is (eql :fourth-set var))))

@@ -74,6 +74,8 @@
                 #:send-webhook)
   (:import-from #:screenshotbot/gitlab/webhook
                 #:gitlab-update-build-status-payload)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:export
    #:merge-request-promoter
    #:gitlab-acceptable))
@@ -144,6 +146,26 @@
          :report report
          args))
 
+(defvar *last-state-update*
+  (make-hash-table :test #'equal
+                   #+sbcl #+sbcl
+                   :synchronized t)
+  "GitLab doesn't like it if we try to update the build status to
+something it already is at, i.e. a no-op, even if the description
+changes. (T2107) This in-memory cache avoids that.")
+
+(def-easy-macro with-noop-prevention (&key company commit project-path name state &fn fn)
+  "If the state for the given arguments is the same, then don't attempt to send a new request"
+  (let ((key (list :company company :commit commit :project-path project-path :name name)))
+   (cond
+     ((equal (gethash key *last-state-update*) state)
+      (log:info "Ignoring GitLab request because it will be a no-op")
+      (values))
+     (t
+      (prog1
+          (fn)
+        (setf (gethash key *last-state-update*) state))))))
+
 (auto-restart:with-auto-restart (:retries 4)
   (defun post-build-status (&key
                               company
@@ -157,20 +179,26 @@
     (assert
      (str:s-member (str:split ", " "pending, running, success, failed, canceled")
                    state))
-    (with-audit-log (audit-log (make-instance 'update-status-audit-log
-                                              :company company
-                                              :commit sha
-                                              :state state))
-      (declare (ignore audit-log))
-      (gitlab-request company
-                      (format nil "/projects/~a/statuses/~a"
-                              (urlencode:urlencode project-path)
-                              sha)
-                      :method :post
-                      :content `(("name" . ,name)
-                                 ("target_url" . ,target-url)
-                                 ("state" . ,state)
-                                 ("description" . ,description))))))
+    (with-noop-prevention (:company company
+                           :commit sha
+                           :project-path project-path
+                           :name name
+                           :state state)
+      (with-audit-log (audit-log (make-instance 'update-status-audit-log
+                                                :company company
+                                                :commit sha
+                                                :state state))
+        (declare (ignore audit-log))
+        (log:info "Sending GitLab status")
+        (gitlab-request company
+                        (format nil "/projects/~a/statuses/~a"
+                                (urlencode:urlencode project-path)
+                                sha)
+                        :method :post
+                        :content `(("name" . ,name)
+                                   ("target_url" . ,target-url)
+                                   ("state" . ,state)
+                                   ("description" . ,description)))))))
 
 (defmethod make-promoter-for-acceptable ((self gitlab-acceptable))
   (make-instance 'merge-request-promoter))
