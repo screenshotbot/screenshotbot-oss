@@ -159,7 +159,8 @@
                    state))
     (with-audit-log (audit-log (make-instance 'update-status-audit-log
                                               :company company
-                                              :commit sha))
+                                              :commit sha
+                                              :state state))
       (declare (ignore audit-log))
       (gitlab-request company
                       (format nil "/projects/~a/statuses/~a"

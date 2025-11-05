@@ -35,8 +35,11 @@
 (with-class-validation
   (defclass update-status-audit-log (gitlab-audit-log)
     ((commit :initarg :commit
-             :reader %commit))
-    (:metaclass persistent-class)))
+             :reader %commit)
+     (state :initarg :state
+            :reader %state))
+    (:metaclass persistent-class)
+    (:default-initargs :state nil)))
 
 (with-class-validation
   (defclass check-personal-access-token (gitlab-audit-log)
@@ -45,7 +48,12 @@
 
 (defmethod describe-audit-log ((self update-status-audit-log))
   <span>
-    Updated build status on commit <commit-tag>,(%commit self)</commit-tag>
+    Updated build status
+    ,@(when (and (slot-boundp self 'state)
+                 (%state self))
+        (list " to " <strong>,(%state self)</strong>))
+    " on commit "
+    <commit-tag>,(%commit self)</commit-tag>
   </span>)
 
 (with-class-validation
