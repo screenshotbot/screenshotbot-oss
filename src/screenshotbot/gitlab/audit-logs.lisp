@@ -25,7 +25,7 @@
    #:check-personal-access-token))
 (in-package :screenshotbot/gitlab/audit-logs)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (with-class-validation
   (defclass gitlab-audit-log (base-audit-log)
@@ -49,10 +49,10 @@
 (defmethod describe-audit-log ((self update-status-audit-log))
   <span>
     Updated build status
-    ,@(when (and (slot-boundp self 'state)
+    ,(when (and (slot-boundp self 'state)
                  (%state self))
-        (list " to " <strong>,(%state self)</strong>))
-    " on commit "
+       <span> to  <strong>,(%state self)</strong></span>)
+    on commit
     <commit-tag>,(%commit self)</commit-tag>
   </span>)
 
