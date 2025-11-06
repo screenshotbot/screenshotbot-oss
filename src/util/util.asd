@@ -379,7 +379,7 @@
                              (:file "test-make-instance-with-accessors")
                              (:file "test-digests")
                              (:file "test-benchmark")
-                             #+(and lispworks (not darwin))
+                             #+(and lispworks (not darwin) (not arm64))
                              (:file "test-ssl")
                              #+lispworks
                              (:file "test-lispworks")))
