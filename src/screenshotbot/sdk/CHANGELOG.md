@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.16.19 - 2025-11-06
+
+### Changed
+
+- Fixed git protocol ACK/NAK handling when sending multiple "have" lines
+  without multi_ack capability. The server sends ACK responses interleaved
+  with the request stream, so we now read until finding the PACK signature
+  (T2108)
+
 ## 2.16.18 - 2025-10-31
 
 ### Changed
