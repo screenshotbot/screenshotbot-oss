@@ -112,6 +112,33 @@ set st to idle when block timeout"))))
        commits
        (has-length 0)))))
 
+(test simple-repo-get-commits-with-haves-one-after-the-other
+  (test-git:with-git-repo (repo :dir dir)
+    (test-git:make-commit repo "foo")
+    (test-git:make-commit repo "bar")
+    (test-git:enable-server-features repo)
+    (let ((commits
+            (read-commits (namestring dir) :wants (list "main" "master")
+                                           :haves (list (git:current-commit repo)
+                                                        (git:rev-parse-local repo "HEAD^")))))
+      (assert-that
+       commits
+       (has-length 0)))))
+
+(test simple-repo-get-commits-that-does-not-exist
+  (test-git:with-git-repo (repo :dir dir)
+    (test-git:make-commit repo "foo")
+    (test-git:make-commit repo "bar")
+    (test-git:enable-server-features repo)
+    (let ((commits
+            (read-commits (namestring dir) :wants (list "main" "master")
+                                           :haves (list "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"))))
+      (assert-that
+       commits
+       (has-length 2)))))
+
+
+
 (test azure-is-not-supported
   (is-false (supported-remote-repo-p "git@ssh.dev.azure.com:v3/testsbot/fast-example/fast-example"))
   (is-true (supported-remote-repo-p "git@github.com:fast-example/fast-example")))

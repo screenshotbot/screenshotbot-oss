@@ -134,7 +134,12 @@
 
 (defun read-length (self)
   (let ((len (make-array 4 :element-type '(unsigned-byte 8))))
-    (assert (= 4 (read-sequence len (%stream self))))
+    (unless (= 4 (read-sequence len (%stream self)))
+      (error "Could not read length"))
+
+    (when (equalp len #. (flex:string-to-octets "PACK"))
+      (error 'pack-header-encountered))
+    
     (log:trace "Got length: ~a" len)
     (parse-integer (flex:octets-to-string len)
                    :radix 16)))
@@ -142,6 +147,9 @@
 (defun write-length (self len)
   (let ((len (str:downcase (format nil "~4,'0x" len))))
     (write-sequence (flex:string-to-octets len) (%stream self))))
+
+(define-condition pack-header-encountered (error)
+  ())
 
 (defmethod read-protocol-line ((self abstract-upload-pack))
   (let ((len (read-length self)))
@@ -151,8 +159,10 @@
       (t
        (let ((content (make-array (- len 4) :element-type '(unsigned-byte 8))))
          (read-sequence content (%stream self))
-         (prog1
-             (flex:octets-to-string content)))))))
+         (let ((result
+                 (flex:octets-to-string content)))
+           (log:trace "Read protocol line: ~a" result)
+           result))))))
 
 (defmethod read-headers (self)
   ;;  () - Got line:829e9b346306604777c9dcc2c09b61aa30511446 HEAD ... multi_ack thin-pack side-band side-band-64k ofs-delta shallow deepen-since deepen-not deepen-relative no-progress include-tag multi_ack_detailed symref=HEAD:refs/heads/new-pr filter object-format=sha1 agent=git/2.39.5
@@ -198,12 +208,15 @@
           (ash (read-byte stream) 08)
           (read-byte stream)))
 
-(defun read-packfile-header (stream)
-  "Reads the header and returns the number of entries"
+(defun read-packfile-header (stream &key (read-magic-p t))
+  "Reads the header and returns the number of entries
+
+If READ-MAGIC-P is true, we'll read the first four bytes of PACK magic."
   ;; https://github.com/git/git/blob/master/Documentation/gitformat-pack.adoc
-  (let ((magic (make-array 4 :element-type '(unsigned-byte 8))))
-    (assert-equal 4 (read-sequence magic stream))
-    (assert-equal "PACK" (flex:octets-to-string magic)))
+  (when read-magic-p
+    (let ((magic (make-array 4 :element-type '(unsigned-byte 8))))
+      (assert-equal 4 (read-sequence magic stream))
+      (assert-equal "PACK" (flex:octets-to-string magic))))
 
   (let ((version (make-array 4 :element-type '(unsigned-byte 8))))
     (assert (= 4 (read-sequence version stream)))
@@ -518,19 +531,34 @@ a second value the headers that were initially provided (sha and refs)
          (read-response-and-packfile
           p :parse-parents parse-parents))))))
 
+(defun process-ack (p)
+  "See process_ack() in fetch-pack.c"
+  (let ((line (read-protocol-line p)))
+    (log:debug "Got ACK/NAK: ~a" line)
+    (cond
+      ((equal "NAK" (str:trim line))
+       (process-ack p))
+      ((str:starts-with-p "ACK " line)
+       (process-ack p))
+      ((equal "ready" (str:trim line))
+       (process-ack p))
+      (t
+       (error "Didn't get an ACK or NAK or recognized line: ~a" line)))))
+
 (defun read-response-and-packfile (p &key parse-parents)
   ;; This should either be a NAK (nothing common found), or ACK
   ;; <commit> signalling that that was a common commit.
-  (let ((line (read-protocol-line p)))
-    (log:debug "Got ACK/NAK: ~a" line)
-    (unless (or
-             (str:starts-with-p "NAK" line)
-             (str:starts-with-p "ACK" line))
-      (error "Didn't get an ACK or NAK: ~a" line)))
-
+  (handler-case
+      (progn
+        (process-ack p)
+        (error "We should never be here"))
+    (pack-header-encountered (e)))
+  
   (log:debug "reading packfile")        
   ;; Now we get the packfile
-  (let ((num (read-packfile-header (%stream p))))
+  (let ((num (read-packfile-header (%stream p)
+                                   ;; We've already read the magic in process-ack
+                                   :read-magic-p nil)))
     (log:debug "Packfile entries: ~a" num)
     (serapeum:collecting
       (loop for i below num
