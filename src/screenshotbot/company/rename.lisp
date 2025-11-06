@@ -76,15 +76,15 @@
                      id= "name" />
             </div>
 
-            ,(when (invite-enabled-p company)
-               <div class= "form-group mt-3">
-                 <label for= "invitation-role" class= "form-label">Who can invite other members?</label>
-                 <select name= "invitation-role" id= "invitation-role" class= "form-select" >
-                   ,@ (loop for (type desc role) in *roles*
-                            collect
-                            <option value= type selected= (when (eql role (company-invitation-role company)) "selected") >,(progn desc)</option>)
-                 </select>
-               </div>)
+            <!-- putting this under a (when ...) block instead of d-none will cause the post to fail -->
+            <div class= (format nil "form-group mt-3 ~a" (unless (invite-enabled-p company) "d-none")) >
+              <label for= "invitation-role" class= "form-label">Who can invite other members?</label>
+              <select name= "invitation-role" id= "invitation-role" class= "form-select" >
+                ,@ (loop for (type desc role) in *roles*
+                         collect
+                         <option value= type selected= (when (eql role (company-invitation-role company)) "selected") >,(progn desc)</option>)
+              </select>
+             </div>
 
           </div>
 
