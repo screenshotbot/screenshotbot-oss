@@ -26,6 +26,8 @@
   (:import-from #:screenshotbot/model/company
                 #:find-or-create-channel
                 #:company)
+  (:import-from #:screenshotbot/model/channel
+                #:channel-subscribers)
   (:import-from #:util/object-id
                 #:oid)
   (:import-from #:fiveam-matchers/core
@@ -42,6 +44,7 @@
   (:import-from #:screenshotbot/user-api
                 #:channel
                 #:user
+                #:user-image-url
                 #:can-view!
                 #:can-view)
   (:import-from #:screenshotbot/testing
@@ -112,6 +115,26 @@
                          "deadbeef"))
     (fix-timestamps
      (single-channel-view channel))))
+
+(screenshot-test channel-page-with-subscribers
+  (with-fixture state ()
+    (let ((subscriber-1 (make-user :email "subscriber1@example.com"
+                                   :full-name "Alice Johnson"
+                                   :companies (list company)))
+          (subscriber-2 (make-user :email "subscriber2@example.com"
+                                   :full-name "Bob Smith"
+                                   :companies (list company))))
+      (bknr.datastore:with-transaction ()
+        (pushnew subscriber-1 (channel-subscribers channel))
+        (pushnew subscriber-2 (channel-subscribers channel)))
+      (cl-mock:if-called 'oid
+                         (lambda (arg)
+                           "deadbeef"))
+      (cl-mock:if-called 'user-image-url
+                         (lambda (user)
+                           "https://example.com/avatar.png"))
+      (fix-timestamps
+       (single-channel-view channel)))))
 
 (test delete-channel
   (with-fixture state ()

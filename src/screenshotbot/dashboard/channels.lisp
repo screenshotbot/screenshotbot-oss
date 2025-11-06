@@ -101,6 +101,7 @@
                                 (channel-subscribers channel)))
                      (go-back channel)))
         (subscribedp (member (current-user) (channel-subscribers channel)))
+        (subscribers (channel-subscribers channel))
         (unsubscribe (nibble (:method :post)
                        (with-transaction ()
                          (removef (channel-subscribers channel)
@@ -125,6 +126,23 @@
                 <input type= "submit" class= "btn btn-primary" value = "Subscribe" />
               </form>
             </markup:merge-tag>))
+
+        ,(when subscribers
+           <markup:merge-tag>
+             <hr class= "my-3" />
+             <h5 class= "mb-3">Current Subscribers</h5>
+             <ul class= "list-unstyled">
+               ,@ (loop for user in subscribers
+                        collect
+                        <li class= "mb-2 d-flex align-items-center">
+                          <img class= "rounded-circle avatar me-2" src= (user-image-url user) style= "width: 32px; height: 32px;" />
+                          <span>
+                            <strong>,(user-full-name user)</strong>
+                            <span class= "text-muted ms-2">,(user-email user)</span>
+                          </span>
+                        </li>)
+             </ul>
+           </markup:merge-tag>)
 
       </div>
     </div>))
