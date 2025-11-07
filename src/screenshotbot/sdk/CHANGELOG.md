@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.16.20 - 2025-11-07
+
+### Changed
+
+- Added retry logic for upload-pack operations to improve reliability (T2111)
+- Enabled multi-ack capability in git-pack protocol by default
+
 ## 2.16.19 - 2025-11-06
 
 ### Changed
