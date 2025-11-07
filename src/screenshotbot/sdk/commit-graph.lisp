@@ -24,6 +24,7 @@
   (:import-from #:util/misc
                 #:?.)
   (:import-from #:util/threading
+                #:with-extras
                 #:ignore-and-log-errors)
   (:import-from #:screenshotbot/api/model
                 #:*api-version*)
@@ -109,15 +110,16 @@ commits that are needed."
 
 #+lispworks
 (defun update-commit-graph-new-style (api-context repo branch)
-  (let ((upload-pack (make-remote-upload-pack repo)))
-    (update-from-pack
-     api-context
-     upload-pack
-     (git:get-remote-url repo)
-     (list branch
-           (git:current-branch repo))
-     :current-commit (git:current-commit repo))))
-
+  (let ((remote-url (git:get-remote-url repo)))
+    (with-extras (("remote-git-url" remote-url))
+      (let ((upload-pack (make-remote-upload-pack repo)))
+        (update-from-pack
+         api-context
+         upload-pack
+         remote-url
+         (list branch
+               (git:current-branch repo))
+         :current-commit (git:current-commit repo))))))
 
 (defun ref-in-sync-p (known-refs sha ref)
   "At this point, we know we're interested in this ref. What we need to know is if this is in sync with the server"
