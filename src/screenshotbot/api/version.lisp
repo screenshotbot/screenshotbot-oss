@@ -41,12 +41,12 @@
                   :features
                   (%build-features (auth:current-company)))))
 
-(defparameter *gk-list* (list :cli-shallow-clones
-                              :server-cli-logs))
+(defparameter *gk-list* `((:cli-shallow-clones t)
+                          (:server-cli-logs nil)))
 
 (defmethod %build-features ((company company))
-  (loop for gk in *gk-list*
-        if (gk:check gk company)
+  (loop for (gk default) in *gk-list*
+        if (gk:check gk company :default default)
           collect (string-downcase (string gk))))
 
 (defmethod %build-features ((company null))

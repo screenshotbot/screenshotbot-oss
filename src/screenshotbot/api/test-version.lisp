@@ -50,9 +50,10 @@
                                       :api-secret-key "T0pSecret"
                                       :user 'fake-user))
               (*gk-list*
-                (list*
-                 :fake-gk
-                 :fake-gk-2
+                (append
+                 `((:fake-gk nil)
+                   (:fake-gk-2 nil)
+                   (:fake-gk-3 t))
                  *gk-list*)))
          (gk:create :fake-gk)
          (&body))))))
@@ -77,4 +78,19 @@
           (is (equal "https://example.com" (installation-url version)))
           (assert-that (api-features version)
                        (has-item "fake-gk")
+                       (does-not (has-item "fake-gk-2"))))))))
+
+(test default-value-is-respected
+  (with-fixture state ()
+    (with-fake-request ()
+      (gk:allow :fake-gk company)
+      (answer (hunchentoot:authorization)
+        (values "foobar" "T0pSecret"))
+      (let ((content (api-version)))
+        (let ((version (decode-json content 'version)))
+          (is (eql *api-version* (version-number version)))
+          (is (equal "https://example.com" (installation-url version)))
+          (assert-that (api-features version)
+                       (has-item "fake-gk")
+                       (has-item "fake-gk-3")
                        (does-not (has-item "fake-gk-2"))))))))
