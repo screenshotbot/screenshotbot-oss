@@ -150,6 +150,11 @@ commits that are needed."
                          :sha sha)
           (refs-to-update self))))
 
+(auto-restart:with-auto-restart (:retries 3)
+  (defun read-commits-with-retries (&rest args)
+    "GitLab's https endpoint is buggy, and occassionally returns 401. See T2111."
+    (apply #'read-commits args)))
+
 #+lispworks
 (defmethod update-from-pack ((self commit-graph-updater)
                              (upload-pack abstract-upload-pack)
@@ -163,7 +168,7 @@ commits that are needed."
           (get-commit-graph-refs self repo-url)))
     (check-type known-refs list)
     (log:info "Getting git graph via git-upload-pack")
-    (let ((commits (read-commits
+    (let ((commits (read-commits-with-retries
                     upload-pack
                     ;; TODO: also do release branches, but that will need a regex here
                     :wants (lambda (list)
