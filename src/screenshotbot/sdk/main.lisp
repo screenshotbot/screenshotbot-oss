@@ -160,6 +160,12 @@
           (log:warn "Default libssl paths failed, trying ~a" path)
           (comm:ensure-ssl :library-path path))))))
 
+(auto-restart:with-auto-restart ()
+  (defun maybe-test-stack-overflow! ()
+    (when (str:non-empty-string-p (uiop:getenv "SCREENSHOTBOT_TEST_STACK_OVERFLOW"))
+      (setf drakma:*header-stream* *standard-output*)
+      (maybe-test-stack-overflow!))))
+
 (defun %main (&optional (argv #+lispworks system:*line-arguments-list*
                               #-lispworks (uiop:raw-command-line-arguments)))
   ;; We used to do :immediate-flush, but it looks like that might be
@@ -170,6 +176,8 @@
   (log:info "Screenshotbot SDK v~a" *client-version*)
 
   (maybe-setup-ssl)
+
+  (maybe-test-stack-overflow!)
 
   (let ((unrecognized  (parse-command-line (cdr argv))))
     (when flags:*verbose*

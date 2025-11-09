@@ -43,8 +43,6 @@
   (:import-from #:bknr.datastore
                 #:with-transaction)
   (:import-from #:screenshotbot/git-repo
-                #:commit-graph
-                #:commit-graph-dag
                 #:compute-merge-base
                 #:get-parent-commit
                 #:repo-link)
@@ -266,17 +264,11 @@ API. We're eventually going to replace it with this."
                 ;; generating the screenshots, then we must use the
                 ;; non-overriden COMMIT to compare the merge base.
                 (recorder-run-commit run)))
-     (let* ((dag (commit-graph-dag (commit-graph repo)))
-            (active-commits (channel-active-commits channel))
-            ;; Filter out commits that aren't in the DAG to avoid warnings
-            (active-commits-in-dag (remove-if-not
-                                    (lambda (commit)
-                                      (dag:get-commit dag commit))
-                                    active-commits)))
+     (let ((active-commits (channel-active-commits channel)))
        (compute-merge-base repo
                            (list*
                             master-commit
-                            active-commits-in-dag)
+                            active-commits)
                            this-commit)))))
 
 (defmethod pr-merge-base ((promoter abstract-pr-promoter)

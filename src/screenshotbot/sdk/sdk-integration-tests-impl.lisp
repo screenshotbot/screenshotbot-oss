@@ -175,6 +175,24 @@
   (log:info "Running self tests")
   (run (list *sdk* "--self-test")))
 
+(defun test-stack-overflow ()
+  (log:info "## TESTING STACK OVERFLOW")
+  (unwind-protect
+       (progn
+         (setf (uiop:getenv "SCREENSHOTBOT_TEST_STACK_OVERFLOW") "true")
+         (handler-case
+             (multiple-value-bind (out err res)
+                 (uiop:with-temporary-file (:stream stream :direction :output)
+                   (run (list *sdk* "--help")
+                        :error-output stream
+                        :output stream
+                        :ignore-error-status t))
+               (log:info "Got error code for stack overflow test: ~a" res)
+               (assert (not (= res 0))))))
+    (setf (uiop:getenv "SCREENSHOTBOT_TEST_STACK_OVERFLOW") nil)))
+
+
+
 (defun run-tests ()
   (setf (uiop:getenv "TDRHQ_IGNORE_SENTRY") "true")
 
@@ -193,6 +211,8 @@
   (test-mark-unchanged-with-batch)
 
   (test-verbose-logs)
+
+  (test-stack-overflow)
 
   (with-repo
     (test-crash)

@@ -192,6 +192,19 @@
                     :output t
                     :error-output t))
 
+#+lispworks
+(defun safe-debugger-hook (condition old-debugger-hook)
+  (declare (ignore old-debugger-hook))
+  (let ((path 
+         (dbg:log-bug-form (format nil "an error occured : ~a" condition)
+                           :message-stream nil)))
+    ;; Tell the user what happen, and try to make sure that if they report the error they
+    ;; include the log file. 
+    (format t "Unhandled Error log written to~%~a~%Please attach this file when reporting the error.~2%~a"
+            path condition)
+    (abort)))
+
+
 
 (defun default-deliver (fn-name output-file deliver-level &rest args)
   #-lispworks
@@ -208,7 +221,13 @@
    :save-runtime-options t)
 
   #+lispworks
-  (apply #'lw:deliver fn-name
+  (apply #'lw:deliver
+         (lambda ()
+           ;; Why don't we set the debugger-hook before deliver? It
+           ;; works, but if the deliver script itself crashes, then we
+           ;; won't be able to debug it easily.
+           (setf *debugger-hook* #'safe-debugger-hook)
+           (funcall fn-name))
          output-file
          deliver-level
          (append
@@ -220,6 +239,12 @@
            :keep-pretty-printer t
            :keep-clos-object-printing t
            :keep-lisp-reader t
+
+           ;;;; This is problematic: It makes it super hard to control
+           ;;;; output in error situations. (For instance, the
+           ;;;; --self-test will become noisy)
+           ;; :error-handler :btrace
+
            :keep-symbols `(system:pipe-exit-status
                            dspec:find-dspec-locations)
            :packages-to-keep-symbol-names :all
