@@ -1,11 +1,25 @@
 # Changelog
 
+## 2.16.21 - 2025-11-10
+
+### Changed
+
+- Reverted multi-ack capability changes from 2.16.20
+- Fixed logging for stack overflow errors to improve error reporting (T2113)
+- Fixed stack overflow issue in git-pack protocol by avoiding reliance on tail call optimization (T2115)
+
+### Note
+
+- Version 2.16.20 should not be used due to issues with the multi-ack implementation
+
 ## 2.16.20 - 2025-11-07
 
 ### Changed
 
 - Added retry logic for upload-pack operations to improve reliability (T2111)
 - Enabled multi-ack capability in git-pack protocol by default
+
+**WARNING: This version has known issues and should not be used. Please upgrade to 2.16.21 or later.**
 
 ## 2.16.19 - 2025-11-06
 
