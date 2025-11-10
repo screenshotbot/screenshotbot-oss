@@ -44,6 +44,7 @@
                 #:parse-command-line)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
+                    (#:api-context #:screenshotbot/sdk/api-context)                    
                     (#:e #:screenshotbot/sdk/env)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:static #:screenshotbot/sdk/static)
@@ -98,17 +99,18 @@
 (def-easy-macro with-defaults (&binding api-context &fn fn)
   (sdk:parse-org-defaults)
   (let ((api-context (make-api-context)))
-    (with-reused-ssl ((engine api-context))
-      (let ((version (remote-version api-context)))
-        (log:debug "Remote version is ~a" version))
-      (let ((server-appender (make-server-log-appender api-context)))
-        (when (api-feature-enabled-p api-context :server-cli-logs)
-          (log4cl:add-appender log4cl:*root-logger*
-                               server-appender))
-        (unwind-protect
-            (funcall fn api-context)
+    (with-extras (("cli-session-id" (api-context:session-id api-context)))
+      (with-reused-ssl ((engine api-context))
+        (let ((version (remote-version api-context)))
+          (log:debug "Remote version is ~a" version))
+        (let ((server-appender (make-server-log-appender api-context)))
           (when (api-feature-enabled-p api-context :server-cli-logs)
-            (flush-server-appender server-appender)))))))
+            (log4cl:add-appender log4cl:*root-logger*
+                                 server-appender))
+          (unwind-protect
+               (funcall fn api-context)
+            (when (api-feature-enabled-p api-context :server-cli-logs)
+              (flush-server-appender server-appender))))))))
 
 
 (defun emptify (s)
