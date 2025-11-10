@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.16.22 - 2025-11-10
+
+### Changed
+
+- Added a bunch of Sentry extras to track run-time when a crash happens
+
 ## 2.16.21 - 2025-11-10
 
 ### Changed
