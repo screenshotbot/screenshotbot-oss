@@ -363,21 +363,24 @@ If READ-MAGIC-P is true, we'll read the first four bytes of PACK magic."
                               url &rest args)
    (multiple-value-bind (git-url auth)
        (remove-auth-from-uri (http-url p))
-    (apply #'http-request (format nil "~a~a"
-                                  (str:ensure-suffix "/" git-url)
-                                  url)
-           :basic-authorization (or
-                                 auth
-                                 (read-netrc
-                                  (quri:uri-host
-                                   (quri:uri (http-url p)))))
-           :additional-headers (extra-headers p)
-           :want-stream t
-           :ensure-success t
-           :read-timeout 45
-           :connection-timeout 15
-           :force-binary t
-           args))))
+     (let ((auth (or
+                  auth
+                  (read-netrc
+                   (quri:uri-host
+                    (quri:uri (http-url p)))))))
+       (unless auth
+         (log:info "Could not find authentication information for Git http, assuming this is a public repo"))
+       (apply #'http-request (format nil "~a~a"
+                                     (str:ensure-suffix "/" git-url)
+                                     url)
+              :basic-authorization auth
+              :additional-headers (extra-headers p)
+              :want-stream t
+              :ensure-success t
+              :read-timeout 45
+              :connection-timeout 15
+              :force-binary t
+              args)))))
 
 (auto-restart:with-auto-restart ()
   (defmethod read-commits ((p http-upload-pack)
