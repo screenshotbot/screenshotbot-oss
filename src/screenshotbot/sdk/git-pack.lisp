@@ -533,17 +533,15 @@ a second value the headers that were initially provided (sha and refs)
 
 (defun process-ack (p)
   "See process_ack() in fetch-pack.c"
-  (let ((line (read-protocol-line p)))
-    (log:debug "Got ACK/NAK: ~a" line)
-    (cond
-      ((equal "NAK" (str:trim line))
-       (process-ack p))
-      ((str:starts-with-p "ACK " line)
-       (process-ack p))
-      ((equal "ready" (str:trim line))
-       (process-ack p))
-      (t
-       (error "Didn't get an ACK or NAK or recognized line: ~a" line)))))
+  (loop
+    (let ((line (read-protocol-line p)))
+      (log:debug "Got ACK/NAK: ~a" line)
+      (cond
+        ((equal "NAK" (str:trim line)))
+        ((str:starts-with-p "ACK " line))
+        ((equal "ready" (str:trim line)))
+        (t
+         (error "Didn't get an ACK or NAK or recognized line: ~a" line))))))
 
 (defun read-response-and-packfile (p &key parse-parents)
   ;; This should either be a NAK (nothing common found), or ACK
