@@ -45,45 +45,48 @@
                                       (on-error (lambda ()
                                                   (uiop:quit 1)))
                                       &fn fn)
-  (with-extras (#+lispworks
-                ("cmd-line-trimmed"
-                 (mapcar
-                  #'trim-arg
-                  sys:*line-arguments-list*))
-                ("hostname" (uiop:hostname))
-                #+lispworks
-                ("openssl-version" (comm:openssl-version)))
-    (let ((error-handler (lambda (e)
-                          (format stream "~%~a~%~%" e)
-                          #+lispworks
-                          (dbg:output-backtrace (if verbose :bug-form :brief)
-                                                :stream stream)
-                          #-lispworks
-                          (trivial-backtrace:print-backtrace e stream)
-                          (unless dry-run
-                            #-screenshotbot-oss
-                            (util/threading:log-sentry e))
-                          (funcall on-error))))
-     (let ((*warning-count* 0))
-       (handler-case
-           (handler-bind (#+lispworks
-                          (error error-handler)
-                          #+lispworks
-                          (conditions:stack-overflow error-handler))
-             ;; We put the warning handler inside here, so that if an
-             ;; error happens in the warning handler, we can log that.
+  (let ((start-time (get-universal-time)))
+    (with-extras (#+lispworks
+                  ("cmd-line-trimmed"
+                   (mapcar
+                    #'trim-arg
+                    sys:*line-arguments-list*))
+                  ("hostname" (uiop:hostname))
+                  #+lispworks
+                  ("openssl-version" (comm:openssl-version))
+                  ("start-time" start-time)
+                  ("current-time" (get-universal-time)))
+     (let ((error-handler (lambda (e)
+                            (format stream "~%~a~%~%" e)
+                            #+lispworks
+                            (dbg:output-backtrace (if verbose :bug-form :brief)
+                                                  :stream stream)
+                            #-lispworks
+                            (trivial-backtrace:print-backtrace e stream)
+                            (unless dry-run
+                              #-screenshotbot-oss
+                              (util/threading:log-sentry e))
+                            (funcall on-error))))
+       (let ((*warning-count* 0))
+         (handler-case
              (handler-bind (#+lispworks
-                            (warning #'maybe-log-sentry))
-               (funcall fn)))
-         #+lispworks
-         (conditions:stack-overflow (e)
-           (funcall error-handler e))
-         #+nil ;; We could keep this here, but :error-handler :btrace is probably good 
-         (error (e)
-           ;; This is here just in case 
-           (format t "Unrecoverable error happened: ~a (~a)~%" e (type-of e)))
-         #+nil ;; We could keep this here, but :error-handler :btrace is probably good 
-         (serious-condition (e)
-           ;; In particular, this could've handled stack-overflow,
-           ;; which is of type serious-condition, and not an error.
-           (format t "Serious error happened: ~a (~a)~%" e (type-of e))))))))
+                            (error error-handler)
+                            #+lispworks
+                            (conditions:stack-overflow error-handler))
+               ;; We put the warning handler inside here, so that if an
+               ;; error happens in the warning handler, we can log that.
+               (handler-bind (#+lispworks
+                              (warning #'maybe-log-sentry))
+                 (funcall fn)))
+           #+lispworks
+           (conditions:stack-overflow (e)
+             (funcall error-handler e))
+           #+nil ;; We could keep this here, but :error-handler :btrace is probably good 
+           (error (e)
+             ;; This is here just in case 
+             (format t "Unrecoverable error happened: ~a (~a)~%" e (type-of e)))
+           #+nil ;; We could keep this here, but :error-handler :btrace is probably good 
+           (serious-condition (e)
+             ;; In particular, this could've handled stack-overflow,
+             ;; which is of type serious-condition, and not an error.
+             (format t "Serious error happened: ~a (~a)~%" e (type-of e)))))))))
