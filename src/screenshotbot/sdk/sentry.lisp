@@ -53,7 +53,8 @@
                                   &fn fn)
   #-screenshotbot-oss
   (sentry-client:initialize-sentry-client
-   sentry:*dsn* :client-class 'sentry:delivered-client)
+   "https://b0c00f1b8a0e499fbdba1de5013fc97b:0632f4ab8db64d55accd4b81c93e7b79@sentry.io/1460546"
+   :client-class 'sentry:delivered-client)
   (with-tags (("cli-client" "true")
               #+lispworks ("api_hostname" *hostname*)
               #+lispworks ("api_id"  *api-key*)
