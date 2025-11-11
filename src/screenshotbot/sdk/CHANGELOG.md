@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.16.23 - 2025-11-10
+
+### Changed
+
+- Added more Sentry extras
+
 ## 2.16.22 - 2025-11-10
 
 ### Changed
