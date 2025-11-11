@@ -92,7 +92,8 @@
                                 "user_agent"
                                 "query_string" "ts"
                                 "hostname"
-                                "domain")
+                                "domain"
+                                "cli_session_id")
                               (lambda (event)
                                 (list
                                  (slot-value event 'ip-address)
@@ -105,7 +106,9 @@
                                  (slot-value event 'query-string)
                                  (analytics-event-ts event)
                                  hostname
-                                 domain)))))))
+                                 domain
+                                 (ignore-errors
+                                  (cli-session-id event)))))))))
 
 (defun %write-analytics-events ()
   (let ((old-events (util/atomics:atomic-exchange *events* nil)))
