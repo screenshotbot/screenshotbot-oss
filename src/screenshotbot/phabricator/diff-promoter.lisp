@@ -45,6 +45,8 @@
                 #:report)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:util/logger
+                #:format-log)
   (:export #:phabricator-promoter))
 (in-package :screenshotbot/phabricator/diff-promoter)
 
@@ -95,22 +97,26 @@
     ret))
 
 (defmethod push-remote-check ((promoter phabricator-promoter) run check)
-  (update-diff-status
-   (recorder-run-company run)
-   (phabricator-diff-id run)
-   (ecase (check-status check)
-     (:accepted "pass")
-     (:rejected "fail")
-     (:success "pass")
-     (:failed "fail")
-     (:failure "fail")
-     (:pending "work")
-     (:action-required "fail"))
-   :name (check-key check)
-   :details
-   (format nil "~a~%~a"
-           (check-title check)
-           (details-url check))))
+  (cond
+    ((not (phabricator-diff-id run))
+     (format-log run :warn "No diff-id, please provide a --phabricator-diff-id"))
+    (t
+     (update-diff-status
+      (recorder-run-company run)
+      (phabricator-diff-id run)
+      (ecase (check-status check)
+        (:accepted "pass")
+        (:rejected "fail")
+        (:success "pass")
+        (:failed "fail")
+        (:failure "fail")
+        (:pending "work")
+        (:action-required "fail"))
+      :name (check-key check)
+      :details
+      (format nil "~a~%~a"
+              (check-title check)
+              (details-url check))))))
 
 (defmethod make-promoter-for-acceptable ((self diff-acceptable))
   (make-instance 'phabricator-promoter))

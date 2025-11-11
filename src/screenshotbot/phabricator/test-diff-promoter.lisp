@@ -25,6 +25,7 @@
                 #:make-recorder-run
                 #:recorder-run)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:push-remote-check
                 #:promoter-pull-id)
   (:import-from #:screenshotbot/model/company
                 #:company)
@@ -57,3 +58,17 @@
                 :company company
                 :phabricator-diff-id "20")))
       (is (eql 5 (promoter-pull-id promoter run))))))
+
+(test push-remote-check-succeeds-quietly-if-no-diff-id-is-presnt
+  (with-fixture state ()
+    (let ((run (make-recorder-run
+                :commit-hash "abcd"
+                :company company
+                :phabricator-diff-id nil))
+          (check (make-instance 'screenshotbot/abstract-pr-promoter::check
+                                :sha "abcd"
+                                :status :accepted
+                                :key "test-check"
+                                :title "Test Check")))
+      (finishes
+        (push-remote-check promoter run check)))))
