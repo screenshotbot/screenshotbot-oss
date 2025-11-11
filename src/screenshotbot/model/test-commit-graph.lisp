@@ -93,6 +93,11 @@
   (is (equal "https://github.com/tdrhq/fast-example"
              (normalize-url "ssh://git@github.com:tdrhq/fast-example/"))))
 
+(test normalize-url-removes-auth-info
+  (is (equal
+       "https://gitlab.com/abc/def/g/hij/klm"
+       (normalize-url "https://gitlab-ci-token:blahblah@gitlab.com/abc/def/g/hij/klm"))))
+
 (test normalization-overrides
   (with-fixture state ()
     (make-instance 'normalization-override

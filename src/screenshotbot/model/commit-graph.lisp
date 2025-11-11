@@ -137,28 +137,38 @@ use the refs in promoted runs.")
 
 (defmethod snapshot-slot-value ((self commit-graph) (slot (eql 'dag-v2)))
   (when-let ((dag (slot-value self 'dag-v2)))
-   (dag:clone-dag dag)))
+    (dag:clone-dag dag)))
+
+(defun %remove-auth (url)
+  (cond
+    ((str:starts-with-p "http" url)
+     (let ((uri (quri:uri url)))
+       (setf (quri:uri-userinfo uri) nil)
+       (quri:render-uri uri)))
+    (t
+     url)))
 
 (defun normalize-url (repo-url)
   "Normalizing is relatively safe. Even if two distinct repos normalize
 to the same repo, the graph will still be the same."
-  (or
-   (?. normalization-override-to (find-normalization-override repo-url))
-   (let ((repo-url (str:downcase repo-url)))
-     (flet ((remove-prefixes (repo-url)
-              (let ((git-prefix "^(ssh[:/]//)?git@"))
-                (cond
-                  ((cl-ppcre:scan git-prefix repo-url)
-                   (cl-ppcre:regex-replace-all
-                    git-prefix (str:replace-all ":" "/" repo-url) "https://"))
-                  (t repo-url)))))
-       (let ((suffixes (list "/" ".git")))
-         (loop for suffix in suffixes
-               if (str:ends-with-p suffix repo-url)
-                 return (normalize-url (str:substring 0 (- (length repo-url)
-                                                           (length suffix))
-                                                      repo-url))
-               finally (return (remove-prefixes repo-url))))))))
+  (let ((repo-url (%remove-auth repo-url)))
+   (or
+    (?. normalization-override-to (find-normalization-override repo-url))
+    (let ((repo-url (str:downcase repo-url)))
+      (flet ((remove-prefixes (repo-url)
+               (let ((git-prefix "^(ssh[:/]//)?git@"))
+                 (cond
+                   ((cl-ppcre:scan git-prefix repo-url)
+                    (cl-ppcre:regex-replace-all
+                     git-prefix (str:replace-all ":" "/" repo-url) "https://"))
+                   (t repo-url)))))
+        (let ((suffixes (list "/" ".git")))
+          (loop for suffix in suffixes
+                if (str:ends-with-p suffix repo-url)
+                  return (normalize-url (str:substring 0 (- (length repo-url)
+                                                            (length suffix))
+                                                       repo-url))
+                finally (return (remove-prefixes repo-url)))))))))
 
 
 (defmethod find-commit-graph ((company company) (url string))
