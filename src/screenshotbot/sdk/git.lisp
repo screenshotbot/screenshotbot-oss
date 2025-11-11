@@ -26,7 +26,8 @@
    #:repo-dir
    #:rev-parse-local
    #:$
-   #:extra-header)
+   #:extra-header
+   #:debug-git-config)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/git)
 
@@ -61,11 +62,14 @@
 (defmethod cleanp ((repo null-repo))
   t)
 
+(defmethod repo-git-dir ((repo git-repo))
+  (path:catdir (repo-dir repo) ".git/"))
+
 (defmethod git-command ((repo git-repo))
   (list
    "git"
    "--git-dir"
-   (namestring (path:catdir (repo-dir repo) ".git/"))))
+   (namestring (repo-git-dir repo))))
 
 (defmethod cleanp ((repo git-repo))
   (str:emptyp ($ (git-command repo) "status" "--porcelain")))
@@ -205,6 +209,15 @@ rev-parse compares against the remote branch :/"
     #+windows
     (uiop:run-program (list "attrib" "-r" (format nil "~a\\*.*" (namestring dir)) "/s"))))
 
+(defmethod debug-git-config ((repo git-repo))
+  "Generates a string with enough information about what's in the
+.git/config without revealing any secrets"
+  (let ((config (path:catfile (repo-git-dir repo) "config")))
+    (let ((lines (str:lines (uiop:read-file-string config))))
+      (str:join #\Newline
+       (loop for line in lines
+             collect (str:substring 0 8 line))))))
+
 
 (defmethod extra-header ((repo git-repo))
   (ignore-errors
@@ -218,3 +231,4 @@ rev-parse compares against the remote branch :/"
              (mapcar #'str:trim
                      (str:split ":" line))
            (cons (str:downcase key) value)))))
+

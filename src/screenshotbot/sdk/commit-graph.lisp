@@ -111,7 +111,9 @@ commits that are needed."
 #+lispworks
 (defun update-commit-graph-new-style (api-context repo branch)
   (let ((remote-url (git:get-remote-url repo)))
-    (with-extras (("remote-git-url" remote-url))
+    (with-extras (("remote-git-url" remote-url)
+                  ("git-config-anonymized" (or (git:debug-git-config repo)
+                                               "failed")))
       (let ((upload-pack (make-remote-upload-pack repo)))
         (update-from-pack
          api-context

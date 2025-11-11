@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/git
+                #:debug-git-config
                 #:parse-raw-git-log
                 #:repo-link
                 #:get-remote-url
@@ -215,3 +216,10 @@
       (is
        (equal expected-output
               (parse-raw-git-log input)))))
+
+
+(test debug-git-config
+  (with-fixture git-repo ()
+    (assert-that
+     (debug-git-config repo)
+     (contains-string "[core]"))))
