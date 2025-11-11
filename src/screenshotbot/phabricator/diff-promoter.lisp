@@ -69,8 +69,7 @@
 (create-comment *phab* 3498 "hello world")
 
 (defclass phabricator-promoter (abstract-pr-promoter)
-  ((phab :accessor phab)
-   (diff-id :accessor diff-id)))
+  ())
 
 (defclass diff-acceptable (abstract-pr-acceptable)
   ()
@@ -128,11 +127,7 @@
     (build-info-revision build-info)))
 
 (defmethod add-comment ((promoter phabricator-promoter) comment)
-  (let ((phab (phab promoter)))
-    (when (and (url phab)
-               (api-key phab))
-     (let ((revision (diff-to-revision phab (diff-id promoter))))
-       (create-comment phab revision comment)))))
+  (error "TODO: Obsolete, delete"))
 
 (unregister-promoter 'phabricator-promoter)
 
