@@ -59,6 +59,10 @@ attempt. Attempts will be 1-indexed (1, 2, 3 ... ).
 
 AUTO-RESTARTABLE-ERRORS is evaluated to get a list of error classes
 for which we're allowed to auto-restart. It defaults to `'(ERROR)`.
+
+If RETRIES is provided, then we automatically retry, for a total of
+RETRIES times (including the first invocation). So RETRIES is
+misleading, it's not a count of retries but a total count of attempts.
 "
   (assert (= 1 (length body)))
 
