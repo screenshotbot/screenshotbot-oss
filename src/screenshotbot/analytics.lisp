@@ -54,6 +54,8 @@
    (ts :initform (local-time:now)
        :initarg :ts
        :accessor analytics-event-ts)
+   (cli-session-id :initarg :cli-session-id
+                   :accessor cli-session-id)
    (referrer :initarg :referrer)
    (user-agent :initarg :user-agent))
   (:base-table "analytics"))
@@ -157,6 +159,7 @@
                               (t
                                "no-session"))
                             :referrer (hunchentoot:referer)
+                            :cli-session-id (hunchentoot:header-in* :x-cli-session-id)
                             :script-name (hunchentoot:script-name hunchentoot:*request*)
                             :query-string (hunchentoot:query-string*))))
     (atomics:atomic-push ev *events*)))

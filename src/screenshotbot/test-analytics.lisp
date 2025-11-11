@@ -69,6 +69,7 @@
            "create table analytics (ip_address text, session text, script_name text,
                                     referrer text,
                                     user_agent text,
+                                    cli_session_id text,
                                     query_string text, ts datetime,
                                     hostname text, domain text)"
            :database db))
