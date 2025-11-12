@@ -255,6 +255,11 @@
 (defun main (&rest args)
   (uiop:setup-command-line-arguments)
 
+  #-screenshotbot-oss
+  (sentry-client:initialize-sentry-client
+   "https://b0c00f1b8a0e499fbdba1de5013fc97b:0632f4ab8db64d55accd4b81c93e7b79@sentry.io/1460546"
+   :client-class 'sentry:delivered-client)
+
   (with-sentry ()
     (apply '%main args))
 
