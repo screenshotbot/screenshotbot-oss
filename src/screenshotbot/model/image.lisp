@@ -90,6 +90,7 @@
   (:import-from #:util/store/simple-object-snapshot
                 #:simple-object-snapshot)
   (:import-from #:util/store/store
+                #:defindex
                 #:fast-ensure-directories-exist)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
@@ -473,11 +474,15 @@
        (trivial-file-size:file-size-in-octets pathname))
       dest)))
 
+(defindex +image-1-index+
+  'hash-index
+  :slot-name 'image-1
+  :test #'equalp)
+
 (with-class-validation
   (defclass content-equal-result (store-object)
     ((image-1 :initarg :image-1
-              :index-type hash-index
-              :index-initargs (:test #'equalp)
+              :index +image-1-index+
               :index-reader content-equal-results-for-image-1)
      (image-2 :initarg :image-2
               :reader image-2)
