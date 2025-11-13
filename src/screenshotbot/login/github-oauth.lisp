@@ -30,6 +30,7 @@
                 #:github-request)
   (:import-from #:screenshotbot/login/common
                 #:abstract-oauth-provider
+                #:make-oauth-url
                 #:oauth-callback
                 #:oauth-signin-link
                 #:oauth-signup-link)
@@ -97,22 +98,23 @@ redirect reduces the chances that somebody gets access to a sub-domain."))
                              (access-token-callback #'process-access-token)
                              (scope "user:email"))
   (declare (ignore authorize-link)) ;; too lazy to figure out what this was
-  (let ((redirect (nibble:nibble (code error)
-                    (cond
-                      (code
-                       (%gh-oauth-callback
-                        github-oauth code
-                        redirect
-                        :access-token-callback access-token-callback))
-                      (t
-                       (warn "GitHub Oauth failed: ~a" error)
-                       (hex:safe-redirect "/signin" :error error))))))
-    (format nil "https://github.com~a"
-            (make-url "/login/oauth/authorize"
-                      :client_id (client-id github-oauth)
-                      :scope scope
-                      :state (nibble:nibble-id redirect)
-                      :redirect_uri (redirect-uri github-oauth)))))
+  (let* ((callback (lambda (&key code error redirect-uri)
+                            (cond
+                              (code
+                               (%gh-oauth-callback
+                                github-oauth code
+                                redirect
+                                :access-token-callback access-token-callback
+                                :oauth-redirect-uri redirect-uri))
+                              (t
+                               (warn "GitHub Oauth failed: ~a" error)
+                               (hex:safe-redirect "/signin" :error error)))))
+         (base-url (format nil "https://github.com~a"
+                          (make-url "/login/oauth/authorize"
+                                    :client_id (client-id github-oauth)
+                                    :scope scope))))
+    (make-oauth-url base-url callback
+                    :redirect-uri (redirect-uri github-oauth))))
 
 (defun handle-github (event auth redirect)
   (nibble ()
@@ -129,19 +131,17 @@ redirect reduces the chances that somebody gets access to a sub-domain."))
   (let ((user (get-user-from-gh-access-token access-token)))
     (setf (current-user) user)))
 
-(defun %gh-oauth-callback (auth-provider code redirect &key (access-token-callback #'process-access-token))
-  (restart-case
-      (progn
-        (let ((access-token (oauth-get-access-token
-                             "https://github.com/login/oauth/access_token"
-                             :client_id (client-id auth-provider)
-                             :client_secret (client-secret auth-provider)
-                             :code code
-                             :redirect_uri (redirect-uri auth-provider))))
-          (funcall access-token-callback access-token)
-          (hex:safe-redirect redirect)))
-    (retry-gh-oauth-callback ()
-      (%gh-oauth-callback auth-provider code redirect))))
+(auto-restart:with-auto-restart ()
+ (defun %gh-oauth-callback (auth-provider code redirect &key (access-token-callback #'process-access-token)
+                                                          oauth-redirect-uri)
+   (let ((access-token (oauth-get-access-token
+                        "https://github.com/login/oauth/access_token"
+                        :client_id (client-id auth-provider)
+                        :client_secret (client-secret auth-provider)
+                        :code code
+                        :redirect_uri oauth-redirect-uri)))
+     (funcall access-token-callback access-token)
+     (hex:safe-redirect redirect))))
 
 (defun get-github-emails (access-token-str)
   (restart-case
