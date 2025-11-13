@@ -33,6 +33,7 @@
   (:export
    #:abstract-oauth-provider
    #:after-create-user
+   #:make-oauth-url
    #:make-redirect-nibble
    #:oauth-callback
    #:oauth-logo-svg
@@ -162,6 +163,19 @@
        (hex:safe-redirect nibble)))))
 
 (hex:def-named-url oauth-callback "/account/oauth-callback")
+
+(defun make-oauth-url (url redirect-nibble)
+  "Takes a base OAuth URL and a redirect nibble, and returns the complete URL
+   with redirect_uri and state parameters added."
+  (let* ((redirect-uri (hex:make-full-url hunchentoot:*request* "/account/oauth-callback"))
+         (state (nibble-id redirect-nibble))
+         (uri (quri:uri url)))
+    (quri:render-uri
+     (quri:make-uri
+      :defaults uri
+      :query (append (quri:uri-query-params uri)
+                     `(("redirect_uri" . ,redirect-uri)
+                       ("state" . ,(princ-to-string state))))))))
 
 (define-condition illegal-oauth-redirect (error)
   ())
