@@ -250,6 +250,8 @@ nibble or not."
                  (cond
                    ((not (auth:is-same-session-disregarding-resets-p
                           session current-session))
+                    ;; This is quite noisy, so we're getting rid of it for now
+                    #+nil
                     (warn "Incorrect session: this is not a cause for concern unless it's spiking")
                     (render-incorrect-session plugin))
                    ((different-user-viewing-p nibble)
