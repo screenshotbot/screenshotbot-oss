@@ -33,11 +33,13 @@ i.e. encoded as http arguments"
    (let* ((redirect-uri (or
                          redirect-uri
                          (hex:make-full-url hunchentoot:*request* "/account/oauth-callback")))
-          (redirect-nibble (nibble (code error)
+          (redirect-nibble (nibble (code error error_description)
                              (funcall callback
                                       :redirect-uri redirect-uri
                                       :code code
-                                      :error error)))
+                                      :error-description error_description
+                                      :error error
+                                      :allow-other-keys t)))
           (state (nibble-id redirect-nibble))
           (uri (quri:uri url)))
      (quri:render-uri
