@@ -9,15 +9,21 @@
   :depends-on (#:util
                #:alexandria
                #:nibble
+               #:hunchentoot-extensions
                #:cl-json
                #:dexador
-               #:pkg)
-  :components ((:file "oidc")
+               #:pkg
+               #:hunchentoot
+               #:quri)
+  :components ((:file "oauth")
+               (:file "oidc")
                (:file "all")))
 
 (defsystem :oidc/tests
   :serial t
   :depends-on (#:oidc
                #:util/fiveam
-               #:cl-mock)
-  :components ((:file "test-oidc")))
+               #:cl-mock
+               #:fiveam-matchers)
+  :components ((:file "test-oauth")
+               (:file "test-oidc")))

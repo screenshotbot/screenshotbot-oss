@@ -18,7 +18,6 @@
                 #:with-fixture)
   (:import-from #:screenshotbot/login/common
                 #:illegal-oauth-redirect
-                #:make-oauth-url
                 #:server-with-login
                 #:signin-get)
   (:import-from #:screenshotbot/testing
@@ -26,8 +25,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request)
-  (:local-nicknames (#:a #:alexandria)))
+                #:with-fake-request))
 (in-package :screenshotbot/login/test-common)
 
 
@@ -119,52 +117,3 @@
           (fail "expected to redirect"))
         (is (equal (hunchentoot:header-out :location hunchentoot:*reply*)
                    "https://trusted.example.com/account/oauth-callback?state=12345&code=test-code"))))))
-
-(test make-oauth-url-basic
-  (with-fixture state ()
-    (with-fake-request (:host "example.com")
-      (let* ((oauth-url))
-        (cl-mock:if-called 'nibble:nibble-id
-                           (lambda (nibble)
-                             (declare (ignore nibble))
-                             12345))
-        (setf oauth-url (make-oauth-url
-                         "https://oauth.provider.com/authorize?client_id=abc123&scope=read"
-                         (lambda (&key code error redirect-uri)
-                           (declare (ignore code error redirect-uri)))))
-        (let ((parsed (quri:uri oauth-url)))
-          (is (equal (quri:uri-scheme parsed) "https"))
-          (is (equal (quri:uri-host parsed) "oauth.provider.com"))
-          (is (equal (quri:uri-path parsed) "/authorize"))
-          (let ((params (quri:uri-query-params parsed)))
-            (assert-that (a:assoc-value params "client_id" :test #'equal)
-                         (is-equal-to "abc123"))
-            (assert-that (a:assoc-value params "scope" :test #'equal)
-                         (is-equal-to "read"))
-            (assert-that (a:assoc-value params "redirect_uri" :test #'equal)
-                         (is-equal-to "http://example.com/account/oauth-callback"))
-            (assert-that (a:assoc-value params "state" :test #'equal)
-                         (is-equal-to "12345"))))))))
-
-(test make-oauth-url-without-existing-params
-  (with-fixture state ()
-    (with-fake-request (:host "example.com")
-      (let* ((oauth-url))
-        (cl-mock:if-called 'nibble:nibble-id
-                           (lambda (nibble)
-                             (declare (ignore nibble))
-                             67890))
-        (setf oauth-url (make-oauth-url
-                         "https://oauth.provider.com/authorize"
-                         (lambda (&key code error redirect-uri)
-                           (declare (ignore code error redirect-uri)))))
-        (let ((parsed (quri:uri oauth-url)))
-          (is (equal (quri:uri-path parsed) "/authorize"))
-          (let ((params (quri:uri-query-params parsed)))
-            (is (= (length params) 2))
-            (assert-that (a:assoc-value params "redirect_uri" :test #'equal)
-                         (is-equal-to "http://example.com/account/oauth-callback"))
-            (assert-that (a:assoc-value params "state" :test #'equal)
-                         (is-equal-to "67890"))))))))
-
-

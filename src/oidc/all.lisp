@@ -5,4 +5,5 @@
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (uiop:define-package #:oidc
-  (:use-reexport #:oidc/oidc))
+  (:use-reexport #:oidc/oidc
+                 #:oidc/oauth))
