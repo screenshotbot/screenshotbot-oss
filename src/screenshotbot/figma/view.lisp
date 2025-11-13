@@ -31,7 +31,9 @@
                 #:with-form-errors
                 #:with-error-builder)
   (:import-from #:util/events
-                #:push-event))
+                #:push-event)
+  (:import-from #:auth/login/common
+                #:make-oauth-url))
 (in-package :screenshotbot/figma/view)
 
 (named-readtables:in-readtable markup:syntax)
@@ -138,7 +140,6 @@
            (figma-client-id figma))
          (client-secret
            (figma-client-secret figma))
-         (redirect-uri (hex:make-full-url hunchentoot:*request* "/account/oauth-callback"))
          (redirect (nibble (code error)
                      (cond
                        (error
@@ -152,12 +153,10 @@
                          :client-secret client-secret))
                        (t
                         (error "Invalid OAuth callback state")))))
-         (state (nibble:nibble-id redirect))
-         (oauth-url (format nil "https://www.figma.com/oauth?client_id=~a&redirect_uri=~a&scope=~a&state=~a&response_type=code"
-                           (quri:url-encode client-id)
-                           (quri:url-encode redirect-uri)
-                           (quri:url-encode "file_content:read")
-                           state)))
+         (base-oauth-url (format nil "https://www.figma.com/oauth?client_id=~a&scope=~a&response_type=code"
+                                (quri:url-encode client-id)
+                                (quri:url-encode "file_content:read")))
+         (oauth-url (make-oauth-url base-oauth-url redirect)))
     (hex:safe-redirect oauth-url)))
 
 (defun parse-figma-url (url)
