@@ -144,6 +144,7 @@
                  (:file "auto-cleanup")
                  (:file "company")
                  (:file "build-info")
+                 (:file "enterprise")
                  (:file "sharing")
                  (:file "user")
                  (:file "view")
