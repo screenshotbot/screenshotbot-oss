@@ -140,7 +140,7 @@
            (figma-client-id figma))
          (client-secret
            (figma-client-secret figma))
-         (redirect (nibble (code error)
+         (callback (lambda (&key code error redirect-uri)
                      (cond
                        (error
                         (error "OAuth error: ~a" error))
@@ -149,14 +149,16 @@
                          figma-url
                          callback
                          :code code
+                         :redirect-uri redirect-uri
                          :client-id client-id
                          :client-secret client-secret))
                        (t
                         (error "Invalid OAuth callback state")))))
-         (base-oauth-url (format nil "https://www.figma.com/oauth?client_id=~a&scope=~a&response_type=code"
-                                (quri:url-encode client-id)
-                                (quri:url-encode "file_content:read")))
-         (oauth-url (make-oauth-url base-oauth-url redirect)))
+         (oauth-url (make-oauth-url "https://www.figma.com/oauth"
+                                    callback
+                                    :client_id client-id
+                                    :response_type "code"
+                                    :scope "file_content:read")))
     (hex:safe-redirect oauth-url)))
 
 (defun parse-figma-url (url)
@@ -209,10 +211,9 @@
                    </simple-card-page>))))
           (error "Figma API error: ~A" status-code)))))
 
-(defun handle-after-oauth-response (figma-url callback &key code client-secret client-id)
+(defun handle-after-oauth-response (figma-url callback &key code client-secret client-id redirect-uri)
   "Handle the OAuth response by exchanging the code for an access token"
-  (let* ((redirect-uri (hex:make-full-url hunchentoot:*request* "/account/oauth-callback"))
-         (token-response (util/request:http-request 
+  (let* ((token-response (util/request:http-request 
                           "https://api.figma.com/v1/oauth/token"
                           :method :post
                           :parameters `(("client_id" . ,client-id)

@@ -164,18 +164,32 @@
 
 (hex:def-named-url oauth-callback "/account/oauth-callback")
 
-(defun make-oauth-url (url redirect-nibble)
+(defun make-oauth-url (url callback &rest args)
   "Takes a base OAuth URL and a redirect nibble, and returns the complete URL
-   with redirect_uri and state parameters added."
-  (let* ((redirect-uri (hex:make-full-url hunchentoot:*request* "/account/oauth-callback"))
-         (state (nibble-id redirect-nibble))
-         (uri (quri:uri url)))
-    (quri:render-uri
-     (quri:make-uri
-      :defaults uri
-      :query (append (quri:uri-query-params uri)
-                     `(("redirect_uri" . ,redirect-uri)
-                       ("state" . ,(princ-to-string state))))))))
+   with redirect_uri and state parameters added.
+
+CALLBACK is called with three named arguments: code, error and the
+redirect-uri used. You can ignore the redirect-uri, but in many cases
+you need the redirect-uri to request the token later.
+
+Any other arguments will be added like (hex:make-url ... ),
+i.e. encoded as http arguments"
+
+  (let ((url (apply #'hex:make-url url args)))
+   (let* ((redirect-uri (hex:make-full-url hunchentoot:*request* "/account/oauth-callback"))
+          (redirect-nibble (nibble (code error)
+                             (funcall callback
+                                      :redirect-uri redirect-uri
+                                      :code code
+                                      :error error)))
+          (state (nibble-id redirect-nibble))
+          (uri (quri:uri url)))
+     (quri:render-uri
+      (quri:make-uri
+       :defaults uri
+       :query (append (quri:uri-query-params uri)
+                      `(("redirect_uri" . ,redirect-uri)
+                        ("state" . ,(princ-to-string state)))))))))
 
 (define-condition illegal-oauth-redirect (error)
   ())

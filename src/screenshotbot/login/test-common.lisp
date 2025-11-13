@@ -35,9 +35,11 @@
 
 (def-fixture state ()
   (with-installation ()
-   (with-test-store ()
-     (cl-mock:with-mocks ()
-       (&body)))))
+    (with-test-store ()
+      (with-fake-request ()
+       (auth:with-sessions ()
+         (cl-mock:with-mocks ()
+           (&body)))))))
 
 (test server-with-login-happy-path
   (with-fixture state ()
@@ -121,15 +123,15 @@
 (test make-oauth-url-basic
   (with-fixture state ()
     (with-fake-request (:host "example.com")
-      (let* ((mock-nibble (make-instance 'nibble:nibble))
-             (oauth-url))
+      (let* ((oauth-url))
         (cl-mock:if-called 'nibble:nibble-id
                            (lambda (nibble)
                              (declare (ignore nibble))
                              12345))
         (setf oauth-url (make-oauth-url
                          "https://oauth.provider.com/authorize?client_id=abc123&scope=read"
-                         mock-nibble))
+                         (lambda (&key code error redirect-uri)
+                           (declare (ignore code error redirect-uri)))))
         (let ((parsed (quri:uri oauth-url)))
           (is (equal (quri:uri-scheme parsed) "https"))
           (is (equal (quri:uri-host parsed) "oauth.provider.com"))
@@ -147,15 +149,15 @@
 (test make-oauth-url-without-existing-params
   (with-fixture state ()
     (with-fake-request (:host "example.com")
-      (let* ((mock-nibble (make-instance 'nibble:nibble))
-             (oauth-url))
+      (let* ((oauth-url))
         (cl-mock:if-called 'nibble:nibble-id
                            (lambda (nibble)
                              (declare (ignore nibble))
                              67890))
         (setf oauth-url (make-oauth-url
                          "https://oauth.provider.com/authorize"
-                         mock-nibble))
+                         (lambda (&key code error redirect-uri)
+                           (declare (ignore code error redirect-uri)))))
         (let ((parsed (quri:uri oauth-url)))
           (is (equal (quri:uri-path parsed) "/authorize"))
           (let ((params (quri:uri-query-params parsed)))
