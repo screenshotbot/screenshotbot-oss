@@ -11,10 +11,13 @@
                 #:has-typep
                 #:is-equal-to)
   (:import-from #:it.bese.fiveam
+                #:is
+                #:signals
                 #:def-fixture
                 #:test
                 #:with-fixture)
   (:import-from #:screenshotbot/login/common
+                #:illegal-oauth-redirect
                 #:server-with-login
                 #:signin-get)
   (:import-from #:screenshotbot/testing
@@ -60,3 +63,59 @@
          :needs-login t))
       (assert-that last-redirect
                    (is-equal-to "/foo/bar")))))
+
+(test handle-oauth-callback-happy-path
+  (with-fixture state ()
+    (let ((callback-result)
+          (rendered-nibble))
+      (cl-mock:if-called 'nibble:render-nibble
+                         (lambda (self state)
+                           (setf rendered-nibble state)
+                           "rendered-content"))
+      (with-fake-request ()
+        (setf callback-result
+              (screenshotbot/login/common::handle-oauth-callback
+               (make-instance 'auth:auth-acceptor-mixin)
+               "test-code"
+               "12345")))
+      (assert-that callback-result
+                   (is-equal-to "rendered-content"))
+      (assert-that rendered-nibble
+                   (is-equal-to "12345")))))
+
+
+(test handle-oauth-with-unpermitted-redirect
+  (with-fixture state ()
+    (let ((callback-result)
+          (rendered-nibble))
+      (cl-mock:if-called 'nibble:render-nibble
+                         (lambda (self state)
+                           (setf rendered-nibble state)
+                           "rendered-content"))
+      (with-fake-request ()
+        (signals illegal-oauth-redirect
+          (screenshotbot/login/common::handle-oauth-callback
+           (make-instance 'auth:auth-acceptor-mixin)
+           "test-code"
+           "12345,https://attacker.example.com"))))))
+
+(test handle-oauth-with-permitted-redirect
+  (with-fixture state ()
+    (let ((callback-result)
+          (rendered-nibble))
+      (cl-mock:if-called 'screenshotbot/login/common::allow-oauth-redirect-p
+                         (lambda (installation redirect)
+                           (declare (ignore installation))
+                           (equal redirect "https://trusted.example.com")))
+      (with-fake-request ()
+        (catch 'hunchentoot::handler-done
+          (screenshotbot/login/common::handle-oauth-callback
+           (make-instance 'auth:auth-acceptor-mixin)
+           "test-code"
+           "12345,https://trusted.example.com")
+          (fail "expected to redirect"))
+        (is (equal (hunchentoot:header-out :location hunchentoot:*reply*)
+                   "https://trusted.example.com/account/oauth-callback?state=12345&code=test-code"))))))
+
+
+

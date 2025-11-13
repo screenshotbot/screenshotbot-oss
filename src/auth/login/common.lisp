@@ -163,14 +163,41 @@
 
 (hex:def-named-url oauth-callback "/account/oauth-callback")
 
-(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/account/oauth-callback") (code state)
-  (declare (ignore code)) ;; will be read from the nibble
+(define-condition illegal-oauth-redirect (error)
+  ())
+
+(defmethod allow-oauth-redirect-p (installation redirect)
+  nil)
+
+(defmethod handle-oauth-callback ((self auth:auth-acceptor-mixin) code state)
+  (declare (ignore code))
   (cond
     ((str:emptyp state)
      (warn "State not present in oauth-callback")
      "Invalid OpenID Connect response, missing state field.")
     (t
-     (nibble:render-nibble self state))))
+     (destructuring-bind (state &optional redirect) (str:split "," state)
+       (cond
+         ((and redirect (allow-oauth-redirect-p *installation* redirect))
+          (hex:safe-redirect
+           (quri:render-uri
+            (quri:merge-uris
+             "/account/oauth-callback"
+             redirect))
+           :code code
+           :state state))
+         (redirect
+          (error 'illegal-oauth-redirect))
+         (t
+          (nibble:render-nibble self state)))))))
+
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/account/oauth-callback") (code state)
+  "Handles OAuth callback with authorization code and state parameter.
+   
+   The state parameter contains a nibble ID and optional redirect URL separated by comma.
+   If a valid redirect is provided and allowed by the installation, redirects there with
+   code and state parameters. Otherwise, renders the nibble identified by the state."
+  (handle-oauth-callback self code state))
 
 (defmacro with-oauth-state-and-redirect ((state) &body body)
   `(flet ((body () ,@body))
