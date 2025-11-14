@@ -13,6 +13,8 @@
                 #:http-request)
   (:import-from #:util/threading
                 #:with-extras)
+  (:import-from #:oidc/oauth
+                #:make-oauth-url)
   (:export #:oidc
            #:issuer
            #:discover
@@ -181,7 +183,7 @@
                                                                     (Access-token-str token))))))
 
 (defmethod oauth-callback ((auth oidc))
-   "/account/oauth-callback")
+  (error "deprecated"))
 
 
 (defmethod oidc-callback ((auth oidc) code redirect
@@ -246,18 +248,15 @@
 
 (defmethod make-oidc-auth-link ((oauth oidc) redirect
                                 &key (error-redirect "/"))
-  (let* ((auth-uri (quri:uri (authorization-endpoint oauth)))
-         (redirect-uri (hex:make-full-url hunchentoot:*request* (oauth-callback oauth)))
-         (redirect (nibble (code error error_description)
+  (let* ((callback (lambda (&key code error error-description redirect-uri)
                      (oidc-callback oauth code redirect
                                     :error error
-                                    :error-description error_description
+                                    :error-description error-description
                                     :error-redirect error-redirect
                                     :original-redirect-uri redirect-uri))))
-    (setf (quri:uri-query-params auth-uri)
-          `(("redirect_uri" . ,redirect-uri)
-            ("client_id" . ,(client-id oauth))
-            ("state" . ,(format nil "~d" (nibble:nibble-id redirect)))
-            ("response_type" . "code")
-            ("scope" . ,(scope oauth))))
-    (quri:render-uri auth-uri)))
+    (make-oauth-url
+     (authorization-endpoint oauth)
+     callback
+     :client_id (client-id oauth)
+     :response_type "code"
+     :scope (scope oauth))))
