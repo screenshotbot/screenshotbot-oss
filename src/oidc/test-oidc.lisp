@@ -60,5 +60,6 @@
      (catch 'hunchentoot::handler-done
        (oidc-callback
         auth
-        "code" "/"))
+        "code" "/"
+        :original-redirect-uri "http://localhost/account/oauth-callback"))
      (pass))))

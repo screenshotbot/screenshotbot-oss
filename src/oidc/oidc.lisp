@@ -187,7 +187,8 @@
 (defmethod oidc-callback ((auth oidc) code redirect
                           &key error
                             error-description
-                            (error-redirect "/"))
+                            (error-redirect "/")
+                            original-redirect-uri)
   (flet ((error-authenticating (message)
            (hex:safe-redirect
             (nibble ()
@@ -204,9 +205,7 @@
                     :client_id (client-id auth)
                     :client_secret (client-secret auth)
                     :code code
-                    :redirect_uri (hex:make-full-url
-                                   hunchentoot:*request*
-                                   (oauth-callback auth)))))
+                    :redirect_uri original-redirect-uri)))
         (let ((user-info
                 (user-info auth token)))
           (log:debug "Got user info ~S" user-info)
@@ -248,13 +247,15 @@
 (defmethod make-oidc-auth-link ((oauth oidc) redirect
                                 &key (error-redirect "/"))
   (let* ((auth-uri (quri:uri (authorization-endpoint oauth)))
+         (redirect-uri (hex:make-full-url hunchentoot:*request* (oauth-callback oauth)))
          (redirect (nibble (code error error_description)
                      (oidc-callback oauth code redirect
                                     :error error
                                     :error-description error_description
-                                    :error-redirect error-redirect))))
+                                    :error-redirect error-redirect
+                                    :original-redirect-uri redirect-uri))))
     (setf (quri:uri-query-params auth-uri)
-          `(("redirect_uri" . ,(hex:make-full-url hunchentoot:*request* (oauth-callback oauth)))
+          `(("redirect_uri" . ,redirect-uri)
             ("client_id" . ,(client-id oauth))
             ("state" . ,(format nil "~d" (nibble:nibble-id redirect)))
             ("response_type" . "code")
