@@ -79,8 +79,7 @@
                        :initform nil
                        :reader expiration-seconds))
   (:default-initargs
-   :oauth-name "Generic OIDC"
-   :callback-endpoint 'oauth-callback))
+   :oauth-name "Generic OIDC"))
 
 (defindex +user-id-index+
   'fset-set-index

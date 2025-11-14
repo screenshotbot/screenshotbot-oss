@@ -55,13 +55,6 @@
            :documentation "The issuer URL, such as
            https://accounts.google.com. We'll use OpenID discovery to
            discover the rest.")
-   (oauth-callback
-    :initarg :callback-endpoint
-    :reader oauth-callback
-    :documentation "A handler that will always be used as the redirect
-    endpoint. This handler should look at the actual state parameter,
-    and treat it as a nibble id, and execute the said nibble (or
-    redirect to the nibble)")
    (client-id :initarg :client-id
               :accessor client-id)
    (client-secret :initarg :client-secret
@@ -187,6 +180,8 @@
                                                            ,(format nil "Bearer ~a"
                                                                     (Access-token-str token))))))
 
+(defmethod oauth-callback ((auth oidc))
+   "/account/oauth-callback")
 
 
 (defmethod oidc-callback ((auth oidc) code redirect

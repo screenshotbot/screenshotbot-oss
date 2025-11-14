@@ -32,8 +32,7 @@
        (let ((auth (make-instance 'oidc
                                   :client-id "meh-client-id"
                                   :client-secret "meh-client-secret"
-                                  :issuer "https://example.com"
-                                  :callback-endpoint "/account/oauth-callback")))
+                                  :issuer "https://example.com")))
          (&body))))))
 
 (test simple-oidc-callback
