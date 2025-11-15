@@ -73,3 +73,27 @@
                          (is-equal-to "http://example.com/account/oauth-callback"))
             (assert-that (a:assoc-value params "state" :test #'equal)
                          (is-equal-to "67890"))))))))
+
+(test make-oauth-with-via
+  (with-fixture state ()
+    (with-fake-request (:host "example.com")
+      (let* ((oauth-url))
+        (cl-mock:if-called 'nibble:nibble-id
+                           (lambda (nibble)
+                             (declare (ignore nibble))
+                             12345))
+        (setf oauth-url (make-oauth-url
+                         "/authorize?client_id=abc123&scope=read"
+                         (lambda (&key code error redirect-uri)
+                           (declare (ignore code error redirect-uri)))
+                         :via "https://screenshotbot.io"))
+        (let ((parsed (quri:uri oauth-url)))
+          (let ((params (quri:uri-query-params parsed)))
+            (assert-that (a:assoc-value params "client_id" :test #'equal)
+                         (is-equal-to "abc123"))
+            (assert-that (a:assoc-value params "scope" :test #'equal)
+                         (is-equal-to "read"))
+            (assert-that (a:assoc-value params "redirect_uri" :test #'equal)
+                         (is-equal-to "https://screenshotbot.io/account/oauth-callback"))
+            (assert-that (a:assoc-value params "state" :test #'equal)
+                         (is-equal-to "12345,http://example.com/"))))))))

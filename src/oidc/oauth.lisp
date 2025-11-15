@@ -14,7 +14,7 @@
   (:export #:make-oauth-url))
 (in-package :oidc/oauth)
 
-(defun make-oauth-url (url callback &rest args &key redirect-uri &allow-other-keys)
+(defun make-oauth-url (url callback &rest args &key redirect-uri via &allow-other-keys)
   "Takes a base OAuth URL and a redirect nibble, and returns the complete URL
    with redirect_uri and state parameters added.
 
@@ -26,13 +26,29 @@ REDIRECT-URI overrides the redirect-uri. This is only useful for our
 GitHub implementation which is trying to redirect to
 accounts.screenshotbot.io
 
+See documentation for VIA in oidc/oidc:OIDC class. It's a non-standard
+part of our implementation.
+
 Any other arguments will be added like (hex:make-url ... ),
 i.e. encoded as http arguments"
 
-  (let ((url (apply #'hex:make-url url (remove-from-plist args :redirect-uri))))
+  (let ((url (apply #'hex:make-url url (remove-from-plist args :redirect-uri :via))))
    (let* ((redirect-uri (or
                          redirect-uri
                          (hex:make-full-url hunchentoot:*request* "/account/oauth-callback")))
+          (redirect-uri
+            (cond
+              ((null via)
+               redirect-uri)
+              (t
+               (let ((via (quri:uri via))
+                     (uri (quri:uri redirect-uri)))
+                 (quri:render-uri
+                  (quri:make-uri
+                   :scheme (quri:uri-scheme via)
+                   :host (quri:uri-host via)
+                   :port (quri:uri-port via)
+                   :defaults uri))))))
           (redirect-nibble (nibble (code error error_description)
                              (funcall callback
                                       :redirect-uri redirect-uri
@@ -41,6 +57,12 @@ i.e. encoded as http arguments"
                                       :error error
                                       :allow-other-keys t)))
           (state (nibble-id redirect-nibble))
+          (state
+            (cond
+              ((null via)
+               state)
+              (t
+               (format nil "~a,~a" state (hex:make-full-url hunchentoot:*request* "/")))))
           (uri (quri:uri url)))
      (quri:render-uri
       (quri:make-uri

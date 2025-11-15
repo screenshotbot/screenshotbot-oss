@@ -66,7 +66,15 @@
           :initform "openid"
           :documentation "The default scope used for authorization")
    (cached-discovery :initform nil
-                     :accessor cached-discovery)))
+                     :accessor cached-discovery)
+   (via :initarg :via
+        :initform nil
+        :reader oidc-via
+        :documentation "Typically NIL, or perhaps https://screenshotbot.io. This adds a via
+point for redirects. This is not a standard part of the OIDC protocol,
+but rather a convenience for us to only have one domain listed in the
+IdP. For this to work, you must have created an ENTERPRISE-INSTALL
+object on prod, other screenshotbot.io will reject it.")))
 
 (defmethod logout-link ((self oidc))
   "RP initiated logout link: https://openid.net/specs/openid-connect-rpinitiated-1_0.html.
@@ -257,6 +265,7 @@
     (make-oauth-url
      (authorization-endpoint oauth)
      callback
+     :via (oidc-via oauth)
      :client_id (client-id oauth)
      :response_type "code"
      :scope (scope oauth))))
