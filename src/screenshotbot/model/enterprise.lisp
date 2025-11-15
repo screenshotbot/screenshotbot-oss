@@ -14,7 +14,9 @@
   (:import-from #:util/store/fset-index
                 #:fset-unique-index)
   (:export #:enterprise-install
-           #:enterprise-install-domain))
+           #:enterprise-install-domain
+           #:enterprise-install-by-domain
+           #:all-enterprise-installs))
 (in-package :screenshotbot/model/enterprise)
 
 (defindex +domain-index+
@@ -24,6 +26,8 @@
 (defclass enterprise-install (store-object)
   ((domain :initarg :domain
            :index +domain-index+
+           :index-reader enterprise-install-by-domain
+           :index-values all-enterprise-installs
            :accessor enterprise-install-domain))
   (:metaclass persistent-class))
 
