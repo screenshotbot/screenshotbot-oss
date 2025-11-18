@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.16.24 - 2025-11-18
+
+### Changed
+
+- Fixed an issue with the upload-pack protocol hanging when an ERR is
+  sent during read-shallow-lines. (T2130)
+
+
 ## 2.16.23 - 2025-11-10
 
 ### Changed
