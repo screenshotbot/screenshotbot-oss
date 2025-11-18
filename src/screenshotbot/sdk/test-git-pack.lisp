@@ -12,6 +12,7 @@
   (:import-from #:fiveam-matchers/strings
                 #:starts-with)
   (:import-from #:screenshotbot/sdk/git-pack
+                #:upload-pack-error
                 #:remove-auth-from-uri
                 #:read-netrc
                 #:supported-remote-repo-p
@@ -190,3 +191,18 @@ set st to idle when block timeout"))))
           nil)
     (multiple-value-list
      (remove-auth-from-uri "https://gitlab.com/my-group/my-repo.git")))))
+
+(test not-our-ref-error
+  "Reproduces the 'fatal: git upload-pack: not our ref' error.
+This happens when requesting a commit SHA that doesn't exist in the repository,
+typically because it was removed via force push or history rewrite."
+  (test-git:with-git-repo (repo :dir dir)
+    (test-git:make-commit repo "foo")
+    (test-git:make-commit repo "bar")
+    (test-git:enable-server-features repo)
+    (signals upload-pack-error
+      (read-commits (namestring dir)
+                    :wants (lambda (refs)
+                             ;; Return a fake SHA that doesn't exist
+                             (list "458a81c522f6d7325c9d893624c926eaa8ed2cc0"))
+                    :depth 30))))

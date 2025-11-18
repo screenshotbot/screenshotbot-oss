@@ -151,6 +151,13 @@
 (define-condition pack-header-encountered (error)
   ())
 
+(define-condition upload-pack-error (error)
+  ((message :initarg :message
+            :reader upload-pack-error-message))
+  (:report (lambda (condition stream)
+             (format stream "Git upload-pack error: ~a"
+                     (upload-pack-error-message condition)))))
+
 (defmethod read-protocol-line ((self abstract-upload-pack))
   (let ((len (read-length self)))
     (cond
@@ -162,6 +169,10 @@
          (let ((result
                  (flex:octets-to-string content)))
            (log:trace "Read protocol line: ~a" result)
+           ;; Check for ERR packets sent by git
+           (when (str:starts-with-p "ERR " result)
+             (error 'upload-pack-error
+                    :message (str:substring 4 nil result)))
            result))))))
 
 (defmethod read-headers (self)
@@ -644,7 +655,7 @@ a second value the headers that were initially provided (sha and refs)
 ;; (read-commits "https://github.com/tdrhq/alisp.git" :wants (list "master") :depth nil)
 ;; (read-commits "git@gitlab.com:tdrhq/fast-example.git" :wants (list "master") :depth 30 :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b" "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b"))
 ;; (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30 :haves (list "3c6fcd29ecdf37a2d1a36f46309787d32e11e69b"  "3be209da6b797a6821d8c43b13c8b2ce64cf4a5b"))
-;; (read-commits "git@bitbucket.org:tdrhq/fastq-example.git" :wants (list "master") :depth 30)
+;; (read-commits "git@bitbucket.org:tdrhq/fast-example.git" :wants (list "master") :depth 30)
 ;; (read-commits (make-remote-upload-pack (make-instance 'git:git-repo :dir "/tmp/alisp/")) :wants (list "master"))
 
 ;; Azure features: ( multi_ack thin-pack side-band side-band-64k no-progress multi_ack_detailed no-done shallow allow-tip-sha1-in-want filter symref=HEAD:refs/heads/master)
@@ -655,6 +666,11 @@ a second value the headers that were initially provided (sha and refs)
 ;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master") :extra-wants (list "4ec592fc02c8bf200e4e2b9902e9a71fd8de3aec") :depth 100)
 ;; (read-commits "/home/arnold/builds/web/.git" :wants (list "master") :depth 2)
 ;; (read-commits "https://github.com/tdrhq/alisp.git" :git-config "/tmp/alisp/.git/config" :wants (list "master") :depth nil)
+
+;; Reproduce "fatal: git upload-pack: not our ref" error:
+;; This happens when you request a SHA that doesn't exist in the repository,
+;; typically because it was removed via force push or history rewrite.
+;; (read-commits "git@bitbucket.org:tdrhq/fast-example.git" :wants (lambda (refs) (list "458a81c522f6d7325c9d893624c926eaa8ed2cc0")) :depth 30)
 
 (def-health-check can-compute-sha1 ()
   "The first time we tried to do this, sha1 was removed out of the delivered image"
