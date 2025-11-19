@@ -45,3 +45,6 @@ tests. It's the tests responsibility to clean up any background jobs.")
        (fn)
     (setf lparallel:*kernel* nil)))
 
+
+;; temporary: just needed for a hot-reload before using lparallel more rigorously
+(setf lparallel:*debug-tasks-p* nil)
