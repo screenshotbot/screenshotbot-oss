@@ -9,7 +9,8 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:export
-   #:immediate-promise))
+   #:immediate-promise
+   #:with-temp-lparallel-kernel))
 (in-package :util/lparallel)
 
 (defvar *sleep-time* 1)
@@ -18,3 +19,14 @@
   (let ((promise (lparallel:promise)))
     (lparallel:fulfill promise val)
     promise))
+
+(def-easy-macro with-temp-lparallel-kernel (&key (threads 20)
+                                                 &fn fn)
+  (let ((shutting-down-p nil))
+    (let ((lparallel:*kernel* (lparallel:make-kernel threads
+                                                     #+nil #+nil
+                                                     :context #'context)))
+      
+      (unwind-protect
+           (funcall fn)
+        (lparallel:end-kernel :wait t)))))
