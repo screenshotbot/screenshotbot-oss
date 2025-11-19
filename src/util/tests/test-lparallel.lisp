@@ -8,8 +8,10 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/lparallel
+                #:with-test-lparallel-kernel
                 #:with-temp-lparallel-kernel)
   (:import-from #:lparallel.promise
+                #:force
                 #:future)
   (:import-from #:lparallel.promise
                 #:force))
@@ -23,5 +25,10 @@
       (log:info "count: ~a" i))
     (finishes
       
-     (with-temp-lparallel-kernel ()
+      (with-temp-lparallel-kernel ()
        (values)))))
+
+(test cached-test-kernel
+  (finishes
+    (with-test-lparallel-kernel ()
+      (is (eql :done (force (future :done)))))))

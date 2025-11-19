@@ -241,6 +241,7 @@
 
 (defsystem :util/lparallel
   :depends-on (:lparallel
+               :util.misc
                :easy-macros)
   :serial t
   :components ((:file "lparallel")))

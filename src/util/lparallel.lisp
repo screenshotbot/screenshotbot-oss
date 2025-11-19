@@ -30,3 +30,18 @@
       (unwind-protect
            (funcall fn)
         (lparallel:end-kernel :wait t)))))
+
+(defvar *kernel-for-tests* nil
+  "A kernel that is only used during tests, but is cached across
+tests. It's the tests responsibility to clean up any background jobs.")
+
+(def-easy-macro with-test-lparallel-kernel (&fn fn)
+  (util/misc:or-setf
+   *kernel-for-tests*
+   (lparallel:make-kernel 20))
+  (assert (not lparallel:*kernel*))
+  (setf lparallel:*kernel* *kernel-for-tests*)
+  (unwind-protect
+       (fn)
+    (setf lparallel:*kernel* nil)))
+
