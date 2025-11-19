@@ -77,9 +77,14 @@
   (register-tdrhq "cl-unix-sockets" "master")
   (register-tdrhq "bknr.cluster" "main"))
 
+;; Sharplisper forks
+(quick-patch:register "https://github.com/sharplispers/lparallel"
+                      "95b162b152e43bae9a19bf7085db2aeb108a74d5")
 
 (let ((output-dir (format nil "~abuild/quick-patch/"
                           ;; *cwd* is from prepare-image.lisp. Can we clean this up better?
                           (namestring cl-user::*cwd*))))
   (format t "Checking out quick-patch repos in: ~a~%" output-dir)
   (quick-patch:checkout-all output-dir))
+
+
