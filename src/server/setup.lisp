@@ -187,6 +187,11 @@
                                               (when shutting-down-p
                                                 (muffle-warning w)))))
                (funcall fn))))
+
+      ;; Better default, and there's not many ways we can safely make
+      ;; this T, unless we change lparallel itself. (T2133)
+      (setf lparallel:*debug-tasks-p* nil)
+
       (setf lparallel:*kernel* (lparallel:make-kernel threads
                                                       :context #'context))
       (unwind-protect
