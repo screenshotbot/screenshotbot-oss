@@ -182,11 +182,11 @@
     :documentation "Jobs that are done periodically, as opposed to for
     each commit. We will attempt to promote each run. This is mostly
     for taking screenshots of public websites.")
-   (screenshots
+   (screenshot-map
     :initarg :screenshots
     :initform nil
-    :json-key "screenshots"
-    :json-type (or null :string)
+    :json-key "screenshotMap"
+    :json-type (or null :number)
     :accessor archived-run-screenshots
     :documentation "The list of screenshot names")
    (promotion-complete-p
