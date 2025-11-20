@@ -103,3 +103,19 @@
 (defun differential--define-keybindings ()
   (define-key differential-mode-map
     (kbd "g") #'differential--reload))
+
+(defun arc-paste ()
+  "Takes the current region and pipes it to 'arc paste' command in ~/builds/web directory."
+  (interactive)
+  (if (use-region-p)
+      (let ((region-text (buffer-substring-no-properties (region-beginning) (region-end)))
+            (default-directory "~/builds/web/"))
+        (let ((response (maniphest-call-conduit
+                         "paste.create"
+                         (let ((dict (make-hash-table)))
+                           (puthash "content" region-text dict)
+                           dict))))
+          (let ((paste-id (gethash "id" (gethash "response" response))))
+            (message "Region pasted: P%s" paste-id))))
+    (message "No region selected")))
+
