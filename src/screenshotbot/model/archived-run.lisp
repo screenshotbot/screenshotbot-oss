@@ -16,10 +16,13 @@
                 #:encode-json
                 #:decode-json)
   (:import-from #:util/store/object-id
+                #:find-by-oid
                 #:oid
                 #:oid-array)
   (:import-from #:util/store
                 #:location-for-oid)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-company)
   (:export
    #:archived-run
    #:archived-run-channel
@@ -334,3 +337,6 @@ the oid as a string. Otherwise we return the oid as stored."
                                   while line
                                   do (write-line line out)))))
          (decode-json json-string 'archived-run))))))
+
+(defmethod recorder-run-company ((self archived-run))
+  (find-by-oid (archived-run-company self) '%c:company))
