@@ -29,6 +29,8 @@ very fantastic bknr.datastore.
   deduplicate copies of the same string as a memory
   optimization. However this means it is illegal and unsafe to have a 
   transaction that modifies a string that is being used by the datastore.
+  
+* We use lparallel to parallelize some parts of the snapshotting process
 
 # Planned changes from OG version
 
