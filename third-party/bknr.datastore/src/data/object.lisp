@@ -10,6 +10,18 @@
 
 (in-package :bknr.datastore)
 
+(defvar *datastore-lparallel-kernel* nil
+  "We use a dedicated lparallel kernel to avoid deadlocks if a shared
+kernel is trying to write to bknr.datastore")
+
+(defvar *datastore-lparallel-kernel-lock* (bt:make-lock))
+
+(defun datastore-lparallel-kernel ()
+  (bt:with-lock-held (*datastore-lparallel-kernel-lock*)
+    (or
+     *datastore-lparallel-kernel*
+     (setf *datastore-lparallel-kernel* (lparallel:make-kernel 20 :name "bknr.datastore-lparallel-kernel")))))
+
 (define-condition inconsistent-slot-persistence-definition (store-error)
   ((class :initarg :class)
    (slot-name :initarg :slot-name))
@@ -826,17 +838,19 @@ the slots are read from the snapshot and ignored."
   nil)
 
 (defun split-objects-into-snapshots (objects)
-  (loop for obj in objects
-        for snapshot = (make-object-snapshot obj)
-        if (not snapshot)
-          collect obj into objs
-        else
-          collect  (make-object-snapshot-pair
-                    :object obj
-                    :snapshot snapshot)
-            into snaps
-        finally
-           (return (values objs snaps))))
+  (let ((lparallel:*kernel* (datastore-lparallel-kernel)))
+   (let ((snapshots (lparallel:pmapcar #'make-object-snapshot objects)))
+     (loop for obj in objects
+           for snapshot in snapshots
+           if (not snapshot)
+             collect obj into objs
+           else
+             collect  (make-object-snapshot-pair
+                       :object obj
+                       :snapshot snapshot)
+               into snaps
+           finally
+              (return (values objs snaps))))))
 
 (defun encode-object-slots (subsystem class-layouts objects snapshot-pathname)
   (labels ((make-batches (objects batch-size)

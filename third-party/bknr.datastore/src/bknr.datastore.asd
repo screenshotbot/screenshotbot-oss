@@ -23,6 +23,7 @@
                :bknr.indices
                :yason
                :trivial-backtrace
+               :lparallel
                :trivial-utf-8
                #+sbcl :sb-posix
                #+lispworks :float-features
