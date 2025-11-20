@@ -13,6 +13,8 @@
                 #:base-indexed-object)
   (:import-from #:screenshotbot/api/model
                 #:metadata)
+  (:import-from #:util/store/object-id
+                #:oid)
   (:export
    #:archived-run
    #:archived-run-channel
@@ -57,6 +59,18 @@
     :json-type (or null :string)
     :accessor archived-run-channel
     :documentation "The channel this run belongs to")
+   (oid
+    :initarg :oid
+    :initform nil
+    :json-key "oid"
+    :json-type (or null :string)
+    :accessor %oid)
+   (bknr-id
+    :initarg :bknr-id
+    :initform nil
+    :json-key "bknrId"
+    :json-type (or null :number)
+    :documentation "The original bknr datastore id for this object")
    (company
     :initarg :company
     :initform nil
