@@ -11,6 +11,8 @@
                 #:ext-json-serializable-class)
   (:import-from #:bknr.indices
                 #:base-indexed-object)
+  (:import-from #:screenshotbot/api/model
+                #:metadata)
   (:export
    #:archived-run
    #:archived-run-channel
@@ -257,9 +259,9 @@ NIL or 0, this will use exact pixel comparisons.")
     :initarg :metadata
     :initform nil
     :json-key "metadata"
-    :json-type (or null :string)
+    :json-type (:list metadata)
     :accessor archived-run-metadata
-    :documentation "An alist of metadata. The keys and values are both strings."))
+    :documentation "A list of metadata objects with key-value pairs."))
   (:metaclass ext-json-serializable-class)
   (:documentation "An archived recorder run with minimal information, stored as JSON.
   This represents an old, finalized run that will be rarely directly referenced."))

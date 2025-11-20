@@ -17,7 +17,12 @@
                 #:archived-run-compare-threshold
                 #:archived-run-compare-tolerance
                 #:archived-run-channel
-                #:archived-run-company)
+                #:archived-run-company
+                #:archived-run-metadata)
+  (:import-from #:screenshotbot/api/model
+                #:metadata
+                #:metadata-key
+                #:metadata-value)
   (:import-from #:json-mop
                 #:json-to-clos)
   (:local-nicknames (#:a #:alexandria)))
@@ -88,3 +93,39 @@
     (is (typep (archived-run-cleanp read-run1) 'boolean))
     (is (equal nil (archived-run-cleanp read-run2)))
     (is (typep (archived-run-cleanp read-run2) 'boolean))))
+
+(test archived-run-with-metadata
+  "Test that archived-run properly serializes and deserializes metadata objects"
+  (let* ((meta1 (make-instance 'metadata
+                               :key "build-id"
+                               :value "12345"))
+         (meta2 (make-instance 'metadata
+                               :key "environment"
+                               :value "production"))
+         (run (make-instance 'archived-run
+                             :commit-hash "test-commit"
+                             :branch "main"
+                             :metadata (list meta1 meta2)))
+         (json-output (with-output-to-string (out)
+                        (json-mop:encode run out)))
+         (read-run (json-to-clos json-output 'archived-run)))
+
+    ;; Verify basic fields
+    (is (equal "test-commit" (archived-run-commit read-run)))
+    (is (equal "main" (archived-run-branch read-run)))
+
+    ;; Verify metadata is a list
+    (is (listp (archived-run-metadata read-run)))
+    (is (= 2 (length (archived-run-metadata read-run))))
+
+    ;; Verify first metadata object
+    (let ((read-meta1 (first (archived-run-metadata read-run))))
+      (is (typep read-meta1 'metadata))
+      (is (equal "build-id" (metadata-key read-meta1)))
+      (is (equal "12345" (metadata-value read-meta1))))
+
+    ;; Verify second metadata object
+    (let ((read-meta2 (second (archived-run-metadata read-run))))
+      (is (typep read-meta2 'metadata))
+      (is (equal "environment" (metadata-key read-meta2)))
+      (is (equal "production" (metadata-value read-meta2))))))
