@@ -1,0 +1,35 @@
+<!ELEMENT archived-run (commit-hash?,build-url?,github-repo?,branch?,work-branch?,branch-hash?,merge-base?,pull-request?,override-commit-hash?,screenshots?,tags?,author?,metadata?)>
+
+<!ELEMENT commit-hash (#PCDATA)>
+<!ELEMENT build-url (#PCDATA)>
+<!ELEMENT github-repo (#PCDATA)>
+<!ELEMENT branch (#PCDATA)>
+<!ELEMENT work-branch (#PCDATA)>
+<!ELEMENT branch-hash (#PCDATA)>
+<!ELEMENT merge-base (#PCDATA)>
+<!ELEMENT pull-request (#PCDATA)>
+<!ELEMENT override-commit-hash (#PCDATA)>
+<!ELEMENT screenshots (#PCDATA)>
+<!ELEMENT tags (#PCDATA)>
+<!ELEMENT author (#PCDATA)>
+<!ELEMENT metadata (#PCDATA)>
+
+<!ATTLIST archived-run
+    channel CDATA #IMPLIED
+    company CDATA #IMPLIED
+    cleanp CDATA #IMPLIED
+    activep CDATA #IMPLIED
+    release-branch-p CDATA #IMPLIED
+    gitlab-merge-request-iid CDATA #IMPLIED
+    phabricator-diff-id CDATA #IMPLIED
+    previous-run CDATA #IMPLIED
+    create-github-issue-p CDATA #IMPLIED
+    trunkp CDATA #IMPLIED
+    periodic-job-p CDATA #IMPLIED
+    promotion-complete-p CDATA #IMPLIED
+    compare-threshold CDATA #IMPLIED
+    compare-tolerance CDATA #IMPLIED
+    created-at CDATA #IMPLIED
+    batch CDATA #IMPLIED
+    group-separator CDATA #IMPLIED
+    was-promoted-p CDATA #IMPLIED>
