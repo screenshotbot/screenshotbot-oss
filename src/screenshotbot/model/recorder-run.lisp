@@ -162,6 +162,11 @@
   'fset-set-index
   :slot-name 'channel)
 
+(defclass bknr-or-archived-run-mixin ()
+  ()
+  (:documentation "A class that's mixed into both RECORDER-RUN and ARCHIVED-RUN, so that
+we can write methods that are generic to both."))
+
 (defclass abstract-run (store-object)
   ()
   (:metaclass persistent-class))
@@ -200,7 +205,8 @@
            collect shard)))
 
 (with-class-validation
-  (defclass recorder-run (object-with-oid abstract-run)
+  (defclass recorder-run (object-with-oid abstract-run
+                          bknr-or-archived-run-mixin)
     ((channel
       :initarg :channel
       :initform nil

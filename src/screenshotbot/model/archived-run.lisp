@@ -22,6 +22,7 @@
   (:import-from #:util/store
                 #:location-for-oid)
   (:import-from #:screenshotbot/model/recorder-run
+                #:bknr-or-archived-run-mixin
                 #:recorder-run-company)
   (:export
    #:archived-run
@@ -61,7 +62,8 @@
 (in-package :screenshotbot/model/archived-run)
 
 
-(defclass archived-run (base-indexed-object)
+(defclass archived-run (base-indexed-object
+                        bknr-or-archived-run-mixin)
   ((channel
     :initarg :channel
     :initform nil
