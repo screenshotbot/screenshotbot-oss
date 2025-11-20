@@ -839,18 +839,20 @@ the slots are read from the snapshot and ignored."
 
 (defun split-objects-into-snapshots (objects)
   (let ((lparallel:*kernel* (datastore-lparallel-kernel)))
-   (let ((snapshots (lparallel:pmapcar #'make-object-snapshot objects)))
-     (loop for obj in objects
-           for snapshot in snapshots
-           if (not snapshot)
-             collect obj into objs
-           else
-             collect  (make-object-snapshot-pair
-                       :object obj
-                       :snapshot snapshot)
-               into snaps
-           finally
-              (return (values objs snaps))))))
+    (let ((snapshots (lparallel:pmapcar #'make-object-snapshot objects)))
+      (assert (eql (length snapshots)
+                   (length objects)))
+      (loop for obj in objects
+            for snapshot in snapshots
+            if (not snapshot)
+              collect obj into objs
+            else
+              collect  (make-object-snapshot-pair
+                        :object obj
+                        :snapshot snapshot)
+                into snaps
+            finally
+               (return (values objs snaps))))))
 
 (defun encode-object-slots (subsystem class-layouts objects snapshot-pathname)
   (labels ((make-batches (objects batch-size)
