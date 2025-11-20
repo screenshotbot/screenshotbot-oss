@@ -94,6 +94,8 @@
                 #:timeago)
   (:import-from #:screenshotbot/figma/dropdown
                 #:figma-drop-down)
+  (:import-from #:screenshotbot/model/archived-run
+                #:load-archived-run)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -119,8 +121,16 @@
 (deftag commit (&key repo hash)
   <a href= (commit-link repo hash) >,(str:substring 0 8 hash)</a>)
 
+(defun find-run-by-oid (oid)
+  (let ((run (find-by-oid oid)))
+    (when run
+      (check-type run recorder-run))
+    (or
+     run
+     (load-archived-run oid))))
+
 (defhandler (run-page :uri "/runs/:id" :method :get) (id name)
-  (let* ((run (find-by-oid id 'recorder-run)))
+  (let* ((run (find-run-by-oid id)))
     (maybe-redirect-for-company (recorder-run-company run))
     (flet ((render ()
              (render-run-page run :name name)))
