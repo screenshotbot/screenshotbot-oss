@@ -15,99 +15,76 @@
                 #:archived-run-cleanp
                 #:archived-run-created-at
                 #:archived-run-compare-threshold
-                #:archived-run-compare-tolerance)
-  (:import-from #:bknr.impex
-                #:parse-xml-file
-                #:write-to-xml)
+                #:archived-run-compare-tolerance
+                #:archived-run-channel
+                #:archived-run-company)
+  (:import-from #:json-mop
+                #:json-to-clos)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-archived-run)
 
 (util/fiveam:def-suite)
 
 (test write-and-read-archived-run
-  "Test writing an archived-run to XML and reading it back"
-  (uiop:with-temporary-file (:stream s :pathname p :direction :output
-                                      :keep t :type "xml")
-    (let* ((run (make-instance 'archived-run
-                               :commit-hash "abc123def456"
-                               :branch "main"
-                               :author "test-author"
-                               :cleanp t
-                               :created-at 1234567890
-                               :compare-threshold 0.05
-                               :compare-tolerance 10
-                               :channel "test-channel"
-                               :company "test-company"))
-           (xml-output (with-output-to-string (out)
-                         (write-to-xml (list run) :name "archived-runs" :output out))))
+  "Test writing an archived-run to JSON and reading it back"
+  (let* ((run (make-instance 'archived-run
+                             :commit-hash "abc123def456"
+                             :branch "main"
+                             :author "test-author"
+                             :cleanp t
+                             :created-at 1234567890
+                             :compare-threshold 0.05
+                             :compare-tolerance 10
+                             :channel "test-channel"
+                             :company "test-company"))
+         (json-output (with-output-to-string (out)
+                        (json-mop:encode run out)))
+         (read-run (json-to-clos json-output 'archived-run)))
 
-      ;; Write XML to file
-      (write-string xml-output s)
-      (finish-output s)
-      (close s)
+    ;; Verify the data matches
+    (is (equal "abc123def456" (archived-run-commit read-run)))
+    (is (equal "main" (archived-run-branch read-run)))
+    (is (equal "test-author" (archived-run-author read-run)))
+    (is (equal "test-channel" (archived-run-channel read-run)))
+    (is (equal "test-company" (archived-run-company read-run)))
 
-      ;; Read it back
-      (let* ((parsed (parse-xml-file p (list (find-class 'archived-run))))
-             (runs (getf parsed :archived-run)))
+    ;; Verify boolean is parsed correctly
+    (is (equal t (archived-run-cleanp read-run)))
+    (is (typep (archived-run-cleanp read-run) 'boolean))
 
-        ;; Verify we got one run back
-        (is (= 1 (length runs)))
+    ;; Verify integers are parsed correctly
+    (is (equal 1234567890 (archived-run-created-at read-run)))
+    (is (typep (archived-run-created-at read-run) 'integer))
 
-        (let ((read-run (first runs)))
-          ;; Verify the data matches
-          (is (equal "abc123def456" (archived-run-commit read-run)))
-          (is (equal "main" (archived-run-branch read-run)))
-          (is (equal "test-author" (archived-run-author read-run)))
-
-          ;; Verify boolean is parsed correctly
-          (is (equal t (archived-run-cleanp read-run)))
-          (is (typep (archived-run-cleanp read-run) 'boolean))
-
-          ;; Verify integers are parsed correctly
-          (is (equal 1234567890 (archived-run-created-at read-run)))
-          (is (typep (archived-run-created-at read-run) 'integer))
-
-          ;; Verify numbers are parsed correctly
-          (is (equal 0.05 (archived-run-compare-threshold read-run)))
-          (is (typep (archived-run-compare-threshold read-run) 'number))
-          (is (equal 10 (archived-run-compare-tolerance read-run)))
-          (is (typep (archived-run-compare-tolerance read-run) 'number)))))))
+    ;; Verify numbers are parsed correctly
+    (is (< (abs (- 0.05 (archived-run-compare-threshold read-run))) 0.001))
+    (is (typep (archived-run-compare-threshold read-run) 'number))
+    (is (equal 10 (archived-run-compare-tolerance read-run)))
+    (is (typep (archived-run-compare-tolerance read-run) 'number))))
 
 (test write-multiple-archived-runs
-  "Test writing multiple archived-runs to XML and reading them back"
-  (uiop:with-temporary-file (:stream s :pathname p :direction :output
-                                      :keep t :type "xml")
-    (let* ((run1 (make-instance 'archived-run
-                                :commit-hash "commit1"
-                                :branch "main"
-                                :cleanp t))
-           (run2 (make-instance 'archived-run
-                                :commit-hash "commit2"
-                                :branch "develop"
-                                :cleanp nil))
-           (xml-output (with-output-to-string (out)
-                         (write-to-xml (list run1 run2) :name "archived-runs" :output out))))
+  "Test encoding multiple archived-runs to JSON"
+  (let* ((run1 (make-instance 'archived-run
+                              :commit-hash "commit1"
+                              :branch "main"
+                              :cleanp t))
+         (run2 (make-instance 'archived-run
+                              :commit-hash "commit2"
+                              :branch "develop"
+                              :cleanp nil))
+         (json1 (with-output-to-string (out)
+                  (json-mop:encode run1 out)))
+         (json2 (with-output-to-string (out)
+                  (json-mop:encode run2 out)))
+         (read-run1 (json-to-clos json1 'archived-run))
+         (read-run2 (json-to-clos json2 'archived-run)))
 
-      ;; Write XML to file
-      (write-string xml-output s)
-      (finish-output s)
-      (close s)
+    ;; Verify the data
+    (is (equal "commit1" (archived-run-commit read-run1)))
+    (is (equal "commit2" (archived-run-commit read-run2)))
 
-      ;; Read it back
-      (let* ((parsed (parse-xml-file p (list (find-class 'archived-run))))
-             (runs (getf parsed :archived-run)))
-
-        ;; Verify we got two runs back
-        (is (= 2 (length runs)))
-
-        ;; Verify the data
-        (is (equal "commit1" (archived-run-commit (first runs))))
-        (is (equal "commit2" (archived-run-commit (second runs))))
-
-        ;; Verify booleans work with both true and false
-        (is (equal t (archived-run-cleanp (first runs))))
-        (is (typep (archived-run-cleanp (first runs)) 'boolean))
-        (is (equal nil (archived-run-cleanp (second runs))))
-        (is (typep (archived-run-cleanp (second runs)) 'boolean))))))
-
-
+    ;; Verify booleans work with both true and false
+    (is (equal t (archived-run-cleanp read-run1)))
+    (is (typep (archived-run-cleanp read-run1) 'boolean))
+    (is (equal nil (archived-run-cleanp read-run2)))
+    (is (typep (archived-run-cleanp read-run2) 'boolean))))
