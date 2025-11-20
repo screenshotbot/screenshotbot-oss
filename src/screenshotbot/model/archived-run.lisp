@@ -12,9 +12,14 @@
   (:import-from #:bknr.indices
                 #:base-indexed-object)
   (:import-from #:screenshotbot/api/model
-                #:metadata)
+                #:metadata
+                #:encode-json
+                #:decode-json)
   (:import-from #:util/store/object-id
-                #:oid)
+                #:oid
+                #:oid-array)
+  (:import-from #:util/store
+                #:location-for-oid)
   (:export
    #:archived-run
    #:archived-run-channel
@@ -47,7 +52,9 @@
    #:archived-run-group-separator
    #:archived-run-was-promoted-p
    #:archived-run-author
-   #:archived-run-metadata))
+   #:archived-run-metadata
+   #:save-archived-run
+   #:load-archived-run))
 (in-package :screenshotbot/model/archived-run)
 
 
@@ -279,3 +286,51 @@ NIL or 0, this will use exact pixel comparisons.")
   (:metaclass ext-json-serializable-class)
   (:documentation "An archived recorder run with minimal information, stored as JSON.
   This represents an old, finalized run that will be rarely directly referenced."))
+
+(defmethod oid ((run archived-run) &key (stringp t))
+  "Returns the oid of the archived-run. If :STRINGP is T, then we return
+the oid as a string. Otherwise we return the oid as stored."
+  (let ((oid (%oid run)))
+    (cond
+      ((and stringp oid)
+       oid)
+      (t
+       oid))))
+
+(defun archived-run-location-for-oid (oid)
+  "Figure out the local location for the given OID for an archived run"
+  (location-for-oid
+   #P"archived-runs/"
+   oid
+   :type "json"))
+
+(defun save-archived-run (run)
+  "Save an archived-run to disk as JSON using its OID to determine the location."
+  (let* ((oid-str (oid run :stringp t))
+         (oid-bytes (mongoid:oid oid-str))
+         (file-path (archived-run-location-for-oid oid-bytes))
+         (json-string (encode-json run)))
+    (with-open-file (stream file-path
+                            :direction :output
+                            :if-exists :supersede
+                            :if-does-not-exist :create)
+      (write-string json-string stream))
+    file-path))
+
+(defun load-archived-run (oid)
+  "Load an archived-run from disk using its OID.
+   OID can be a string, array, or OID struct."
+  (let* ((oid-bytes (etypecase oid
+                      (string (mongoid:oid oid))
+                      ((vector (unsigned-byte 8)) oid)
+                      (util/store/object-id::oid
+                       (util/store/object-id::oid-arr oid))))
+         (file-path (archived-run-location-for-oid oid-bytes)))
+    (when (probe-file file-path)
+     (with-open-file (stream file-path
+                             :direction :input)
+       (let ((json-string (with-output-to-string (out)
+                            (loop for line = (read-line stream nil nil)
+                                  while line
+                                  do (write-line line out)))))
+         (decode-json json-string 'archived-run))))))

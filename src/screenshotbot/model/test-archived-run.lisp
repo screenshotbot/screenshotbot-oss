@@ -18,13 +18,22 @@
                 #:archived-run-compare-tolerance
                 #:archived-run-channel
                 #:archived-run-company
-                #:archived-run-metadata)
+                #:archived-run-metadata
+                #:save-archived-run
+                #:load-archived-run
+                #:oid)
   (:import-from #:screenshotbot/api/model
                 #:metadata
                 #:metadata-key
                 #:metadata-value)
   (:import-from #:json-mop
                 #:json-to-clos)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:fiveam-matchers/strings
+                #:matches-regex)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-archived-run)
 
@@ -129,3 +138,46 @@
       (is (typep read-meta2 'metadata))
       (is (equal "environment" (metadata-key read-meta2)))
       (is (equal "production" (metadata-value read-meta2))))))
+
+(test save-and-load-archived-run
+  "Test saving and loading an archived-run to/from disk"
+  (with-test-store ()
+   (uiop:with-temporary-file (:pathname temp-dir :type :directory)
+     (let* ((run (make-instance 'archived-run
+                                :oid "507f1f77bcf86cd799439011"
+                                :commit-hash "abc123def456"
+                                :branch "main"
+                                :author "test-author"
+                                :cleanp t
+                                :created-at 1234567890
+                                :compare-threshold 0.05
+                                :compare-tolerance 10
+                                :channel "test-channel"
+                                :company "test-company"))
+            (oid-str (oid run :stringp t)))
+
+       ;; Save the run
+       (let ((file-path (save-archived-run run)))
+         (assert-that
+          (namestring file-path)
+          (matches-regex ".*/50/7f/1f77bcf86cd799439011" ))
+         (is (not (null file-path)))
+         (is (probe-file file-path)))
+
+       ;; Load the run back
+       (let ((loaded-run (load-archived-run oid-str)))
+         ;; Verify the data matches
+         (is (equal "abc123def456" (archived-run-commit loaded-run)))
+         (is (equal "main" (archived-run-branch loaded-run)))
+         (is (equal "test-author" (archived-run-author loaded-run)))
+         (is (equal "test-channel" (archived-run-channel loaded-run)))
+         (is (equal "test-company" (archived-run-company loaded-run)))
+         (is (equal t (archived-run-cleanp loaded-run)))
+         (is (equal 1234567890 (archived-run-created-at loaded-run)))
+         (is (< (abs (- 0.05 (archived-run-compare-threshold loaded-run))) 0.001))
+         (is (equal 10 (archived-run-compare-tolerance loaded-run))))))))
+
+(test non-existent-archived-run
+  (with-test-store ()
+    (is (eql nil
+             (load-archived-run "507f1f77bcf86cd799439011")))))
