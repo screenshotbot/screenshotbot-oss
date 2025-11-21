@@ -29,6 +29,7 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
   (:import-from #:screenshotbot/dashboard/run-page
+                #:%advanced-run-page
                 #:can-view-metadata-p
                 #:render-run-warning
                 #:run-delete-page
@@ -45,7 +46,16 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
                 #:has-item
-                #:contains))
+                #:contains)
+  (:import-from #:screenshotbot/model/archived-run
+                #:save-archived-run
+                #:archived-run)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:screenshotbot/model/screenshot-map
+                #:screenshot-map)
+  (:import-from #:bknr.datastore
+                #:store-object-id))
 (in-package :screenshotbot/dashboard/test-run-page)
 
 (util/fiveam:def-suite)
@@ -78,6 +88,24 @@
 (def-easy-macro wrap-snapshot (&fn fn)
   (snap-all-images)
   (fix-timestamps (fn)))
+
+(def-easy-macro with-archived-run (&key (oid "507f1f77bcf86cd799439011") &binding archived-run company &fn fn)
+  (let* ((channel (make-instance 'channel
+                                 :company company
+                                 :name "test-channel"))
+         (screenshot-map (make-instance 'screenshot-map
+                                        :channel channel
+                                        :screenshots nil))
+         (archived-run (make-instance 'archived-run
+                                      :oid oid
+                                      :channel (store-object-id channel)
+                                      :company (oid company :stringp t)
+                                      :screenshots (store-object-id screenshot-map)
+                                      :commit-hash "test-commit"
+                                      :created-at (get-universal-time))))
+    ;; Save the archived-run to disk so it can be found
+    (save-archived-run archived-run)
+    (fn archived-run)))
 
 (screenshot-test simple-run-page-screenshots
   (with-fixture state ()
@@ -149,3 +177,25 @@
       (is-false (can-view-metadata-p "%foo"))
       (setf (adminp (auth:current-user)) t)
       (is-true (can-view-metadata-p "%foo")))))
+
+(test archived-run-page-happy-path
+  "Test that visiting the run page with an archived-run doesn't crash"
+  (with-test-store ()
+    (with-test-user (:company company
+                     :user user
+                     :logged-in-p t)
+      (roles:ensure-has-role company user 'roles:standard-member)
+      (with-archived-run (:company company :archived-run archived-run)
+        (finishes
+          (run-page :id (oid archived-run :stringp t)))))))
+
+(test archived-run-debug-page-happy-path
+  "Test that visiting the debug page with an archived-run doesn't crash"
+  (with-test-store ()
+    (with-test-user (:company company
+                     :user user
+                     :logged-in-p t)
+      (roles:ensure-has-role company user 'roles:standard-member)
+      (with-archived-run (:oid "507f1f77bcf86cd799439012" :company company :archived-run archived-run)
+        (finishes
+          (%advanced-run-page :oid (oid archived-run :stringp t)))))))
