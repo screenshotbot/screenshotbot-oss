@@ -440,7 +440,7 @@
 
 (defhandler (%advanced-run-page :uri "/runs/:oid/debug") (oid)
   (with-login ()
-    (let ((run (find-by-oid  oid 'recorder-run)))
+    (let ((run (find-run-by-oid  oid)))
       (can-view! run)
       (advanced-run-page :run run))))
 

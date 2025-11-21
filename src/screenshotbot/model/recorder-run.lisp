@@ -588,9 +588,10 @@ branch runs."
 (defmethod (setf activep) (val (run recorder-run))
   (error "Old method, set active-run on channel directly"))
 
-(defmethod recorder-run-screenshots ((run recorder-run))
+(defmethod recorder-run-screenshots ((run bknr-or-archived-run-mixin))
   (screenshot-map:to-list
    (run-screenshot-map run)))
+
 
 (defmethod bknr.datastore:blob-pathname ((self transient-promotion-log))
   (ensure-directories-exist

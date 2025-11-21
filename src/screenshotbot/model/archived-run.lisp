@@ -12,6 +12,8 @@
   (:import-from #:bknr.indices
                 #:base-indexed-object)
   (:import-from #:screenshotbot/api/model
+                #:metadata-key
+                #:metadata-value
                 #:metadata
                 #:encode-json
                 #:decode-json)
@@ -22,6 +24,19 @@
   (:import-from #:util/store
                 #:location-for-oid)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-metadata
+                #:recorder-run-batch
+                #:compare-threshold
+                #:periodic-job-p
+                #:trunkp
+                #:run-build-url
+                #:gitlab-merge-request-iid
+                #:phabricator-diff-id
+                #:recorder-run-merge-base
+                #:recorder-run-author
+                #:recorder-run-work-branch
+                #:override-commit-hash
+                #:github-repo
                 #:recorder-run-branch
                 #:recorder-run-warnings
                 #:recorder-run-tags
@@ -29,6 +44,9 @@
                 #:bknr-or-archived-run-mixin
                 #:recorder-run-company)
   (:import-from #:screenshotbot/user-api
+                #:activep
+                #:pull-request-url
+                #:recorder-run-commit
                 #:%created-at
                 #:recorder-run-channel)
   (:import-from #:bknr.datastore
@@ -104,19 +122,22 @@
     :initform nil
     :json-key "commitHash"
     :json-type (or null :string)
-    :accessor archived-run-commit)
+    :accessor archived-run-commit
+    :reader recorder-run-commit)
    (build-url
     :initform nil
     :initarg :build-url
     :json-key "buildUrl"
     :json-type (or null :string)
-    :accessor archived-run-build-url)
+    :accessor archived-run-build-url
+    :reader run-build-url)
    (github-repo
     :initform nil
     :initarg :github-repo
     :json-key "githubRepo"
     :json-type (or null :string)
-    :accessor archived-run-github-repo)
+    :accessor archived-run-github-repo
+    :reader github-repo)
    (cleanp
     :initarg :cleanp
     :initform nil
@@ -128,6 +149,7 @@
     :initform nil
     :json-key "activep"
     :json-type (or null :bool)
+    :reader activep
     :accessor archived-run-activep)
    (branch
     :initarg :branch
@@ -144,6 +166,7 @@
     :json-key "workBranch"
     :json-type (or null :string)
     :accessor archived-run-work-branch
+    :reader recorder-run-work-branch
     :documentation "The branch we're currently working on, which might
     be the same as the main branch, or it might be the current pull
     request branch")
@@ -170,24 +193,28 @@
     :json-key "mergeBase"
     :json-type (or null :string)
     :accessor archived-run-merge-base
+    :reader recorder-run-merge-base
     :documentation "The merge base between branch-hash and commit-hash")
    (pull-request
     :initarg :pull-request
     :initform nil
     :json-key "pullRequest"
     :json-type (or null :string)
+    :reader pull-request-url
     :accessor archived-run-pull-request-url)
    (gitlab-merge-request-iid
     :initarg :gitlab-merge-request-iid
     :initform nil
     :json-key "gitlabMergeRequestIid"
     :json-type (or null :string)
-    :accessor archived-run-gitlab-merge-request-iid)
+    :accessor archived-run-gitlab-merge-request-iid
+    :reader gitlab-merge-request-iid)
    (phabricator-diff-id
     :initarg :phabricator-diff-id
     :initform nil
     :json-key "phabricatorDiffId"
     :json-type (or null :string)
+    :reader phabricator-diff-id
     :accessor archived-run-phabricator-diff-id)
    (previous-run
     :initform nil
@@ -208,6 +235,7 @@
     :json-key "trunkp"
     :json-type (or null :bool)
     :accessor archived-run-trunkp
+    :reader trunkp
     :documentation "whether this is tracking a production branch (as opposed to dev)")
    (periodic-job-p
     :initarg :periodic-job-p
@@ -215,6 +243,7 @@
     :json-key "periodicJobP"
     :json-type (or null :bool)
     :accessor archived-run-periodic-job-p
+    :reader periodic-job-p
     :documentation "Jobs that are done periodically, as opposed to for
     each commit. We will attempt to promote each run. This is mostly
     for taking screenshots of public websites.")
@@ -236,6 +265,7 @@
     :json-key "overrideCommitHash"
     :json-type (or null :string)
     :accessor archived-run-override-commit-hash
+    :reader override-commit-hash
     :documentation "Override the pull request commit hash that will be
     used to update the Pull Request (either GitHub or Bitbucket)")
    (compare-threshold
@@ -244,6 +274,7 @@
     :json-key "compareThreshold"
     :json-type (or null :number)
     :accessor archived-run-compare-threshold
+    :reader compare-threshold
     :documentation "The comparison threshold in terms of fraction of pixels changed. If
 NIL or 0, this will use exact pixel comparisons.")
    (compare-tolerance
@@ -272,6 +303,7 @@ NIL or 0, this will use exact pixel comparisons.")
     :json-key "batch"
     :json-type (or null :string)
     :accessor archived-run-batch
+    :reader recorder-run-batch
     :documentation "The batch object associated with this run")
    (group-separator
     :initarg :group-separator
@@ -292,6 +324,7 @@ NIL or 0, this will use exact pixel comparisons.")
     :json-key "author"
     :json-type (or null :string)
     :accessor archived-run-author
+    :reader recorder-run-author
     :documentation "The author, or owner of this run. This will be used for logic to ensure that authors cannot review their own runs. See T1056.")
    (metadata
     :initarg :metadata
@@ -365,4 +398,8 @@ the oid as a string. Otherwise we return the oid as stored."
 (defmethod recorder-run-warnings ((self archived-run))
   nil)
 
-
+(defmethod recorder-run-metadata ((self archived-run))
+  (loop for entry in (archived-run-metadata self)
+        collect (cons
+                 (metadata-key entry)
+                 (metadata-value entry))))
