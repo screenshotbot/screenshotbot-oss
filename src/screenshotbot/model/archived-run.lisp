@@ -22,8 +22,17 @@
   (:import-from #:util/store
                 #:location-for-oid)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-branch
+                #:recorder-run-warnings
+                #:recorder-run-tags
+                #:run-screenshot-map
                 #:bknr-or-archived-run-mixin
                 #:recorder-run-company)
+  (:import-from #:screenshotbot/user-api
+                #:%created-at
+                #:recorder-run-channel)
+  (:import-from #:bknr.datastore
+                #:store-object-with-id)
   (:export
    #:archived-run
    #:archived-run-channel
@@ -68,7 +77,7 @@
     :initarg :channel
     :initform nil
     :json-key "channel"
-    :json-type (or null :string)
+    :json-type (or null :number)
     :accessor archived-run-channel
     :documentation "The channel this run belongs to")
    (oid
@@ -126,6 +135,7 @@
     :json-key "branch"
     :json-type (or null :string)
     :accessor archived-run-branch
+    :reader recorder-run-branch
     :documentation "The main branch. This is not the branch associated with the
     current pull request!")
    (work-branch
@@ -247,13 +257,15 @@ NIL or 0, this will use exact pixel comparisons.")
     :initarg :created-at
     :json-key "createdAt"
     :json-type (or null :number)
-    :accessor archived-run-created-at)
+    :accessor archived-run-created-at
+    :reader %created-at)
    (tags
     :initarg :tags
     :initform nil
     :json-key "tags"
     :json-type (or null :string)
-    :accessor archived-run-tags)
+    :accessor archived-run-tags
+    :reader recorder-run-tags)
    (batch
     :initform nil
     :initarg :batch
@@ -342,3 +354,15 @@ the oid as a string. Otherwise we return the oid as stored."
 
 (defmethod recorder-run-company ((self archived-run))
   (find-by-oid (archived-run-company self) '%c:company))
+
+(defmethod recorder-run-channel ((self archived-run))
+  (store-object-with-id (archived-run-channel self)))
+
+(defmethod run-screenshot-map ((self archived-run))
+  (store-object-with-id (archived-run-screenshots self)))
+
+
+(defmethod recorder-run-warnings ((self archived-run))
+  nil)
+
+

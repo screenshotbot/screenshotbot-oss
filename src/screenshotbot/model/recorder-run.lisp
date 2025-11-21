@@ -533,14 +533,22 @@ associated report is rendered.")
     (unless (bknr.datastore::object-destroyed-p channel)
       (remove-run-from-channel channel run))))
 
-(defmethod auth:can-view ((run recorder-run) user)
+(defmethod auth:can-view ((run bknr-or-archived-run-mixin) user)
   (auth:can-view-with-normal-viewer-context
    user run))
 
-(defmethod auth:can-viewer-view (vc (run recorder-run))
+(defmethod auth:can-view ((run recorder-run) user)
+  ;; TODO: delete
+  (call-next-method))
+
+(defmethod auth:can-viewer-view (vc (run bknr-or-archived-run-mixin))
   (or
    (publicp (recorder-run-channel run))
    (auth:can-viewer-view vc (recorder-run-channel run))))
+
+(defmethod auth:can-viewer-view (vc (run recorder-run))
+  ;; TODO: delete
+  (call-next-method))
 
 (defmethod can-api-key-view-run-p (api-key run)
   (member :full (api-key-permissions api-key)))

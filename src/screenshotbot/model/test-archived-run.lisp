@@ -19,6 +19,8 @@
                 #:archived-run-channel
                 #:archived-run-company
                 #:archived-run-metadata
+                #:archived-run-tags
+                #:archived-run-screenshots
                 #:save-archived-run
                 #:load-archived-run
                 #:oid)
@@ -33,7 +35,28 @@
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:assert-that)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-channel
+                #:run-screenshot-map
+                #:recorder-run-warnings
+                #:recorder-run-branch
+                #:recorder-run-tags)
+  (:import-from #:screenshotbot/user-api
+                #:%created-at
+                #:channel
+                #:user)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:screenshotbot/model/screenshot-map
+                #:screenshot-map)
+  (:import-from #:screenshotbot/model/api-key
+                #:api-key)
+  (:import-from #:auth/viewer-context
+                #:api-viewer-context)
+  (:import-from #:bknr.datastore
+                #:store-object-id)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-archived-run)
 
@@ -49,7 +72,7 @@
                              :created-at 1234567890
                              :compare-threshold 0.05
                              :compare-tolerance 10
-                             :channel "test-channel"
+                             :channel 12345
                              :company "test-company"))
          (json-output (with-output-to-string (out)
                         (json-mop:encode run out)))
@@ -59,7 +82,7 @@
     (is (equal "abc123def456" (archived-run-commit read-run)))
     (is (equal "main" (archived-run-branch read-run)))
     (is (equal "test-author" (archived-run-author read-run)))
-    (is (equal "test-channel" (archived-run-channel read-run)))
+    (is (equal 12345 (archived-run-channel read-run)))
     (is (equal "test-company" (archived-run-company read-run)))
 
     ;; Verify boolean is parsed correctly
@@ -152,7 +175,7 @@
                                 :created-at 1234567890
                                 :compare-threshold 0.05
                                 :compare-tolerance 10
-                                :channel "test-channel"
+                                :channel 12345
                                 :company "test-company"))
             (oid-str (oid run :stringp t)))
 
@@ -170,7 +193,7 @@
          (is (equal "abc123def456" (archived-run-commit loaded-run)))
          (is (equal "main" (archived-run-branch loaded-run)))
          (is (equal "test-author" (archived-run-author loaded-run)))
-         (is (equal "test-channel" (archived-run-channel loaded-run)))
+         (is (equal 12345 (archived-run-channel loaded-run)))
          (is (equal "test-company" (archived-run-company loaded-run)))
          (is (equal t (archived-run-cleanp loaded-run)))
          (is (equal 1234567890 (archived-run-created-at loaded-run)))
@@ -181,3 +204,97 @@
   (with-test-store ()
     (is (eql nil
              (load-archived-run "507f1f77bcf86cd799439011")))))
+
+(test archived-run-recorder-run-channel
+  "Test that recorder-run-channel works with archived-run"
+  (with-test-store ()
+    (let* ((company (make-instance 'company))
+           (channel (make-instance 'channel :company company))
+           (channel-id (store-object-id channel))
+           (run (make-instance 'archived-run
+                               :channel channel-id
+                               :company (store-object-id company))))
+      ;; Verify that recorder-run-channel returns the channel object
+      (is (eql channel (recorder-run-channel run))))))
+
+(test archived-run-run-screenshot-map
+  "Test that run-screenshot-map works with archived-run"
+  (with-test-store ()
+    (let* ((company (make-instance 'company))
+           (channel (make-instance 'channel :company company))
+           (screenshot-map (make-instance 'screenshot-map :channel channel))
+           (screenshot-map-id (store-object-id screenshot-map))
+           (run (make-instance 'archived-run
+                               :screenshots screenshot-map-id
+                               :channel (store-object-id channel)
+                               :company (store-object-id company))))
+      ;; Verify that run-screenshot-map returns the screenshot-map object
+      (is (eql screenshot-map (run-screenshot-map run))))))
+
+(test archived-run-recorder-run-warnings
+  "Test that recorder-run-warnings returns nil for archived-run"
+  (with-test-store ()
+    (let* ((run (make-instance 'archived-run
+                               :commit-hash "test-commit")))
+      ;; Verify that recorder-run-warnings returns nil
+      (is (eql nil (recorder-run-warnings run))))))
+
+(test archived-run-recorder-run-branch-reader
+  "Test that recorder-run-branch reader works with archived-run"
+  (let* ((run (make-instance 'archived-run
+                             :branch "feature-branch")))
+    ;; Verify that recorder-run-branch returns the branch
+    (is (equal "feature-branch" (recorder-run-branch run)))))
+
+(test archived-run-created-at-reader
+  "Test that %created-at reader works with archived-run"
+  (let* ((timestamp 1234567890)
+         (run (make-instance 'archived-run
+                             :created-at timestamp)))
+    ;; Verify that %created-at returns the timestamp
+    (is (equal timestamp (%created-at run)))))
+
+(test archived-run-recorder-run-tags-reader
+  "Test that recorder-run-tags reader works with archived-run"
+  (let* ((run (make-instance 'archived-run
+                             :tags "v1.0.0")))
+    ;; Verify that recorder-run-tags returns the tags
+    (is (equal "v1.0.0" (recorder-run-tags run)))))
+
+(test archived-run-can-view
+  "Test that auth:can-view works with archived-run"
+  (with-test-store ()
+    (let* ((company (make-instance 'company))
+           (channel (make-instance 'channel :company company))
+           (user (make-instance 'user))
+           (run (make-instance 'archived-run
+                               :channel (store-object-id channel)
+                               :company (store-object-id company))))
+      ;; Give the user access to the company
+      (roles:ensure-has-role company user 'roles:standard-member)
+      ;; Verify that the user can view the run
+      (is (equal t (auth:can-view run user))))))
+
+(test archived-run-can-viewer-view
+  "Test that auth:can-viewer-view works with archived-run"
+  (with-test-store ()
+    (let* ((company (make-instance 'company))
+           (channel (make-instance 'channel :company company))
+           (user (make-instance 'user))
+           (api-key (make-instance 'api-key
+                                   :user user
+                                   :company company
+                                   :permissions '(:full)))
+           (run (make-instance 'archived-run
+                               :channel (store-object-id channel)
+                               :company (store-object-id company))))
+      ;; Give the user access to the company
+      (roles:ensure-has-role company user 'roles:standard-member)
+      ;; Verify that the viewer can view the run
+      (assert-that
+       (auth:can-viewer-view
+        (make-instance 'api-viewer-context
+                       :user user
+                       :api-key api-key)
+        run)
+       (is-equal-to t)))))
