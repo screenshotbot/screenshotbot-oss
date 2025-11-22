@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/rb-tree
+                #:sorted-keys
                 #:validate!
                 #:+black+
                 #:+red+
@@ -161,6 +162,28 @@
     (rb-insert tree (make-node :key 52))
     (rb-insert tree (make-node :key 38))
     (finishes (validate! tree))))
+
+(test ordering
+  (let ((tree (make-tree)))
+    (rb-insert tree (make-node :key 42))
+    (rb-insert tree (make-node :key 17))
+    (rb-insert tree (make-node :key 89))
+    (rb-insert tree (make-node :key 3))
+    (rb-insert tree (make-node :key 56))
+    (is (equal
+         '(3 17 42 56 89)
+         (sorted-keys tree)))))
+
+(test respects-the-comparison-operator
+  (let ((tree (make-tree :cmp #'>)))
+    (rb-insert tree (make-node :key 42))
+    (rb-insert tree (make-node :key 17))
+    (rb-insert tree (make-node :key 89))
+    (rb-insert tree (make-node :key 3))
+    (rb-insert tree (make-node :key 56))
+    (is (equal
+         (reverse '(3 17 42 56 89))
+         (sorted-keys tree)))))
 
 
 (test insert-100-random-elements

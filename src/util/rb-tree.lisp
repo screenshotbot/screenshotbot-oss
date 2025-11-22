@@ -39,6 +39,10 @@
             cmp))
     rb-tree))
 
+(defun key< (tree x y)
+  (funcall (rb-tree-cmp tree)
+           x y))
+
 (defun rb-insert (Tree z)
   (%rb-insert-only Tree z)
   (rb-insert-fixup Tree z))
@@ -51,8 +55,9 @@
           do
              (progn
                (setf y x)
-               (if (< (node-key z)
-                      (node-key x))
+               (if (key< Tree
+                         (node-key z)
+                         (node-key x))
                    (setf x (node-left x))
                    (setf x (node-right x)))))
 
@@ -63,7 +68,7 @@
     (cond
       ((eq y T.nil)
        (setf (rb-tree-root Tree) z))
-      ((< (node-key z) (node-key y))
+      ((key< Tree (node-key z) (node-key y))
        (setf (node-left y) z))
       (t
        (setf (node-right y) z)))
@@ -210,3 +215,13 @@
       (validate-node root))
     
     t))
+
+(defun sorted-keys (tree)
+  (let ((result))
+    (labels ((dfs (node)
+               (unless (eq node (rb-tree-sentinel tree))
+                 (dfs (node-left node))
+                 (push (node-key node) result)
+                 (dfs (node-right node)))))
+      (dfs (rb-tree-root tree)))
+    (nreverse result)))
