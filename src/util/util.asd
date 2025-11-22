@@ -87,7 +87,8 @@
                (:file "acceptor")
                (:file "mquery")
                (:file "form-errors")
-               (:file "debugger-hook")))
+               (:file "debugger-hook")
+               (:file "rb-tree")))
 
 (defsystem :util/copy-file
   :serial t
@@ -343,6 +344,7 @@
                              (:file "test-ret-let")
                              (:file "test-mail")
                              (:file "test-hunchentoot-engine")
+                             (:file "test-rb-tree")
                              (:file "test-fset")
                              (:file "test-reused-ssl")
                              (:file "test-truncated-stream")
