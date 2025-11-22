@@ -175,6 +175,91 @@
      (setf (node-left y) x)
      (setf (node-parent x) y))))
 
+;; Deletion
+
+(defun rb-transplant (Tree u v)
+  (let ((T.nil (rb-tree-sentinel Tree)))
+    (cond
+      ((eq (node-parent u) T.nil)
+       (setf (rb-tree-root  Tree) v))
+      ((eq u (node-left (node-parent u)))
+       (setf (node-left (node-parent u))
+             v))
+      (t
+       (setf (node-right (node-parent u)) v)))
+    (setf (node-parent v) (node-parent u))))
+
+(defun rb-delete (Tree z)
+  (let* ((T.nil (rb-tree-sentinel Tree))
+         (y z)
+         (y-original-color (node-color y))
+         x)
+    (cond
+      ((eq (node-left z) T.nil)
+       (setf x (node-right z))
+       (rb-transplant Tree z (node-right z)))
+      ((eq (node-right z) T.nil)
+       (setf x (node-left z))
+       (rb-transplant Tree z (node-left z)))
+      (t
+       (setf y (tree-minimum Tree (node-right z)))
+       (setf y-original-color (node-color y))
+       (setf x (node-right y))
+       (cond
+         ((eq (node-parent y) z)
+          (setf (node-parent x) y))
+         (t
+          (rb-transplant Tree y (node-right y))
+          (setf (node-right y) (node-right z))
+          (setf (node-parent (node-right y)) y)))
+       (rb-transplant Tree z y)
+       (setf (node-left y) (node-left z))
+       (setf (node-parent (node-left y)) y)
+       (setf (node-color y) (node-color z))))
+
+    (if (eq y-original-color +black+)
+        (rb-delete-fixup Tree x))))
+
+(with-symmetric
+  (defmacro %rb-delete-fixup-helper-left ()
+    `(progn
+       (setf w (node-right (node-parent x)))
+       (when (red? w)
+         (setf (node-color w) +black+)
+         (setf (node-color (node-parent x)) +red+)
+         (left-rotate Tree (node-parent x))
+         (setf w (node-right (node-parent x))))
+
+       (cond
+         ((and (black? (node-left w))
+               (black? (node-right w)))
+          (setf (node-color w) +red+)
+          (setf x (node-parent x)))
+         (t
+          (when (black? (node-right w))
+            (setf (node-color (node-left w)) +black+)
+            (setf (node-color w) +red+)
+            (right-rotate Tree w)
+            (setf w (node-right (node-parent x))))
+          (setf (node-color w) (node-color (node-parent x)))
+          (setf (node-color (node-parent x)) +black+)
+          (setf (node-color (node-right w)) +black+)
+          (left-rotate  Tree (node-parent x))
+          (setf x (rb-tree-root Tree)))))))
+
+(defun rb-delete-fixup (Tree x)
+  (let (w)
+   (loop while (and
+                (not (eq x (rb-tree-root Tree)))
+                (black? x))
+         do
+            (cond
+              ((eq x (node-left (node-parent x)))
+               (%rb-delete-fixup-helper-left))
+              (t
+               (%rb-delete-fixup-helper-right)))))
+  (setf (node-color x) +black+))
+
 
 
 (defun validate! (tree)
@@ -225,3 +310,11 @@
                  (dfs (node-right node)))))
       (dfs (rb-tree-root tree)))
     (nreverse result)))
+
+(defun tree-minimum (Tree node)
+  (cond
+    ((or
+      (eq (rb-tree-sentinel Tree) (node-left node)))
+     node)
+    (t
+     (tree-minimum Tree (node-left node)))))

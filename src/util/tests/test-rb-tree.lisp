@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/rb-tree
+                #:rb-delete
+                #:node-key
                 #:sorted-keys
                 #:validate!
                 #:+black+
@@ -199,3 +201,71 @@
         (rb-insert tree (make-node :key element)))
       ;; Validate the tree structure using existing validate! function
       (finishes (validate! tree)))))
+
+(test insert-and-delete-20-numbers-random-order
+  (let ((tree (make-tree))
+        (numbers (loop for i from 1 to 20 collect i)))
+    ;; Insert 20 numbers in order
+    (dolist (num numbers)
+      (rb-insert tree (make-node :key num)))
+    
+    ;; Validate tree after all insertions
+    (finishes (validate! tree))
+    (is (equal numbers (sorted-keys tree)))
+    
+    ;; Create a shuffled copy for deletion order
+    (let ((delete-order (copy-list numbers)))
+      ;; Shuffle the list using Fisher-Yates algorithm
+      (loop for i from (1- (length delete-order)) downto 1 do
+        (let ((j (random (1+ i))))
+          (rotatef (nth i delete-order) (nth j delete-order))))
+      
+      ;; Delete numbers in random order
+      (let ((remaining (copy-list numbers)))
+        (dolist (num delete-order)
+          ;; Find and delete the node with this key
+          (labels ((find-node (node)
+                     (cond
+                       ((eq node (rb-tree-sentinel tree)) nil)
+                       ((= (node-key node) num) node)
+                       ((< num (node-key node)) (find-node (node-left node)))
+                       (t (find-node (node-right node))))))
+            (let ((node-to-delete (find-node (rb-tree-root tree))))
+              (is-true node-to-delete)
+              (when node-to-delete
+                (rb-delete tree node-to-delete)
+                (setf remaining (remove num remaining))
+                ;; Validate tree structure after each deletion
+                (finishes (validate! tree))
+                ;; Check that remaining keys are still in sorted order
+                (is (equal remaining (sorted-keys tree)))))))))))
+
+(test tree-minimum
+  (let ((tree (make-tree)))
+    ;; Test empty tree
+    ;;(is (eq nil (util/rb-tree::tree-minimum tree (rb-tree-root tree))))
+    
+    ;; Test single node tree
+    (rb-insert tree (make-node :key 42))
+    (is (= 42 (node-key (util/rb-tree::tree-minimum tree (rb-tree-root tree)))))
+    
+    ;; Test tree with multiple nodes
+    (rb-insert tree (make-node :key 17))
+    (rb-insert tree (make-node :key 89))
+    (rb-insert tree (make-node :key 3))
+    (rb-insert tree (make-node :key 56))
+    (is (= 3 (node-key (util/rb-tree::tree-minimum tree (rb-tree-root tree)))))
+    
+    ;; Test with negative numbers
+    (rb-insert tree (make-node :key -10))
+    (rb-insert tree (make-node :key -5))
+    (is (= -10 (node-key (util/rb-tree::tree-minimum tree (rb-tree-root tree)))))
+    
+    ;; Test with custom comparator (reverse order)
+    (let ((reverse-tree (make-tree :cmp #'>)))
+      (rb-insert reverse-tree (make-node :key 42))
+      (rb-insert reverse-tree (make-node :key 17))
+      (rb-insert reverse-tree (make-node :key 89))
+      (rb-insert reverse-tree (make-node :key 3))
+      (is (= 89 (node-key (util/rb-tree::tree-minimum reverse-tree (rb-tree-root reverse-tree))))))))
+
