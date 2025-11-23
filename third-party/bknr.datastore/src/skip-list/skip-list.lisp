@@ -260,9 +260,14 @@ with KEY if present, or inserts a new node with random level."
 ;;; cursors
 
 (defclass skip-list-cursor ()
-  ((node :initarg :node :accessor skip-list-cursor-node)))
+  ((node :initarg :node :accessor skip-list-cursor-node))
+  (:documentation "Base cursor class for iterating through a skip-list. Maintains a reference
+to the current node and supports forward traversal via sl-cursor-next."))
 
 (defmethod sl-cursor-next ((slc skip-list-cursor) &optional eoc)
+  "Advance the cursor and return (KEY VALUE) for the current node.
+If the cursor has reached the end or is nil, returns EOC (end-of-cursor marker).
+Moves the cursor forward to the next node as a side effect."
   (with-slots (node) slc
     (if node
 	    (let ((result (list (bknr.skip-list::node-key node)
@@ -272,28 +277,42 @@ with KEY if present, or inserts a new node with random level."
 	    eoc)))
 
 (defmethod sl-cursor-prev ((slc skip-list-cursor) &optional eoc)
+  "Attempt to move the cursor backwards. Not supported for skip-lists - always signals an error.
+Skip-lists only support forward iteration due to their unidirectional pointer structure."
   (declare (ignore eoc))
   (error "Can not move backward in skip-list"))
 
 (defclass skip-list-value-cursor (skip-list-cursor)
-  ())
+  ()
+  (:documentation "Cursor that returns only values (not keys) when calling sl-cursor-next.
+Wraps the base skip-list-cursor to extract just the value portion from each node."))
 
 (defmethod sl-cursor-next :around ((slc skip-list-value-cursor) &optional eoc)
+  "Returns only the value portion from the base cursor's (KEY VALUE) result.
+If at end of cursor, returns EOC unchanged."
   (let ((result (call-next-method)))
     (if (eql result eoc)
 	eoc
 	(second result))))
 
 (defclass skip-list-key-cursor (skip-list-cursor)
-  ())
+  ()
+  (:documentation "Cursor that returns only keys (not values) when calling sl-cursor-next.
+Wraps the base skip-list-cursor to extract just the key portion from each node."))
 
 (defmethod sl-cursor-next :around ((slc skip-list-key-cursor) &optional eoc)
+  "Returns only the key portion from the base cursor's (KEY VALUE) result.
+If at end of cursor, returns EOC unchanged."
   (let ((result (call-next-method)))
     (if (eql result eoc)
 	    eoc
 	    (first result))))
 
 (defmethod skip-list-cursor ((sl skip-list) &key cursor (class 'skip-list-cursor))
+  "Create or reinitialize a cursor for skip-list SL.
+If CURSOR is provided, resets it to the beginning of the list and returns it.
+If CURSOR is nil (default), creates a new cursor instance of CLASS (defaults to 'skip-list-cursor).
+The cursor starts positioned at the first element of the skip-list."
   (if cursor
       (progn (setf (skip-list-cursor-node cursor)
 		           (bknr.skip-list::node-forward (bknr.skip-list::skip-list-header sl)))
@@ -301,32 +320,47 @@ with KEY if present, or inserts a new node with random level."
       (make-instance class :node (bknr.skip-list::node-forward (bknr.skip-list::skip-list-header sl)))))
 
 (defmethod skip-list-values-cursor ((sl skip-list))
+  "Create a cursor that returns only values (not keys) from skip-list SL.
+Convenience wrapper around skip-list-cursor with class 'skip-list-value-cursor."
   (skip-list-cursor sl :class 'skip-list-value-cursor))
 
 (defmethod skip-list-keys-cursor ((sl skip-list))
+  "Create a cursor that returns only keys (not values) from skip-list SL.
+Convenience wrapper around skip-list-cursor with class 'skip-list-key-cursor."
   (skip-list-cursor sl :class 'skip-list-key-cursor))
 
 (defclass skip-list-range-cursor (skip-list-cursor)
-  ((end :initarg :end :reader slrc-end)))
+  ((end :initarg :end :reader slrc-end))
+  (:documentation "Cursor for iterating over a key range [START, END) in a skip-list.
+Stops iteration when encountering a node with key >= END."))
 
 (defmethod sl-cursor-next :around ((slc skip-list-range-cursor) &optional eoc)
+  "Returns the next (KEY VALUE) pair if the current node's key is less than END.
+Once a node with key >= END is encountered, returns EOC to signal end of range."
   (with-slots (node end) slc
     (if (and node (< (bknr.skip-list::node-key node) end))
 	    (call-next-method)
 	    eoc)))
 
 (defmethod skip-list-range-cursor ((sl skip-list) start end)
+  "Create a cursor for iterating over keys in range [START, END) of skip-list SL.
+Returns nil if no node with key >= START exists. Otherwise returns a cursor
+positioned at the first node with key >= START, which will iterate until key >= END."
   (let ((node (bknr.skip-list::skip-list-after-node sl start)))
     (when node
       (make-instance 'skip-list-range-cursor :node node :end end))))
 
 (defmethod map-skip-list (fun (sl skip-list))
+  "Iterate over skip-list SL, calling FUN with two arguments (key value) for each node.
+Uses a cursor to traverse the list from beginning to end."
   (let ((cursor (skip-list-cursor sl)))
     (do ((val (sl-cursor-next cursor) (sl-cursor-next cursor)))
 	    ((null val))
       (apply fun val))))
 
 (defmethod map-skip-list-values (fun (sl skip-list))
+  "Iterate over skip-list SL, calling FUN with one argument (value) for each node.
+Uses a values-cursor to traverse only the values, ignoring keys."
   (let ((cursor (skip-list-values-cursor sl)))
     (do ((val (sl-cursor-next cursor) (sl-cursor-next cursor)))
 	    ((null val))
