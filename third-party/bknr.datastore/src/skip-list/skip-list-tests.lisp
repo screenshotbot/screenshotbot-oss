@@ -280,8 +280,9 @@
         (test-equal (sl-cursor-next cursor :end-of-list) :end-of-list))))
 
 (define-skip-list-test "Cursor result list identity - mutation test"
-    ;; This test verifies current behavior: each call returns a fresh list
-    ;; If the optimization is implemented, this test will need to be updated
+    ;; This test verifies current behavior: each call returns the same
+    ;; list object. This test might a bit brittle to implementation
+    ;; detail though.
     (let* ((sl (make-instance 'skip-list)))
       (skip-list-insert sl 1 :one)
       (skip-list-insert sl 2 :two)
@@ -289,16 +290,13 @@
       (let ((cursor (skip-list-cursor sl)))
         (let ((result1 (sl-cursor-next cursor))
               (result2 (sl-cursor-next cursor)))
-          ;; Currently, results are different cons cells
-          (test-assert (not (eq result1 result2)))
 
-          ;; Verify mutating result1 doesn't affect result2
-          (setf (first result1) 999)
-          (test-equal (first result2) 2)))))
+          ;; Currently, results are identical cons cells
+          (test-assert (eq result1 result2))))))
 
 (define-skip-list-test "Cursor result storage - safety test"
     ;; This test verifies that storing cursor results works correctly
-    ;; If list reuse optimization is added, this test must pass
+    ;; REQUIRES copy-list because the same list object is reused
     (let* ((sl (make-instance 'skip-list))
            (stored-results nil))
       (skip-list-insert sl 1 :one)
@@ -308,7 +306,7 @@
       (let ((cursor (skip-list-cursor sl)))
         (loop for result = (sl-cursor-next cursor)
               while result
-              do (push result stored-results)))
+              do (push (copy-list result) stored-results)))
 
       ;; All stored results should maintain their original values
       (test-equal (length stored-results) 3)
@@ -318,6 +316,34 @@
       (test-equal (second (second stored-results)) :two)
       (test-equal (first (first stored-results)) 3)
       (test-equal (second (first stored-results)) :three)))
+
+(define-skip-list-test "Cursor result storage - WITHOUT copy demonstrates the problem"
+    ;; This test demonstrates what happens if you DON'T copy the result
+    ;; All stored references point to the same list with the FINAL values
+    (let* ((sl (make-instance 'skip-list))
+           (stored-results nil))
+      (skip-list-insert sl 1 :one)
+      (skip-list-insert sl 2 :two)
+      (skip-list-insert sl 3 :three)
+
+      ;; Store WITHOUT copying - this is WRONG but demonstrates the behavior
+      (let ((cursor (skip-list-cursor sl)))
+        (loop for result = (sl-cursor-next cursor)
+              while result
+              do (push result stored-results)))
+
+      ;; All three stored "results" point to the SAME list object
+      (test-equal (length stored-results) 3)
+      (test-assert (eq (first stored-results) (second stored-results)))
+      (test-assert (eq (second stored-results) (third stored-results)))
+
+      ;; And they all contain the FINAL values (3 :three)
+      (test-equal (first (first stored-results)) 3)
+      (test-equal (second (first stored-results)) :three)
+      (test-equal (first (second stored-results)) 3)
+      (test-equal (second (second stored-results)) :three)
+      (test-equal (first (third stored-results)) 3)
+      (test-equal (second (third stored-results)) :three)))
 
 (define-skip-list-test "Large list cursor iteration"
     (let* ((sl (make-instance 'skip-list))

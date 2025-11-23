@@ -260,20 +260,39 @@ with KEY if present, or inserts a new node with random level."
 ;;; cursors
 
 (defclass skip-list-cursor ()
-  ((node :initarg :node :accessor skip-list-cursor-node))
+  ((node :initarg :node :accessor skip-list-cursor-node)
+   (result :initform (list nil nil)
+                    :reader result
+                    :documentation "A cached list that will be used to avoid consing"))
   (:documentation "Base cursor class for iterating through a skip-list. Maintains a reference
-to the current node and supports forward traversal via sl-cursor-next."))
+to the current node and supports forward traversal via sl-cursor-next.
+
+IMPORTANT: For performance, sl-cursor-next returns a REUSED mutable list. The same list object
+is returned on each call with updated contents. If you need to store cursor results, you MUST
+copy them first using (copy-list result). The specialized cursors (skip-list-keys-cursor and
+skip-list-values-cursor) return scalar values and do not have this limitation."))
 
 (defmethod sl-cursor-next ((slc skip-list-cursor) &optional eoc)
   "Advance the cursor and return (KEY VALUE) for the current node.
 If the cursor has reached the end or is nil, returns EOC (end-of-cursor marker).
-Moves the cursor forward to the next node as a side effect."
-  (with-slots (node) slc
+Moves the cursor forward to the next node as a side effect.
+
+IMPORTANT: Returns a REUSED mutable list for performance (avoids allocation). The same list
+object is returned on every call with its contents updated. The list contents are only valid
+until the next call to sl-cursor-next.
+
+If you need to store the result beyond the next cursor operation, you MUST copy it:
+  (push (copy-list (sl-cursor-next cursor)) stored-results)
+
+For immediate use (e.g., in map-skip-list with apply), no copy is needed. If you only need
+keys or values, use skip-list-keys-cursor or skip-list-values-cursor which return scalars."
+  (with-slots (node result) slc
     (if node
-	    (let ((result (list (bknr.skip-list::node-key node)
-			                (bknr.skip-list::node-value node))))
-	      (setf node (bknr.skip-list::node-forward node))
-	      result)
+        (progn
+          (setf (first result) (bknr.skip-list::node-key node)
+                (second result) (bknr.skip-list::node-value node))
+          (setf node (bknr.skip-list::node-forward node))
+          result)
 	    eoc)))
 
 (defmethod sl-cursor-prev ((slc skip-list-cursor) &optional eoc)
