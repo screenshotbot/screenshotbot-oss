@@ -411,10 +411,13 @@ the new skip-list."
 
 (defclass class-skip-index ()
   ((index-superclasses :initarg :index-superclasses :initform nil
-		       :reader class-skip-index-index-superclasses)
+		               :reader class-skip-index-index-superclasses
+                       :documentation "When non-nil, index objects under their superclasses as well as their direct class")
    (slot-name :initarg :slot-name
-	      :accessor class-skip-index-slot-name)
-   (hash-table :accessor class-skip-index-hash-table)))
+	          :accessor class-skip-index-slot-name
+              :documentation "The name of the slot whose value is used as the key in the skip lists")
+   (hash-table :accessor class-skip-index-hash-table
+               :documentation "Hash table mapping class names to skip-list instances containing objects of that class")))
 
 (defmethod initialize-instance :after ((index class-skip-index)
                                        &key (test #'eql) slots index-superclasses)
