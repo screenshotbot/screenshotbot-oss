@@ -87,12 +87,13 @@ kernel is trying to write to bknr.datastore")
 
 
 (defun update-instances-for-changed-class (class)
-  (let ((instance-count (length (class-instances class))))
-    (when (plusp instance-count)
-      (unless *suppress-schema-warnings*
-        (report-progress "~&; updating ~A instances of ~A for class changes~%"
-                         instance-count class))
-      (mapc #'reinitialize-instance (class-instances class)))))
+  (let ((instances (class-instances class)))
+   (let ((instance-count (length instances)))
+     (when (plusp instance-count)
+       (unless *suppress-schema-warnings*
+         (report-progress "~&; updating ~A instances of ~A for class changes~%"
+                          instance-count class))
+       (mapc #'reinitialize-instance instances)))))
 
 (defvar *wait-for-tx-p* t
   "If true, we wait for the transaction to apply before proceeding. This
