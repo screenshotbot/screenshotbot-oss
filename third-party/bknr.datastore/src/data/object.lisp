@@ -87,6 +87,11 @@ kernel is trying to write to bknr.datastore")
 
 
 (defun update-instances-for-changed-class (class)
+  "Update all instances of CLASS after the class definition has changed.
+
+Note: This is a DEFUN, not DEFTRANSACTION (unlike upstream bknr.datastore).
+Using DEFTRANSACTION prevents code deployments to follower nodes in bknr.cluster.
+See D7646 for historical context."
   (let ((instances (class-instances class)))
    (let ((instance-count (length instances)))
      (when (plusp instance-count)
