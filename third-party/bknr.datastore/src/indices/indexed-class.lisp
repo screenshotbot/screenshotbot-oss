@@ -12,9 +12,9 @@
 
 (defclass indexed-class (standard-class)
   ((indices :initarg :indices :initform nil
-	    :accessor indexed-class-indices)
+            :accessor indexed-class-indices)
    (old-indices :initarg :old-indices :initform nil
-		:accessor indexed-class-old-indices)
+                :accessor indexed-class-old-indices)
    (index-definitions :initarg :class-indices :initform nil
                       :accessor indexed-class-index-definitions)))
 
@@ -29,7 +29,7 @@
 
 (defmethod indexed-class-index-named ((class indexed-class) index-name)
   (let ((index-holder (find index-name (indexed-class-indices class)
-			    :key #'index-holder-name)))
+                            :key #'index-holder-name)))
     (when index-holder
       (index-holder-index index-holder))))
 
@@ -49,52 +49,52 @@
 
 (defclass index-direct-slot-definition (standard-direct-slot-definition)
   ((index :initarg :index :initform nil
-	  :reader index-direct-slot-definition-index
-	  :documentation "Slot keyword for an already existing index")
+          :reader index-direct-slot-definition-index
+          :documentation "Slot keyword for an already existing index")
 
    (index-var :initarg :index-var :initform nil
-	      :reader index-direct-slot-definition-index-var
-	      :documentation "Symbol that will be bound to the index")
+              :reader index-direct-slot-definition-index-var
+              :documentation "Symbol that will be bound to the index")
 
    (index-type :initarg :index-type :initform nil
-	       :reader index-direct-slot-definition-index-type
-	       :documentation "Slot keyword to specify the class of a new slot index")
+               :reader index-direct-slot-definition-index-type
+               :documentation "Slot keyword to specify the class of a new slot index")
    (index-initargs :initarg :index-initargs :initform nil
-	       :reader index-direct-slot-definition-index-initargs
-	       :documentation "Arguments that will be passed to
+                   :reader index-direct-slot-definition-index-initargs
+                   :documentation "Arguments that will be passed to
 INDEX-CREATE when creating a new slot index")
 
    (index-reader :initform nil
-		 :initarg :index-reader
-		 :accessor index-direct-slot-definition-index-reader
-		 :documentation "Name of a function that will be created to query the slot index")
+                 :initarg :index-reader
+                 :accessor index-direct-slot-definition-index-reader
+                 :documentation "Name of a function that will be created to query the slot index")
    (index-values :initform nil
-		 :initarg :index-values
-		 :accessor index-direct-slot-definition-index-values
-		 :documentation "Name of a function that will be
+                 :initarg :index-values
+                 :accessor index-direct-slot-definition-index-values
+                 :documentation "Name of a function that will be
 created to get the values stored in the index")
    (index-mapvalues :initform nil
-		    :initarg :index-mapvalues
-		    :accessor index-direct-slot-definition-index-mapvalues
-		    :documentation "Name of a function that will be
+                    :initarg :index-mapvalues
+                    :accessor index-direct-slot-definition-index-mapvalues
+                    :documentation "Name of a function that will be
 created to map over the values stored in the index")
    (index-keys :initform nil
-	       :initarg :index-keys
-	       :accessor index-direct-slot-definition-index-keys
-	       :documentation "Name of a function that will be created
+               :initarg :index-keys
+               :accessor index-direct-slot-definition-index-keys
+               :documentation "Name of a function that will be created
 to get the keys stored in the index")
 
    (index-subclasses :initarg :index-subclasses :initform t
-		     :accessor index-direct-slot-definition-index-subclasses
-		     :documentation "Specify if the slot index will
+                     :accessor index-direct-slot-definition-index-subclasses
+                     :documentation "Specify if the slot index will
 also index subclasses of the class to which the slot belongs, default is T")
 
    (class :initform nil
-	  :accessor index-direct-slot-definition-class)))
+          :accessor index-direct-slot-definition-class)))
 
 (defclass index-effective-slot-definition (standard-effective-slot-definition)
   ((indices :initarg :indices :initform nil
-	        :accessor index-effective-slot-definition-indices)
+            :accessor index-effective-slot-definition-indices)
    #+lispworks ;; :class is not an arg for standard-effective-slot-definition
    (%class :initarg :class)))
 
@@ -102,19 +102,19 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defmethod class-all-indexed-superclasses ((class indexed-class))
   (let (result)
     (labels ((superclasses (class)
-	       (let ((classes (remove-if-not #'(lambda (class)
-						 (typep class 'indexed-class))
-					     (class-direct-superclasses class))))
-		 (dolist (class classes)
-		   (unless (class-finalized-p class)
-		     (finalize-inheritance class))
-		   (push class result)
-		   (superclasses class)))))
+               (let ((classes (remove-if-not #'(lambda (class)
+                                                 (typep class 'indexed-class))
+                                             (class-direct-superclasses class))))
+                 (dolist (class classes)
+                   (unless (class-finalized-p class)
+                     (finalize-inheritance class))
+                   (push class result)
+                   (superclasses class)))))
       (superclasses class))
     (nreverse result)))
 
 (defmethod direct-slot-definition-class ((class indexed-class) &key index index-type
-                                                                 &allow-other-keys)
+                                         &allow-other-keys)
   (if (or index index-type)
       'index-direct-slot-definition
       (call-next-method)))
@@ -132,40 +132,40 @@ also index subclasses of the class to which the slot belongs, default is T")
       (compile function))))
 
 (defun create-index-access-functions (index &key index-reader index-values
-				                              index-mapvalues index-keys index-var)
+                                              index-mapvalues index-keys index-var)
   (defun-and-compile
       `(defun ,index-reader (key) (index-get ,index key)))
   (defun-and-compile
       `(defun ,index-values ()
-	     (index-values ,index)))
+         (index-values ,index)))
   (defun-and-compile
       `(defun ,index-mapvalues (fun)
-	     (index-mapvalues ,index fun)))
+         (index-mapvalues ,index fun)))
   (defun-and-compile
       `(defun ,index-keys ()
-	     (index-keys ,index)))
+         (index-keys ,index)))
   (when index-var
     (when (boundp index-var)
       (warn "~A is already bound to ~A, rebinding to ~A"
-	        index-var (eval index-var) index))
+            index-var (eval index-var) index))
     (eval `(defparameter ,index-var ,index))))
 
 (defun make-index-object (&key index type initargs reader values mapvalues slots keys var)
   (let ((index-object (if index
-			              (eval index)
-			              (apply #'index-create
-				                 (append (cons type (eval-initargs initargs))
-					                     (list :slots slots))))))
+                          (eval index)
+                          (apply #'index-create
+                                 (append (cons type (eval-initargs initargs))
+                                         (list :slots slots))))))
     (when index-object
       (create-index-access-functions index-object :index-reader reader
-				                                  :index-values values
-				                                  :index-mapvalues mapvalues
-				                                  :index-keys keys
-				                                  :index-var var))
+                                                  :index-values values
+                                                  :index-mapvalues mapvalues
+                                                  :index-keys keys
+                                                  :index-var var))
     index-object))
 
 (defmethod compute-effective-slot-definition :around ((class indexed-class)
-						                              name direct-slots)
+                                                      name direct-slots)
   (declare (ignore name))
   (let* ((normal-slot (call-next-method))
          (direct-slots (remove-if-not #'(lambda (slot)
@@ -201,7 +201,7 @@ also index subclasses of the class to which the slot belongs, default is T")
   (unless (class-finalized-p class)
     (finalize-inheritance class))
   (let* ((class-slots (class-slots class))
-	 (slot-names (mapcar #'slot-definition-name class-slots)))
+         (slot-names (mapcar #'slot-definition-name class-slots)))
 
     ;;; create new class indices
     (dolist (class-index class-indices)
@@ -209,25 +209,25 @@ also index subclasses of the class to which the slot belongs, default is T")
       (format t "class-index ~A~%" class-index)
 
       (destructuring-bind (name &key index-reader index-values index-mapvalues
-				index-keys (index-subclasses t) index-initargs
-				(slots :all-slots) index-type
-				index) class-index
-	(when (eql slots :all-slots)
-	  (setf slots slot-names))
+                                  index-keys (index-subclasses t) index-initargs
+                                  (slots :all-slots) index-type
+                                  index) class-index
+        (when (eql slots :all-slots)
+          (setf slots slot-names))
 
-	(let ((index-object (make-index-object :index index
-					       :type index-type
-					       :initargs index-initargs
-					       :reader index-reader
-					       :values index-values
-					       :keys index-keys
-					       :mapvalues index-mapvalues
-					       :slots slots)))
-	  (when index-object
-	    (push (make-index-holder :class class :slots slots
-				     :name name :index index-object
-				     :index-subclasses index-subclasses)
-		  (indexed-class-indices class))))))
+        (let ((index-object (make-index-object :index index
+                                               :type index-type
+                                               :initargs index-initargs
+                                               :reader index-reader
+                                               :values index-values
+                                               :keys index-keys
+                                               :mapvalues index-mapvalues
+                                               :slots slots)))
+          (when index-object
+            (push (make-index-holder :class class :slots slots
+                                     :name name :index index-object
+                                     :index-subclasses index-subclasses)
+                  (indexed-class-indices class))))))
 
     #+nil
     (format t "superclasses ~A~%" (class-all-indexed-superclasses class))
@@ -235,22 +235,22 @@ also index subclasses of the class to which the slot belongs, default is T")
     ;;; class indices from superclasses
     (dolist (superclass (class-all-indexed-superclasses class))
       (setf (indexed-class-indices class)
-	    (remove-duplicates
-	     (append (indexed-class-indices class)
-		     (remove nil (indexed-class-indices superclass)
-			     :key #'index-holder-index-subclasses))
-	     :key #'index-holder-index)))
+            (remove-duplicates
+             (append (indexed-class-indices class)
+                     (remove nil (indexed-class-indices superclass)
+                             :key #'index-holder-index-subclasses))
+             :key #'index-holder-index)))
 
     (dolist (holder (indexed-class-indices class))
       (dolist (slot-name (index-holder-slots holder))
-	(let ((slot (find slot-name class-slots :key #'slot-definition-name)))
-	  #+nil
-	  (format t "slot ~A indx ~A~%" slot holder)
-	  (unless (and slot
-		       (typep slot 'index-effective-slot-definition ))
-	    (error "Could not find slot ~A to store index ~A~%" slot-name holder))
-	  (pushnew (index-holder-index holder)
-		   (index-effective-slot-definition-indices slot)))))))
+        (let ((slot (find slot-name class-slots :key #'slot-definition-name)))
+          #+nil
+          (format t "slot ~A indx ~A~%" slot holder)
+          (unless (and slot
+                       (typep slot 'index-effective-slot-definition ))
+            (error "Could not find slot ~A to store index ~A~%" slot-name holder))
+          (pushnew (index-holder-index holder)
+                   (index-effective-slot-definition-indices slot)))))))
 
 #+(or allegro lispworks)
 (defmethod finalize-inheritance :after ((class indexed-class))
@@ -284,20 +284,20 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defmethod reinitialize-class-indices
     ((class indexed-class))
   (let ((old-indices (remove class (indexed-class-old-indices class)
-			                 :test-not #'eql :key #'index-holder-class))
-	    (indices (remove class (indexed-class-indices class)
-			             :test-not #'eql :key #'index-holder-class)))
+                             :test-not #'eql :key #'index-holder-class))
+        (indices (remove class (indexed-class-indices class)
+                         :test-not #'eql :key #'index-holder-class)))
     (when old-indices
       (dolist (holder indices)
-	    (let ((old-holder (find (index-holder-name holder) old-indices
-				                :key #'index-holder-name)))
-	      (when old-holder
-	        (index-reinitialize (index-holder-index holder)
-				                (index-holder-index old-holder))))))))
+        (let ((old-holder (find (index-holder-name holder) old-indices
+                                :key #'index-holder-name)))
+          (when old-holder
+            (index-reinitialize (index-holder-index holder)
+                                (index-holder-index old-holder))))))))
 
 (defmethod reinitialize-instance :before ((class indexed-class) &key)
   (setf (indexed-class-old-indices class) (indexed-class-indices class)
-	(indexed-class-indices class) nil))
+        (indexed-class-indices class) nil))
 
 ;;; Hier koennen wir keine :AROUND method fuer COMPUTE-SLOTS bauen,
 ;;; weil die LISP-Implementierung die Allocation von dem neuen
@@ -338,8 +338,8 @@ also index subclasses of the class to which the slot belongs, default is T")
     (when (and (not *indexed-class-override*)
                (not (allow-destroyed-access-p class slot-name))
                (object-destroyed-p object))
-     (error "Can not get slot ~A of destroyed object of class ~a."
-	        slot-name (class-name (class-of object))))))
+      (error "Can not get slot ~A of destroyed object of class ~a."
+             slot-name (class-name (class-of object))))))
 
 (defmethod (setf slot-value-using-class) :before
     (newvalue (class indexed-class) object
@@ -352,8 +352,8 @@ also index subclasses of the class to which the slot belongs, default is T")
     (when (and (not (allow-destroyed-access-p class slot-name))
                (object-destroyed-p object)
                (not *indexed-class-override*))
-     (error "Can not set slot ~A of destroyed object ~a."
-	        slot-name (class-name (class-of object))))))
+      (error "Can not set slot ~A of destroyed object ~a."
+             slot-name (class-name (class-of object))))))
 
 (defmethod slot-makunbound-using-class :before ((class indexed-class) object
                                                 (slot slot-definition))
@@ -365,7 +365,7 @@ also index subclasses of the class to which the slot belongs, default is T")
              (object-destroyed-p object)
              (not *indexed-class-override*))
     (error "Can not MAKUNBOUND slot ~A of destroyed object ~a."
-	       (slot-definition-name slot) (class-name (class-of object)))))
+           (slot-definition-name slot) (class-name (class-of object)))))
 
 #+lispworks
 (defmethod slot-makunbound-using-class ((class indexed-class) object
@@ -374,8 +374,8 @@ also index subclasses of the class to which the slot belongs, default is T")
     (unless slot-def
       (error "Did not find slot ~S in ~S"
              slot class))
-   (slot-makunbound-using-class class object
-                                slot-def)))
+    (slot-makunbound-using-class class object
+                                 slot-def)))
 
 (defvar *in-make-instance-p* nil)
 
@@ -460,21 +460,21 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defmethod slot-makunbound-using-class
     ((class indexed-class) object (slot index-effective-slot-definition))
   (let* ((slot-name (slot-definition-name slot))
-	 (previous-slot-boundp (slot-boundp object slot-name))
-	 (indices (index-effective-slot-definition-indices slot)))
+         (previous-slot-boundp (slot-boundp object slot-name))
+         (indices (index-effective-slot-definition-indices slot)))
     (when (and previous-slot-boundp
-	       *indices-remove-p*)
+               *indices-remove-p*)
       (let ((changed-indices nil)
-	    (error t))
-	(unwind-protect
-	     (progn
-	       (dolist (index indices)
-		 (index-remove index object)
-		 (push index changed-indices))
-	       (setf error nil))
-	  (when error
-	    (dolist (index changed-indices)
-	      (index-add index object))))))
+            (error t))
+        (unwind-protect
+             (progn
+               (dolist (index indices)
+                 (index-remove index object)
+                 (push index changed-indices))
+               (setf error nil))
+          (when error
+            (dolist (index changed-indices)
+              (index-add index object))))))
     (call-next-method)))
 
 (defmethod clear-class-indices ((class indexed-class))
@@ -490,8 +490,8 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 (defmethod class-slot-index ((class indexed-class) slot-name)
   (let ((holder (find-if #'(lambda (holder) (and (eql (index-holder-class holder) class)
-						                         (eql (index-holder-name holder) slot-name)))
-			             (indexed-class-indices class))))
+                                                 (eql (index-holder-name holder) slot-name)))
+                         (indexed-class-indices class))))
     (when holder
       (index-holder-index holder))))
 
