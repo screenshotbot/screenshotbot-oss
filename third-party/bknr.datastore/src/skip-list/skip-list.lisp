@@ -174,36 +174,36 @@ with KEY if present, or inserts a new node with random level."
 (defmethod skip-list-search-node ((sl skip-list) key)
   "Search for the node with KEY in the skip-list."
   (declare (type integer key)
-	   (optimize (speed 3)))
+	       (optimize (speed 3)))
   (do ((level (1- (skip-list-level sl)) (1- level))
        (node (skip-list-header sl) (follow-node node key level)))
       ((< level 0)
        (let ((result (node-forward node)))
-	 (if (and result (= (node-key result) key))
-	     result
-	     nil)))
+	     (if (and result (= (node-key result) key))
+	         result
+	         nil)))
     (declare (type fixnum level)
-	     (type simple-vector node))))
+	         (type simple-vector node))))
 
 (defmethod skip-list-after-node ((sl skip-list) key)
   "Search for the node with key biffer or equal to KEY in the skip-list (for range queries)."
   (declare (type integer key)
-	   (optimize (speed 3)))
+	       (optimize (speed 3)))
   (do ((level (1- (skip-list-level sl)) (1- level))
        (node (skip-list-header sl) (follow-node node key level)))
       ((< level 0)
        (let ((result (node-forward node)))
-	 (if (and result (>= (node-key result) key))
-	     result
-	     nil)))
+	     (if (and result (>= (node-key result) key))
+	         result
+	         nil)))
     (declare (type fixnum level)
-	     (type simple-vector node))))
+	         (type simple-vector node))))
 
 (defmethod skip-list-search ((sl skip-list) key &optional not-found)
   (let ((result (skip-list-search-node sl key)))
     (if result
-	(node-value result)
-	not-found)))
+	    (node-value result)
+	    not-found)))
 
 (defun node-before (node key &optional (level 0))
   (let ((next (node-forward node level)))
@@ -265,11 +265,11 @@ with KEY if present, or inserts a new node with random level."
 (defmethod sl-cursor-next ((slc skip-list-cursor) &optional eoc)
   (with-slots (node) slc
     (if node
-	(let ((result (list (bknr.skip-list::node-key node)
-			    (bknr.skip-list::node-value node))))
-	  (setf node (bknr.skip-list::node-forward node))
-	  result)
-	eoc)))
+	    (let ((result (list (bknr.skip-list::node-key node)
+			                (bknr.skip-list::node-value node))))
+	      (setf node (bknr.skip-list::node-forward node))
+	      result)
+	    eoc)))
 
 (defmethod sl-cursor-prev ((slc skip-list-cursor) &optional eoc)
   (declare (ignore eoc))
@@ -290,14 +290,14 @@ with KEY if present, or inserts a new node with random level."
 (defmethod sl-cursor-next :around ((slc skip-list-key-cursor) &optional eoc)
   (let ((result (call-next-method)))
     (if (eql result eoc)
-	eoc
-	(first result))))
+	    eoc
+	    (first result))))
 
 (defmethod skip-list-cursor ((sl skip-list) &key cursor (class 'skip-list-cursor))
   (if cursor
       (progn (setf (skip-list-cursor-node cursor)
-		   (bknr.skip-list::node-forward (bknr.skip-list::skip-list-header sl)))
-	     cursor)
+		           (bknr.skip-list::node-forward (bknr.skip-list::skip-list-header sl)))
+	         cursor)
       (make-instance class :node (bknr.skip-list::node-forward (bknr.skip-list::skip-list-header sl)))))
 
 (defmethod skip-list-values-cursor ((sl skip-list))
@@ -312,8 +312,8 @@ with KEY if present, or inserts a new node with random level."
 (defmethod sl-cursor-next :around ((slc skip-list-range-cursor) &optional eoc)
   (with-slots (node end) slc
     (if (and node (< (bknr.skip-list::node-key node) end))
-	(call-next-method)
-	eoc)))
+	    (call-next-method)
+	    eoc)))
 
 (defmethod skip-list-range-cursor ((sl skip-list) start end)
   (let ((node (bknr.skip-list::skip-list-after-node sl start)))
@@ -323,12 +323,12 @@ with KEY if present, or inserts a new node with random level."
 (defmethod map-skip-list (fun (sl skip-list))
   (let ((cursor (skip-list-cursor sl)))
     (do ((val (sl-cursor-next cursor) (sl-cursor-next cursor)))
-	((null val))
+	    ((null val))
       (apply fun val))))
 
 (defmethod map-skip-list-values (fun (sl skip-list))
   (let ((cursor (skip-list-values-cursor sl)))
     (do ((val (sl-cursor-next cursor) (sl-cursor-next cursor)))
-	((null val))
+	    ((null val))
       (funcall fun val))))
 
