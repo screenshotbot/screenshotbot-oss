@@ -93,12 +93,12 @@ Note: This is a DEFUN, not DEFTRANSACTION (unlike upstream bknr.datastore).
 Using DEFTRANSACTION prevents code deployments to follower nodes in bknr.cluster.
 See D7646 for historical context."
   (let ((instances (class-instances class)))
-   (let ((instance-count (length instances)))
-     (when (plusp instance-count)
-       (unless *suppress-schema-warnings*
-         (report-progress "~&; updating ~A instances of ~A for class changes~%"
-                          instance-count class))
-       (mapc #'reinitialize-instance instances)))))
+    (let ((instance-count (length instances)))
+      (when (plusp instance-count)
+        (unless *suppress-schema-warnings*
+          (report-progress "~&; updating ~A instances of ~A for class changes~%"
+                           instance-count class))
+        (mapc #'reinitialize-instance instances)))))
 
 (defvar *wait-for-tx-p* t
   "If true, we wait for the transaction to apply before proceeding. This
@@ -117,34 +117,34 @@ is only applicable for bknr.cluster.")
                        (class-name class)))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
- (defclass persistent-direct-slot-definition (index-direct-slot-definition)
-   ((relaxed-object-reference :initarg :relaxed-object-reference
-                              :initform nil)
-    (transient :initarg :transient
-               :initform nil)))
+  (defclass persistent-direct-slot-definition (index-direct-slot-definition)
+    ((relaxed-object-reference :initarg :relaxed-object-reference
+                               :initform nil)
+     (transient :initarg :transient
+                :initform nil)))
 
- (defclass persistent-effective-slot-definition (index-effective-slot-definition)
-  ((relaxed-object-reference :initarg :relaxed-object-reference
-                             :initform nil)
-   (transient :initarg :transient
-              :initform nil)))
+  (defclass persistent-effective-slot-definition (index-effective-slot-definition)
+    ((relaxed-object-reference :initarg :relaxed-object-reference
+                               :initform nil)
+     (transient :initarg :transient
+                :initform nil)))
 
- (defgeneric transient-slot-p (slotd)
-  (:method ((slotd t))
-    t)
-  (:method ((slotd persistent-direct-slot-definition))
-    (slot-value slotd 'transient))
-  (:method ((slotd persistent-effective-slot-definition))
-    (slot-value slotd 'transient)))
+  (defgeneric transient-slot-p (slotd)
+    (:method ((slotd t))
+      t)
+    (:method ((slotd persistent-direct-slot-definition))
+      (slot-value slotd 'transient))
+    (:method ((slotd persistent-effective-slot-definition))
+      (slot-value slotd 'transient)))
 
- (defgeneric relaxed-object-reference-slot-p (slotd)
-  (:method ((slotd t))
-    nil)
-  (:method ((slotd persistent-effective-slot-definition))
-    (slot-value slotd 'relaxed-object-reference))
-  (:method ((slotd persistent-direct-slot-definition))
-    (slot-value slotd 'relaxed-object-reference))
-  (:documentation "Return whether the given slot definition specifies
+  (defgeneric relaxed-object-reference-slot-p (slotd)
+    (:method ((slotd t))
+      nil)
+    (:method ((slotd persistent-effective-slot-definition))
+      (slot-value slotd 'relaxed-object-reference))
+    (:method ((slotd persistent-direct-slot-definition))
+      (slot-value slotd 'relaxed-object-reference))
+    (:documentation "Return whether the given slot definition specifies
 that the slot is relaxed.  If a relaxed slot holds a pointer to
 another persistent object and the pointed-to object is deleted, slot
 reads will return nil.")))
@@ -169,16 +169,16 @@ reads will return nil.")))
         ;; If we're restoring then we don't need to create a new transaction
         (in-restore-p))
        (call-next-method))
-     (t
-      ;; If we're not in a transaction, or this is not a transient
-      ;; slot, we don't make the change directly, instead we just
-      ;; create a transaction for it. The transaction should call
-      ;; slot-value-using-class again.
-      (execute (make-instance 'transaction
-                              :function-symbol 'tx-change-slot-values
-                              :timestamp (get-universal-time)
-                              :args (list object (slot-definition-name slotd) newval)))
-      newval))))
+      (t
+       ;; If we're not in a transaction, or this is not a transient
+       ;; slot, we don't make the change directly, instead we just
+       ;; create a transaction for it. The transaction should call
+       ;; slot-value-using-class again.
+       (execute (make-instance 'transaction
+                               :function-symbol 'tx-change-slot-values
+                               :timestamp (get-universal-time)
+                               :args (list object (slot-definition-name slotd) newval)))
+       newval))))
 
 
 (define-condition transient-slot-cannot-have-initarg (store-error)
@@ -193,12 +193,12 @@ reads will return nil.")))
                        slot-name (class-name class))))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
- (defmethod direct-slot-definition-class ((class persistent-class) &key initargs transient name &allow-other-keys)
-   ;; It might be better to do the error checking in an
-   ;; initialize-instance method of persistent-direct-slot-definition
-   (when (and initargs transient)
-     (error 'transient-slot-cannot-have-initarg :class class  :slot-name name))
-   'persistent-direct-slot-definition))
+  (defmethod direct-slot-definition-class ((class persistent-class) &key initargs transient name &allow-other-keys)
+    ;; It might be better to do the error checking in an
+    ;; initialize-instance method of persistent-direct-slot-definition
+    (when (and initargs transient)
+      (error 'transient-slot-cannot-have-initarg :class class  :slot-name name))
+    'persistent-direct-slot-definition))
 
 (defmethod effective-slot-definition-class ((class persistent-class) &key &allow-other-keys)
   'persistent-effective-slot-definition)
@@ -340,12 +340,12 @@ reads will return nil.")))
                (destructuring-bind (class . args)
                    (fix-make-instance-args
                     class initargs)
-                (make-instance 'transaction
-                               :function-symbol 'tx-make-instance
-                               :timestamp (get-universal-time)
-                               :args (list*
-                                      (class-name class)
-                                      args)))))
+                 (make-instance 'transaction
+                                :function-symbol 'tx-make-instance
+                                :timestamp (get-universal-time)
+                                :args (list*
+                                       (class-name class)
+                                       args)))))
          (execute transaction))))))
 
 (defun tx-make-instance (class &rest args)
@@ -409,8 +409,8 @@ reads will return nil.")))
 
 (defun persistent-change-class (object class &rest args)
   (execute (make-instance 'transaction :function-symbol 'tx-persistent-change-class
-                          :timestamp (get-universal-time)
-                          :args (append (list object (if (symbolp class) class (class-name class))) args))))
+                                       :timestamp (get-universal-time)
+                                       :args (append (list object (if (symbolp class) class (class-name class))) args))))
 
 (defgeneric initialize-transient-instance (store-object)
   (:documentation
@@ -510,7 +510,7 @@ bound, encode 'bknr.datastore::unbound."
 (defun encode-set-slots-for-snapshot (class-layouts object-snapshot-pair stream)
   (let* ((object (object-snapshot-pair-object object-snapshot-pair))
          (class-layout (gethash (class-of object)
-                               class-layouts)))
+                                class-layouts)))
     (%write-tag #\S stream)
     (%encode-integer (class-layout-id class-layout) stream)
     (%encode-integer (store-object-id object) stream)
@@ -520,21 +520,21 @@ bound, encode 'bknr.datastore::unbound."
 (defun find-class-with-interactive-renaming (class-name)
   (loop until (or (null class-name)
                   (find-class class-name nil))
-     do (progn
-          (format *query-io* "Class ~A not found, enter new class or enter ~
+        do (progn
+             (format *query-io* "Class ~A not found, enter new class or enter ~
                               NIL to ignore objects of this class: "
-                  class-name)
-          (finish-output *query-io*)
-          (setq class-name (read *query-io*))))
+                     class-name)
+             (finish-output *query-io*)
+             (setq class-name (read *query-io*))))
   (and class-name
        (find-class class-name)))
 
 (defun find-slot-name-with-interactive-rename (class slot-name)
   (loop until (find slot-name (class-slots class) :key #'slot-definition-name)
-     do (format *query-io* "Slot ~S not found in class ~S, enter new slot name: "
-                slot-name (class-name class))
-     do (setq slot-name (read *query-io*))
-     finally (return slot-name)))
+        do (format *query-io* "Slot ~S not found in class ~S, enter new slot name: "
+                   slot-name (class-name class))
+        do (setq slot-name (read *query-io*))
+        finally (return slot-name)))
 
 (defvar *slot-name-map*)
 
@@ -577,7 +577,7 @@ bound, encode 'bknr.datastore::unbound."
   (format t "; verifying class layout for class ~A~%; slots:~{ ~S~}~%" (class-name class)
           (mapcar #'slot-definition-name (class-slots class)))
   (loop for slot-name in slot-names
-     collect (find-slot-name-with-automatic-rename class slot-name)))
+        collect (find-slot-name-with-automatic-rename class slot-name)))
 
 (defun snapshot-read-layout (stream layouts)
   (let* ((id (%decode-integer stream))
@@ -688,7 +688,7 @@ the slots are read from the snapshot and ignored."
                  (%write-tag #\o stream)
                  (%encode-integer id stream)))
           (if *current-slot-relaxed-p*
-             ;; the slot can contain references to deleted objects, just warn
+              ;; the slot can contain references to deleted objects, just warn
               (encode-relaxed)
               ;; the slot can't contain references to deleted objects, throw an error
               (restart-case
@@ -956,26 +956,26 @@ the slots are read from the snapshot and ignored."
                  (with-simple-restart
                      (finalize-object-subsystem "Finalize the object subsystem.")
                    (loop
-                      (when (and (plusp created-objects)
-                                 (zerop (mod created-objects 10000))
-                                 (not (= created-objects reported-objects-count)))
-                        #+nil (format t "Snapshot position ~A~%" (file-position s))
-                        (report-progress "~A objects created.~%" created-objects)
-                        (setf reported-objects-count created-objects)
-                        (force-output))
-                      (when (and (plusp read-slots)
-                                 (zerop (mod read-slots 10000)))
-                        (report-progress "~A of ~A objects initialized.~%" read-slots created-objects)
-                        (force-output))
-                      (let ((char (%read-tag s nil nil)))
-                        (unless (member char '(#\I #\L #\O #\S nil))
-                          (error "unknown char ~A at offset ~A~%" char (file-position s)))
-                        (ecase char
-                          ((nil) (return))
-                          (#\I (setf (next-object-id (store-object-subsystem)) (%decode-integer s)))
-                          (#\L (snapshot-read-layout s class-layouts))
-                          (#\O (snapshot-read-object s class-layouts) (incf created-objects))
-                          (#\S (snapshot-read-slots s class-layouts) (incf read-slots))))))
+                     (when (and (plusp created-objects)
+                                (zerop (mod created-objects 10000))
+                                (not (= created-objects reported-objects-count)))
+                       #+nil (format t "Snapshot position ~A~%" (file-position s))
+                       (report-progress "~A objects created.~%" created-objects)
+                       (setf reported-objects-count created-objects)
+                       (force-output))
+                     (when (and (plusp read-slots)
+                                (zerop (mod read-slots 10000)))
+                       (report-progress "~A of ~A objects initialized.~%" read-slots created-objects)
+                       (force-output))
+                     (let ((char (%read-tag s nil nil)))
+                       (unless (member char '(#\I #\L #\O #\S nil))
+                         (error "unknown char ~A at offset ~A~%" char (file-position s)))
+                       (ecase char
+                         ((nil) (return))
+                         (#\I (setf (next-object-id (store-object-subsystem)) (%decode-integer s)))
+                         (#\L (snapshot-read-layout s class-layouts))
+                         (#\O (snapshot-read-object s class-layouts) (incf created-objects))
+                         (#\S (snapshot-read-slots s class-layouts) (incf read-slots))))))
                  (map-store-objects #'initialize-transient-slots)
                  (map-store-objects #'initialize-transient-instance)
                  (setf error nil))
@@ -994,8 +994,8 @@ the slots are read from the snapshot and ignored."
   (if (in-transaction-p)
       (destroy-object object)
       (execute (make-instance 'transaction :function-symbol 'tx-delete-object
-                              :timestamp (get-universal-time)
-                              :args (list (store-object-id object))))))
+                                           :timestamp (get-universal-time)
+                                           :args (list (store-object-id object))))))
 
 (defun tx-delete-objects (&rest object-ids)
   (mapc #'(lambda (id) (destroy-object (store-object-with-id id))) object-ids))
@@ -1004,8 +1004,8 @@ the slots are read from the snapshot and ignored."
   (if (in-transaction-p)
       (mapc #'destroy-object objects)
       (execute (make-instance 'transaction :function-symbol 'tx-delete-objects
-                              :timestamp (get-universal-time)
-                              :args (mapcar #'store-object-id objects)))))
+                                           :timestamp (get-universal-time)
+                                           :args (mapcar #'store-object-id objects)))))
 
 (defgeneric cascade-delete-p (object referencing-object)
   (:method (object referencing-object)
@@ -1042,7 +1042,7 @@ to cascading deletes."
     (error 'not-in-transaction))
   (when object
     (loop for (slot value) on slots-and-values by #'cddr
-       do (setf (slot-value object slot) value))))
+          do (setf (slot-value object slot) value))))
 
 (defun change-slot-values (object &rest slots-and-values)
   "This function is the deprecated way to set slots of persistent
