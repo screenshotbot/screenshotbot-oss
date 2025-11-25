@@ -66,7 +66,7 @@ remove these from the graph."
   (object-neighbors x))
 
 (defmethod object-neighbors-for-graph ((note note))
-  (unless (adminp (screenshotbot/model/note::user note))
+  (unless (?. adminp (screenshotbot/model/note::user note))
     (call-next-method)))
 
 (defmethod object-neighbors-for-graph ((self screenshotbot/model/screenshot::lite-screenshot))
