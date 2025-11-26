@@ -613,6 +613,7 @@
                 :components ((:file "proxy")
                              (:file "replay-acceptor")
                              (:file "services")
+                             (:file "aws-selenium-provider")
                              (:file "frontend")
                              (:file "sitemap")
                              (:file "run-builder")
