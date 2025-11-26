@@ -14,6 +14,8 @@
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:replay-password)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:nicknames :screenshotbot/pro/replay/services)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -102,11 +104,20 @@
                   :type nil))
 
 
-(defun call-with-selenium-server (fn &key type)
+(defclass static-selenium-provider ()
+  ()
+  (:documentation "An older selenium provider"))
+
+(defmethod selenium-provider (installation)
+  (make-instance 'static-selenium-provider))
+
+(defmethod call-with-selenium-server ((self static-selenium-provider)
+                                      fn &key type)
   (funcall fn
            (selenium-server :type type)))
 
 (defmacro with-selenium-server ((var &rest args) &body body)
   `(call-with-selenium-server
+    (selenium-provider *installation*)
     (lambda (,var) ,@body)
     ,@args))

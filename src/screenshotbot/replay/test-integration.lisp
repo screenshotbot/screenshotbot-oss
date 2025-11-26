@@ -162,7 +162,7 @@
                                                         :type "firefox"))))
                     (fake-driver (make-instance 'fake-driver)))
                (cl-mock:if-called 'call-with-selenium-server
-                                  (lambda (fn &key type)
+                                  (lambda (self fn &key type)
                                     (funcall fn
                                              (make-instance 'selenium-server
                                                             :host "foo.bar"
