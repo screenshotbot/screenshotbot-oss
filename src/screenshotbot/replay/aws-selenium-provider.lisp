@@ -15,6 +15,10 @@
                    :reader security-group)
    (subnet-id :initarg :subnet-id
               :reader subnet-id)
+   (iam-profile :initarg :iam-profile
+                :reader iam-profile)
+   (proxy-binary :initarg :proxy-binary
+                 :reader proxy-binary)
    (ami :initarg :ami
         :initform "ami-0030d3967006e88b5"
         :reader ami)))
@@ -33,25 +37,27 @@
   (let* ((image-id (ami self)) 
          (instance-type "t3a.medium")
          (subnet-id (subnet-id self))
-         (user-data "#!/bin/bash
+         (user-data (format nil "#!/bin/bash
+aws s3 cp ~a ./proxy
 curl https://screenshotbot.io/force-crash
 sudo apt-get update
 sudo apt-get install -y docker
-")
+" (proxy-binary self)))
          (user-data-file (format nil "/tmp/user-data-~A.sh" (get-universal-time))))
     ;; Write user-data to temporary file
     (with-open-file (stream user-data-file :direction :output :if-exists :supersede)
       (write-string user-data stream))
     (unwind-protect
         (let* ((run-result (uiop:run-program 
-                           (list "aws" "ec2" "run-instances"
-                                 "--image-id" image-id
-                                 "--count" "1"
-                                 "--instance-type" instance-type
-                                 "--security-group-ids" (security-group self)
-                                 "--subnet-id" subnet-id
-                                 "--user-data" (format nil "file://~A" user-data-file)
-                                 "--output" "json")
+                            (list "aws" "ec2" "run-instances"
+                                  "--image-id" image-id
+                                  "--count" "1"
+                                  "--instance-type" instance-type
+                                  "--security-group-ids" (security-group self)
+                                  "--subnet-id" subnet-id
+                                  "--iam-instance-profile" (format nil "Name=~A" (iam-profile self))
+                                  "--user-data" (format nil "file://~A" user-data-file)
+                                  "--output" "json")
                            :error-output t
                            :output :string))
                (response (yason:parse run-result))
