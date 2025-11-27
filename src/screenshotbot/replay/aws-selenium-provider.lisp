@@ -7,7 +7,9 @@
 (defpackage :screenshotbot/replay/aws-selenium-provider
   (:use #:cl)
   (:import-from #:screenshotbot/replay/services
-                #:call-with-selenium-server))
+                #:call-with-selenium-server)
+  (:import-from #:util/request
+                #:http-request))
 (in-package :screenshotbot/replay/aws-selenium-provider)
 
 (defclass aws-selenium-provider ()
@@ -19,16 +21,60 @@
                 :reader iam-profile)
    (proxy-binary :initarg :proxy-binary
                  :reader proxy-binary)
+   (ssh-key-name :initarg :ssh-key-name
+                 :reader ssh-key-name)
    (ami :initarg :ami
         :initform "ami-0030d3967006e88b5"
         :reader ami)))
+
+(auto-restart:with-auto-restart ()
+ (defmethod get-instance-ipv6 (instance-id)
+   "Get the IPv6 address of an AWS EC2 instance"
+   (let* ((result (uiop:run-program
+                   (list "aws" "ec2" "describe-instances"
+                         "--instance-ids" instance-id
+                         "--output" "json")
+                   :output :string))
+          (response (yason:parse result))
+          (reservations (gethash "Reservations" response))
+          (instances (gethash "Instances" (first reservations)))
+          (instance (first instances))
+          (network-interfaces (gethash "NetworkInterfaces" instance)))
+     (loop for interface in network-interfaces
+           for ipv6-addresses = (gethash "Ipv6Addresses" interface)
+           when (and ipv6-addresses (> (length ipv6-addresses) 0))
+             return (gethash "Ipv6Address" (elt ipv6-addresses 0))
+           finally (error "No IPv6 address found for instance ~A" instance-id)))))
+
+(defun get-status (ipv6)
+  (let* ((url (format nil "http://[~a]:5004/status" ipv6))
+         (response
+           (handler-case
+               (http-request
+                url)
+             (error (e)
+               (log:warn "Got error: ~a" e)
+               nil))))
+    (log:info "Made request to ~a" url)
+    response))
+
 
 (defmethod call-with-selenium-server ((self aws-selenium-provider)
                                       fn &key type)
   (let ((instance-id (aws-new-instance self)))
     (log:info "Started new instance: ~a" instance-id)
     (unwind-protect
-         (funcall fn instance-id)
+         (let ((ipv6 (get-instance-ipv6 instance-id)))
+           (block wait
+            (loop for i from 0 to 300
+                  do
+                     (let ((response (get-status ipv6)))
+                       (log:info "Got response: ~a" response)
+                       (when (equal  (str:trim response) "OK")
+                         (return-from wait nil))
+                       (sleep 1))))
+           (funcall fn instance-id))
+      
       (aws-terminate-instance instance-id))))
 
 
@@ -39,9 +85,10 @@
          (subnet-id (subnet-id self))
          (user-data (format nil "#!/bin/bash
 aws s3 cp ~a ./proxy
-curl https://screenshotbot.io/force-crash
-sudo apt-get update
-sudo apt-get install -y docker
+chmod a+x ./proxy
+# sudo apt-get update
+# sudo apt-get install -y docker
+./proxy --address \"::\" > /tmp/output &
 " (proxy-binary self)))
          (user-data-file (format nil "/tmp/user-data-~A.sh" (get-universal-time))))
     ;; Write user-data to temporary file
@@ -53,6 +100,7 @@ sudo apt-get install -y docker
                                   "--image-id" image-id
                                   "--count" "1"
                                   "--instance-type" instance-type
+                                  "--key-name" (ssh-key-name self)
                                   "--security-group-ids" (security-group self)
                                   "--subnet-id" subnet-id
                                   "--iam-instance-profile" (format nil "Name=~A" (iam-profile self))
