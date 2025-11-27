@@ -587,6 +587,7 @@
                :cl+ssl
                :cl-mongo-id
                :cl-webdriver-client
+               :clingon
                :hunchentoot
                :hunchensocket
                :screenshotbot
