@@ -611,6 +611,7 @@
   :components ((:module "replay"
                 :serial t
                 :components ((:file "proxy")
+                             (:file "proxy-main")
                              (:file "replay-acceptor")
                              (:file "services")
                              (:file "aws-selenium-provider")
