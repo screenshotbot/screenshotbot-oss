@@ -268,16 +268,9 @@ hit too much in production."
                (encode (image-comparison-result obj) output)
                (encode
                 (if (identical-p obj) 1 0)
-                output))
-             (write-imcs (set)
-               (cond
-                 ((fset:empty? set)
-                  nil)
-                 (t
-                  (let ((next (fset:arb set)))
-                    (write-single next)
-                    (write-imcs (fset:less set next)))))))
-      (write-imcs stored-cache))))
+                output)))
+      (fset:do-set (next stored-cache)
+        (write-single next)))))
 
 (defmethod snapshot-subsystem-async ((store bknr.datastore:store) (self image-comparison-subsystem))
   (gc-comparisons)
