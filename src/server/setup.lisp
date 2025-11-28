@@ -85,6 +85,9 @@
                                hunchentoot:easy-acceptor)
   ())
 
+(defclass my-taskmaster (hunchentoot:one-thread-per-connection-taskmaster)
+  ())
+
 (defclass my-acceptor (#+lispworks acceptor-with-existing-socket
                        #+lispworks
                        server/acceptor-override:ipv6-acceptor
@@ -92,6 +95,7 @@
   ()
   (:default-initargs
    :listen-backlog 500
+   :taskmaster (make-instance 'my-taskmaster)
    :default-acceptor (make-instance 'my-default-acceptor
                                     :port 1
                                     :name 'hunchentoot-multi-acceptor:default-acceptor)))
