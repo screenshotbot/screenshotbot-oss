@@ -16,10 +16,25 @@
    #:proxy-main/command))
 (in-package :screenshotbot/replay/proxy-main)
 
+(defun prepare-machine ()
+  "Prepare the machine by updating packages and installing Docker"
+  (log:info "Preparing machine: running apt-get update")
+  (uiop:run-program '("apt-get" "update")
+                    :output :interactive
+                    :error-output :interactive)
+  (log:info "Installing Docker")
+  (uiop:run-program '("apt-get" "install" "-y" "docker.io")
+                    :output :interactive
+                    :error-output :interactive)
+  (log:info "Machine preparation complete"))
+
 (defun proxy-main/handler (cmd)
   (let ((port (clingon:getopt cmd :port))
         (address (clingon:getopt cmd :address))
-        (listen-backlog (clingon:getopt cmd :listen-backlog)))
+        (listen-backlog (clingon:getopt cmd :listen-backlog))
+        (prepare-machine-p (clingon:getopt cmd :prepare-machine)))
+    (when prepare-machine-p
+      (prepare-machine))
     (server:main :acceptor (make-instance 'replay-proxy
                                           :port port
                                           :address address
@@ -50,7 +65,13 @@
               :description "Listen backlog size"
               :long-name "listen-backlog"
               :initial-value 500
-              :key :listen-backlog))))
+              :key :listen-backlog)
+             (make-option
+              :flag
+              :description "Prepare machine by running apt-get update and installing Docker"
+              :long-name "prepare-machine"
+              :initial-value nil
+              :key :prepare-machine))))
 
 (defun proxy-main ()
   (let ((args (cdr (uiop:raw-command-line-arguments))))

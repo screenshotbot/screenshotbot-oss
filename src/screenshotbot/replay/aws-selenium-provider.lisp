@@ -81,15 +81,13 @@
 (defmethod aws-new-instance ((self aws-selenium-provider))
   "Create a new AWS EC2 instance for selenium testing"
   (let* ((image-id (ami self)) 
-         (instance-type "t3a.medium")
+         (instance-type "m7a.medium")
          (subnet-id (subnet-id self))
          (user-data (format nil "#!/bin/bash
 aws s3 cp ~a ./proxy.gz
 gunzip ./proxy.gz
 chmod a+x ./proxy
-# sudo apt-get update
-# sudo apt-get install -y docker
-./proxy --address \"::\" > /tmp/output &
+./proxy --address \"::\" --prepare-machine > /tmp/output &
 " (proxy-binary self)))
          (user-data-file (format nil "/tmp/user-data-~A.sh" (get-universal-time))))
     ;; Write user-data to temporary file
