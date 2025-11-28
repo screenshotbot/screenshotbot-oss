@@ -34,7 +34,7 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/phabricator/plugin)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defclass phabricator-plugin (plugin)
   ())

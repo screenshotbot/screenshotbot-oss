@@ -34,7 +34,7 @@
    #:get-canonical-pull-request-url))
 (in-package :screenshotbot/dashboard/review-link)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun review-link (&key run)
   (cond

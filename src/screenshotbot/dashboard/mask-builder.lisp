@@ -26,7 +26,7 @@
 (in-package :screenshotbot/dashboard/mask-builder)
 
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun mask-editor (channel screenshot &key (redirect "/runs")
                                          overlay)

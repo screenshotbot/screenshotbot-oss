@@ -14,7 +14,7 @@
 
 (util/fiveam:def-suite)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (test simple-check ()
   (is (equal "hello world"

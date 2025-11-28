@@ -40,7 +40,7 @@
    #:generate-documentation-context))
 (in-package :remark/render)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 
 (defmethod link-to (page &key (toplevel *toplevel*))

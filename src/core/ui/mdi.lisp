@@ -10,7 +10,7 @@
    #:mdi))
 (in-package :core/ui/mdi)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (markup:deftag mdi (&key name class style)
   <i class= (format nil "material-icons ~a" class) style=style >,(progn name)</i>)

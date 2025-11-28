@@ -62,7 +62,7 @@
 
 (util/fiveam:def-suite)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (def-fixture state ()
   (let* ((*installation* (make-instance 'installation))

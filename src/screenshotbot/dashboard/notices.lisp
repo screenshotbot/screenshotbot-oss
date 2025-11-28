@@ -35,7 +35,7 @@
                 #:oid))
 (in-package :screenshotbot/dashboard/notices)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (deftag user-notice-list (&key (user (current-user)))
   <div id= "user-notice-list" class= "row">

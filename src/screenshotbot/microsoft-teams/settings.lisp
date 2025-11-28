@@ -22,7 +22,7 @@
                 #:workflow-name))
 (in-package :screenshotbot/microsoft-teams/settings)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun get-settings-teams ()
   <settings-template>

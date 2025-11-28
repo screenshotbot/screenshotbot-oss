@@ -11,7 +11,7 @@
   (:export))
 (in-package :util.test-bind-form)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (Def-suite* :util.test-bind-form)
 

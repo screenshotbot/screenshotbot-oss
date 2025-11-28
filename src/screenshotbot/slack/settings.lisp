@@ -43,7 +43,7 @@
   (:export #:post-settings-slack))
 (in-package :screenshotbot/slack/settings)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun disconnect-slack (company)
   (let ((slack-config (find-or-create-slack-config company)))

@@ -5,7 +5,7 @@
 ;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 (in-package #:util)
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (markup:deftag google-analytics (&key tracking (site-speed-sample-rate 100))
   (markup:make-merge-tag

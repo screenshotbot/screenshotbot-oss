@@ -28,7 +28,7 @@
    #:screenshotbot/ui))
 (in-package :screenshotbot/admin/core)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defvar *index* nil)
 

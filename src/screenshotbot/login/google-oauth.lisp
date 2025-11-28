@@ -29,7 +29,7 @@
    #:make-google-oauth-link))
 (in-package :screenshotbot/login/google-oauth)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defclass google-oauth-provider (oidc-provider)
   ((domain :initform nil

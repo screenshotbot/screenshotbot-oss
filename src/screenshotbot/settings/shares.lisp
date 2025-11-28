@@ -34,7 +34,7 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/settings/shares)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defsettings settings-shares-page
   :name "shares"

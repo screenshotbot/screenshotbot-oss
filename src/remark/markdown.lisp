@@ -8,7 +8,7 @@
    #:header-id))
 (in-package :remark/markdown)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 ;; TODO: \\W is incorrect here
 

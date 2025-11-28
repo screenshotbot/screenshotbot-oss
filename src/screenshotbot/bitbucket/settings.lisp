@@ -65,7 +65,7 @@
    #:refresh-token))
 (in-package :screenshotbot/bitbucket/settings)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (with-class-validation
  (defclass bitbucket-token (store-object)

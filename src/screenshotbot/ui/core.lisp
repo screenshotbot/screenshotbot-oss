@@ -10,7 +10,7 @@
   (:export #:ui/a #:ui/div #:ui/span))
 (in-package :screenshotbot/ui/core)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (deftag ui/a (children &key href class btn id)
   (let* ((class (or

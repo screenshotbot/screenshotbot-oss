@@ -23,7 +23,7 @@
                 #:conduit-api-key))
 (in-package :screenshotbot/phabricator/settings)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defvar +unchanged+ "unchanged")
 

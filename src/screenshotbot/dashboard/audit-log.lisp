@@ -22,7 +22,7 @@
    #:commit-tag))
 (in-package :screenshotbot/dashboard/audit-log)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defmethod render-audit-log ((self base-audit-log))
   (let ((timeago (timeago :timestamp (created-at self))))

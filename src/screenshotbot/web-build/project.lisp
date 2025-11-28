@@ -115,7 +115,7 @@
    #:update-next-job-at))
 (in-package :screenshotbot/web-build/project)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (declaim (ftype (function (project) t) update-next-job-at))
 

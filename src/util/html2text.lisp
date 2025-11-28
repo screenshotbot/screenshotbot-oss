@@ -9,7 +9,7 @@
   (:export #:html2text))
 (in-package #:util/html2text)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun html2text (markup)
   (let* ((markup (if (stringp markup) markup

@@ -20,7 +20,7 @@
                 #:with-form-errors))
 (in-package :screenshotbot/settings/general)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun %general-settings ()
   (let ((submit (nibble (full-name)

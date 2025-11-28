@@ -32,7 +32,7 @@
    #:updated-check-run-check))
 (in-package :screenshotbot/github/audit-log)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defclass github-audit-log (base-audit-log)
   ((%company :initarg :company

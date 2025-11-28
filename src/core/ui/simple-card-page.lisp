@@ -13,7 +13,7 @@
            #:confirmation-modal))
 (in-package :core/ui/simple-card-page)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (markup:deftag simple-card-page (children &key (col-class "col-lg-4 col-md-8")
                                  title

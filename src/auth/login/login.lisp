@@ -53,7 +53,7 @@
    #:auth-header-logo))
 (in-package :screenshotbot/login/login)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defparameter *throttler* (make-instance 'ip-throttler
                                          :tokens 120))

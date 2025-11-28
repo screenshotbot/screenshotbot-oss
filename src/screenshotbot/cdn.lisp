@@ -16,7 +16,7 @@
            #:img-with-fallback))
 (in-package :screenshotbot/cdn)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (markup:deftag script (children &key src type async)
   <:script src= (when src (util.cdn:make-cdn src)) type=type async=async >,@ (progn children)</:script>)

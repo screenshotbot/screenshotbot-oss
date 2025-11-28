@@ -9,7 +9,7 @@
    #:explain))
 (in-package :screenshotbot/dashboard/explain)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (deftag explain (explanation &key title)
   <sup><a data-bs-toggle= "popover" title= title

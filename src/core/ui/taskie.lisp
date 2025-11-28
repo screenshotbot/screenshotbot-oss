@@ -32,7 +32,7 @@
    #:with-pagination))
 (in-package :core/ui/taskie)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (deftag taskie-page-title (children &key title class)
   <div class= (format nil "page-title-box main-content ~a" class) >

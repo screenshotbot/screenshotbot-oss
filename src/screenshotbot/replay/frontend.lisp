@@ -51,7 +51,7 @@
    #:type))
 (in-package :screenshotbot/replay/frontend)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defclass screenshot ()
   ((key :initarg :key

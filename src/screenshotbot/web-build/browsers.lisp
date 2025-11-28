@@ -42,7 +42,7 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/web-build/browsers)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 
 (defhandler (nil :uri "/browsers") ()

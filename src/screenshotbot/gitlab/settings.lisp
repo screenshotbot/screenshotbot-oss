@@ -61,7 +61,7 @@
    #:enable-webhooks-p))
 (in-package :screenshotbot/gitlab/settings)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defvar +unchanged+ "unchanged")
 

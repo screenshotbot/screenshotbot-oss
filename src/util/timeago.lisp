@@ -14,7 +14,7 @@
    #:human-render-local-time))
 (in-package :util/timeago)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defvar *ts-format-cache* (make-hash-table))
 

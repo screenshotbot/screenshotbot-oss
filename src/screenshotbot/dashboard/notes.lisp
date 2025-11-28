@@ -37,7 +37,7 @@
    #:render-notes))
 (in-package :screenshotbot/dashboard/notes)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun create-note-page (&rest args)
   (nibble ()

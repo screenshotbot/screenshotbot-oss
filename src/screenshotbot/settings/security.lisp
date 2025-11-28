@@ -17,7 +17,7 @@
                 #:with-transaction))
 (in-package :screenshotbot/settings/security)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (deftag settings-card (children)
   <div class= "card mt-3">

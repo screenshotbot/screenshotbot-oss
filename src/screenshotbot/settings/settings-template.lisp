@@ -19,7 +19,7 @@
    #:screenshotbot/settings-api))
 (in-package :screenshotbot/settings/settings-template)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (deftag settings-menu-item (children &key href)
   <li class= "nav-item" >

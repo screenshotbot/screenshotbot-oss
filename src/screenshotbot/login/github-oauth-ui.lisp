@@ -12,7 +12,7 @@
                 #:github-oauth-provider))
 (in-package :screenshotbot/login/github-oauth-ui)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defmethod oauth-logo-svg ((auth github-oauth-provider))
   (declare (ignore auth))

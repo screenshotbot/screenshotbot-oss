@@ -14,7 +14,7 @@
                 #:confirmation-page))
 (in-package :screenshotbot/admin/index)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 
 (defadminhandler (nil :uri "/admin") ()

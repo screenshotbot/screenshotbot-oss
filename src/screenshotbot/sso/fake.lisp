@@ -14,7 +14,7 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/sso/fake)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defmethod call-with-company-login ((sso fake-sso-auth-provider)
                                     company

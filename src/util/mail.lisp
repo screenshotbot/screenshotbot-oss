@@ -6,7 +6,7 @@
 
 (in-package :util)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun parse-email-list (s)
   (cond

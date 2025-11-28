@@ -13,7 +13,7 @@
            #:with-error-builder))
 (in-package :util/form-errors)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun update-form-values (args)
   (dolist (arg args)

@@ -64,7 +64,7 @@
               if (or
                   (member (car expr)
                           '(named-readtables:in-readtable
-                            markup:enable-reader))
+                            named-readtables:in-readtable markup:syntax))
                   (string-equal
                    "markup_enable-reader" (string-downcase (symbol-name (car expr))))
                   (string-equal

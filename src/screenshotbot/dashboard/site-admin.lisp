@@ -23,7 +23,7 @@
                 #:simple-card-page))
 (in-package :screenshotbot/dashboard/site-admin)
 
-(markup:enable-reader)
+(named-readtables:in-readtable markup:syntax)
 
 (defun finish-self-promotion (secret-file)
   (cond
