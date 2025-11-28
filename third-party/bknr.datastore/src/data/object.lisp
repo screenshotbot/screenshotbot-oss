@@ -464,14 +464,19 @@ transaction log."))
   "Given an object (or snapshot), encode each of the slots in the stream
 in the order established by class-layout. If a specific slot is not
 bound, encode 'bknr.datastore::unbound."
-  (dolist (slot-info (class-layout-slot-infos class-layout))
-    (let* ((slot (slot-info-slot slot-info))
-           (*current-object-slot* (list object slot))
-           (*current-slot-relaxed-p* (slot-info-relaxed-object-reference-p slot-info)))
-      (encode (if (slot-boundp object slot)
-                  (slot-value object slot)
-                  'unbound)
-              stream))))
+  (let* ((current-object-slot (list nil nil))
+         ;; In the past we were creating a new list for every slot, to
+         ;; avoid consing we're caching and reusing this list.
+         (*current-object-slot* current-object-slot))
+    (dolist (slot-info (class-layout-slot-infos class-layout))
+      (let* ((slot (slot-info-slot slot-info))
+             (*current-slot-relaxed-p* (slot-info-relaxed-object-reference-p slot-info)))
+        (setf (first current-object-slot) object)
+        (setf (second current-object-slot) slot)
+        (encode (if (slot-boundp object slot)
+                    (slot-value object slot)
+                    'unbound)
+                stream)))))
 
 (defun encode-create-object (class-layouts object stream)
   (let* ((class (class-of object))
