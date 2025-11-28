@@ -200,9 +200,9 @@
   (%write-char object stream))
 
 (defun %encode-string (object stream)
-  (let ((octets (trivial-utf-8:string-to-utf-8-bytes object)))
-    (%encode-integer (length octets) stream)
-    (write-sequence octets stream)))
+  (let ((byte-length (trivial-utf-8:utf-8-byte-length object)))
+    (%encode-integer byte-length stream)
+    (trivial-utf-8::write-utf-8-bytes object stream)))
 
 (defun encode-string (object stream)
   (%write-tag #\s stream)
