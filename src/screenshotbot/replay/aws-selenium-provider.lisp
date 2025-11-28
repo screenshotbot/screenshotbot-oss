@@ -66,7 +66,7 @@
     (unwind-protect
          (let ((ipv6 (get-instance-ipv6 instance-id)))
            (block wait
-            (loop for i from 0 to 300
+            (loop for i from 0 to 600
                   do
                      (let ((response (get-status ipv6)))
                        (log:info "Got response: ~a" response)
@@ -84,7 +84,8 @@
          (instance-type "t3a.medium")
          (subnet-id (subnet-id self))
          (user-data (format nil "#!/bin/bash
-aws s3 cp ~a ./proxy
+aws s3 cp ~a ./proxy.gz
+gunzip ./proxy.gz
 chmod a+x ./proxy
 # sudo apt-get update
 # sudo apt-get install -y docker
@@ -117,25 +118,26 @@ chmod a+x ./proxy
       (when (probe-file user-data-file)
         (delete-file user-data-file)))))
 
-(defmethod aws-wait-for-instance-running ((self aws-selenium-provider) instance-id)
-  "Wait for the EC2 instance to be in running state"
-  (loop with max-attempts = 30
-        with attempt = 0
-        do (let* ((result (uiop:run-program
-                          (list "aws" "ec2" "describe-instances"
-                                "--instance-ids" instance-id
-                                "--output" "json")
-                          :output :string))
-                  (response (yason:parse result))
-                  (reservations (gethash "Reservations" response))
-                  (instances (gethash "Instances" (first reservations)))
-                  (instance (first instances))
-                  (state (gethash "Name" (gethash "State" instance))))
-             (when (string= state "running")
-               (return t))
-             (when (>= (incf attempt) max-attempts)
-               (error "Instance ~A failed to start within timeout" instance-id))
-             (sleep 10))))
+(auto-restart:with-auto-restart ()
+ (defmethod aws-wait-for-instance-running ((self aws-selenium-provider) instance-id)
+   "Wait for the EC2 instance to be in running state"
+   (loop with max-attempts = 30
+         with attempt = 0
+         do (let* ((result (uiop:run-program
+                            (list "aws" "ec2" "describe-instances"
+                                  "--instance-ids" instance-id
+                                  "--output" "json")
+                            :output :string))
+                   (response (yason:parse result))
+                   (reservations (gethash "Reservations" response))
+                   (instances (gethash "Instances" (first reservations)))
+                   (instance (first instances))
+                   (state (gethash "Name" (gethash "State" instance))))
+              (when (string= state "running")
+                (return t))
+              (when (>= (incf attempt) max-attempts)
+                (error "Instance ~A failed to start within timeout" instance-id))
+              (sleep 10)))))
 
 
 (defmethod aws-terminate-instance (instance-id)
