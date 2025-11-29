@@ -191,8 +191,12 @@ error."
      (error "Not a type that can be convered to integer: ~s" str))))
 
 (define-condition empty-run-error (error)
-  ()
-  (:report "No screenshots were detected in this this run. Perhaps you wanted to use the --recursive flag?"))
+  ((recursivep :initarg :recursivep
+               :initform nil
+               :reader empty-run-error-recursivep))
+  (:report (lambda (condition stream)
+             (format stream "No screenshots were detected in this run.~@[ Perhaps you wanted to use the --recursive flag?~]"
+                     (not (empty-run-error-recursivep condition))))))
 
 (defun create-run-context-from-args (&key repo channel is-trunk branch 
                                           github-repo commit has-commit-p
@@ -264,7 +268,7 @@ run-context that was created here."
                         :has-branch-hash-p has-branch-hash-p))))
      (funcall before run-context)
      (unless (or screenshots (run-context:shard-spec run-context))
-       (error 'empty-run-error))
+       (error 'empty-run-error :recursivep flags:*recursive*))
 
      (unless (str:emptyp branch)
        (unless (equal branch (run-context:main-branch run-context))

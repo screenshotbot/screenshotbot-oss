@@ -312,6 +312,21 @@
      (signals empty-run-error
        (make-run api-context nil :branch "main")))))
 
+(test empty-run-error-suggests-recursive-when-not-provided
+  (let ((err (make-condition 'empty-run-error :recursivep nil)))
+    (let ((message (with-output-to-string (s)
+                     (format s "~A" err))))
+      (is (str:containsp "--recursive" message))
+      (is (str:containsp "Perhaps you wanted to use the --recursive flag?" message)))))
+
+(test empty-run-error-does-not-suggest-recursive-when-already-provided
+  (let ((err (make-condition 'empty-run-error :recursivep t)))
+    (let ((message (with-output-to-string (s)
+                     (format s "~A" err))))
+      (is (not (str:containsp "--recursive" message)))
+      (is (not (str:containsp "Perhaps you wanted to use the --recursive flag?" message)))
+      (is (str:containsp "No screenshots were detected" message)))))
+
 #+lispworks
 (test |ensure we're not depending on cl+ssl|
   (let ((seen (make-hash-table :test #'equal)))
