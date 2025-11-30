@@ -126,6 +126,7 @@ chmod a+x ./proxy
                              (list "--subnet-id" subnet-id
                                    "--iam-instance-profile" (format nil "Name=~A" (iam-profile self))
                                    "--tag-specifications" "ResourceType=instance,Tags=[{Key=ManagedBy,Value=aws-selenium-provider},{Key=Temporary,Value=true}]"
+                                   "--block-device-mappings" "[{\"DeviceName\":\"/dev/xvda\",\"Ebs\":{\"VolumeSize\":24,\"VolumeType\":\"gp3\"}}]"
                                    "--user-data" (format nil "file://~A" user-data-file)
                                    "--output" "json"))
                            :error-output t
