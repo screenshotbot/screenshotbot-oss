@@ -13,6 +13,7 @@
 (defpackage :screenshotbot/replay/aws-selenium-provider
   (:use #:cl)
   (:import-from #:screenshotbot/replay/services
+                #:selenium-server
                 #:call-with-selenium-server)
   (:import-from #:util/request
                 #:http-request))
@@ -65,6 +66,18 @@
     (log:info "Made request to ~a" url)
     response))
 
+(auto-restart:with-auto-restart ()
+  (defmethod after-machine-is-up ((self aws-selenium-provider)
+                                  fn &key type ipv6)
+    (funcall fn
+             (make-instance 'selenium-server
+                            :host ipv6
+                            :port 4444
+                            :type type
+                            :squid-proxy "squid:3128"
+                            
+                            ;; Not providing :selenium-hub
+                            ))))
 
 (defmethod call-with-selenium-server ((self aws-selenium-provider)
                                       fn &key type)
@@ -80,7 +93,7 @@
                        (when (equal  (str:trim response) "OK")
                          (return-from wait nil))
                        (sleep 1))))
-           (funcall fn instance-id))
+           (after-machine-is-up self fn :type type :ipv6 ipv6))
       
       (aws-terminate-instance instance-id))))
 
