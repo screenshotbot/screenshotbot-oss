@@ -13,8 +13,9 @@
 (in-package :screenshotbot/replay/aws-selenium-provider)
 
 (defclass aws-selenium-provider ()
-  ((security-group :initarg :security-group
-                   :reader security-group)
+  ((security-groups :initarg :security-groups
+                    :reader security-groups
+                    :documentation "List of security group IDs")
    (subnet-id :initarg :subnet-id
               :reader subnet-id)
    (iam-profile :initarg :iam-profile
@@ -94,17 +95,19 @@ chmod a+x ./proxy
     (with-open-file (stream user-data-file :direction :output :if-exists :supersede)
       (write-string user-data stream))
     (unwind-protect
-        (let* ((run-result (uiop:run-program 
-                            (list "aws" "ec2" "run-instances"
-                                  "--image-id" image-id
-                                  "--count" "1"
-                                  "--instance-type" instance-type
-                                  "--key-name" (ssh-key-name self)
-                                  "--security-group-ids" (security-group self)
-                                  "--subnet-id" subnet-id
-                                  "--iam-instance-profile" (format nil "Name=~A" (iam-profile self))
-                                  "--user-data" (format nil "file://~A" user-data-file)
-                                  "--output" "json")
+        (let* ((run-result (uiop:run-program
+                            (append
+                             (list "aws" "ec2" "run-instances"
+                                   "--image-id" image-id
+                                   "--count" "1"
+                                   "--instance-type" instance-type
+                                   "--key-name" (ssh-key-name self)
+                                   "--security-group-ids")
+                             (security-groups self)
+                             (list "--subnet-id" subnet-id
+                                   "--iam-instance-profile" (format nil "Name=~A" (iam-profile self))
+                                   "--user-data" (format nil "file://~A" user-data-file)
+                                   "--output" "json"))
                            :error-output t
                            :output :string))
                (response (yason:parse run-result))
