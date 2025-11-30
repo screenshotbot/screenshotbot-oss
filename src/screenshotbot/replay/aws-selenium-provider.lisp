@@ -3,6 +3,12 @@
 ;;;; This Source Code Form is subject to the terms of the Mozilla Public
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
+;;;;
+;;;; AWS Selenium Provider - Creates temporary EC2 instances for Selenium testing
+;;;;
+;;;; IMPORTANT: For production deployment, this requires proper IAM permissions.
+;;;; See AWS-SELENIUM-IAM-POLICY.md in this directory for the complete IAM policy
+;;;; that uses tag-based access control to restrict instance termination.
 
 (defpackage :screenshotbot/replay/aws-selenium-provider
   (:use #:cl)
@@ -106,6 +112,7 @@ chmod a+x ./proxy
                              (security-groups self)
                              (list "--subnet-id" subnet-id
                                    "--iam-instance-profile" (format nil "Name=~A" (iam-profile self))
+                                   "--tag-specifications" "ResourceType=instance,Tags=[{Key=ManagedBy,Value=aws-selenium-provider},{Key=Temporary,Value=true}]"
                                    "--user-data" (format nil "file://~A" user-data-file)
                                    "--output" "json"))
                            :error-output t
