@@ -32,7 +32,6 @@
   (:import-from #:util/events
                 #:with-tracing)
   (:export
-   #:verify-image
    #:with-raw-post-data-as-tmp-file))
 (in-package :screenshotbot/api/image)
 
@@ -165,5 +164,3 @@ screenshotbot.sdk if you need to test it."
                       (ironclad:byte-array-to-hex-string
                        hash)))))))
 
-(defun verify-image (image)
-  (values))

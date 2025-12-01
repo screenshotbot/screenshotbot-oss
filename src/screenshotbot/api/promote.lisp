@@ -57,7 +57,6 @@
    #:default-promoter)
   ;; forward decls
   (:export
-   #:recorder-run-verify
    #:maybe-promote-run
    #:master-promoter
    #:%maybe-send-tasks))
@@ -216,8 +215,6 @@
            (optimize (debug 3) (speed 0)))
   (unless channel
     (setf channel (recorder-run-channel run)))
-  (log :info "Begin image verifications for ~a" run)
-  (recorder-run-verify run)
 
   (restart-case
       (let ((*channel-repo-overrides*

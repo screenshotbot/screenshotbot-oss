@@ -575,12 +575,6 @@ promotion thread starts. Used by the API and by Replay"
                             :test 'string=)))
    (apply 'make-screenshot :masks masks args)))
 
-(defun recorder-run-verify (recorder-run)
-  ;; try not to hold onto the DB for long periods of time
-  (dolist (im (mapcar 'screenshot-image (recorder-run-screenshots recorder-run)))
-    (verify-image im)))
-
-
 (defapi (%find-base-run :uri "/api/find-base-run" :wrap-success nil) (channel commit)
   "Find an appropriate base run for the given channel and commit.
 
