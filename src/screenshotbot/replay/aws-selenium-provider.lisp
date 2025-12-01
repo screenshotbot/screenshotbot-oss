@@ -69,12 +69,13 @@
 (auto-restart:with-auto-restart ()
   (defmethod after-machine-is-up ((self aws-selenium-provider)
                                   fn &key type ipv6)
+    
     (funcall fn
              (make-instance 'selenium-server
                             :host ipv6
                             :port 4444
                             :type type
-                            :squid-proxy "squid:3128"
+                            :squid-proxy (format nil "squid:3128")
                             
                             ;; Not providing :selenium-hub
                             ))))

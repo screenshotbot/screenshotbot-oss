@@ -45,8 +45,13 @@
    (selenium-hub :initarg :selenium-hub)))
 
 (defmethod selenium-server-url ((self selenium-server))
-  (format nil "http://~a:~a" (selenium-host self)
-          (selenium-port self)))
+  (let ((host (selenium-host self)))
+    (format nil "http://~a:~a"
+            ;; IPv6 addresses contain colons and must be wrapped in brackets
+            (if (find #\: host)
+                (format nil "[~a]" host)
+                host)
+            (selenium-port self))))
 
 (defun oss? ()
   (progn #+screenshotbot-oss t))

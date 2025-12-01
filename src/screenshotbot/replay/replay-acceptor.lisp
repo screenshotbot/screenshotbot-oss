@@ -38,6 +38,9 @@
   (:import-from #:util/misc
                 #:not-null!
                 #:make-mp-hash-table)
+  #+lispworks
+  (:import-from #:server/acceptor-override
+                #:ipv6-acceptor)
   (:export
    #:call-with-hosted-snapshot
    #:render-acceptor
@@ -55,7 +58,9 @@
 (defclass cached-404-acceptor (hunchentoot:acceptor)
   ())
 
-(defclass render-acceptor (hunchentoot:easy-acceptor
+(defclass render-acceptor (#+lispworks
+                           ipv6-acceptor
+                           hunchentoot:easy-acceptor
                            cached-404-acceptor)
   ((snapshots :reader acceptor-snapshots
               :initform (make-mp-hash-table :test #'equal))
@@ -73,6 +78,7 @@
 
 
 (defvar *default-render-acceptor* nil)
+
 
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor cached-404-acceptor)
                                                   request)
@@ -325,6 +331,10 @@
              (root-asset (car (replay:root-assets snapshot))))
          (progn
            (funcall fn (format nil "http://~a:~a~a"
-                               hostname  (hunchentoot:acceptor-port acceptor)
+                               ;; IPv6 addresses contain colons and must be wrapped in brackets
+                               (if (find #\: hostname)
+                                   (format nil "[~a]" hostname)
+                                   hostname)
+                               (hunchentoot:acceptor-port acceptor)
                                (replay:asset-file root-asset)))))
     (pop-snapshot (default-render-acceptor) snapshot)))

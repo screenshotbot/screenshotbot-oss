@@ -99,8 +99,13 @@
 ;; If you change this behaves, make sure it looks reasonable in launch-proxy.lisp
 (defun ensure-proxy (selenium-service)
   "Ensure the proxy is running and return the URL to the proxy"
-  (declare (ignore selenium-service))
   (cond
+    ((and selenium-service
+          (selenium-host selenium-service)
+          (find #\: (selenium-host selenium-service)))
+     ;; IPv6 selenium server - proxy is running on the same host
+     (format nil "http://[~a]:5004"
+             (selenium-host selenium-service)))
     ((linode?)
      ;; todo: error handling: if this endpoint goes down then just a local
      ;; proxy.
