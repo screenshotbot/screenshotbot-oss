@@ -222,17 +222,20 @@
     (setf channel (recorder-run-channel run)))
 
   (restart-case
-      (handler-case
-          (promotion-with-lock run channel :start-time start-time :wait-timeout wait-timeout)
-        (parent-not-ready (e)
-          ;; Why don't we just do an exponential backoff here? Well,
-          ;; consider the case that there are 10 commits, and the last
-          ;; nine are done: if the first commit comes in, some of the
-          ;; promotions will be haphazard. (Because with exponential
-          ;; backoff, definitely all 9 commits won't be able to complete
-          ;; in the 5 minutes).
-          (wait-for-run channel (parent-commit e) wait-timeout :minute)
-          (apply 'maybe-promote-run run args)))
+      (loop for i from 1 to 1000
+            do
+               (handler-case
+                   (return (promotion-with-lock run channel :start-time start-time :wait-timeout wait-timeout))
+                 (parent-not-ready (e)
+                   ;; Why don't we just do an exponential backoff here? Well,
+                   ;; consider the case that there are 10 commits, and the last
+                   ;; nine are done: if the first commit comes in, some of the
+                   ;; promotions will be haphazard. (Because with exponential
+                   ;; backoff, definitely all 9 commits won't be able to complete
+                   ;; in the 5 minutes).
+                   (wait-for-run channel (parent-commit e) wait-timeout :minute)))
+            finally
+            (error "Promotion didn't succeed after 1000 attempts, we should not be here"))
     (retry-promote ()
       (apply 'maybe-promote-run run args))))
 
