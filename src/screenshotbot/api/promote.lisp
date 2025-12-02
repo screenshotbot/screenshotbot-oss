@@ -223,40 +223,7 @@
 
   (restart-case
       (handler-case
-          (let ((*channel-repo-overrides*
-                  (cons
-                   (cons channel (github-repo run))
-                   *channel-repo-overrides*)))
-            (bt:with-lock-held ((channel-promotion-lock channel))
-              (log :info "Inside promotion logic")
-              (let ((run-branch (recorder-run-branch run)))
-                (log :info "Branch on run: ~a" run-branch)
-                (cond
-                  ((pull-request-id run)
-                   ;; Note that we looked for pull-request-id, not
-                   ;; pull-request-url. This is to handle the case of an
-                   ;; invalid pull-request-url being provided because of
-                   ;; custom CI scripts.
-                   (log :error "Looks like there's a Pull Request attached, not promoting"))
-                  ((not (work-branch-matches-p run))
-                   (log :error "Work-branch doesn't match main-branch ~a ~a"
-                        (recorder-run-work-branch run)
-                        (recorder-run-branch run)))
-                  ((gitlab-merge-request-iid run)
-                   (log :error "Looks like there's a GitLab Merge Request attached, not promoting"))
-                  ((periodic-job-p run)
-                   (log :info "This is a periodic job, running promotions")
-                   (finalize-promotion
-                    run
-                    (active-run channel (master-branch channel))
-                    channel
-                    run-branch))
-                  ((null run-branch)
-                   (log :error "No branch set, not promoting"))
-                  (t
-                   (maybe-promote-run-on-branch run channel run-branch
-                                                :start-time start-time
-                                                :wait-timeout wait-timeout))))))
+          (promotion-with-lock run channel :start-time start-time :wait-timeout wait-timeout)
         (parent-not-ready (e)
           ;; Why don't we just do an exponential backoff here? Well,
           ;; consider the case that there are 10 commits, and the last
@@ -268,6 +235,42 @@
           (apply 'maybe-promote-run run args)))
     (retry-promote ()
       (apply 'maybe-promote-run run args))))
+
+(defun promotion-with-lock (run channel &key start-time wait-timeout)
+  (let ((*channel-repo-overrides*
+          (cons
+           (cons channel (github-repo run))
+           *channel-repo-overrides*)))
+    (bt:with-lock-held ((channel-promotion-lock channel))
+      (log :info "Inside promotion logic")
+      (let ((run-branch (recorder-run-branch run)))
+        (log :info "Branch on run: ~a" run-branch)
+        (cond
+          ((pull-request-id run)
+           ;; Note that we looked for pull-request-id, not
+           ;; pull-request-url. This is to handle the case of an
+           ;; invalid pull-request-url being provided because of
+           ;; custom CI scripts.
+           (log :error "Looks like there's a Pull Request attached, not promoting"))
+          ((not (work-branch-matches-p run))
+           (log :error "Work-branch doesn't match main-branch ~a ~a"
+                (recorder-run-work-branch run)
+                (recorder-run-branch run)))
+          ((gitlab-merge-request-iid run)
+           (log :error "Looks like there's a GitLab Merge Request attached, not promoting"))
+          ((periodic-job-p run)
+           (log :info "This is a periodic job, running promotions")
+           (finalize-promotion
+            run
+            (active-run channel (master-branch channel))
+            channel
+            run-branch))
+          ((null run-branch)
+           (log :error "No branch set, not promoting"))
+          (t
+           (maybe-promote-run-on-branch run channel run-branch
+                                        :start-time start-time
+                                        :wait-timeout wait-timeout)))))))
 
 (defmethod %maybe-promote-run-on-branch ((run recorder-run)
                                          previous-run
