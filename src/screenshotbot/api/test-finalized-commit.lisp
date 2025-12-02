@@ -65,3 +65,25 @@
                                           :commit "abcd"
                                           :company company))
         (is-true called)))))
+
+(test duplicate-commits-should-be-deduped
+  "Demonstrates that posting the same commit multiple times creates duplicates.
+   This should be fixed to deduplicate by company+commit."
+  (with-fixture state ()
+    (let ((dto (make-instance 'dto:finalized-commit
+                              :commit "abcd0000")))
+      (answer (%parse-body)
+        dto)
+      (with-test-user (:logged-in-p t :company company)
+        ;; First call
+        (finishes (%post-finalized-commit))
+        (is (eql 1 (length (bknr.datastore:class-instances
+                            'finalized-commit))))
+
+        ;; Second call with same commit - should NOT create a duplicate
+        (finishes (%post-finalized-commit))
+
+        (is (eql 1 (length (bknr.datastore:class-instances
+                            'finalized-commit))))
+
+        (is-true (commit-finalized-p company "abcd0000"))))))

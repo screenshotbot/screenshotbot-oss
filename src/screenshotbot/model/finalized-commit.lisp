@@ -17,7 +17,8 @@
   (:export
    #:finalized-commit-company
    #:finalized-commit
-   #:finalized-commit-hash))
+   #:finalized-commit-hash
+   #:find-or-create-finalized-commit))
 (in-package :screenshotbot/model/finalized-commit)
 
 (defindex +commit-index+
@@ -34,7 +35,19 @@
              :index-reader %finalized-commits-for-commit))
    (:metaclass persistent-class)))
 
-(defun commit-finalized-p (company commit)
+(defun find-finalized-commit (company commit)
+  "Find an existing finalized-commit for the given company and commit SHA."
   (fset:do-set (fc (%finalized-commits-for-commit commit))
-    (when  (eql company (finalized-commit-company fc))
-      (return t))))
+    (when (eql company (finalized-commit-company fc))
+      (return fc))))
+
+(defun commit-finalized-p (company commit)
+  (not (null (find-finalized-commit company commit))))
+
+(defun find-or-create-finalized-commit (company commit)
+  "Find or create a finalized-commit for the given company and commit SHA.
+   Returns the existing finalized-commit if one exists, or creates a new one."
+  (or (find-finalized-commit company commit)
+      (make-instance 'finalized-commit
+                     :company company
+                     :commit commit)))

@@ -11,7 +11,8 @@
   (:import-from #:screenshotbot/model/finalized-commit
                 #:finalized-commit-company
                 #:finalized-commit-hash
-                #:finalized-commit)
+                #:finalized-commit
+                #:find-or-create-finalized-commit)
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:screenshotbot/api/core
@@ -34,9 +35,9 @@
                                 :use-yason t) ()
   (assert (current-company))
   (let ((input (%parse-body)))
-    (let ((finalized-commit (make-instance 'finalized-commit
-                                           :company (current-company)
-                                           :commit (dto:finalized-commit-hash input))))
+    (let ((finalized-commit (find-or-create-finalized-commit
+                             (current-company)
+                             (dto:finalized-commit-hash input))))
       (trigger-callbacks finalized-commit)
       (to-dto finalized-commit))))
 
