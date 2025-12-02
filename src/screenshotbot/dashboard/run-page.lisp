@@ -255,7 +255,7 @@
         This shows all the information we have about your Git commit
  history. In particular, we only store the Git hashes. This
  information here is for debugging information only when reaching out
- to Screenshotbot support.
+ to Screenshotbot support. (ID ,(progn (bknr.datastore:store-object-id (commit-graph (car repo)))))
       </div>
       <table class= "table git-graph" >
         <thead>
