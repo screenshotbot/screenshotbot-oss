@@ -207,65 +207,49 @@
      (str:emptyp work-branch)
      (equal work-branch main-branch))))
 
-(define-condition parent-not-ready (error)
-  ((parent-commit :initarg :parent-commit
-                  :reader parent-commit)))
-
 (defun maybe-promote-run (run &rest args &key channel
                                            (wait-timeout (if *disable-ancestor-checks-p*
                                                              0
-                                                             1))
-                                           (start-time (get-universal-time)))
+                                                             1)))
   (declare (type recorder-run run)
            (optimize (debug 3) (speed 0)))
   (unless channel
     (setf channel (recorder-run-channel run)))
 
   (restart-case
-      (handler-case
-          (let ((*channel-repo-overrides*
-                  (cons
-                   (cons channel (github-repo run))
-                   *channel-repo-overrides*)))
-            (bt:with-lock-held ((channel-promotion-lock channel))
-              (log :info "Inside promotion logic")
-              (let ((run-branch (recorder-run-branch run)))
-                (log :info "Branch on run: ~a" run-branch)
-                (cond
-                  ((pull-request-id run)
-                   ;; Note that we looked for pull-request-id, not
-                   ;; pull-request-url. This is to handle the case of an
-                   ;; invalid pull-request-url being provided because of
-                   ;; custom CI scripts.
-                   (log :error "Looks like there's a Pull Request attached, not promoting"))
-                  ((not (work-branch-matches-p run))
-                   (log :error "Work-branch doesn't match main-branch ~a ~a"
-                        (recorder-run-work-branch run)
-                        (recorder-run-branch run)))
-                  ((gitlab-merge-request-iid run)
-                   (log :error "Looks like there's a GitLab Merge Request attached, not promoting"))
-                  ((periodic-job-p run)
-                   (log :info "This is a periodic job, running promotions")
-                   (finalize-promotion
-                    run
-                    (active-run channel (master-branch channel))
-                    channel
-                    run-branch))
-                  ((null run-branch)
-                   (log :error "No branch set, not promoting"))
-                  (t
-                   (maybe-promote-run-on-branch run channel run-branch
-                                                :start-time start-time
-                                                :wait-timeout wait-timeout))))))
-        (parent-not-ready (e)
-          ;; Why don't we just do an exponential backoff here? Well,
-          ;; consider the case that there are 10 commits, and the last
-          ;; nine are done: if the first commit comes in, some of the
-          ;; promotions will be haphazard. (Because with exponential
-          ;; backoff, definitely all 9 commits won't be able to complete
-          ;; in the 5 minutes).
-          (wait-for-run channel (parent-commit e) wait-timeout :minute)
-          (apply 'maybe-promote-run run args)))
+      (let ((*channel-repo-overrides*
+              (cons
+               (cons channel (github-repo run))
+               *channel-repo-overrides*)))
+       (bt:with-lock-held ((channel-promotion-lock channel))
+         (log :info "Inside promotion logic")
+         (let ((run-branch (recorder-run-branch run)))
+           (log :info "Branch on run: ~a" run-branch)
+           (cond
+             ((pull-request-id run)
+              ;; Note that we looked for pull-request-id, not
+              ;; pull-request-url. This is to handle the case of an
+              ;; invalid pull-request-url being provided because of
+              ;; custom CI scripts.
+              (log :error "Looks like there's a Pull Request attached, not promoting"))
+             ((not (work-branch-matches-p run))
+              (log :error "Work-branch doesn't match main-branch ~a ~a"
+                   (recorder-run-work-branch run)
+                   (recorder-run-branch run)))
+             ((gitlab-merge-request-iid run)
+              (log :error "Looks like there's a GitLab Merge Request attached, not promoting"))
+             ((periodic-job-p run)
+              (log :info "This is a periodic job, running promotions")
+              (finalize-promotion
+               run
+               (active-run channel (master-branch channel))
+               channel
+               run-branch))
+             ((null run-branch)
+              (log :error "No branch set, not promoting"))
+             (t
+              (maybe-promote-run-on-branch run channel run-branch
+                                           :wait-timeout wait-timeout))))))
     (retry-promote ()
       (apply 'maybe-promote-run run args))))
 
@@ -348,14 +332,6 @@
   (push-run-warning run
                     'not-fast-forward-promotion-warning))
 
-(defmethod find-complete-run ((channel channel) commit)
-  "A synchronous way to find a run for a channel that is PROMOTION-COMPLETE-P.
-
-(As opposed to wait-for-run, which waits for such a run.)"
-  (let ((run (production-run-for channel :commit commit)))
-    (when (and run (promotion-complete-p run))
-      run)))
-
 (defmethod wait-for-run ((channel channel) commit
                      &optional (amount 15) (unit :minute))
   "Wait AMOUNT time (with UNIT) until there's just a production run on
@@ -392,7 +368,7 @@
               (log :info "Waiting for run ~a to be completed" run)
               (bt:condition-wait cv lock :timeout 5)))))
 
-(defun maybe-promote-run-on-branch (run channel branch &key start-time wait-timeout)
+(defun maybe-promote-run-on-branch (run channel branch &key wait-timeout)
   (cond
     ((str:emptyp (github-repo run))
      (log :error "No repo link provided, cannot promote"))
@@ -402,27 +378,9 @@
      (let ((parent-commit (get-parent-commit
                            (channel-repo channel)
                            (recorder-run-commit run))))
-       (cond
-        (parent-commit
-         (unless (find-complete-run channel parent-commit)
-           (cond
-             ((or
-               (< start-time (- (get-universal-time) wait-timeout))
-               ;; For testing, to ensure that it can be synchronous
-               (eql 0 wait-timeout))
-              (log :info "Not waiting for the parent anymore")
-              (values))
-             (t
-              (error 'parent-not-ready :parent-commit parent-commit)))))
-        (t
-         (log :info "No parent commit at all, first commit in the repo?")))
-       ;; TODO: Just because we found a run for the parent commit
-       ;; doesn't mean that it's the previous-run! Ideally, we want to
-       ;; wait a bit more until the commit of the previous-run matches
-       ;; parent-commit. For example, this might happen because of a
-       ;; merge-queue run: the merge queue triggers a run on the same
-       ;; commit which will be complete by the time it's on the main
-       ;; branch.
+       (when parent-commit
+         (wait-for-run channel parent-commit
+                       wait-timeout :minute))
        (let* ((previous-run
                 (active-run channel branch)))
          (%maybe-promote-run-on-branch

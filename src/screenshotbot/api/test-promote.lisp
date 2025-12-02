@@ -45,7 +45,6 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:screenshotbot/api/promote
-                #:find-complete-run
                 #:work-branch-matches-p
                 #:with-log-errors
                 #:delegating-promoter)
@@ -197,6 +196,7 @@
   (with-fixture state ()
     (%maybe-promote-run run2 channel :wait-timeout 0)
     (%maybe-promote-run run1 channel)
+
     (is-true (activep run2))
     (is-false (activep run1))))
 
@@ -318,93 +318,3 @@ the promotion history."
       (signals logged-error
         (with-log-errors (run)
           (error 'logged-error))))))
-
-(test find-complete-run-with-no-runs
-  (with-fixture state ()
-    (is (eql nil
-         (find-complete-run channel "a1")))))
-
-(test find-complete-run-with-incomplete-run
-  (with-fixture state ()
-    (%maybe-promote-run run1 channel)
-    ;; Don't mark as promotion-complete
-    (with-transaction ()
-      (setf (promotion-complete-p run1) nil))
-    (is (eql
-         nil
-         (find-complete-run channel "a1")))))
-
-(test find-complete-run-with-complete-run
-  (with-fixture state ()
-    (%maybe-promote-run run1 channel)
-    ;; run1 should be marked as promotion-complete by %maybe-promote-run
-    (is (eql run1 (find-complete-run channel "a1")))))
-
-(test find-complete-run-with-multiple-runs
-  (with-fixture state ()
-    (%maybe-promote-run run1 channel)
-    (%maybe-promote-run run2 channel)
-    ;; run2 should be the complete run for "a2"
-    (is (eql run2 (find-complete-run channel "a2")))
-    ;; I should still be able to find run1, since it was promoted in
-    ;; the past
-    (is
-     (eql run1 (find-complete-run channel "a1")))))
-
-(test find-complete-run-returns-nil-when-production-run-for-returns-nil
-  (with-fixture state ()
-    (cl-mock:with-mocks ()
-      (is (eql nil
-               (find-complete-run channel "ca"))))))
-
-(test parent-not-ready-handler-waits-for-parent
-  "Test that parent-not-ready condition triggers wait-for-run with correct arguments.
-This test ensures that when a parent commit is not ready, the handler-case catches
-the parent-not-ready condition and calls wait-for-run with the proper wait-timeout."
-  (with-fixture state ()
-    ;; First promote run1 (parent commit "a1") and run2 (parent "a2")
-    (%maybe-promote-run run1 channel :wait-timeout 0)
-    (%maybe-promote-run run2 channel :wait-timeout 0)
-
-    ;; Mark run2 as NOT promotion-complete, so run3 will wait for it
-    (with-transaction ()
-      (setf (promotion-complete-p run2) nil))
-
-    ;; Create run3 with commit "a3" which has parent "a2"
-    (let* ((run3 (make-run :commit-hash "a3"
-                           :branch "master"
-                           :branch-hash "a3"))
-           (wait-for-run-called-with nil))
-
-      ;; Mock the wait-for-run function to capture what happens
-      ;; when the parent-not-ready condition is handled
-      (cl-mock:with-mocks ()
-        (cl-mock:if-called 'screenshotbot/api/promote::wait-for-run
-                           (lambda (channel commit &optional amount unit)
-                             (setf wait-for-run-called-with
-                                   (list channel commit amount unit))
-                             ;; After being called, mark run2 as complete to prevent infinite recursion
-                             (with-transaction ()
-                               (setf (promotion-complete-p run2) channel))
-                             ;; Return t to indicate parent was found
-                             t))
-
-        ;; This should trigger the parent-not-ready condition
-        ;; which should be caught by handler-case and call wait-for-run
-        ;; with wait-timeout of 1 and unit :minute
-        (%maybe-promote-run run3 channel :wait-timeout 1)
-
-        ;; Verify that wait-for-run was called with the correct arguments
-        (is-true wait-for-run-called-with
-                 "wait-for-run should have been called via the handler-case")
-
-        ;; Verify the arguments: channel, parent-commit "a2", amount 1, unit :minute
-        (when wait-for-run-called-with
-          (destructuring-bind (chan commit amount unit) wait-for-run-called-with
-            (is (eql channel chan) "Channel should match")
-            (is (equal "a2" commit) "Parent commit should be a2")
-            (is (eql 1 amount) "Wait timeout should be 1")
-            (is (eql :minute unit) "Unit should be :minute")))))))
-
-
-
