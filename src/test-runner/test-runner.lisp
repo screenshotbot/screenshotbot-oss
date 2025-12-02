@@ -136,19 +136,7 @@
   (unless (equal "1" (uiop:getenv "TDRHQ_TEST_DEBUG"))
     (hide-outputs)))
 
-#+lispworks
-(defun debugger-hook (condition old-hook)
-  "On LW <= 8.0.1 there's a bug that causes LW to crash when a thread
-fails."
-  (format *test-trace-io* "A background thread crashed: ~a~%" condition)
-  (dbg:output-backtrace :brief *test-trace-io*)
-  (invoke-restart 'cl:abort))
-
 (defun call-with-main-wrapper (fn)
-
-  #+lispworks
-  (setf *debugger-hook* 'debugger-hook)
-
   (tmpdir:with-tmpdir (tmpdir)
     ;; on CCL, the JVM is already loaded before the main systems
     #+(and lispworks (not jipr) (not eaase-oss))
@@ -230,17 +218,22 @@ fails."
             (systems (mapcar #'car system-suite-pairs)))
        (setup-backtrace)
        (format t "Running tests: ~S~%" systems)
-       (dolist (system systems)
-         (ql:quickload (fix-system-name system)))
-       (format t "Loaded tests~%" systems)
-       (maybe-hide-outputs)
-       (loop for (system . suite) in system-suite-pairs
-             for suite-to-run = (if suite
-                                    (intern (str:upcase suite) "KEYWORD")
-                                    (guess-fiveam-suite system))
-             do (format t "Running suite ~a for system ~a~%" suite-to-run system)
-             collect (fiveam:run suite-to-run)
-             into all-results
-             finally
-                (unless (fiveam:explain! (alexandria:flatten all-results))
-                  (uiop:quit 1)))))))
+       (handler-bind ((error (lambda (e)
+                               (format t "Error: ~a" e)
+                               (dbg:output-backtrace :verbose)
+                               (uiop:quit 1))))
+         (progn
+           (dolist (system systems)
+             (ql:quickload (fix-system-name system)))
+           (format t "Loaded tests~%" systems)
+           (maybe-hide-outputs)
+           (loop for (system . suite) in system-suite-pairs
+                 for suite-to-run = (if suite
+                                        (intern (str:upcase suite) "KEYWORD")
+                                        (guess-fiveam-suite system))
+                 do (format t "Running suite ~a for system ~a~%" suite-to-run system)
+                 collect (fiveam:run suite-to-run)
+                   into all-results
+                 finally
+                    (unless (fiveam:explain! (alexandria:flatten all-results))
+                      (uiop:quit 1)))))))))
