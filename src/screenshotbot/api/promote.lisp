@@ -392,7 +392,9 @@
               (log :info "Waiting for run ~a to be completed" run)
               (bt:condition-wait cv lock :timeout 5)))))
 
-(defun maybe-promote-run-on-branch (run channel branch &key start-time wait-timeout)
+(defun maybe-promote-run-on-branch (run channel branch &key
+                                                         (start-time 0)
+                                                         wait-timeout)
   (cond
     ((str:emptyp (github-repo run))
      (log :error "No repo link provided, cannot promote"))
