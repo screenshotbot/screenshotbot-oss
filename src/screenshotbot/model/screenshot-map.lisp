@@ -244,7 +244,15 @@ will not consider it as a possibility.")
                         :screenshots screenshots))))))
 
 (defun build-usage-map ()
+  "Builds a map from companies to their total screenshot-map usage counts.
+  
+  Iterates through all screenshot-map instances and aggregates the usage
+  (screenshots + deleted items) per company. Returns an fset map where
+  keys are company objects and values are total usage counts.
+  
+  Returns: An fset map mapping company -> total usage count"
   (labels ((build (rest result)
+             "Recursively processes the list of screenshot-maps, accumulating usage by company"
              (cond
                ((not rest)
                 result)
