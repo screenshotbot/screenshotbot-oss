@@ -41,3 +41,18 @@
     (is (fset:equal?
          (decode-back)
          (fset:empty-map)))))
+
+(test large-map-decoding
+  "I couldn't reliably get this test to fail when using TCO"
+  (let ((large-map (loop with map = (fset:empty-map)
+                        for i from 1 to 1000
+                        do (setf map (fset:with map i (* i 2)))
+                        finally (return map)))
+        (stream (flex:make-in-memory-output-stream)))
+    (encode large-map stream)
+    (let ((stream (flex:make-in-memory-input-stream
+                   (flex:get-output-stream-sequence stream))))
+      (is (fset:equal?
+           (decode stream)
+           large-map)))))
+

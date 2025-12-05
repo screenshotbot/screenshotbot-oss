@@ -24,17 +24,13 @@
 (defmethod decode-fset-object ((code (eql #\m)) stream)
   (let ((length (decode stream)))
     (let ((res (fset:empty-map)))
-      (labels ((read-len (length res)
-                 (cond
-                   ((= length 0)
-                    res)
-                   (t
-                    (read-len (1- length)
-                                 (fset:with
-                                  res
-                                  (decode stream)
-                                  (decode stream)))))))
-        (read-len length (fset:empty-map))))))
+      (loop for i below length
+            do (setf res
+                     (fset:with
+                      res
+                      (decode stream)
+                      (decode stream))))
+      res)))
 
 (defmethod encode-object ((map fset:map) stream)
   (%write-tag #\F stream)
