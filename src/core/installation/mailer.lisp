@@ -61,7 +61,8 @@
 
 (defgeneric send-mail (mailer &key from subject to html-message bcc
                                 reply-to
-                                display-name))
+                                display-name
+                                extra-headers))
 
 (defmethod authentication ((mailer local-smtp-mailer))
   nil)
@@ -107,7 +108,8 @@
                       &key from subject to html-message
                         display-name
                         reply-to
-                        bcc)
+                        bcc
+                        extra-headers)
   (log:info "Sending mail ~S" args)
   (restart-case
       (multiple-value-bind (from display-name)
@@ -123,6 +125,7 @@
         :port (port mailer)
         :reply-to reply-to
         :display-name display-name
+        :extra-headers extra-headers
         :authentication (authentication mailer)
         :port (port mailer)
         :html-message (markup:write-html (wrap-template mailer html-message))))

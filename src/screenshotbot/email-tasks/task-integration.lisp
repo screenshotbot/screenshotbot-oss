@@ -127,6 +127,9 @@
      :reply-to (progn
                  #-screenshotbot-oss "support@screenshotbot.io"
                  #+screenshotbot-oss nil)
+     ;; RFC 3834: Suppress out-of-office and other auto-replies while still
+     ;; allowing users to manually respond to these notification emails
+     :extra-headers '(("Auto-Submitted" "auto-generated"))
      :html-message
      (email-content report))))
 
