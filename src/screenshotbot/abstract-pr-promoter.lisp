@@ -97,8 +97,10 @@
                 #:commit-finalized-p)
   (:import-from #:util/cron
                 #:def-cron)
-  (:import-from #:util/misc
-                #:ntrim-list)
+  (:import-from #:util/simple-queue
+                #:make-queue
+                #:enqueue-with-max-length
+                #:queue-items)
   (:import-from #:util/fset
                 #:do-reverse-set)
   (:import-from #:screenshotbot/model/pr-rollout-rule
@@ -132,11 +134,13 @@
 
 (in-package :screenshotbot/abstract-pr-promoter)
 
-(defvar *logs* nil
-  "See trim-logs cron job that clears these references.")
+;; TODO: replace with defvar. This was just for upgrading from a list
+;; to a queue.
+(defparameter *logs* (make-queue)
+  "All the messages we've sent out")
 
 (defun print-logs (&key (substring ""))
-  (loop for log in *logs*
+  (loop for log in (queue-items *logs*)
         if (str:containsp substring (check-title (second log)))
           do
              (format t "~a: ~a (at ~a)~%"
@@ -146,7 +150,7 @@
 
 (defun total-summary-length ()
   "Compute the sum of the length of all summaries in *logs*."
-  (loop for log in *logs*
+  (loop for log in (queue-items *logs*)
         for check = (second log)
         sum (length (check-summary check))))
 
@@ -328,7 +332,7 @@ API. We're eventually going to replace it with this."
        (call-next-method)))))
 
 (defmethod push-remote-check :before (promoter run check)
-  (atomics:atomic-push (list run check) *logs*))
+  (enqueue-with-max-length (list run check) *logs* :max-length 1000))
 
 (defgeneric make-promoter-for-acceptable (acceptable))
 
@@ -632,6 +636,3 @@ we return NIL."
   (when (recorder-run-batch run)
     (log:info "calling promotion for unchanged-run")
     (call-next-method)))
-
-(def-cron trim-jobs (:minute 0 :step-hour 1)
-  (ntrim-list *logs* 1000))

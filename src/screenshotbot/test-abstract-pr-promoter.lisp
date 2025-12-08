@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:*logs*
                 #:same-pull-request-p
                 #:pr-merge-base
                 #:make-run-check
@@ -106,7 +107,11 @@
   (:import-from #:bknr.datastore
                 #:persistent-class)
   (:import-from #:screenshotbot/dashboard/compare
-                #:warmup-report))
+                #:warmup-report)
+  (:import-from #:util/simple-queue
+                #:queue-length
+                #:queue-items
+                #:make-queue))
 (in-package :screenshotbot/test-abstract-pr-promoter)
 
 
@@ -801,5 +806,27 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
       (maybe-promote promoter run)
       (assert-that checks
                    (is-equal-to nil)))))
+
+(test push-remote-check-logs-to-queue
+  "Test that push-remote-check :before adds entries to *logs* queue"
+  (with-fixture state ()
+    (let* ((old-logs *logs*)
+           (*logs* (make-queue))
+           (check (make-instance 'check
+                                :sha "test-sha"
+                                :key "test-key"
+                                :title "Test check"
+                                :summary "Test summary"
+                                :status :success)))
+      (unwind-protect
+           (progn
+             ;; Push a remote check
+             (push-remote-check promoter run check)
+
+             ;; Verify the log entry was added
+             (assert-that (queue-length *logs*)
+                          (is-equal-to 1)))
+        ;; Restore the original *logs*
+        (setf *logs* old-logs)))))
 
 
