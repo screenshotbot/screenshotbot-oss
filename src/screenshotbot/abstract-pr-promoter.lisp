@@ -144,6 +144,12 @@
                      (check-title (second log))
                      (created-at (first log)))))
 
+(defun total-summary-length ()
+  "Compute the sum of the length of all summaries in *logs*."
+  (loop for log in *logs*
+        for check = (second log)
+        sum (length (check-summary check))))
+
 (defun format-updated-summary (state user)
   (let ((summary
           (str:downcase (string state))))
@@ -628,4 +634,4 @@ we return NIL."
     (call-next-method)))
 
 (def-cron trim-jobs (:minute 0 :step-hour 1)
-  (ntrim-list *logs* 10000))
+  (ntrim-list *logs* 1000))
