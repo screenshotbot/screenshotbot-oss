@@ -636,7 +636,3 @@ we return NIL."
   (when (recorder-run-batch run)
     (log:info "calling promotion for unchanged-run")
     (call-next-method)))
-
-(def-cron trim-jobs (:minute 0 :step-hour 1)
-  ;; TODO: Remove this cron job in the future
-  (values))
