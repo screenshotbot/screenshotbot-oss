@@ -10,6 +10,7 @@
   (:import-from #:screenshotbot/magick/magick-lw
                 #:get-non-alpha-pixels)
   (:import-from #:screenshotbot/model/image
+                #:mask-rect
                 #:image-hash
                 #:base-image-comparer
                 #:make-image
@@ -210,3 +211,61 @@
         (assert-that
          (class-instances 'image-equal-cache)
          (has-length 0))))))
+
+(test negative-mask-coordinates-bug
+  "Demonstrates bug with negative mask coordinates being treated as unsigned.
+   Two images differ at pixel (135,416) but the mask with negative coordinates
+   should cover the entire image, making them equal."
+  (with-fixture state ()
+    (with-test-image (f1 :width 2118 :height 2532)
+      (with-test-image (f2 :width 2118 :height 2532
+                           :pixels '((135 416)))
+        (let* ((im1 (make-image :pathname f1))
+               (im2 (make-image :pathname f2))
+               ;; Mask that should cover entire image (from user's bug report)
+               (mask (make-instance 'mask-rect
+                                    :left -388.29245
+                                    :top -81.14493
+                                    :width 2703.924
+                                    :height 2707.5926))
+               (masks (list mask)))
+          ;; The mask covers from (-388.29, -81.14) to (2315.63, 2626.45)
+          ;; which should fully cover the 2118x2532 image
+          ;; Therefore the single pixel difference at (135, 416) is masked
+          ;; and the images should be considered equal
+          (is-true
+           (image=
+            comparer
+            im1
+            im2
+            masks)
+           "Images with masked difference should be equal, but negative mask coordinates are treated as unsigned size_t, causing them to wrap to huge positive values"))))))
+
+(test negative-mask-coordinates-bug--ensure-0-0-is-still-under-mask
+  "Demonstrates bug with negative mask coordinates being treated as unsigned.
+   Two images differ at pixel (135,416) but the mask with negative coordinates
+   should cover the entire image, making them equal."
+  (with-fixture state ()
+    (with-test-image (f1 :width 2118 :height 2532)
+      (with-test-image (f2 :width 2118 :height 2532
+                           :pixels '((0 0)))
+        (let* ((im1 (make-image :pathname f1))
+               (im2 (make-image :pathname f2))
+               ;; Mask that should cover entire image (from user's bug report)
+               (mask (make-instance 'mask-rect
+                                    :left -388.29245
+                                    :top -81.14493
+                                    :width 2703.924
+                                    :height 2707.5926))
+               (masks (list mask)))
+          ;; The mask covers from (-388.29, -81.14) to (2315.63, 2626.45)
+          ;; which should fully cover the 2118x2532 image
+          ;; Therefore the single pixel difference at (135, 416) is masked
+          ;; and the images should be considered equal
+          (is-true
+           (image=
+            comparer
+            im1
+            im2
+            masks)
+           "Images with masked difference should be equal, but negative mask coordinates are treated as unsigned size_t, causing them to wrap to huge positive values"))))))

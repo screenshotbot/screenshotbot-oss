@@ -661,10 +661,22 @@
       (loop for mask in masks
             do
                (progn
-                 (setf (fli:foreign-slot-value ptr 'x) (ceiling (mask-rect-left mask)))
-                 (setf (fli:foreign-slot-value ptr 'y)  (ceiling (mask-rect-top mask)))
-                 (setf (fli:foreign-slot-value ptr 'width) (floor (mask-rect-width mask)))
-                 (setf (fli:foreign-slot-value ptr 'height) (floor (mask-rect-height mask)))
+                 ;; Clamp negative coordinates to 0 (to avoid unsigned integer overflow)
+                 ;; and adjust width/height to maintain the same coverage
+                 (let* ((left (mask-rect-left mask))
+                        (top (mask-rect-top mask))
+                        (width (mask-rect-width mask))
+                        (height (mask-rect-height mask))
+                        ;; Clamp to 0 if negative
+                        (clamped-x (max 0 (ceiling left)))
+                        (clamped-y (max 0 (ceiling top)))
+                        ;; Adjust width/height to maintain right/bottom edges
+                        (adjusted-width (floor (+ left width (- clamped-x))))
+                        (adjusted-height (floor (+ top height (- clamped-y)))))
+                   (setf (fli:foreign-slot-value ptr 'x) clamped-x)
+                   (setf (fli:foreign-slot-value ptr 'y) clamped-y)
+                   (setf (fli:foreign-slot-value ptr 'width) (max 0 adjusted-width))
+                   (setf (fli:foreign-slot-value ptr 'height) (max 0 adjusted-height)))
                  (fli:incf-pointer ptr))))
     (fn native-masks)))
 
