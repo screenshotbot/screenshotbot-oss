@@ -28,7 +28,7 @@ keep the Host header the same."
                       (quri:make-uri
                        :scheme (quri:uri-scheme uri)
                        :host (if keep-current-host
-                                 (hunchentoot:host request)
+                                 (cl-ppcre:regex-replace-all ":[0-9]*$" (hunchentoot:host request) "")
                                  (quri:uri-host uri))
                        :port (quri:uri-port uri)
                        :defaults (quri:uri (hunchentoot:request-uri request))))))

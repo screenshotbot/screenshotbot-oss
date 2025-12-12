@@ -44,4 +44,5 @@
                (:file "test-clos-dispatcher")
                (:file "test-better-easy-handler")
                (:file "test-url")
-               (:file "test-async")))
+               (:file "test-async")
+               (:file "test-forward")))
