@@ -82,8 +82,13 @@
 ;; Note: forward-request preserves the request path, so we forward /echo to /echo
 (better-easy-handler (forward-echo-handler :uri "/echo"
                                            :acceptor-names '(source-acceptor))
-    ()
-  (hex:forward-request *destination-host* :keep-current-host nil))
+    (with-extra-headers)
+  (if with-extra-headers
+      (hex:forward-request *destination-host*
+                           :keep-current-host nil
+                           :extra-headers (list (cons :x-raft-forwarded "test-value")
+                                                (cons :x-custom-loop-detection "enabled")))
+      (hex:forward-request *destination-host* :keep-current-host nil)))
 
 
 (def-fixture state ()
@@ -183,3 +188,17 @@
       (let ((response (http-request (format nil "~a/echo?foo=bar" source-host)
                                     :want-string t)))
         (is (str:contains? "Received:" response))))))
+
+(test test-forward-with-extra-headers-parameter
+  "Test that extra-headers parameter correctly forwards custom headers for loop detection"
+  (with-fixture state ()
+    (with-local-acceptor (source-host) ('source-acceptor)
+      (setf *received-headers* nil)
+      ;; Request the handler with the with-extra-headers parameter
+      (http-request (format nil "~a/echo?with-extra-headers=t" source-host)
+                    :want-string t)
+      ;; Verify both extra headers were forwarded to destination
+      (is (equal "test-value"
+                 (cdr (assoc :x-raft-forwarded *received-headers*))))
+      (is (equal "enabled"
+                 (cdr (assoc :x-custom-loop-detection *received-headers*)))))))

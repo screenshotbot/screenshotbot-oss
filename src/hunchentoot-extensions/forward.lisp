@@ -16,7 +16,8 @@
 
 (auto-restart:with-auto-restart ()
   (defun forward-request (url &key (request hunchentoot:*request*)
-                                (keep-current-host nil))
+                                (keep-current-host nil)
+                                (extra-headers nil))
     "Forward the current request to the destination URL. If
 keep-current-host is T, then we'll forward to the destination, but
 keep the Host header the same."
@@ -35,8 +36,8 @@ keep the Host header the same."
       (multiple-value-bind (response code headers)
           (drakma:http-request
            dest-uri
-           :additional-headers (list*
-                                (cons :x-forwarded-host (hunchentoot:host request))
+           :additional-headers (append
+                                (list (cons :x-forwarded-host (hunchentoot:host request)))
                                 (loop for (key . value) in (hunchentoot:headers-in request)
                                       unless (member key '(:content-length :user-agent :host
                                                            :|:AUTHORITY:|
@@ -44,7 +45,8 @@ keep the Host header the same."
                                                            :|:PATH:|
                                                            :|:SCHEME:|
                                                            :accept-encoding))
-                                        collect (cons key value)))
+                                        collect (cons key value))
+                                extra-headers)
            :method (hunchentoot:Request-method request)
            :real-host (quri:uri-host uri)
            :force-binary t
