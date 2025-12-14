@@ -111,7 +111,8 @@
    (:file "async")
    (:file "installation")
    (:file "throttler")
-   (:file "server" :depends-on ("analytics"))
+   (:file "raft-redirect")
+   (:file "server" :depends-on ("analytics" "raft-redirect"))
    (:file "debugging")
    (:module "s3"
     :serial t

@@ -29,11 +29,8 @@
   #+lispworks
   (:import-from #:hunchentoot-extensions/existing-socket
                 #:acceptor-with-existing-socket)
-  #+ (and lispworks linux)
-  (:import-from #:bknr.cluster/server
-                #:wait-for-leader
-                #:leader-id
-                #:leaderp)
+  (:import-from #:screenshotbot/raft-redirect
+                #:maybe-redirect-to-leader)
   (:import-from #:util/throttler
                 #:throttled-error)
   (:import-from #:auth
@@ -213,34 +210,6 @@
 
 (defparameter *asset-regex*
   (cl-ppcre:create-scanner "[.](js|css|woff|otf|woff2|png|jpg|jpeg|webp|svg)$"))
-
-(defun maybe-redirect-to-leader (request)
-  (declare (ignore request))
-  #+bknr.cluster
-  (when (and
-         (boundp 'bknr.datastore:*store*)
-         (not (leaderp bknr.datastore:*store*)))
-
-    (sleep 0.2)
-
-    (cond
-      ((not (wait-for-leader bknr.datastore:*store* :timeout 6))
-       (warn "Did not get a leader in time, we're probably in a read-only state")
-       (log:warn "Did not get a leader in time, we're probably in a read-only state")
-       (values))
-      ((leaderp bknr.datastore:*store*)
-       ;; If we've become the leader while we were waiting then just
-       ;; continue.
-       (values))
-      (t
-       ;; There's probably a leader, but we're not it. Respond with
-       ;; 502 so that nginx knows to forward it to next backend.  It's
-       ;; possible at this point there's no leader too
-       ;; (wait-for-leader can return non-NIL while an election is
-       ;; still happening).
-       (log:info "Forwarding request to next backend (leader: ~a)" (leader-id bknr.datastore:*store*))
-       (setf (hunchentoot:return-code*) 502)
-       (hunchentoot:abort-request-handler)))))
 
 (defmethod hunchentoot:acceptor-dispatch-request ((acceptor acceptor) request)
   (maybe-redirect-to-leader request)
