@@ -11,18 +11,26 @@
                 #:wait-for-leader
                 #:leader-id
                 #:leaderp)
+  (:import-from #:hunchentoot-extensions
+                #:forward-request)
+  (:import-from #:core/rpc/rpc
+                #:id-to-ip)
   (:export
-   #:maybe-redirect-to-leader))
+   #:maybe-redirect-to-leader)
+  (:local-nicknames (#:hex #:hunchentoot-extensions)))
 (in-package :screenshotbot/raft-redirect)
 
+(defun assert-not-in-redirect-loop (request)
+  (when (hunchentoot:header-in :x-raft-forwarded request)
+    (log:error "Request forwarding loop detected")
+    (setf (hunchentoot:return-code*) 502)
+    (hunchentoot:abort-request-handler)))
+
 (defun maybe-redirect-to-leader (request)
-  (declare (ignore request))
   #+bknr.cluster
   (when (and
          (boundp 'bknr.datastore:*store*)
          (not (leaderp bknr.datastore:*store*)))
-
-    (sleep 0.2)
 
     (cond
       ((not (wait-for-leader bknr.datastore:*store* :timeout 6))
@@ -34,11 +42,17 @@
        ;; continue.
        (values))
       (t
-       ;; There's probably a leader, but we're not it. Respond with
-       ;; 502 so that nginx knows to forward it to next backend.  It's
-       ;; possible at this point there's no leader too
-       ;; (wait-for-leader can return non-NIL while an election is
-       ;; still happening).
-       (log:info "Forwarding request to next backend (leader: ~a)" (leader-id bknr.datastore:*store*))
-       (setf (hunchentoot:return-code*) 502)
-       (hunchentoot:abort-request-handler)))))
+       (assert-not-in-redirect-loop request)
+
+       (let* ((leader-id (leader-id bknr.datastore:*store*))
+              (leader-ip (id-to-ip leader-id))
+              (port (hunchentoot:acceptor-port hunchentoot:*acceptor*))
+              (url (format nil "http://~a:~a" leader-ip port)))
+         (log:debug "About to forward ~a ~a to ~a"
+                   (hunchentoot:request-method hunchentoot:*request*)
+                   (hunchentoot:script-name hunchentoot:*request*)
+                   url)
+         (hex:forward-request url
+                              :request request
+                              :keep-current-host t
+                              :extra-headers '((:x-raft-forwarded . "1"))))))))
