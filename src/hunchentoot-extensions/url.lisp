@@ -135,10 +135,8 @@ to decide how to attach the new parameter to the end of the string."
     (let ((port (parse-integer port)))
      (case port
        (443 (format nil "https://~a" host))
-       (80 (format nil "~a://~a"
-                   (or
-                    (hunchentoot:header-in :x-forwarded-proto request)
-                    (hunchentoot:header-in :x-forwarded-proto request)
-                    "http")
-                   host))
-       (otherwise (format nil "http://~a:~a" host port))))))
+       (otherwise (format nil "~a://~a"
+                          (or
+                           (hunchentoot:header-in :x-forwarded-proto request)
+                           "http")
+                          host))))))
