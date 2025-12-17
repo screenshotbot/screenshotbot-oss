@@ -780,3 +780,9 @@ list of warnings for RUN."
 
 (def-cron delete-old-unchanged-runs (:minute 22 :hour 4)
   (delete-old-unchanged-runs))
+
+(def-store-migration ("Backfill run slot on warnings" :version 37)
+  (dolist (run (bknr.datastore:class-instances 'recorder-run))
+    (dolist (warning (recorder-run-warnings run))
+      (when (typep warning 'base-run-warning)
+        (setf (slot-value warning '%run) run)))))
