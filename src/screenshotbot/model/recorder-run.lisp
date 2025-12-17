@@ -785,4 +785,5 @@ list of warnings for RUN."
   (dolist (run (bknr.datastore:class-instances 'recorder-run))
     (dolist (warning (recorder-run-warnings run))
       (when (typep warning 'base-run-warning)
-        (setf (slot-value warning '%run) run)))))
+        (unless (slot-boundp warning '%run)
+          (setf (slot-value warning '%run) run))))))
