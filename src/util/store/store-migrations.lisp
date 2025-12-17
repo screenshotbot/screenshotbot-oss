@@ -18,7 +18,11 @@
                 #:*store-version*)
   (:export
    #:def-store-migration
-   #:run-migrations))
+   #:run-migrations
+   #:run-migrations-async
+   #:migration-running-p
+   #:migration-failed-p
+   #:migration-error))
 (in-package :util/store/store-migrations)
 
 (defclass migration ()
@@ -79,3 +83,54 @@
 
 (def-store-migration ("Dummy migration for version test" :version 2)
   (log:info "Nothing to do in this migration"))
+
+;;; Async migration support
+(defvar *migration-thread* nil
+  "The current migration thread, or NIL if no migration is running")
+
+(defvar *migration-error* nil
+  "If the migration failed, this will contain the error condition")
+
+(defvar *migration-lock* (bt:make-lock "migration-lock")
+  "Lock to protect migration state")
+
+(defun migration-running-p ()
+  "Returns T if a migration is currently running"
+  (bt:with-lock-held (*migration-lock*)
+    (and *migration-thread*
+         (bt:thread-alive-p *migration-thread*))))
+
+(defun migration-failed-p ()
+  "Returns T if the last migration failed"
+  (bt:with-lock-held (*migration-lock*)
+    (not (null *migration-error*))))
+
+(defun migration-error ()
+  "Returns the error from the last failed migration, or NIL"
+  (bt:with-lock-held (*migration-lock*)
+    *migration-error*))
+
+(defun run-migrations-async (&key (snapshot t))
+  "Run migrations in a background thread. Returns immediately.
+   Use migration-running-p to check if still running,
+   migration-failed-p to check if it failed, and
+   migration-error to get the error if it failed."
+  (bt:with-lock-held (*migration-lock*)
+    (when (and *migration-thread* (bt:thread-alive-p *migration-thread*))
+      (error "A migration is already running"))
+    (setf *migration-error* nil)
+    (setf *migration-thread*
+          (bt:make-thread
+           (lambda ()
+             (handler-case
+                 (progn
+                   (format t "Starting migrations in background thread~%")
+                   (run-migrations :snapshot snapshot)
+                   (format t "Migrations completed successfully~%"))
+               (error (e)
+                 (bt:with-lock-held (*migration-lock*)
+                   (setf *migration-error* e))
+                 (format t "Migration failed with error: ~a~%" e)
+                 (trivial-backtrace:print-backtrace e))))
+           :name "migration-thread")))
+  (values))
