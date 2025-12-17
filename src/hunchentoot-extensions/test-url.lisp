@@ -5,7 +5,9 @@
   (:import-from :hex
                 :missing-required-arg)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:hunchentoot-extensions
+                #:get-request-domain-prefix))
 (in-package :util.test-url)
 
 (def-suite* :util.test-url)
@@ -76,3 +78,43 @@
       (is (equal "https://example.com/foo" (make-full-url
                                             req
                                             "/foo"))))))
+
+(test get-request-domain-prefix
+  (with-fake-request ()
+    (is (equal "http://example.com" 
+               (get-request-domain-prefix
+                (make-instance
+                 'hunchentoot:request
+                 :uri "/foo"
+                 :headers-in `((:host . "example.com"))))))
+    
+    (is (equal "https://example.com" 
+               (get-request-domain-prefix
+                (make-instance
+                 'hunchentoot:request
+                 :uri "/foo"
+                 :headers-in `((:host . "example.com")
+                               (:x-forwarded-proto . "https"))))))
+    
+    (is (equal "https://secure.com" 
+               (get-request-domain-prefix
+                (make-instance
+                 'hunchentoot:request
+                 :uri "/foo"
+                 :headers-in `((:host . "secure.com:443"))))))
+    
+    (is (equal "http://localhost:3000" 
+               (get-request-domain-prefix
+                (make-instance
+                 'hunchentoot:request
+                 :uri "/foo"
+                 :headers-in `((:host . "localhost:3000"))))))
+    
+    (is (equal "https://localhost:8080" 
+               (get-request-domain-prefix
+                (make-instance
+                 'hunchentoot:request
+                 :uri "/foo"
+                 :headers-in `((:host . "localhost:8080")
+                               (:x-forwarded-proto . "https"))))))))
+
