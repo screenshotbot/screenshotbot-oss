@@ -829,7 +829,7 @@ the slots are read from the snapshot and ignored."
                    (push object objects))))
 
       ;; Will return a lambda!
-      (encode-object-slots subsystem class-layouts (reverse objects) snapshot-pathname))))
+      (encode-object-slots subsystem class-layouts (nreverse objects) snapshot-pathname))))
 
 (defun %log-crash (e)
   (format t "Error in background snapshot thread: ~a~%" e)
