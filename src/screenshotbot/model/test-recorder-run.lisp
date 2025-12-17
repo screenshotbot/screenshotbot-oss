@@ -28,7 +28,11 @@
                 #:pull-request-id
                 #:transient-promotion-log
                 #:promotion-log
-                #:recorder-run)
+                #:recorder-run
+                #:push-run-warning
+                #:recorder-run-warnings
+                #:not-fast-forward-promotion-warning
+                #:%run)
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:fiveam-matchers/core
@@ -388,3 +392,10 @@
                             ("uname" . "carbar")))))
       (is (equal "carbar"
                  (recorder-run-uname one))))))
+
+(test push-run-warning-sets-run-slot
+  (with-fixture state ()
+    (push-run-warning run 'not-fast-forward-promotion-warning)
+    (let ((warning (first (recorder-run-warnings run))))
+      (is (not (null warning)))
+      (is (eq run (slot-value warning '%run))))))

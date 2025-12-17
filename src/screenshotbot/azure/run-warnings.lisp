@@ -13,13 +13,15 @@
                 #:non-root-object)
   (:import-from #:bknr.datastore
                 #:persistent-class)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:base-run-warning)
   (:export
    #:azure-unauthorized-warning))
 (in-package :screenshotbot/azure/run-warnings)
 
 (named-readtables:in-readtable markup:syntax)
 
-(defclass azure-unauthorized-warning (non-root-object)
+(defclass azure-unauthorized-warning (base-run-warning)
   ()
   (:metaclass persistent-class))
 

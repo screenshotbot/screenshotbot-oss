@@ -655,8 +655,18 @@ branch runs."
                 (ignore-this-blob ()
                   (values))))))
 
+(defindex +run-warning-run-index+
+  'hash-index
+  :slot-name '%run)
+
+(defclass base-run-warning (store-object)
+  ((%run :initarg :run
+         :index +run-warning-run-index+
+         :index-reader warnings-for-run))
+  (:metaclass persistent-class))
+
 (with-class-validation
- (defclass merge-base-failed-warning (non-root-object)
+ (defclass merge-base-failed-warning (base-run-warning)
    ((%compared-against :initarg :compared-against
                        :reader compared-against))
    (:metaclass persistent-class)
@@ -664,7 +674,7 @@ branch runs."
 compare against the actual merge base.")))
 
 (with-class-validation
-  (defclass not-fast-forward-promotion-warning (non-root-object)
+  (defclass not-fast-forward-promotion-warning (base-run-warning)
     ()
     (:metaclass persistent-class)
     (:documentation "A warning that this was not a fast-forward when the run was promoted")))
@@ -750,7 +760,9 @@ typo it wasn't being run. I've updated the version."
 (defun push-run-warning (run type &rest args)
   "Create a run warning of type TYPE with args ARGS, and push it to the
 list of warnings for RUN."
-  (let ((warning (apply #'make-instance type args)))
+  (let ((warning (apply #'make-instance type
+                        :run run
+                        args)))
     (bt:with-lock-held (*warning-lock*)
       (push warning (recorder-run-warnings run)))))
 
