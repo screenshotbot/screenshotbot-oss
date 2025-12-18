@@ -372,6 +372,10 @@
       (trivial-utf-8:utf-8-decoding-error ()
         (octets-to-string-safe octets)))))
 
+(* 4 (loop for x being the hash-values of *string-decoding-cache*
+           summing (length x)))
+
+
 (defun octets-to-string-deduped (octets)
   (let ((existing (gethash octets *string-decoding-cache*)))
     (or

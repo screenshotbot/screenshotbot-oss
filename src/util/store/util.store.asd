@@ -32,6 +32,7 @@
                (:file "single")
                (:file "migrations")
                (:file "delayed-accessors")
+               (:file "slot-subsystem")
                (:file "simple-object-snapshot")
                (:file "checksums")
                (:file "export")
@@ -57,6 +58,7 @@
   :serial t
   :depends-on (:util.store
                :fiveam-matchers
+               :util.testing
                :util.store/aws
                :util.store/raft-state
                :util.store/sync
@@ -64,6 +66,7 @@
                :util/fiveam)
   :components ((:file "test-store-version")
                (:file "test-store")
+               (:file "test-slot-subsystem")
                (:file "test-objectid")
                (:file "test-single")
                (:file "test-migrations")
