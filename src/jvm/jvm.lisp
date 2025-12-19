@@ -150,4 +150,4 @@
   t)
 
 #+ (and :lispworks :linux)
-(push :jvm-supported-p *features*)
+(pushnew :jvm-supported-p *features*)
