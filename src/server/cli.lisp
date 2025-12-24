@@ -149,9 +149,7 @@
                        (cond
                          (acceptor
                           acceptor)
-                         ((and
-                           nil ;; TODO(T1105) Disable for now.
-                           (clingon:getopt cmd :only-screenshotbot-p))
+                         ((clingon:getopt cmd :only-screenshotbot-p)
                           (symbol-value
                            (uiop:find-symbol* :*acceptor* :screenshotbot/server)))
                          (t
