@@ -64,4 +64,4 @@ nfs-disk.vdi
 # Arcanist phutil cache files
 .phutil_module_cache
 
-*.deb
+screenshotbot*.deb
