@@ -13,7 +13,7 @@
                 #:is
                 #:test)
   (:import-from #:screenshotbot/mailer
-                #:background-mailer
+                #:background-mailer-mixin
                 #:fix-email-list
                 #:host
                 #:local-smtp-mailer
@@ -46,15 +46,20 @@
 (defclass dummy-mailer ()
   ())
 
+(defclass dummy-background-mailer (dummy-mailer
+                                   background-mailer-mixin)
+  ())
+
 (defmethod send-mail ((mailer dummy-mailer) &rest args)
   :pass)
 
 (test future-from-background-mailer
-  (let ((mailer (make-instance 'background-mailer
-                               :delegate (make-instance 'dummy-mailer))))
-    (is
-     (eql :pass
-          (lparallel:force (send-mail mailer :from "foo" :to "bar"))))))
+  (let ((mailer (make-instance 'dummy-background-mailer)))
+    (let ((promise (send-mail mailer :from "foo" :to "bar")))
+      (is (not (eql :pass promise)))
+      (is
+       (eql :pass
+            (lparallel:force promise))))))
 
 
 (test fix-email-list

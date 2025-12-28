@@ -13,7 +13,6 @@
   (:import-from #:core/installation/installation
                 #:*installation*)
   (:export
-   #:background-mailer
    #:host
    #:local-smtp-mailer
    #:noop-mailer
@@ -32,7 +31,11 @@
   ()
   (:documentation "A mailer that does nothing"))
 
-(defclass smtp-mailer (mailer)
+(defclass background-mailer-mixin ()
+  ())
+
+(defclass smtp-mailer (mailer
+                       background-mailer-mixin)
   ((host :initarg :hostname
          :accessor host)
    (port :initarg :port
@@ -46,9 +49,6 @@
    (password :initarg :password
              :accessor password)))
 
-(defclass background-mailer (mailer)
-  ((delegate :initarg :delegate
-             :accessor delegate)))
 
 (defclass local-smtp-mailer (smtp-mailer)
   ()
@@ -134,14 +134,14 @@
 
 (defvar *mailer-pool* (make-instance 'max-pool))
 
-(defmethod send-mail ((mailer background-mailer) &rest args)
+(defmethod send-mail :around ((mailer background-mailer-mixin) &rest args)
   (let ((promise (lparallel:promise)))
     (prog1
         promise
       (make-thread
        (lambda ()
          (lparallel:fulfill promise
-           (apply #'send-mail (delegate mailer) args)))
+           (call-next-method)))
        :pool *mailer-pool*
        :name "email thread"))))
 
