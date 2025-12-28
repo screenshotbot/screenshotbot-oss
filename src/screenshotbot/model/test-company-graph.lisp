@@ -21,6 +21,7 @@
   (:import-from #:fiveam-matchers/lists
                 #:has-item)
   (:import-from #:fiveam-matchers/core
+                #:does-not
                 #:is-not
                 #:assert-that)
   (:import-from #:bknr.datastore
@@ -29,7 +30,9 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image)
   (:import-from #:util/store/object-id
-                #:oid))
+                #:oid)
+  (:import-from #:screenshotbot/model/constant-string
+                #:constant-string))
 (in-package :screenshotbot/model/test-company-graph)
 
 (util/fiveam:def-suite)
@@ -60,7 +63,8 @@
 
 (defclass dummy-class (store-object)
   ((one :initarg :one)
-   (two :initarg :two))
+   (two :initarg :two
+        :reader two))
   (:metaclass persistent-class)
   (:documentation "Sometimes you might connect two objects with something like this."))
 
@@ -77,6 +81,45 @@
                      (has-item user)
                      (has-item company2)
                      (has-item company))))))
+
+(test full-graph-doesnt-go-via-strings
+  (with-fixture state ()
+    (with-test-user (:user user :company company)
+      (let ((str "abcde"))
+       (with-test-user (:user other-user :company company2 :company-name "other company")
+         (let ((obj1 (make-instance 'dummy-class
+                                    :one company
+                                    :two str))
+               (obj2 (make-instance 'dummy-class
+                                    :one company2
+                                    :two str)))
+           (is (eql (two obj1)
+                    (two obj2))))
+         (is (not (equal company2 company)))
+         (assert-that (company-full-graph company)
+                      (has-item company)
+                      (does-not (has-item company2))))))))
+
+
+(test full-graph-doesnt-go-via-constant-strings
+  (with-fixture state ()
+    (with-test-user (:user user :company company)
+      (let ((str "abcde"))
+       (with-test-user (:user other-user :company company2 :company-name "other company")
+         (let ((obj1 (make-instance 'dummy-class
+                                    :one company
+                                    :two (constant-string str)))
+               (obj2 (make-instance 'dummy-class
+                                    :one company2
+                                    :two (constant-string str))))
+           (is (eql (two obj1)
+                    (two obj2))))
+         (is (not (equal company2 company)))
+         (assert-that (company-full-graph company)
+                      (has-item company)
+                      (has-item (constant-string "abcde"))
+                      (does-not (has-item company2))))))))
+
 
 (test copies-images
   (with-fixture state ()

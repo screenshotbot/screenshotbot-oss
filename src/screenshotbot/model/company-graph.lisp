@@ -38,6 +38,8 @@
   (:import-from #:util/misc
                 #:?.
                 #:safe-ensure-directories-exist)
+  (:import-from #:screenshotbot/model/constant-string
+                #:constant-string)
   (:export
    #:company-graph
    #:company-full-graph)
@@ -125,6 +127,11 @@ remove these from the graph."
    (listp neighbor)
    (every (alexandria:rcurry #'typep 'screenshotbot/model/image::mask-rect)
           neighbor)))
+
+(defmethod should-continue-traversing-p ((obj constant-string) neighbor)
+  "Don't traverse from constant-strings to their neighbors, as constant-strings
+can be shared between unrelated companies and would create false connections."
+  nil)
 
 (defun find-reachable-store-objects (graph self)
   (let ((seen (make-hash-table))
