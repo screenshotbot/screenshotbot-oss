@@ -76,6 +76,9 @@
      (objects :initarg :objects
               :accessor access-control-objects
               :documentation "All the objects on which this ACL applies")
+     (access-control-comment :initarg :comment
+                             :accessor access-control-comment
+                             :documentation "Arbitrary comment, typically maniphest task")
      (created-at :initarg :created-at))
     (:metaclass persistent-class)
     (:default-initargs :created-at (get-universal-time))))
@@ -139,17 +142,18 @@
       (error "~a could not be normalized" ret))
     ret))
 
-(defun push-acl (name type obj)
+(defun push-acl (name type obj &key comment)
   (let ((gk (gk-with-name! name)))
     (let ((acl (make-instance 'access-control
                               :type type
+                              :comment comment
                               :objects (list (normalize-object obj)))))
       (with-transaction ()
 
         (push acl (access-controls gk))))))
 
-(defun allow (name obj)
-  (push-acl name :allow obj))
+(defun allow (name obj &key comment)
+  (push-acl name :allow obj :comment comment))
 
-(defun deny (name obj)
-  (push-acl name :deny obj))
+(defun deny (name obj &key comment)
+  (push-acl name :deny obj :comment comment))
