@@ -26,13 +26,19 @@
     (setf (hunchentoot:return-code*) 502)
     (hunchentoot:abort-request-handler)))
 
+(defun exclude-from-raft-redirect-p (request)
+  "Returns T if the request path should not be forwarded to the leader.
+   Paths that handle their own routing or need direct node access should be excluded."
+  (let ((path (hunchentoot:script-name request)))
+    (or (str:starts-with-p "/raft-state" path)
+        (str:starts-with-p "/intern/rpc" path))))
+
 (defun maybe-redirect-to-leader (request)
   #+bknr.cluster
   (when (and
          (boundp 'bknr.datastore:*store*)
          (not (leaderp bknr.datastore:*store*))
-         (not (str:starts-with-p "/raft-state"
-                                 (hunchentoot:script-name request))))
+         (not (exclude-from-raft-redirect-p request)))
     
     (cond
       ((not (wait-for-leader bknr.datastore:*store* :timeout 6))

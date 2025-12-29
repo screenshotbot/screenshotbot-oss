@@ -527,7 +527,8 @@
                (:module "web-build"
                 :components ((:file "test-scheduler")
                              (:file "test-project")))
-               (:file "test-cdn")))
+               (:file "test-cdn")
+               (:file "test-raft-redirect")))
 
 (defsystem :screenshotbot/secrets
   :serial t
