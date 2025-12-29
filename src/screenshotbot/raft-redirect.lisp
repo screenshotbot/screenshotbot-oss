@@ -30,8 +30,10 @@
   #+bknr.cluster
   (when (and
          (boundp 'bknr.datastore:*store*)
-         (not (leaderp bknr.datastore:*store*)))
-
+         (not (leaderp bknr.datastore:*store*))
+         (not (str:starts-with-p "/raft-state"
+                                 (hunchentoot:script-name request))))
+    
     (cond
       ((not (wait-for-leader bknr.datastore:*store* :timeout 6))
        (warn "Did not get a leader in time, we're probably in a read-only state")
