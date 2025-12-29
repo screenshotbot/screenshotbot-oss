@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:core/rpc/rpc
+                #:%port
                 #:id-to-ip
                 #:rpc-auth-id
                 #:rpc-authentication-failed
@@ -23,9 +24,11 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (with-test-store ()
-    (with-fake-request ()
-      (&body))))
+  (unwind-protect
+       (with-test-store ()
+         (with-fake-request ()
+           (&body)))
+    (makunbound 'server::*multi-acceptor*)))
 
 (defun make-authorization (key pass)
   `((:authorization . ,(format nil "Basic ~a"
@@ -56,3 +59,18 @@
 (test id-to-ip
   (is (equal "172.30.1.199" (id-to-ip "172.30.1.199:7070:0:0")))
   (is (equal "[::1]" (id-to-ip "[::1]:7070:0:0"))))
+
+(test %port
+  (with-fixture state ()
+    (progn
+      (setf server::*multi-acceptor*
+            (make-instance 'hunchentoot:easy-acceptor
+                           :port 8080))
+      (is (= 8080 (%port))))))
+
+(test %port-without-multi-acceptor
+  (with-fixture state ()
+    (is (= 5001 (%port :default-port 5001)))
+    (is (= 4001 (%port)))))
+
+

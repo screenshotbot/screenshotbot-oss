@@ -116,8 +116,15 @@
     (t
      (list "127.0.0.1"))))
 
-(defun %port ()
-  (hunchentoot:acceptor-port server::*multi-acceptor*))
+(defun %port (&key (default-port 4001))
+  "If we're not using multi-acceptor, then I don't know how to find the
+port. For now, we're standardizing on 4001, which is what the
+screenshotbot acceptor hardcodes as."
+  (cond
+    ((boundp 'server::*multi-acceptor*)
+     (hunchentoot:acceptor-port server::*multi-acceptor*))
+    (t
+     default-port)))
 
 (defun send-rpc-to-server (server rpc &key (read-timeout 600))
   (send-rpc
