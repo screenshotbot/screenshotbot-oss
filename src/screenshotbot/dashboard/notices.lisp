@@ -38,49 +38,46 @@
 (named-readtables:in-readtable markup:syntax)
 
 (deftag user-notice-list (&key (user (current-user)))
-  <div id= "user-notice-list" class= "row">
+  <div id= "user-notice-list" >
     <!-- user notice list-->
     ,@ (loop for invite in (unaccepted-invites user) collect
-    <div class= "col-md-4 mt-2">
-      <form action= (util:copying (invite)  (nibble () (accept-invite invite))) method= "POST" >
-        <div class= "card">
-          <div class= "card-header">
-            <h3>,(company-name (invite-company invite)) </h3>
-          </div>
-          <input type= "hidden"
-                 name= "invite-id"
-                 value= (store-object-id invite) />
-          <div class= "card-body">
-            <p>You've been invited to collaborate in this Organization. </p>
-          </div>
-
-          <div class= "card-footer">
-            <input type= "submit" class= "btn btn-success" value= "Accept Invitation" />
-          </div>
-        </div>
-      </form>
-    </div>)
-       ,@ (loop for notice in (user-notices user) collect
-                (render-notice notice))
+                                                     (render-invite invite))
+    ,@ (loop for notice in (user-notices user) collect
+                                               (render-notice notice))
   </div>)
+
+(deftag notice-toast (children)
+  <div class="toast show position-fixed bottom-0 end-0 m-3 " role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="false">
+    ,@children
+  </div>)
+
+(defmethod render-invite (invite)
+  <notice-toast>
+    <div class="toast-header">
+      <strong class="me-auto">Invitation to ,(company-name (invite-company invite))</strong>
+      <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    <div class="toast-body">
+      <p>You've been invited to collaborate in this Organization.</p>
+      <form action= (util:copying (invite)  (nibble () (accept-invite invite))) method= "POST" >
+        <input type= "hidden"
+               name= "invite-id"
+               value= (store-object-id invite) />
+        <input type= "submit" class= "btn btn-success" value= "Accept Invitation" />
+      </form>
+    </div>
+  </notice-toast>)
 
 (defmethod render-notice (notice)
-  <div class= "col-md-4 mt-2">
-    <div class= "card">
-      <div class= "card-header pt-0 pb-0">
-        <h3>,(notice-title notice)</h3>
-      </div>
-
-      <div class= "card-body pt-0 pb-0">
-        <p>,(notice-summary notice)</p>
-      </div>
-
-      <div class= "card-footer">
-        <input type= "button" class= "btn btn-danger user-notice-dismiss" value= "Dismiss"
-               data-notice-id= (oid notice) />
-      </div>
+  <notice-toast>
+    <div class="toast-header">
+      <strong class="me-auto">,(notice-title notice)</strong>
+      <button type="button" class="btn-close user-notice-dismiss" data-bs-dismiss="toast" aria-label="Close" data-notice-id=(oid notice)></button>
     </div>
-  </div>)
+    <div class="toast-body">
+      ,(notice-summary notice)
+    </div>
+  </notice-toast>)
 
 (defhandler (nil :uri "/notice/dismiss" :method :post) (notice-id)
   (with-transaction ()
