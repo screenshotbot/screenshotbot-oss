@@ -153,13 +153,8 @@
 
           <!-- Start Content-->
           <div class="">
-            ,(cond
-               ((and left-nav-bar user)
-                <user-notice-list user=user />)
-               (t
-                ;; fix this, I shouldn't need this, but it breaks the CSS if
-                ;; it isn't here.
-                <div id= "user-notice-list" class= "row" />))
+            ,(when (and left-nav-bar user)
+               <user-notice-list user=user />)
 
             ,(site-alert (installation))
 
