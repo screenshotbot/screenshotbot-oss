@@ -47,3 +47,27 @@
         :screenshotbot
         "notices"
         (dashboard-template))))))
+
+(test two-notices-screenshot-test
+  (with-installation (:installation (make-instance 'multi-org-test-installation))
+   (with-test-store ()
+     (with-test-user (:user user
+                      :company company
+                      :logged-in-p t)
+       (with-transaction ()
+         (setf (unaccepted-invites user)
+               (list
+                (make-instance 'invite
+                               :code "first-invite"
+                               :used-p nil
+                               :company company)
+                (make-instance 'invite
+                               :code "second-invite"
+                               :used-p nil
+                               :company company))))
+       (screenshot-static-page
+        :screenshotbot
+        "two-notices"
+        (dashboard-template))))))
+
+
