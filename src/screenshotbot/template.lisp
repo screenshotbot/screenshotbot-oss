@@ -146,6 +146,12 @@
           data-user-email= (when user (user-email user))
           data-user-name= (when user (user-full-name user)) >
       <!-- Begin page -->
+      ,(let ((alert (site-alert (installation))))
+         (when alert
+           <div class="site-alert-container">
+             ,(progn alert)
+           </div>))
+
       ,(when left-nav-bar
          <left-side-bar user=user company=company script-name=script-name />)
       <div class="content-page bg-light-lighten">
@@ -153,16 +159,13 @@
 
           <!-- Start Content-->
           <div class="">
-
-            ,(site-alert (installation))
-
             ,@children
           </div> <!-- container -->
 
         </div> <!-- content -->
 
 
-      </div>
+      </div> <!-- content-page -->
 
       ,(when (and left-nav-bar user)
          <user-notice-list user=user />)
