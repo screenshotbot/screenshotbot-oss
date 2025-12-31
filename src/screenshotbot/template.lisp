@@ -153,8 +153,6 @@
 
           <!-- Start Content-->
           <div class="">
-            ,(when (and left-nav-bar user)
-               <user-notice-list user=user />)
 
             ,(site-alert (installation))
 
@@ -166,6 +164,8 @@
 
       </div>
 
+      ,(when (and left-nav-bar user)
+         <user-notice-list user=user />)
 
       <!-- bundle -->
 
