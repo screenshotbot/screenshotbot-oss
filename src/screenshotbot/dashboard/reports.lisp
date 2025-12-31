@@ -145,31 +145,29 @@
   (unless skip-access-checks
     (can-view! report))
 
-  <app-template body-class= "dashboard" title= (report-title report) content=nil >
+  <app-template body-class= "dashboard" title= (report-title report) >
 
-    <div class= "content">
-      ,(when (and nil (can-public-view report))
-         <section class= "mt-3" >
-           <div class= "alert alert-danger">
-             This report can be viewed by public, because the underlying repository is public
-           </div>
-         </section>)
+    ,(when (and nil (can-public-view report))
+       <section class= "mt-3" >
+         <div class= "alert alert-danger">
+           This report can be viewed by public, because the underlying repository is public
+         </div>
+       </section>)
 
-      ,(when alert
-         alert)
+    ,(when alert
+       alert)
 
+    <section class= "full-height">
       ,(render-notes :for report)
 
-    </div>
 
-
-    <render-diff-report diff-report= (report-diff-report report)
-                        acceptable= (report-acceptable report)
-                        more= (remove-if #'null (more-links-for-report report))
-                        >
-      ,@(render-warnings (report-run report))
-    </render-diff-report>
-    
+      <render-diff-report diff-report= (report-diff-report report)
+                          acceptable= (report-acceptable report)
+                          more= (remove-if #'null (more-links-for-report report))
+                          >
+        ,@(render-warnings (report-run report))
+      </render-diff-report>
+    </section>
   </app-template>)
 
 (defun share-report (report)
