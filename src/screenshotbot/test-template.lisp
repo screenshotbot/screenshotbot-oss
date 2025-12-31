@@ -33,9 +33,13 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/user-api
-                #:user))
+                #:user)
+  (:import-from #:core/installation/installation
+                #:site-alert))
 
 (util/fiveam:def-suite)
+
+(named-readtables:in-readtable markup:syntax)
 
 (def-fixture state ()
   (with-test-store ()
@@ -80,5 +84,22 @@
      (auth:with-sessions ()
        (no-access-error-page)))))
 
+(defclass test-installation-with-alert (installation)
+  ())
+
+(defmethod site-alert ((self test-installation-with-alert))
+  <div class= "alert alert-warning" >
+    <strong>Scheduled Maintenance:</strong> The system will undergo maintenance on December 31st from 2:00 AM to 4:00 AM EST.
+  </div>)
+
+(screenshot-test dashboard-with-site-alert
+  (with-test-store ()
+    (let ((*installation* (make-instance 'test-installation-with-alert)))
+      (let ((company (make-instance 'company :name "Test Company"))
+            (user (make-instance 'user)))
+        (with-fake-request ()
+          <dashboard-template user=user company=company script-name= "/runs">
+            hello world
+          </dashboard-template>)))))
 
 
