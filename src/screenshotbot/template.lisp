@@ -148,28 +148,28 @@
       <!-- Begin page -->
       ,(when left-nav-bar
          <left-side-bar user=user company=company script-name=script-name />)
-        <div class="content-page bg-light-lighten">
-          <div class="content">
+      <div class="content-page bg-light-lighten">
+        <div class="content">
 
-            <!-- Start Content-->
-  <div class="">
-    ,(cond
-       ((and left-nav-bar user)
-        <user-notice-list user=user />)
-       (t
-        ;; fix this, I shouldn't need this, but it breaks the CSS if
-        ;; it isn't here.
-        <div id= "user-notice-list" class= "row" />))
+          <!-- Start Content-->
+          <div class="">
+            ,(cond
+               ((and left-nav-bar user)
+                <user-notice-list user=user />)
+               (t
+                ;; fix this, I shouldn't need this, but it breaks the CSS if
+                ;; it isn't here.
+                <div id= "user-notice-list" class= "row" />))
 
-    ,(site-alert (installation))
+            ,(site-alert (installation))
 
-              ,@children
-            </div> <!-- container -->
+            ,@children
+          </div> <!-- container -->
 
-          </div> <!-- content -->
+        </div> <!-- content -->
 
 
-        </div>
+      </div>
 
 
       <!-- bundle -->
