@@ -133,6 +133,7 @@
                             (left-nav-bar t)
                             codemirror
                             (company (current-company))
+                            (content t)
                             (script-name (hunchentoot:script-name hunchentoot:*request*))
                             (left-nav-bar t)
                             jquery-ui
@@ -155,16 +156,16 @@
       ,(when left-nav-bar
          <left-side-bar user=user company=company script-name=script-name />)
       <div class="content-page bg-light-lighten">
-        <div class="content">
-
-          <!-- Start Content-->
-          <div class="">
-            ,@children
-          </div> <!-- container -->
-
-        </div> <!-- content -->
-
-
+          ,(cond
+             (content
+              <!-- Start Content-->
+              <div class="content">
+                ,@children
+              </div>)
+             (t
+              <div>
+                ,@children
+              </div>))        
       </div> <!-- content-page -->
 
       ,(when (and left-nav-bar user)
@@ -201,6 +202,7 @@
                       codemirror
                       (body-class "dashboard")
                       scripts
+                      (content t)
                       script-name
                       (nav-bar-style :dark))
   (declare (ignore nav-bar-style
@@ -214,6 +216,7 @@
                          codemirror=codemirror
                          title=title
                          body-class=body-class
+                         content=content
                          script-name= (or script-name (hunchentoot:script-name*)) >,@children </dashboard-template>)))
 
 (defmethod hunchentoot:acceptor-status-message ((acceptor acceptor)
