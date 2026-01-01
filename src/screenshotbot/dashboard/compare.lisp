@@ -343,16 +343,6 @@
   </div>)
 
 
-(deftag change-image-row-triple (&key before-image
-                          after-image
-                          comp-image)
-  <div class="change-image-row change-image-row-triple">
-    <img class= "screenshot-image change-image change-image-left" src= before-image />
-    <img class= "screenshot-image change-image change-image-right" src= after-image />
-    <:img data-src= comp-image
-      class= "bg-primary image-comparison-modal-image screenshot-image change-image" alt= "Image Difference" />
-  </div>)
-
 (defclass image-comparison-job ()
   ((donep :initform nil
           :accessor donep)
@@ -531,29 +521,6 @@ If the diff-report is cached, then we process the body immediately instead."
                        (ignore-this-image ()
                          nil)))))))))
 
-(defun all-comparisons-page (report)
-  <app-template>
-    <a href= "javascript:window.history.back()">Back to Report</a>
-    ,(paginated
-      (lambda (change)
-       (let* ((before (diff-report:before change))
-              (after (diff-report:after change))
-              (image-comparison-job (make-instance 'image-comparison-job
-                                                    :before-image before
-                                                    :after-image after))
-              (comparison-image (util:copying (image-comparison-job)
-                                    (nibble (:name :comparison)
-                                      (prepare-image-comparison image-comparison-job :size :full-page)))))
-         <div class= "image-comparison-wrapper" >
-           <h3>,(screenshot-name before)</h3>
-           <change-image-row-triple before-image=(image-public-url (screenshot-image before) :size :full-page)
-                                    after-image=(image-public-url (screenshot-image after) :size :full-page)
-                                    comp-image=comparison-image
-                                    />
-         </div>))
-      :num 5
-      :items (diff-report:diff-report-changes report))
-  </app-template>)
 
 (deftag progress-img (&key (alt "Image Difference") src class)
   "An IMG with a progress indicator for the image loading."
@@ -1001,12 +968,7 @@ If the diff-report is cached, then we process the body immediately instead."
                                    (?. adminp (current-user))
                                    *summarizer*)
                               <li><a class= "dropdown-item" href= (nibble () (funcall *summarizer* report)) > [Admin] Summarize</a></li>)
-                           ,(progn
-                              #+screenshotbot-oss
-                              (progn
-                                <li>
-                                  <a class= "dropdown-item" href=all-comparisons >All Pixel Comparisons (OSS only) </a>
-                                </li>))
+
 
                 </ul>
 
@@ -1051,10 +1013,7 @@ additional actions in the More dropdown menu.
   (let* ((report diff-report)
          (run (diff-report:diff-report-run diff-report))
          (to (diff-report:diff-report-previous-run diff-report))
-         (all-comparisons (nibble (:name :all-comparison)
-                            (all-comparisons-page report)))
          (script-name (or script-name (hunchentoot:script-name*))))
-    (declare (ignorable all-comparisons))
     (let* ((changes-groups (diff-report:changes-groups report))
            (added-groups (diff-report:added-groups report))
            (deleted-groups (diff-report:deleted-groups report))
