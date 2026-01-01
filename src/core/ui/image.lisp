@@ -6,11 +6,10 @@
 
 (defpackage :core/ui/image
   (:use #:cl)
-  (:import-from #:screenshotbot/magick
-                #:ping-image-dimensions
-                #:*magick*)
   (:import-from #:util/misc
-                #:make-mp-hash-table))
+                #:make-mp-hash-table)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors))
 (in-package :core/ui/image)
 
 (named-readtables:in-readtable markup:syntax)
@@ -26,13 +25,19 @@
         (present-p
          result)
         (t
-         (setf (Gethash url *dim-cache*)
-               (ignore-errors
-                (ping-image-dimensions
-                 *magick*
-                 (path:catfile
-                  (hunchentoot:acceptor-document-root hunchentoot:*acceptor*)
-                  (str:substring 1 nil url))))))))))
+         (setf (gethash url *dim-cache*)
+               (ignore-and-log-errors ()
+                 (let ((file-path (path:catfile
+                                   (hunchentoot:acceptor-document-root hunchentoot:*acceptor*)
+                                   (str:substring 1 nil url))))
+                   (when (probe-file file-path)
+                     (let ((output (uiop:run-program 
+                                    (list "magick" "identify" "-format" "%w %h" (namestring file-path))
+                                    :output :string
+                                    :error-output nil
+                                    :ignore-error-status t)))
+                       (when (and output (not (str:emptyp output)))
+                         (mapcar #'parse-integer (str:split " " (str:trim output))))))))))))))
 
 
 (markup:deftag img-with-fallback (&key class src alt loading)
