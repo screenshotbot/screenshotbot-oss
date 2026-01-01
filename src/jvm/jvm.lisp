@@ -84,6 +84,8 @@
      (let* ((platform #+arm64 "arm64"
                       #-arm64 "amd64")
             (guesses (list
+                      ;; Debian Trixie
+                      (format nil "/usr/lib/jvm/java-21-openjdk-~a/lib/server/libjvm.so" platform)
                       ;; Debian bookworm
                       (format nil "/usr/lib/jvm/java-17-openjdk-~a/lib/server/libjvm.so" platform)
                       ;; Debian Bullseye
