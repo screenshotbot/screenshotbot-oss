@@ -17,10 +17,6 @@
 (defclass magick-cl-source-file (cl-source-file)
   ())
 
-(defparameter *library-file-dir*
-  (make-pathname :name nil :type nil
-                 :defaults *load-truename*))
-
 (defun default-foreign-library-type ()
   "Returns string naming default library type for platform"
   #+(or win32 win64 cygwin windows) "dll"
