@@ -45,6 +45,7 @@ remaining elements (unfiltered)"
       ((<= n 0) list)
       (t (tail (cdr list) (- n 1))))))
 
+
 (def-easy-macro with-batches (&binding batch
                                        list &fn fn &key (batch-size 10)
                                        &binding index)
