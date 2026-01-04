@@ -171,4 +171,22 @@
           (is (null (gethash 42 graph))))))))
 
 
+(test fset-map
+  (with-fixture state ()
+    (with-test-user (:user user :company company)
+      (let* ((key1 user)
+             (val1 company)
+             (key2 "string-key")
+             (val2 42)
+             (test-map (fset:map (key1 val1) (key2 val2))))
+        (let ((neighbors (screenshotbot/model/company-graph::object-neighbors-for-graph test-map)))
+          (assert-that neighbors
+                       (has-item key1)
+                       (has-item val1)
+                       (has-item key2)
+                       (has-item val2))
+          ;; Verify we get exactly 4 items (2 keys + 2 values)
+          (is (= 4 (length neighbors))))))))
+
+
 

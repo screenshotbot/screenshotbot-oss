@@ -71,6 +71,13 @@ remove these from the graph."
   (unless (?. adminp (screenshotbot/model/note::user note))
     (call-next-method)))
 
+(defmethod object-neighbors-for-graph ((map fset:map))
+  (let ((result))
+    (fset:do-map (key val map)
+      (push key result)
+      (push val result))
+    result))
+
 (defmethod object-neighbors-for-graph ((self screenshotbot/model/screenshot::lite-screenshot))
   (list*
    (?. screenshotbot/model/image:find-image-by-oid (screenshotbot/model/screenshot::image-oid self))
@@ -92,6 +99,7 @@ remove these from the graph."
            (arrayp neighbor)
            (typep neighbor 'util/store/object-id:oid)
            (typep neighbor 'dag:dag)
+           (typep neighbor 'fset:map)
            (typep neighbor 'screenshotbot/model/screenshot::lite-screenshot))
     (log:warn "found an object of weird type: ~a" neighbor)))
 
