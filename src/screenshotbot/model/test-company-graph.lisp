@@ -32,7 +32,8 @@
   (:import-from #:util/store/object-id
                 #:oid)
   (:import-from #:screenshotbot/model/constant-string
-                #:constant-string))
+                #:constant-string)
+  (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/model/test-company-graph)
 
 (util/fiveam:def-suite)
@@ -135,3 +136,39 @@
            (path:-d (path:catdir dir "image-blobs/01/")))
           (is-true
            (path:-e (path:catfile dir "image-blobs/01/02/03040102030401020304"))))))))
+
+(test test-reverse-graph-basic-structure
+  ;; Tests that reverse-graph creates the correct inverse relationships
+  ;; This ensures the graph structure is properly inverted for traversal
+  (with-fixture state ()
+    (with-test-user (:user user :company company)
+      (let ((graph (screenshotbot/model/company-graph::reverse-graph :undirected t)))
+        (is (hash-table-p graph))
+        ;; Verify that the user-roles object connects user and company
+        (let ((user-roles (find-if (lambda (obj)
+                                     (and (typep obj 'roles::user-roles)
+                                          (eq (roles:role-user obj) user)
+                                          (eq (roles:role-company obj) company)))
+                                   (bknr.datastore:store-objects-with-class 'roles::user-roles))))
+          (assert-that (gethash user-roles graph)
+                       (has-item company)
+                       (has-item user)))))))
+
+(test test-reverse-graph-ignores-atoms
+  ;; Tests that reverse-graph properly excludes atomic values like strings and numbers
+  ;; This prevents false connections through shared primitive values
+  (with-fixture state ()
+    (with-test-user (:user user :company company)
+      (let ((obj1 (make-instance 'dummy-class
+                                 :one company
+                                 :two "shared-string"))
+            (obj2 (make-instance 'dummy-class
+                                 :one user
+                                 :two 42)))
+        (let ((graph (screenshotbot/model/company-graph::reverse-graph)))
+          ;; Strings and numbers should not appear as keys in the reverse graph
+          (is (null (gethash "shared-string" graph)))
+          (is (null (gethash 42 graph))))))))
+
+
+

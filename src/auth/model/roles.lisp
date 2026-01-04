@@ -39,7 +39,9 @@
    #:hidden-admin
    #:role-friendly-name
    #:company-owner
-   #:ensure-has-role))
+   #:ensure-has-role
+   #:role-user
+   #:role-company))
 (in-package :auth/model/roles)
 
 ;;;; See https://phabricator.tdrhq.com/w/user_roles/

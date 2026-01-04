@@ -87,7 +87,7 @@ remove these from the graph."
 
 (defun reverse-graph (&key (undirected nil))
   "Creates the graph as a hash-table."
-  (let ((graph (make-hash-table)))
+  (let  ((graph (make-hash-table)))
     (let ((seen (make-hash-table))
           (queue (make-array 0 :adjustable t :fill-pointer t))
           (start 0))
