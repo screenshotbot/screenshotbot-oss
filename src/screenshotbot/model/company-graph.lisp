@@ -91,6 +91,7 @@ remove these from the graph."
            (listp neighbor)
            (arrayp neighbor)
            (typep neighbor 'util/store/object-id:oid)
+           (typep neighbor 'dag:dag)
            (typep neighbor 'screenshotbot/model/screenshot::lite-screenshot))
     (log:warn "found an object of weird type: ~a" neighbor)))
 
