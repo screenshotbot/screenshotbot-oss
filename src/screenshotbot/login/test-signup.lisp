@@ -31,6 +31,7 @@
   (:import-from #:screenshotbot/login/github-oauth
                 #:github-oauth-provider)
   (:import-from #:screenshotbot/login/signup
+                #:allowed-domain-p
                 #:signup-after-email/get
                 #:valid-email-address-p
                 #:confirmation-success
@@ -201,3 +202,29 @@
   (is-true (valid-email-address-p "arnold@example.com"))
   (is-false (valid-email-address-p "foo@foo@example.com"))
   (is-true (valid-email-address-p "reuxxx.norxxxx@proximite.group")))
+
+(test only-allows-specified-domains
+  (is-true (allowed-domain-p
+            (make-instance 'standard-auth-provider
+                           :allowed-domains :all)
+            "foo@example.com"))
+  (is-true (allowed-domain-p
+            (make-instance 'standard-auth-provider
+                           :allowed-domains (list "example.com"))
+            "foo@example.com"))
+  (is-false (allowed-domain-p
+            (make-instance 'standard-auth-provider
+                           :allowed-domains (list "example.com"))
+            "foo@bar.com"))
+  (is-false (allowed-domain-p
+             (make-instance 'standard-auth-provider
+                            :allowed-domains (list "example.com" "car.com"))
+             "foo@bar.com"))
+  (is-true (allowed-domain-p
+             (make-instance 'standard-auth-provider
+                            :allowed-domains (list "example.com" "car.com"))
+             "foo@car.com"))
+  (is-true (allowed-domain-p
+            (make-instance 'standard-auth-provider
+                           :allowed-domains (list "example.com" "car.com"))
+            "foo@car.com")))

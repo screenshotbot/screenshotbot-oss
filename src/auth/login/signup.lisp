@@ -27,6 +27,7 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/login/common
+                #:allowed-domains
                 #:verify-email-p
                 #:auth-common-header
                 #:or-divider
@@ -220,6 +221,7 @@
            "This email is blocked from creating an account. Please reach out to us at support@screenshotbot.io")
 
     (check-email
+     auth-provider
      #'check
      :email
      email)))
@@ -375,7 +377,7 @@ bugs. (See corresponding tests.)"
            (not (str:emptyp (str:trim full-name)))
            "We would really like you to introduce yourself!")))
 
-(defun check-email (check field email)
+(defun check-email (auth-provider check field email)
   (flet ((check (&rest args)
            (apply check field args)))
     (check (< (length email) 150)
@@ -383,7 +385,19 @@ bugs. (See corresponding tests.)"
     (check (valid-email-address-p email)
            "That doesn't look like a valid email address")
     (check (not (auth:find-user *installation* :email (string-downcase email)))
-           (format nil "That email address is already in use: ~a" email))))
+           (format nil "That email address is already in use: ~a" email))
+    (when (valid-email-address-p email)
+      (check
+       (allowed-domain-p auth-provider email)
+       "You may not sign up with this email domain."))))
+
+(defun allowed-domain-p (auth-provider email)
+  (cond
+    ((eql :all (allowed-domains auth-provider))
+     t)
+    (t
+     (let ((domain (car (last (str:split "@" email)))))
+       (str:s-member (allowed-domains auth-provider) domain)))))
 
 (defun signup-post (auth-provider
                     &key email password full-name accept-terms-p plan redirect
@@ -397,13 +411,16 @@ bugs. (See corresponding tests.)"
                            :email email
                            :full-name full-name
                            :message message)
+
                (push (cons name message) errors))))
       (check :password (and password (>= (length password) 8))
              "Please use at least 8 letters for the password")
 
-      (check-email #'check
-                   :email
-                   email)
+      (check-email
+       auth-provider
+       #'check
+       :email
+       email)
 
       (validate-name #'check full-name)
 

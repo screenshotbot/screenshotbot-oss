@@ -51,7 +51,8 @@
    #:auth-template-impl
    #:standard-auth-provider
    #:with-login
-   #:or-divider))
+   #:or-divider
+   #:allowed-domains))
 (in-package :screenshotbot/login/common)
 
 (named-readtables:in-readtable markup:syntax)
@@ -237,7 +238,10 @@
                    :reader verify-email-p)
    (recaptcha-token :initarg :recaptcha-token
                     :initform nil
-                    :reader recaptcha-token)))
+                    :reader recaptcha-token)
+   (allowed-domains :initarg :allowed-domains
+                    :initform :all
+                    :reader allowed-domains)))
 
 (defmacro with-login ((&key (needs-login t) (signup nil)
                          (company nil)
