@@ -190,3 +190,20 @@
 
 
 
+(test hash-table-object-neighbors-for-graph
+  (with-fixture state ()
+    (with-test-user (:user user :company company)
+      (let ((test-hash (make-hash-table :test 'equal)))
+        (setf (gethash user test-hash) company)
+        (setf (gethash "key1" test-hash) "value1")
+        (setf (gethash 42 test-hash) user)
+        (let ((neighbors (screenshotbot/model/company-graph::object-neighbors-for-graph test-hash)))
+          (assert-that neighbors
+                       (has-item user)
+                       (has-item company)
+                       (has-item "key1")
+                       (has-item "value1")
+                       (has-item 42))
+          ;; Verify we get exactly 6 items (3 keys + 3 values)
+          (is (= 6 (length neighbors))))))))
+

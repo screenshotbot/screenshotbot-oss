@@ -78,6 +78,15 @@ remove these from the graph."
       (push val result))
     result))
 
+(defmethod object-neighbors-for-graph ((map hash-table))
+  (let ((result))
+    (loop for key being the hash-keys of map
+          using (hash-value val)
+          do
+             (push key result)
+             (push val result))
+    result))
+
 (defmethod object-neighbors-for-graph ((self screenshotbot/model/screenshot::lite-screenshot))
   (list*
    (?. screenshotbot/model/image:find-image-by-oid (screenshotbot/model/screenshot::image-oid self))
@@ -100,6 +109,7 @@ remove these from the graph."
            (typep neighbor 'util/store/object-id:oid)
            (typep neighbor 'dag:dag)
            (typep neighbor 'fset:map)
+           (hash-table-p neighbor)
            (typep neighbor 'screenshotbot/model/screenshot::lite-screenshot))
     (log:warn "found an object of weird type: ~a" neighbor)))
 
