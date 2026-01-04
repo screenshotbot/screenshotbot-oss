@@ -108,6 +108,7 @@ remove these from the graph."
            (arrayp neighbor)
            (typep neighbor 'util/store/object-id:oid)
            (typep neighbor 'dag:dag)
+           (typep neighbor 'dag:commit)           
            (typep neighbor 'fset:map)
            (hash-table-p neighbor)
            (typep neighbor 'screenshotbot/model/screenshot::lite-screenshot))
