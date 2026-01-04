@@ -85,6 +85,15 @@ remove these from the graph."
                (typep obj 'gatekeeper/gatekeeper::access-control)))
             collect obj)))
 
+(defun warn-about-unrecognized-object-types (neighbor)
+  (unless (or
+           (typep neighbor 'bknr.datastore:store-object)
+           (listp neighbor)
+           (arrayp neighbor)
+           (typep neighbor 'util/store/object-id:oid)
+           (typep neighbor 'screenshotbot/model/screenshot::lite-screenshot))
+    (log:warn "found an object of weird type: ~a" neighbor)))
+
 (defun reverse-graph (&key (undirected nil))
   "Creates the graph as a hash-table."
   (let  ((graph (make-hash-table)))
@@ -101,13 +110,7 @@ remove these from the graph."
                  (loop for neighbor in (object-neighbors-for-graph obj)
                        if (not (ignorable-atom neighbor))
                          do
-                            (unless (or
-                                     (typep neighbor 'bknr.datastore:store-object)
-                                     (listp neighbor)
-                                     (arrayp neighbor)
-                                     (typep neighbor 'util/store/object-id:oid)
-                                     (typep neighbor 'screenshotbot/model/screenshot::lite-screenshot))
-                              (log:warn "found an object of weird type: ~a" neighbor))
+                            (warn-about-unrecognized-object-types neighbor)
                             (push obj (gethash neighbor graph))
                             (when undirected
                               (push neighbor (gethash obj graph)))
