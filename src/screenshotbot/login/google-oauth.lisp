@@ -21,6 +21,8 @@
                 #:oidc-user)
   (:import-from #:util/threading
                 #:with-extras)
+  (:import-from #:auth
+                #:oauth-user-user)
   (:export
    #:google-access-token
    #:google-oauth-provider
@@ -76,3 +78,9 @@
                     ("actual-domain" actual-domain))
        (assert (equal expected-domain
                       actual-domain))))))
+
+(defmethod google-user (user)
+  "Get the google-user associated with a given user."
+  (loop for gu in (bknr.datastore:class-instances 'google-user)
+        if (eql user (ignore-errors (oauth-user-user gu)))
+          return gu))
