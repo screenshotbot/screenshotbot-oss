@@ -22,6 +22,7 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/model/company
+                #:redirect-url
                 #:sub-company
                 #:company
                 #:company-with-name)
@@ -57,23 +58,32 @@
      (funcall fn))))
 
 (defun ensure-company-or-invite (user fn invites)
-  (cond
-    ((roles:companies-for-user user)
-     (funcall fn))
-    (invites
-     (let ((invite (car invites)))
-       (%accept-invite user invite
-                       :accept (nibble ()
-                                 (accept-invite invite)
-                                 (hex:safe-redirect
-                                  (nibble ()
-                                    (funcall fn))))
-                       :reject (nibble ()
-                                (ensure-company-or-invite
-                                 user fn (cdr invites))))))
-    (t
-     (%new-company :redirect (nibble () (funcall fn))
-                   :user user))))
+  (let* ((companies (roles:companies-for-user user))
+         (redirect-url (some #'redirect-url companies)))
+    (cond
+      (redirect-url
+       (%redirect-message redirect-url))
+      (companies
+       (funcall fn))
+      (invites
+       (let ((invite (car invites)))
+         (%accept-invite user invite
+                         :accept (nibble ()
+                                   (accept-invite invite)
+                                   (hex:safe-redirect
+                                    (nibble ()
+                                      (funcall fn))))
+                         :reject (nibble ()
+                                   (ensure-company-or-invite
+                                    user fn (cdr invites))))))
+      (t
+       (%new-company :redirect (nibble () (funcall fn))
+                     :user user)))))
+
+(defun %redirect-message (url)
+  <center-box>
+    <p>This organization has been migrated to <a href=url >,(progn url)</a>. Please click that link and log in again.</p>
+  </center-box>)
 
 (markup:deftag center-box (children)
   <dashboard-template left-nav-bar=nil >

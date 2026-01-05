@@ -10,6 +10,7 @@
   (:import-from #:screenshotbot/dashboard/ensure-company
                 #:prepare-company
                 #:ensure-company-or-invite
+                #:%redirect-message
                 #:%new-company)
   (:import-from #:screenshotbot/testing
                 #:with-installation
@@ -24,6 +25,8 @@
                 #:with-test-store)
   (:import-from #:screenshotbot/user-api
                 #:user)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
   (:import-from #:screenshotbot/installation
                 #:call-with-ensure-user-prepared
                 #:installation
@@ -32,7 +35,9 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:fiveam-matchers/core
-                #:assert-that))
+                #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string))
 (in-package :screenshotbot/dashboard/test-ensure-company)
 
 
@@ -43,6 +48,12 @@
     (with-fake-request ()
       (auth:with-sessions ()
         (%new-company)))))
+
+(screenshot-test redirect-message-for-migrated-org
+  (with-installation ()
+    (with-fake-request ()
+      (auth:with-sessions ()
+        (%redirect-message "https://new-instance.example.com")))))
 
 (defclass my-installation (one-owned-company-per-user
                            multi-org-feature
@@ -106,3 +117,39 @@
            (assert-that
             (roles:companies-for-user user)
             (has-length 1))))))))
+
+(test ensure-company-with-redirect-url-shows-migration-message
+  (with-test-store ()
+    (with-installation (:installation (make-instance 'my-installation))
+      (with-fake-request ()
+        (auth:with-sessions ()
+          (let* ((redirect-company (make-instance 'company
+                                                   :name "Migrated Company"
+                                                   :redirect-url "https://new-instance.example.com"))
+                 (user (make-user :companies (list redirect-company))))
+            (let ((output (ensure-company-or-invite
+                           user
+                           (lambda ()
+                             "Should not see this")
+                           nil)))
+              (assert-that
+               (markup:write-html output)
+               (contains-string "has been migrated")))))))))
+
+(test ensure-company-with-redirect-url-does-not-call-function
+  (with-test-store ()
+    (with-installation (:installation (make-instance 'my-installation))
+      (with-fake-request ()
+        (auth:with-sessions ()
+          (let* ((redirect-company (make-instance 'company
+                                                   :name "Migrated Company"
+                                                   :redirect-url "https://new-instance.example.com"))
+                 (user (make-user :companies (list redirect-company)))
+                 (function-called nil))
+            (ensure-company-or-invite
+             user
+             (lambda ()
+               (setf function-called t)
+               "Should not see this")
+             nil)
+            (is (not function-called))))))))
