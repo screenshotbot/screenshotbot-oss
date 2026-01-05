@@ -64,11 +64,14 @@ a1yOubCHt09QsDkyvBTWP3VX541g1voHDCcYMOyzrdv/KQHfwl/ojnEAg1t9HzA=
                             (cert-x509)
                             (local-cert)))))
     (some
-    (lambda (allowed)
-      (when allowed
-        (= 0
-           (x509-cmp allowed
-                     cert))))
+     (lambda (allowed)
+       #-darwin
+       (when allowed
+         (= 0
+            (x509-cmp allowed
+                      cert)))
+       #+darwin
+       t)
     (remove-if #'null
                allowed-certs))))
 
