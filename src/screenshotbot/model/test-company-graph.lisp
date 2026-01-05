@@ -14,6 +14,8 @@
                 #:with-installation
                 #:with-test-user)
   (:import-from #:screenshotbot/model/company-graph
+                #:copy-keys
+                #:copy-other-snapshot-files
                 #:*lparallelp*
                 #:save-images
                 #:company-full-graph
@@ -206,4 +208,54 @@
                        (has-item 42))
           ;; Verify we get exactly 6 items (3 keys + 3 values)
           (is (= 6 (length neighbors))))))))
+
+(test save-and-load-graph-with-blobs
+  (let (obj1-id obj2-id)
+   (cl-mock:with-mocks ()
+     (tmpdir:with-tmpdir (dir)
+       ;; Create and save objects in the first store
+       (with-fixture state ()
+         (with-test-user (:user user :company company)
+           (cl-mock:if-called 'copy-keys
+                              (lambda (output)
+                                (declare (ignore output))))
+           (cl-mock:if-called 'copy-other-snapshot-files
+                              (lambda (output)
+                                (declare (ignore output))))
+
+           ;; Create two dummy objects with slot values
+           (let ((obj1 (make-instance 'dummy-class
+                                      :one user
+                                      :two "second-value"))
+                 (obj2 (make-instance 'dummy-class
+                                      :one user
+                                      :two company)))
+             (setf obj1-id (bknr.datastore:store-object-id obj1))
+             (setf obj2-id (bknr.datastore:store-object-id obj2))
+             ;; Save the company graph to the tmpdir
+             (finishes
+               (screenshotbot/model/company-graph::save-graph-and-blobs company :output dir)))))
+
+       ;; Load the store from the saved directory
+       (let ((*lparallelp* nil))
+         (with-test-store (:dir dir)
+           (with-installation (:installation (make-instance 'multi-org-test-installation))
+             ;; Find the loaded objects by iterating through store objects
+             (let ((loaded-objects (bknr.datastore:class-instances 'dummy-class)))
+               ;; Verify we have exactly 2 dummy-class objects
+               (is (= 2 (length loaded-objects)))
+
+               ;; Find the objects by their slot values
+               (let ((loaded-obj1 (bknr.datastore:store-object-with-id obj1-id))
+                     (loaded-obj2 (bknr.datastore:store-object-with-id obj2-id)))
+                 ;; Verify obj1 was loaded with correct slot values
+                 (is-true loaded-obj1)
+                 (is (not (null (slot-value loaded-obj1 'one))))
+                 (is (equal "second-value" (two loaded-obj1)))
+
+                 ;; Verify obj2 was loaded with correct slot values
+                 (is-true loaded-obj2)
+                 (is (typep (slot-value loaded-obj2 'one) 'bknr.datastore:store-object))
+                 (is (typep (two loaded-obj2) 'bknr.datastore:store-object)))))))))))
+
 

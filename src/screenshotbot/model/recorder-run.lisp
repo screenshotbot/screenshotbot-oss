@@ -216,6 +216,8 @@ we can write methods that are generic to both."))
       :accessor recorder-run-channel)
      (company
       :initarg :company
+
+      
       :initform nil
       :accessor recorder-run-company
       :index +run-company-index+

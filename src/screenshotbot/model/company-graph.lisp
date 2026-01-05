@@ -215,13 +215,14 @@ moving a company to a new instance."
   (with-open-file (s file
                      :direction :output
                      :element-type '(unsigned-byte 8))
-    (snapshot-subsystem-helper
-     (loop for subsystem in (bknr.datastore::store-subsystems bknr.datastore:*store*)
-           if (typep subsystem 'store-object-subsystem)
-             return subsystem)
-     s
-     :map-store-objects (lambda (fn)
-                          (mapc fn objects)))))
+    (funcall
+     (snapshot-subsystem-helper
+      (loop for subsystem in (bknr.datastore::store-subsystems bknr.datastore:*store*)
+            if (typep subsystem 'store-object-subsystem)
+              return subsystem)
+      s
+      :map-store-objects (lambda (fn)
+                           (mapc fn objects))))))
 
 (defun save-images (objects &key output)
   (let ((images (loop for obj in objects
