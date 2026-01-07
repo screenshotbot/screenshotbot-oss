@@ -35,7 +35,8 @@ a1yOubCHt09QsDkyvBTWP3VX541g1voHDCcYMOyzrdv/KQHfwl/ojnEAg1t9HzA=
   (uiop:with-temporary-file (:pathname p :stream s)
     (write-string str s)
     (finish-output s)
-    (comm:pem-read "X509" p)))
+    
+    (fli:make-pointer :address (fli:pointer-address (comm:pem-read "X509" p)) :pointer-type 'comm:x509-pointer)))
 
 (defun local-cert ()
   (if (boundp '*local-cert*)
@@ -51,12 +52,18 @@ a1yOubCHt09QsDkyvBTWP3VX541g1voHDCcYMOyzrdv/KQHfwl/ojnEAg1t9HzA=
    *cert-x509*
    (read-x509-from-string *certificate*)))
 
-(fli:define-foreign-function (x509-cmp "X509_cmp")
-    ((a (:pointer :void) #| just convenience, it's actually an
-        x509-pointer, but pem-read doesn't reutn
-        that |#)
-     (b comm:x509-pointer))
-  :result-type :int)
+(defun certificates-equal-p (cert1 cert2)
+  "Securely compare X509 certificates for pinning by comparing public keys.
+   This prevents accepting different certificates with forged metadata.
+   For certificate pinning (no CA chain), metadata like serial/issuer can be
+   forged, but the public key is cryptographically bound to the private key."
+  (let ((data1 (comm:get-certificate-data cert1))
+        (data2 (comm:get-certificate-data cert2)))
+    ;; Compare public keys - cryptographically unique and unforgeable
+    ;;(log:debug "Got data1" data1)
+    ;;(log:debug "Got data2" data2)
+    (equalp (assoc :public-key data1)
+            (assoc :public-key data2))))
 
 (defun allowed-cert-p (cert &key allowed-certs )
   (let ((allowed-certs (or allowed-certs
@@ -64,14 +71,9 @@ a1yOubCHt09QsDkyvBTWP3VX541g1voHDCcYMOyzrdv/KQHfwl/ojnEAg1t9HzA=
                             (cert-x509)
                             (local-cert)))))
     (some
-     (lambda (allowed)
-       #-darwin
-       (when allowed
-         (= 0
-            (x509-cmp allowed
-                      cert)))
-       #+darwin
-       t)
+    (lambda (allowed)
+      (when allowed
+        (certificates-equal-p allowed cert)))
     (remove-if #'null
                allowed-certs))))
 
