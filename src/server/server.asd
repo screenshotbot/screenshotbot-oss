@@ -11,9 +11,10 @@
   :components ((:file "interrupts")))
 
 (defsystem "server/util"
-    :depends-on (:bordeaux-threads)
-    :components ((:file "util" :if-feature (:and :lispworks :linux)))
-    :description "This system gets reloaded before we reload any complex code, which let's us put reloading logic in here. It also means we must keep the dependencies minimal")
+  :depends-on (:bordeaux-threads
+               :easy-macros)
+  :components ((:file "util" :if-feature (:and :lispworks :linux)))
+  :description "This system gets reloaded before we reload any complex code, which let's us put reloading logic in here. It also means we must keep the dependencies minimal")
 
 (defsystem "server"
     :depends-on ("cl-cli"
