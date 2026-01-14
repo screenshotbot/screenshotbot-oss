@@ -493,6 +493,7 @@
                (:module "replay"
                 :components ((:file "test-core")
                              (:file "test-sitemap")
+                             (:file "test-css-tokenizer")
                              (:file "test-remote")
                              (:file "test-run-builder")
                              (:file "test-integration")
@@ -616,6 +617,7 @@
                 :components ((:file "proxy")
                              (:file "proxy-main")
                              (:file "replay-acceptor")
+                             (:file "css-tokenizer")
                              (:file "services")
                              (:file "aws-selenium-provider")
                              (:file "frontend")
