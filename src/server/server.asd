@@ -13,7 +13,7 @@
 (defsystem "server/util"
   :depends-on (:bordeaux-threads
                :easy-macros)
-  :components ((:file "util" :if-feature (:and :lispworks :linux)))
+  :components ((:file "util" :if-feature :lispworks))
   :description "This system gets reloaded before we reload any complex code, which let's us put reloading logic in here. It also means we must keep the dependencies minimal")
 
 (defsystem "server"
@@ -32,6 +32,7 @@
                  (:feature (:and :lispworks (:not :mswindows)) "control-socket")
                  "easy-macros"
                  "util/health-check"
+                 "server/util"
                  "util.threading"
                  "util/phabricator"
                  "hunchentoot-extensions"
@@ -42,8 +43,7 @@
                  (:file "health-checks")
                  (:file "acceptor-override" :if-feature :lispworks)
                  (:file "control-socket" :if-feature (:and :lispworks (:not :mswindows)))
-                 (:file "setup")
-                 (:file "util")))
+                 (:file "setup")))
 
 (defsystem #:server/config
   :depends-on ()
