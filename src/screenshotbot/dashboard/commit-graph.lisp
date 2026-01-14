@@ -29,7 +29,9 @@
 
 (defun %draw-graph (commit-graph)
   (let* ((input (with-output-to-string (s)
-                  (loop for commit in (ordered-commits commit-graph)
+                  (loop for commit in (loop for x in (ordered-commits commit-graph)
+                                            for i below 1000
+                                            collect x)
                         do (format s "~a~{ ~a~}~%"
                                    (dag:sha commit)
                                    (dag:parents commit)))))
