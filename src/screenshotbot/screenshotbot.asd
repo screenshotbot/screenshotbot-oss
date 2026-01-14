@@ -187,6 +187,7 @@
                  (:file "home")
                  (:file "ensure-company")
                  (:file "review-link")
+                 (:file "commit-graph")
                  (:file "run-page")
                  (:file "dashboard")
                  (:file "image")

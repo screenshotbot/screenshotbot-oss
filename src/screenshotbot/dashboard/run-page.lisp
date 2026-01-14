@@ -55,10 +55,6 @@
                 #:override-commit-hash)
   (:import-from #:screenshotbot/installation
                 #:installation)
-  (:import-from #:screenshotbot/git-repo
-                #:commit-graph)
-  (:import-from #:dag
-                #:ordered-commits)
   (:import-from #:core/ui/simple-card-page
                 #:confirmation-page)
   (:import-from #:screenshotbot/user-api
@@ -96,6 +92,8 @@
                 #:figma-drop-down)
   (:import-from #:screenshotbot/model/archived-run
                 #:load-archived-run)
+  (:import-from #:screenshotbot/dashboard/commit-graph
+                #:view-git-graph)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -246,46 +244,6 @@
              <a href= download >Download</a>
            </div>
          </simple-card-page>)))))
-
-(deftag view-git-graph (repo)
-  (let* ((commit-graph (commit-graph-dag (commit-graph (car repo))))
-         (commits (dag:ordered-commits commit-graph)))
-    <app-template>
-      <div class= "alert alert-info mt-3">
-        This shows all the information we have about your Git commit
- history. In particular, we only store the Git hashes. This
- information here is for debugging information only when reaching out
- to Screenshotbot support. (ID ,(progn (bknr.datastore:store-object-id (commit-graph (car repo)))))
-      </div>
-      <table class= "table git-graph" >
-        <thead>
-          <tr>
-            <th>Commit hash</th>
-            <th>Parents</th>
-            <th>First seen</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-        ,@ (loop for commit in commits collect
-                 <tr id= (dag:sha commit) >
-                   <td class= "font-monospace" >,(str:shorten 13 (dag:sha commit)) </td>
-                   <td class= "font-monospace" >
-                     ,@ (loop for parent in (dag:parents commit)
-                              collect
-                              <span>
-                                <a href= (format nil "#~a" parent) class= "commit-link" >,(str:shorten 13 parent)</a>
-                              </span>)
-
-                   </td>
-                   <td>
-                     <timeago timestamp= (ignore-errors (dag:commit-timestamp commit)) />
-                   </td>
-                   <td><button class= "highlight-branch btn btn-link" data-commit= (dag:sha commit) >Highlight Branch</button></td>
-                 </tr>)
-        </tbody>
-      </table>
-    </app-template>))
 
 (defun unpromote-run-flow (run)
   (confirmation-page
