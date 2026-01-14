@@ -570,4 +570,18 @@ background: url(   shttps://google.com?f=1   )
        (matches-regex
         "<html><body class=\" screenshotbot\"><div style=\"background-image:none;\">hello</div></body></html>")))))
 
+(test link-integrity-tags-are-removed
+  (with-fixture state ()
+    (let ((html (plump:parse "<html><head><link rel=\"stylesheet\" href=\"https://example.com/style.css\" integrity=\"sha384-fake-hash-value\"></head><body>hello</body></html>")))
+      (process-node (make-instance 'context)
+                    html
+                    (make-instance 'snapshot :tmpdir tmpdir)
+                    "https://www.google.com")
+      (assert-that
+       (with-output-to-string (s)
+         (plump:serialize html s))
+       (matches-regex "link ")
+       (does-not
+        (matches-regex "integrity="))))))
+
 
