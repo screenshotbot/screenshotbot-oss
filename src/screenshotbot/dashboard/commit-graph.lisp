@@ -19,11 +19,26 @@
                 #:timeago)
   (:import-from #:bknr.datastore
                 #:store-object-id)
+  (:import-from #:nibble
+                #:nibble)
   (:export
    #:view-git-graph))
 (in-package :screenshotbot/dashboard/commit-graph)
 
 (named-readtables:in-readtable markup:syntax)
+
+(defun %draw-graph (commit-graph)
+  (let* ((input (with-output-to-string (s)
+                  (loop for commit in (ordered-commits commit-graph)
+                        do (format s "~a~{ ~a~}~%"
+                                   (dag:sha commit)
+                                   (dag:parents commit)))))
+         (output (uiop:run-program (list (namestring (asdf:system-relative-pathname :screenshotbot "dashboard/git-graph")))
+                           :input (make-string-input-stream input)
+                           :output :string)))
+    <app-template>
+      <pre>,(progn output)</pre>
+    </app-template>))
 
 (deftag view-git-graph (repo)
   (let* ((commit-graph (commit-graph-dag (commit-graph (car repo))))
@@ -34,6 +49,8 @@
  history. In particular, we only store the Git hashes. This
  information here is for debugging information only when reaching out
  to Screenshotbot support. (ID ,(progn (bknr.datastore:store-object-id (commit-graph (car repo)))))
+
+        <a href= (nibble () (%draw-graph commit-graph) )> Draw Graph </a>
       </div>
       <table class= "table git-graph" >
         <thead>
