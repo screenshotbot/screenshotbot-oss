@@ -95,14 +95,54 @@ background: url(https://google.com)
 background: url(shttps://google.com?f=1)
 }"
       (rewrite-css-urls css (lambda (url)
-                              (format nil "s~a?f=1" url))))))
-    (let ((css "foo {
+                              (format nil "s~a?f=1" url)))))))
+
+(test url-rewriting-with-space
+  (let ((css "foo {
+background: url(   https://google.com   ),
+bar: car
+}"))
+    (is
+     (equal
+      "foo {
+background: url(shttps://google.com?f=1),
+bar: car
+}"
+      (rewrite-css-urls css (lambda (url)
+                              (format nil "s~a?f=1" url)))))))
+
+(test url-rewriting-with-quotes
+  (let ((css "foo {
 background: url('https://google.com')
 }"))
     (is
      (equal
       "foo {
 background: url(shttps://google.com?f=1)
+}"
+      (rewrite-css-urls css (lambda (url)
+                              (format nil "s~a?f=1" url)))))))
+
+(test parenthesis-in-url-t2196
+  (let ((css "foo {
+background-image: url(\"https://cdn.prod.website-files.com/640f69143ec11b21d42015c6/670fe1025fa272f3cda39a34_Trial%20CTA%20Footer_noise%20(1).png\");
+}"))
+    (is
+     (equal
+      "foo {
+background-image: url(https://example.com);
+}"
+      (rewrite-css-urls css (lambda (url)
+                              (format nil "https://example.com" url)))))))
+
+(test url-rewriting-with-quotes-and-whitespace
+  (let ((css "foo {
+background: url(   'https://google.com'   )
+}"))
+    (is
+     (equal
+      "foo {
+background: url(   shttps://google.com?f=1   )
 }"
       (rewrite-css-urls css (lambda (url)
                               (format nil "s~a?f=1" url)))))))

@@ -579,6 +579,7 @@
                 :serial t
                 :components ((static-file "replay-regex" :type "txt")
                              (:file "browser-config")
+                             (:file "css-tokenizer")
                              (:file "core")
                              (:file "squid")))))
 
@@ -617,7 +618,6 @@
                 :components ((:file "proxy")
                              (:file "proxy-main")
                              (:file "replay-acceptor")
-                             (:file "css-tokenizer")
                              (:file "services")
                              (:file "aws-selenium-provider")
                              (:file "frontend")

@@ -38,6 +38,12 @@
                 #:browser-config)
   (:import-from #:core/installation/installation
                 #:*installation*)
+  (:import-from #:screenshotbot/replay/css-tokenizer
+                #:consume-string-token
+                #:token-value
+                #:function-token
+                #:url-token
+                #:consume-ident-like-token)
   (:local-nicknames (#:a #:alexandria)
                     (#:dns-client #:org.shirakumo.dns-client))
   (:export
@@ -678,6 +684,45 @@ shipped by the time you're reading this.)"))
   (destructuring-bind (property-matcher url-matcher) *regexs*
     (declare (ignore property-matcher))
     (let ((url-scanner (cl-ppcre:create-scanner url-matcher)))
+      (let ((output (make-string-output-stream))
+            (last-appended 0))
+
+        (cl-ppcre:do-scans (match-start match-end
+                            reg-starts reg-ends
+                            url-scanner
+                            css)
+          (declare (ignore reg-starts reg-ends))
+          (let ((stream (make-string-input-stream css match-start)))
+            (let ((token (consume-ident-like-token stream)))
+              (flet ((move-forward (new-last-appended)
+                       (write-string css output :start last-appended :end new-last-appended)
+                       (setf last-appended new-last-appended)))
+               (etypecase token
+                 (url-token
+                  ;; When we see a url(foobar) [no quotes], we're
+                  ;; replacing the whole expression.
+                  (let ((url (token-value token)))
+                    (when (should-rewrite-url-p url)
+                      (move-forward match-start)
+                      (format output "url(~a)" (funcall fn url))
+                      (incf last-appended (file-position stream)))))
+                 (function-token
+                  ;; When we see a url("foobar"), we're only replacing
+                  ;; the "foobar" with the new URL
+                  (assert (equal "url" (token-value token)))
+                  (let* ((start (file-position stream))
+                         (starting-code-point (read-char stream))
+                         (string-token (consume-string-token stream starting-code-point))
+                         (url (token-value string-token)))
+                    (when (should-rewrite-url-p url)
+                      (move-forward (+ match-start start))
+                      (format output "~a" (funcall fn url))
+                      (incf last-appended (- (file-position stream) start))))))))))
+
+        (write-string css output :start last-appended :end (length css))
+        (get-output-stream-string output))
+
+      #+nil
       (cl-ppcre:regex-replace-all
        url-scanner
        css
