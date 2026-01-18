@@ -1111,6 +1111,12 @@ run, and the hash associated with the previous run."
           </ol>
         </simple-card-page>)))))
 
+(defhandler (nil :uri "/blame/:run/to/:to") (run to)
+  (let ((run (util:find-by-oid run))
+        (to (util:find-by-oid to)))
+    (auth:can-view! run to)
+    (%commits-between run to)))
+
 (defun info-modal (run to)
   <div class="modal" tabindex="-1" id= "comparison-info-modal" >
     <div class="modal-dialog">
@@ -1134,7 +1140,7 @@ run, and the hash associated with the previous run."
                  <br />
                  Previous commit: <commit repo= repo hash=prev-hash />
                  <br />
-                 <a href= (nibble () (%commits-between run to)) >View commits between these commits</a>
+                 <a href= (format nil "/blame/~a/to/~a" (oid run) (oid to)) >View commits between these commits</a>
                </p>))
         </div>
         <div class="modal-footer">
