@@ -26,7 +26,11 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:recorder-run-tags)
   (:import-from #:util/misc
-                #:?.))
+                #:?.)
+  (:import-from #:screenshotbot/model/company
+                #:company-with-name)
+  (:import-from #:screenshotbot/model/user
+                #:user-personal-company))
 (in-package :screenshotbot/slack/task-integration)
 
 (defclass slack-task-integration (task-integration)
@@ -62,6 +66,28 @@
                first-line))
             second-line)))
 
+(defmethod actually-post-on-channel (channel
+                                     report
+                                     &key company
+                                       (slack-config (default-slack-config company)))
+  (unless (str:emptyp channel)
+    (when-let ((token (?. access-token (?. access-token slack-config))))
+      (handler-case
+          (slack-post-on-channel
+           :channel channel
+           :company company
+           :token token
+           :blocks `#(
+                      ,(alexandria:alist-hash-table
+                        `((:type . "section")
+                          (:text . (("type" . "mrkdwn")
+                                    ("text" . ,(render-text report))))))))
+        (slack-error (e)
+          ;; the slack API error has already been logged, so we should
+          ;; not propagate this.
+          (log:error "Got error: ~a" e)
+          (values))))))
+
 (defmethod send-task ((inst slack-task-integration) report)
   (let ((company (task-integration-company inst))
         (seen (make-hash-table :test #'equal)))
@@ -71,25 +97,21 @@
                (symbol-macrolet ((key (gethash (str:ensure-prefix "#" channel) seen)))
                  (unless key
                    (setf key t)
-                   (unless (str:emptyp channel)
-                     (when-let ((token (?. access-token (?. access-token it))))
-                       (handler-case
-                           (slack-post-on-channel
-                            :channel channel
-                            :company company
-                            :token token
-                            :blocks `#(
-                                       ,(alexandria:alist-hash-table
-                                         `((:type . "section")
-                                           (:text . (("type" . "mrkdwn")
-                                                     ("text" . ,(render-text report))))))))
-                         (slack-error (e)
-                           ;; the slack API error has already been logged, so we should
-                           ;; not propagate this.
-                           (values)))))))))
+                   (actually-post-on-channel channel report
+                                             :company company)))))
         (when (enabledp it)
           (post-on-channel (slack-config-channel it)))
 
         (mapc #'post-on-channel
               (channel-slack-channels
                (report-channel report)))))))
+
+(defun test-message (report-id)
+  "A function to test how a slack messages renders. This is an
+integration test, and only works on Staging."
+  (let ((company (user-personal-company (%u:user-with-email "arnold@tdrhq.com"))))
+    (actually-post-on-channel
+     "#test-channel"
+     (util:find-by-oid report-id)
+     :company company)))
+
