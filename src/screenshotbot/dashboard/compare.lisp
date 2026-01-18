@@ -145,6 +145,7 @@
   (:import-from #:screenshotbot/figma/dropdown
                 #:figma-drop-down)
   (:export
+   #:find-commit-path-to-ancestor
    #:render-acceptable
    #:render-diff-report
    #:warmup-comparison-images)
@@ -1065,17 +1066,23 @@ additional actions in the More dropdown menu.
      <span>empty run</span>)))
 
 (defun find-commit-path-to-ancestor (run to)
+  "Find the commits from the current run to a previous run. If no path
+exists (or is too long), we return NIL.
+
+We return three values: the path, the hash associated with the current
+run, and the hash associated with the previous run."
   (let* ((repo (channel-repo (recorder-run-channel run)))
          (this-hash (recorder-run-commit run))
          (prev-hash (?. recorder-run-commit to))
          (commit-graph (commit-graph repo))
          (dag (commit-graph-dag commit-graph)))
-    (values
-     (dag:best-path dag
-                    this-hash
-                    prev-hash)
-     this-hash
-     prev-hash)))
+    (when (and this-hash prev-hash)
+      (values
+       (dag:best-path dag
+                      this-hash
+                      prev-hash)
+       this-hash
+       prev-hash))))
 
 (defun %commits-between (run to)
   (let ((repo (channel-repo (recorder-run-channel run))))

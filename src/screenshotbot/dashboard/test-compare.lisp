@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:find-commit-path-to-ancestor
                 #:render-diff-report
                 #:render-single-change-permalink
                 #:metrics-page
@@ -76,6 +77,14 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
+  (:import-from #:screenshotbot/user-api
+                #:channel-repo)
+  (:import-from #:screenshotbot/git-repo
+                #:commit-graph
+                #:commit-graph-dag)
+  (:import-from #:screenshotbot/model/commit-graph
+                #:merge-dag-into-commit-graph
+                #:find-or-create-commit-graph)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-compare)
 
@@ -379,6 +388,74 @@
       (let ((dropdown-menu (mquery:$ ".review-dropdown-menu")))
         (assert-that dropdown-menu (has-length 1))
         (mquery:add-class dropdown-menu "show")))))
+
+(test find-commit-path-to-ancestor-happy-path
+  (with-fixture state ()
+    (with-test-user (:user user
+                     :company company
+                     :logged-in-p t)
+      (let* ((repo-url "https://github.com/test/repo")
+             ;; Create commit hashes (40 hex chars)
+             (commit-a "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+             (commit-b "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+             (commit-c "cccccccccccccccccccccccccccccccccccccccc")
+             ;; Set up the commit graph with a DAG: A -> B -> C
+             (cg (find-or-create-commit-graph company repo-url))
+             (dag (make-instance 'dag:dag)))
+        ;; Add commits: A has parent B, B has parent C, C is root
+        (dag:add-commit dag (make-instance 'dag:commit
+                                           :sha commit-c
+                                           :parents nil))
+        (dag:add-commit dag (make-instance 'dag:commit
+                                           :sha commit-b
+                                           :parents (list commit-c)))
+        (dag:add-commit dag (make-instance 'dag:commit
+                                           :sha commit-a
+                                           :parents (list commit-b)))
+        (merge-dag-into-commit-graph cg dag)
+        ;; Create channel with the repo URL
+        (let* ((channel (make-instance 'channel
+                                       :company company
+                                       :name "test-channel"
+                                       :github-repo repo-url))
+               ;; Create runs with commits
+               (run (make-recorder-run
+                     :channel channel
+                     :company company
+                     :commit-hash commit-a))
+               (to (make-recorder-run
+                    :channel channel
+                    :company company
+                    :commit-hash commit-c)))
+          ;; Test find-commit-path-to-ancestor
+          (multiple-value-bind (path this-hash prev-hash)
+              (find-commit-path-to-ancestor run to)
+            (is (equal (list commit-a commit-b commit-c) path))
+            (is (equal commit-a this-hash))
+            (is (equal commit-c prev-hash))))))))
+
+(test find-commit-path-to-ancestor-when-no-commit-hashes
+  (with-fixture state ()
+    (with-test-user (:user user
+                     :company company
+                     :logged-in-p t)
+      (let* ((repo-url "https://github.com/test/repo"))
+        ;; Create channel with the repo URL
+        (let* ((channel (make-instance 'channel
+                                       :company company
+                                       :name "test-channel"
+                                       :github-repo repo-url))
+               ;; Create runs with commits
+               (run (make-recorder-run
+                     :channel channel
+                     :company company))
+               (to (make-recorder-run
+                    :channel channel
+                    :company company)))
+          ;; Test find-commit-path-to-ancestor
+          (multiple-value-bind (path this-hash prev-hash)
+              (find-commit-path-to-ancestor run to)
+            (is (equal nil path))))))))
 
 
 
