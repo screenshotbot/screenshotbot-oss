@@ -15,6 +15,7 @@
                 #:find-or-create-slack-config
                 #:slack-post-on-channel)
   (:import-from #:screenshotbot/slack/task-integration
+                #:format-blame
                 #:render-text
                 #:render-tags
                 #:slack-task-integration)
@@ -61,8 +62,11 @@
                     (lambda (&rest args)
                       (push args posts)))
          (let* ((company (make-instance 'company))
-                (channel (make-instance 'channel :name "foobar"))
+                (channel (make-instance 'channel :name "foobar"
+                                        :company company
+                                        :github-repo "https://github.com/tdrhq/fast-example"))
                 (run (make-recorder-run
+                      :channel channel
                       :work-branch work-branch
                       :screenshots nil
                       :tags tags))
@@ -163,3 +167,25 @@
       (send-task self report))
     (assert-that posts
                  (has-length 1))))
+
+(test format-blame-with-single-commit
+  (with-fixture state ()
+    (let ((path (list "abc123def456" "base-commit")))
+      (assert-that
+       (format-blame report path)
+       (matches-regex " \\| Blames to <.*\\|abc123de>")))))
+
+(test format-blame-with-multiple-commits
+  (with-fixture state ()
+    (let* ((previous-run (make-recorder-run
+                          :channel channel
+                          :screenshots nil))
+           (report (make-instance 'report
+                                  :channel channel
+                                  :run run
+                                  :previous-run previous-run
+                                  :title "foobar"))
+           (path (list "commit1" "commit2" "commit3")))
+      (assert-that
+       (format-blame report path)
+       (matches-regex " \\| <.*blame.*\\|Blame commits>")))))

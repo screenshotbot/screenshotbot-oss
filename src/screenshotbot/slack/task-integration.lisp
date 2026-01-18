@@ -15,6 +15,8 @@
         #:screenshotbot/model/report
         #:anaphora
         #:screenshotbot/slack/core)
+  (:export
+   #:format-blame)
   (:import-from #:screenshotbot/dashboard/reports
                 #:report-link)
   (:import-from #:screenshotbot/slack/core
@@ -30,7 +32,16 @@
   (:import-from #:screenshotbot/model/company
                 #:company-with-name)
   (:import-from #:screenshotbot/model/user
-                #:user-personal-company))
+                #:user-personal-company)
+  (:import-from #:screenshotbot/dashboard/compare
+                #:find-commit-path-to-ancestor)
+  (:import-from #:screenshotbot/user-api
+                #:commit-link)
+  (:import-from #:util/store/object-id
+                #:oid)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:installation-domain))
 (in-package :screenshotbot/slack/task-integration)
 
 (defclass slack-task-integration (task-integration)
@@ -50,7 +61,35 @@
      (t
       ""))))
 
-(defun render-text (report)
+(defun find-report-path (report)
+  (find-commit-path-to-ancestor
+   (report-run report)
+   (report-previous-run report)))
+
+(defun format-blame (report path)
+  (when-let* ((run (report-run report))
+              (channel (recorder-run-channel run))
+              (repo (channel-repo channel)))
+    (cond
+      ((eql 2 (length path))
+       (let ((hash (car path)))
+        (format nil " | Blames to <~a|~a>"
+                (commit-link repo hash)
+                (str:substring 0 8 hash))))
+      ((> (length path) 2)
+       (format nil " | <~a|Blame commits>"
+               (quri:merge-uris
+                (hex:make-url
+                 "/blame/:run/to/:to"
+                 :run (oid (report-run report))
+                 :to (oid
+                      ;; There *will* be a previous run since we found
+                      ;; a path.
+                      (report-previous-run report)))
+                (installation-domain *installation*)))))))
+
+(defun render-text (report
+                    &key (path (find-report-path report)))
   (let ((run (report-run report))
         (first-line (format nil "Screenshots changed in *~a*~a"
                                (channel-name (report-channel report))
@@ -58,13 +97,14 @@
         (second-line (format nil "<~a|~a>"
                              (report-link report)
                              (report-title report))))
-    (format nil "~a~%~a"
+    (format nil "~a~%~a~a"
             (cond
               ((?. recorder-run-work-branch run)
                (format nil "~a on *~a*" first-line (recorder-run-work-branch run)))
               (t
                first-line))
-            second-line)))
+            second-line
+            (or (format-blame report path) "unknown"))))
 
 (defmethod actually-post-on-channel (channel
                                      report
