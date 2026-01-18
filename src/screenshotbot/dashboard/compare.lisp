@@ -1064,39 +1064,45 @@ additional actions in the More dropdown menu.
     (t
      <span>empty run</span>)))
 
-(defun %commits-between (run to)
+(defun find-commit-path-to-ancestor (run to)
   (let* ((repo (channel-repo (recorder-run-channel run)))
          (this-hash (recorder-run-commit run))
          (prev-hash (?. recorder-run-commit to))
          (commit-graph (commit-graph repo))
          (dag (commit-graph-dag commit-graph)))
-    (let ((path
-           (dag:best-path dag
-                          this-hash
-                          prev-hash)))
-      (declare (ignore ancestorp))
+    (values
+     (dag:best-path dag
+                    this-hash
+                    prev-hash)
+     this-hash
+     prev-hash)))
+
+(defun %commits-between (run to)
+  (let ((repo (channel-repo (recorder-run-channel run))))
+    (declare (ignore ancestorp))
+    (multiple-value-bind (path this-hash prev-hash)
+        (find-commit-path-to-ancestor run to)
       (cond
-        ((not path)
-         <simple-card-page>
-           <div class= "card-body" >
-             Could not find path in Git graph from <commit repo=repo hash=this-hash />
-             to <commit repo=repo hash=prev-hash />
-           </div>
-         </simple-card-page>)
-        (t
-         <simple-card-page>
-           <div class= "card-header">
-             <h4>Blame commits</h4>
-           </div>
-           <p>
-             This change could be blamed to one or more of these commits:
-           </p>
-           <ol>
-           ,@ (loop for node in (butlast path)
-                    collect <li><commit repo=repo hash=node /></li>)
-           </ol>
-           
-         </simple-card-page>)))))
+       ((not path)
+        <simple-card-page>
+          <div class= "card-body" >
+            Could not find path in Git graph from <commit repo=repo hash=this-hash />
+            to <commit repo=repo hash=prev-hash />
+          </div>
+        </simple-card-page>)
+       (t
+        <simple-card-page>
+          <div class= "card-header">
+            <h4>Blame commits</h4>
+          </div>
+          <p>
+            This change could be blamed to one or more of these commits:
+          </p>
+          <ol>
+            ,@ (loop for node in (butlast path)
+                     collect <li><commit repo=repo hash=node /></li>)
+          </ol>
+        </simple-card-page>)))))
 
 (defun info-modal (run to)
   <div class="modal" tabindex="-1" id= "comparison-info-modal" >
