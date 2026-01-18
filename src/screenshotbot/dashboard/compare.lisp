@@ -134,6 +134,7 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/git-repo
+                #:generic-git-repo
                 #:commit-graph-dag
                 #:commit-graph)
   (:import-from #:screenshotbot/login/common
@@ -1089,27 +1090,30 @@ run, and the hash associated with the previous run."
     (declare (ignore ancestorp))
     (multiple-value-bind (path this-hash prev-hash)
         (find-commit-path-to-ancestor run to)
-      (cond
-       ((not path)
-        <simple-card-page>
-          <div class= "card-body" >
-            Could not find path in Git graph from <commit repo=repo hash=this-hash />
-            to <commit repo=repo hash=prev-hash />
-          </div>
-        </simple-card-page>)
-       (t
-        <simple-card-page>
-          <div class= "card-header">
-            <h4>Blame commits</h4>
-          </div>
-          <p>
-            This change could be blamed to one or more of these commits:
-          </p>
-          <ol>
-            ,@ (loop for node in (butlast path)
-                     collect <li><commit repo=repo hash=node /></li>)
-          </ol>
-        </simple-card-page>)))))
+      (%render-commits-path repo path this-hash prev-hash))))
+
+(defmethod %render-commits-path ((repo generic-git-repo) path this-hash prev-hash)
+  (cond
+    ((not path)
+     <simple-card-page>
+       <div class= "card-body" >
+         Could not find path in Git graph from <commit repo=repo hash=this-hash />
+         to <commit repo=repo hash=prev-hash />
+       </div>
+     </simple-card-page>)
+    (t
+     <simple-card-page>
+       <div class= "card-header">
+         <h4>Blame commits</h4>
+       </div>
+       <p>
+         This change could be blamed to one or more of these commits:
+       </p>
+       <ol>
+         ,@ (loop for node in (butlast path)
+                  collect <li><commit repo=repo hash=node /></li>)
+       </ol>
+     </simple-card-page>)))
 
 (defhandler (nil :uri "/blame/:run/to/:to") (run to)
   (let ((run (util:find-by-oid run))

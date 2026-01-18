@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:%render-commits-path
                 #:find-commit-path-to-ancestor
                 #:render-diff-report
                 #:render-single-change-permalink
@@ -80,6 +81,7 @@
   (:import-from #:screenshotbot/user-api
                 #:channel-repo)
   (:import-from #:screenshotbot/git-repo
+                #:generic-git-repo
                 #:commit-graph
                 #:commit-graph-dag)
   (:import-from #:screenshotbot/model/commit-graph
@@ -456,6 +458,29 @@
           (multiple-value-bind (path this-hash prev-hash)
               (find-commit-path-to-ancestor run to)
             (is (equal nil path))))))))
+
+(screenshot-test render-commits-path
+  (with-fixture state ()
+   (let ((repo (make-instance 'generic-git-repo :link "https://github.com/tdrhq/fast-example"))
+         (commit-a "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+         (commit-b "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
+         (commit-c "cccccccccccccccccccccccccccccccccccccccc"))
+     (%render-commits-path
+      repo
+      (list commit-a commit-b commit-c)
+      commit-a
+      commit-c))))
+
+(screenshot-test could-not-find-commit-path
+  (with-fixture state ()
+   (let ((repo (make-instance 'generic-git-repo :link "https://github.com/tdrhq/fast-example"))
+         (commit-a "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+         (commit-c "cccccccccccccccccccccccccccccccccccccccc"))
+     (%render-commits-path
+      repo
+      nil
+      commit-a
+      commit-c))))
 
 
 
