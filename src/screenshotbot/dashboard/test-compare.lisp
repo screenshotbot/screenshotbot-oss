@@ -459,6 +459,26 @@
               (find-commit-path-to-ancestor run to)
             (is (equal nil path))))))))
 
+(test find-commit-path-when-{to}-does-not-exist
+  (with-fixture state ()
+    (with-test-user (:user user
+                     :company company
+                     :logged-in-p t)
+      (let* ((repo-url "https://github.com/test/repo"))
+        ;; Create channel with the repo URL
+        (let* ((channel (make-instance 'channel
+                                       :company company
+                                       :name "test-channel"
+                                       :github-repo repo-url))
+               ;; Create runs with commits
+               (run (make-recorder-run
+                     :channel channel
+                     :company company)))
+          ;; Test find-commit-path-to-ancestor
+          (multiple-value-bind (path this-hash prev-hash)
+              (find-commit-path-to-ancestor run nil)
+            (is (equal nil path))))))))
+
 (screenshot-test render-commits-path
   (with-fixture state ()
    (let ((repo (make-instance 'generic-git-repo :link "https://github.com/tdrhq/fast-example"))
