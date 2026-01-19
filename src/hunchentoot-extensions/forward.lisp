@@ -53,6 +53,7 @@ keep the Host header the same."
            :want-stream t
            :decode-content nil
            :redirect nil
+           :preserve-uri t
            :user-agent (hunchentoot:header-in :User-agent request)
            :content-type (hunchentoot:header-in :content-type request)
            :content body)
