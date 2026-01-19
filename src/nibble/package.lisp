@@ -17,4 +17,6 @@
            #:nibble-current-user
            #:nibble-acceptor-mixin
            #:allow-user-change
-           #:nibble-funcall))
+           #:nibble-funcall
+           #:expired-nibble-src
+           #:expired-nibble))

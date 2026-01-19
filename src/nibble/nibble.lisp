@@ -194,6 +194,7 @@ nibble or not."
   ((name :initarg :name
          :initform nil)
    (src :initarg :src
+        :reader expired-nibble-src
         :initform nil))
   (:report (lambda (self stream)
              (with-slots (name src) self
