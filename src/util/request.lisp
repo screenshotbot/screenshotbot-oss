@@ -137,7 +137,7 @@ use stream pools.")
          :reader bad-response-code-body))
   (:report (lambda (e output)
              (with-slots (code url) e
-               (format output "Got response code ~a when downloading ~a" code url)))))
+               (format output "Got response code ~a when requesting ~a" code url)))))
 
 
 (defmethod http-request-impl ((engine core-engine)
