@@ -92,8 +92,10 @@
   :selector "api-hostname"
   :default-value ""
   :type string
-  :help "Screenshotbot API Endpoint"
-  :documentation "Only used for Enterprise or Open Source users, Defaults to `https://api.screenshotbot.io` or $SCREENSHOTBOT_API_HOSTNAME")
+  :help "The API endpoint we connect to. This is not required for most users,
+since the hostname is encoded in the API secret. If your Screenshotbot
+domain was moved, then this might be useful. We also read
+SCREENSHOTBOT_API_HOSTNAME environment variable.")
 
 
 (def-easy-macro with-defaults (&binding api-context &fn fn)
