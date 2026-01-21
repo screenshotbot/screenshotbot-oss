@@ -142,6 +142,7 @@ session-value, and until there there might be no session available."
     (set-cookie (cookie-name)
                 :value token :domain domain :expires (+ (get-universal-time) (* (- (* 30 24) 8)  3600))
                 :http-only t
+                :same-site "Lax" ;; Strict breaks OAuth
                 :path "/" :secure (and
                                    *secure-cookie-p*
                                    (string=
