@@ -70,6 +70,10 @@ user. The intention of this flag is to set to NIL for some tests.")
 (defmethod authenticate-api-request ((request auth:authenticated-request))
   "Like auth:authenticate-request, but for API handling, and modifies the request"
   (with-api-key (api-key api-secret-key)
+    ;; temporary hack: PS. (we don't consider the key id a secret)
+    (when (equal api-key "56E7E9FLRVOTTJ5SUV0J")
+      (hex:forward-request "https://postcodelottery.screenshotbot.io"))
+    
     ;; If api-key is not provided, try to extract it from api-secret
     (let ((api-key (if (or (null api-key) (equal "" api-key))
                        (ignore-errors
