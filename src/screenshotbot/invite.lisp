@@ -52,10 +52,13 @@
   (:import-from #:auth/model/invite
                 #:all-invites)
   (:import-from #:core/installation/auth-provider
+                #:auth-providers
                 #:default-oidc-provider
                 #:company-sso-auth-provider)
   (:import-from #:core/installation/installation
                 #:*installation*)
+  (:import-from #:auth/login/roles-auth-provider
+                #:company-provider)
   (:local-nicknames (#:roles #:auth/model/roles))
   (:export
    #:invite-page
@@ -69,7 +72,16 @@
 (defmethod invite-enabled-p (company)
   (and
    (not (company-sso-auth-provider company))
-   (not (default-oidc-provider *installation*))))
+   (not (default-oidc-provider *installation*))
+   (not
+    (every #'has-company-provider-p
+           (auth-providers *installation*)))))
+
+
+(defun has-company-provider-p (auth-provider)
+  (when-let ((company-provider (company-provider auth-provider)))
+    (funcall company-provider)))
+
 
 (defmethod user-can-invite-p (company user)
   (and

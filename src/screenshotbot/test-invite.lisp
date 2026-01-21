@@ -46,10 +46,13 @@
                 #:invite-used-p
                 #:invite-code)
   (:import-from #:core/installation/auth-provider
+                #:auth-providers
                 #:default-oidc-provider
                 #:company-sso-auth-provider)
   (:import-from #:core/installation/installation
-                #:*installation*))
+                #:*installation*)
+  (:import-from #:screenshotbot/login/common
+                #:standard-auth-provider))
 (in-package :screenshotbot/test-invite)
 
 (util/fiveam:def-suite)
@@ -211,3 +214,35 @@
     (is-true (invite-enabled-p company))
     (setf (default-oidc-provider *installation*) 'fake)
     (is-false (invite-enabled-p company))))
+
+(test invite-enabled-p-with-company-provider
+  (with-fixture state ()
+    (is-true company)
+    (setf (auth-providers *installation*)
+          (list
+           (make-instance 'standard-auth-provider
+                          :verify-email-p t
+                          :company-provider (lambda ()
+                                              company))))
+    (is-false (invite-enabled-p company))))
+
+(test invite-enabled-p-without-company-provider
+  (with-fixture state ()
+    (is-true company)
+    (setf (auth-providers *installation*)
+          (list
+           (make-instance 'standard-auth-provider
+                          :verify-email-p t
+                          :company-provider nil)))
+    (is-true (invite-enabled-p company))))
+
+(test invite-enabled-p-with-nil-company-provider
+  (with-fixture state ()
+    (is-true company)
+    (setf (auth-providers *installation*)
+          (list
+           (make-instance 'standard-auth-provider
+                          :verify-email-p t
+                          :company-provider (lambda ()
+                                              nil))))
+    (is-true (invite-enabled-p company))))
