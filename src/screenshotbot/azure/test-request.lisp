@@ -14,7 +14,17 @@
   (:import-from #:screenshotbot/azure/request
                 #:azure-unauthorized-error
                 #:azure-request
-                #:azure))
+                #:azure)
+  (:import-from #:screenshotbot/azure/promoter
+                #:push-remote-check-impl)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run)
+  (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check))
 (in-package :screenshotbot/azure/test-request)
 
 
@@ -24,19 +34,26 @@
   (cl-mock:with-mocks ()
     ;; if you need a non-401-engine, still keep this around as a
     ;; default for these dtests.
-    (let ((*engine* (make-instance '401-engine))
-          (azure (make-instance 'azure
-                                :token "dfd"
-                                :organization "testsbot"
-                                :project "fast-example")))
-     (&body))))
+    (with-test-store ()
+      (let* ((*engine* (make-instance '401-engine))
+             (company (make-instance 'company))
+             (run (make-recorder-run :screenshots nil :company company)))
+        (gk:create :azure-commit-status)
+        (let ((azure (make-instance 'azure
+                                    :token "dfd"
+                                    :organization "testsbot"
+                                    :project "fast-example")))
+          (&body))))))
 
 (defclass 401-engine ()
   ())
 
+(defvar *request-callback* (lambda (url &key &allow-other-keys)
+                             (values "" 401 nil)))
+
 (defmethod http-request-impl ((self 401-engine)
-                              url &key &allow-other-keys)
-  (values "" 401 nil))
+                              url &rest args &key &allow-other-keys)
+  (apply *request-callback* self args))
 
 (test handles-401-more-gracefully
   (with-fixture state ()
@@ -45,4 +62,37 @@
        azure
        "foo/bar"
        :method :post))))
+
+(test push-remote-check-impl-happy-path
+  (let ((*request-callback* (lambda (url &key &allow-other-keys)
+                    (values "{}" 200 nil))))
+    (with-fixture state ()
+      (finishes
+       (push-remote-check-impl
+        azure
+        :run run
+        :repo "testbot/fast-example"
+        :check (make-instance 'check
+                              :key "blahblah"
+                              :sha "abcd"
+                              :title "Foobarxs"
+                              :details-url "https://example.com"
+                              :status :accepted))))))
+
+(test push-remote-check-impl-with-new-azure-commit-status
+  (let ((*request-callback* (lambda (url &key &allow-other-keys)
+                              (values "{}" 200 nil))))
+    (with-fixture state ()
+      (gk:allow :azure-commit-status company)
+      (finishes
+       (push-remote-check-impl
+        azure
+        :run run
+        :repo "testbot/fast-example"
+        :check (make-instance 'check
+                              :key "blahblah"
+                              :sha "abcd"
+                              :title "Foobarxs"
+                              :details-url "https://example.com"
+                              :status :accepted))))))
 

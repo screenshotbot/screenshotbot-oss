@@ -8,6 +8,7 @@
   (:use #:cl
         #:screenshotbot/azure/plugin)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:check-sha
                 #:check-key
                 #:make-promoter-for-acceptable
                 #:details-url
@@ -39,6 +40,7 @@
   (:import-from #:util/store
                 #:with-class-validation)
   (:import-from #:screenshotbot/azure/request
+                #:create-commit-status
                 #:azure-unauthorized-error
                 #:git-status-context
                 #:pull-request-status
@@ -128,24 +130,40 @@ into run warnings"
                                     :organization org
                                     :project project)))
           (with-run-warnings (run)
-            (create-pull-request-status
-             azure
-             (make-instance 'pull-request-status
-                            :description (format nil "Screenshotbot: ~a"
-                                                 (check-title check))
-                            :state (ecase (check-status check)
-                                     (:accepted +succeeded+)
-                                     (:pending +pending+)
-                                     (:rejected +failed+)
-                                     (:success +succeeded+)
-                                     (:failure +failed+)
-                                     (:action-required +failed+))
-                            :target-url (details-url check)
-                            :context (make-instance 'git-status-context
-                                                    :name (check-key check)))
-             :company (recorder-run-company run)
-             :repository-id repo
-             :pull-request-id (pull-request-id run))))))))
+            (push-remote-check-impl azure
+                                    :run run
+                                    :repo repo
+                                    :check check)))))))
+
+(defmethod push-remote-check-impl (azure &key repo run check)
+  (let ((status (make-instance 'pull-request-status
+                               :description (format nil "Screenshotbot: ~a"
+                                                    (check-title check))
+                               :state (ecase (check-status check)
+                                        (:accepted +succeeded+)
+                                        (:pending +pending+)
+                                        (:rejected +failed+)
+                                        (:success +succeeded+)
+                                        (:failure +failed+)
+                                        (:action-required +failed+))
+                               :target-url (details-url check)
+                               :context (make-instance 'git-status-context
+                                                       :name (check-key check)))))
+   (cond
+     ((gk:check :azure-commit-status (recorder-run-company run))
+      (create-commit-status
+       azure
+       status
+       :company (recorder-run-company run)
+       :repository-id repo
+       :commit-id (check-sha check)))
+     (t
+      (create-pull-request-status
+       azure
+       status
+       :company (recorder-run-company run)
+       :repository-id repo
+       :pull-request-id (pull-request-id run))))))
 
 (defmethod make-promoter-for-acceptable ((acceptable azure-acceptable))
   (make-instance 'azure-promoter))
