@@ -43,8 +43,9 @@ the node-id directly."
   (assert x)
   (util/misc:or-setf
    (gethash x *node-id-cache*)
-   (let ((arr
-           (ironclad:hex-string-to-byte-array x)))
+   (when-let ((arr
+               (ignore-errors
+                (ironclad:hex-string-to-byte-array x))))
      (let ((ret 0))
        (loop for i across arr do
          (setf ret
@@ -84,7 +85,7 @@ checks and on the commit graph debug page."
           collect (gethash id (commit-map dag)))))
 
 (defmethod get-commit ((dag dag) (sha string))
-  (let ((id (commit-node-id sha)))
+  (when-let ((id (commit-node-id sha)))
     (log:debug "Commit id for ~a is ~a" sha id)
     (gethash id (commit-map dag))))
 

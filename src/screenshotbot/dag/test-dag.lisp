@@ -625,3 +625,7 @@ for you."
       (let ((result (dag:dag-difference dag other)))
         (assert-that (mapcar #'sha (all-commits result))
                      (has-item "aa"))))))
+
+(test invalid-commit-hash
+  (with-fixture state ()
+    (is (eql nil (dag:get-commit dag "abcdef2")))))
