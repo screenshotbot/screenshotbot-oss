@@ -13,9 +13,18 @@
   (:import-from #:screenshotbot/audit-log
                 #:with-audit-log)
   (:import-from #:screenshotbot/azure/audit-log
-                #:pr-update-request)
+                #:pr-update-request
+                #:commit-update-request)
   (:import-from #:alexandria
-                #:assoc-value))
+                #:assoc-value)
+  (:export
+   #:azure
+   #:azure-error
+   #:azure-unauthorized-error
+   #:git-status-context
+   #:pull-request-status
+   #:create-pull-request-status
+   #:create-commit-status))
 (in-package :screenshotbot/azure/request)
 
 
@@ -57,9 +66,9 @@
    (project :initarg :project
             :reader project)))
 
-(defvar *test-azure* (make-instance 'azure :token *token*
-                                           :organization "testsbot"
-                                           :project "fast-example"))
+(defparameter *test-azure* (make-instance 'azure :token *token*
+                                                 :organization "testsbot"
+                                                 :project "fast-example"))
 
 (define-condition azure-error (simple-error)
   ((headers :initarg :headers)))
@@ -129,6 +138,31 @@
      :response-type 'pull-request-status
      :content status)))
 
+(defmethod create-commit-status (azure status
+                                 &key repository-id
+                                   company
+                                   commit-id)
+  (declare (optimize (speed 0) (debug 3)))
+  (with-audit-log (audit-log (make-instance 'commit-update-request
+                                            :commit-id commit-id
+                                            :company company
+                                            :repository-id repository-id))
+    (declare (ignore audit-log))
+    (azure-request
+     azure
+     (format nil
+             "git/repositories/~a/commits/~a/statuses"
+             repository-id
+             commit-id)
+     :method :post
+     :response-type 'pull-request-status
+     :content status)))
+
+
+
+;; See https://phabricator.tdrhq.com/w/azure_devops/
+
+
 #|
 https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=azure-devops&tabs=browser#build-validation
 |#
@@ -144,3 +178,15 @@ https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies?view=az
                                         :name "foobar"))
  :repository-id "fast-example"
  :pull-request-id 1)
+
+#+nil
+(create-commit-status
+ *test-azure*
+ (make-instance 'pull-request-status
+                :description "some stuff"
+                :state "succeeded"
+                :target-url "https://screenshotbot.io/runs"
+                :context (make-instance 'git-status-context
+                                        :name "foobar"))
+ :repository-id "fast-example"
+ :commit-id "55da297c51d36e34297004fd414ac14ea643342d")

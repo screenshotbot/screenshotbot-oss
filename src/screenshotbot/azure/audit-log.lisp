@@ -13,7 +13,8 @@
   (:import-from #:util/store/store
                 #:with-class-validation)
   (:export
-   #:pr-update-request))
+   #:pr-update-request
+   #:commit-update-request))
 (in-package :screenshotbot/azure/audit-log)
 
 (with-class-validation
@@ -24,6 +25,13 @@
 (defclass pr-update-request (audit-log)
   ((pr-id :initarg :pr-id
           :reader pr-id)
+   (repository-id :initarg :repository-id
+                  :reader audit-log-repository-id))
+  (:metaclass persistent-class))
+
+(defclass commit-update-request (audit-log)
+  ((commit-id :initarg :commit-id
+              :reader commit-id)
    (repository-id :initarg :repository-id
                   :reader audit-log-repository-id))
   (:metaclass persistent-class))
