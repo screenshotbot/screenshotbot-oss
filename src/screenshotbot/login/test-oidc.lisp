@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/login/test-oidc
   (:use :cl)
   (:import-from #:auth
+                #:user-email
                 #:oauth-user-email
                 #:oauth-user-user)
   (:import-from #:bknr.datastore
@@ -21,32 +22,43 @@
   (:import-from #:oidc/oidc
                 #:after-authentication)
   (:import-from #:screenshotbot/login/oidc
+                #:update-oidc-user
                 #:%email
                 #:%user
                 #:oidc-provider
                 #:oidc-user)
   (:import-from #:screenshotbot/testing
+                #:with-installation
                 #:with-test-user)
   (:import-from #:util/store/object-id
                 #:oid)
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:screenshotbot/user-api
+                #:user)
+  (:import-from #:screenshotbot/login/signup
+                #:*signup-throttler*)
+  (:import-from #:util/throttler
+                #:keyed-throttler
+                #:throttler))
 (in-package :screenshotbot/login/test-oidc)
 
 (util/fiveam:def-suite)
 
 (def-fixture state (&key expiration-seconds)
-  (cl-mock:with-mocks ()
-   (with-test-store ()
-     (with-fake-request ()
-       (with-test-user (:user user)
-         (auth:with-sessions ()
-           (let ((auth (make-instance 'oidc-provider
-                                      :expiration-seconds expiration-seconds
-                                      :identifier 'foo)))
-             (&body))))))))
+  (let ((*signup-throttler* (make-instance 'keyed-throttler :tokens 100)))
+    (cl-mock:with-mocks ()
+      (with-installation ()
+        (with-test-store ()
+          (with-fake-request ()
+            (with-test-user (:user user)
+              (auth:with-sessions ()
+                (let ((auth (make-instance 'oidc-provider
+                                           :expiration-seconds expiration-seconds
+                                           :identifier 'foo)))
+                  (&body))))))))))
 
 (test happy-path
   (with-fixture state ()
@@ -101,3 +113,41 @@
      (is (equal "ack" (oauth-user-user
                        (make-instance 'oidc-user
                                       :old-user-slot "ack")))))))
+
+(test we-dont-override-an-existing-user-with-a-given-email
+  (with-fixture state ()
+    (let ((other-user (make-instance 'user :email "foo@example.com"))
+          (oidc-user (make-instance 'oidc-user)))
+      (let ((user1 (update-oidc-user
+                    oidc-user
+                    :email "bar@example.com"
+                    :user-id "ignored"
+                    :full-name "Foo Bar"
+                    :avatar "https://example.com/fake.png")))
+        (is
+         (eql user1 (update-oidc-user
+                     oidc-user
+                     :email "foo@example.com"
+                     :user-id "ignored"
+                     :full-name "Foo Bar"
+                     :avatar "https://example.com/fake.png")))
+        (is (not (eql user1 other-user)))
+        (is (equal "bar@example.com" (user-email user1)))
+        (is (equal "foo@example.com" (user-email other-user)))
+        (is (equal (list oidc-user)
+                   (auth:oauth-users user1)))
+        (is (equal nil (auth:oauth-users other-user)))))))
+
+(test we-DO-override-an-existing-user-if-theres-no-current-user
+  (with-fixture state ()
+    (let ((other-user (make-instance 'user :email "foo@example.com"))
+          (oidc-user (make-instance 'oidc-user)))
+      (let ((user1 (update-oidc-user
+                    oidc-user
+                    :email "foo@example.com"
+                    :user-id "ignored"
+                    :full-name "Foo Bar"
+                    :avatar "https://example.com/fake.png")))
+        (is (eql other-user user1))
+        (is (equal (list oidc-user)
+                   (auth:oauth-users other-user)))))))

@@ -186,16 +186,31 @@ user as used in Screenshotbot)"
       ;; ensure two way mapping.
       (pushnew oauth-user (auth:oauth-users user))
       (setf (oauth-user-user oauth-user) user))
-    ;; what happens if there's another user with the current email?
-    ;; For instance, if the Oauth session changed their email address?
-    ;; In that case, we ignore and don't make the email change.
-    (ignore-errors
-     (with-transaction (:set-user-email)
-       (setf (user-email user) email)))
+
+    (maybe-set-user-primary-email
+     user
+     email)
 
     (when first-time-p
       (after-create-user *installation* user))
     user))
+
+(defun maybe-set-user-primary-email (user email)
+  ;; what happens if there's another user with the current email?
+  ;; For instance, if the Oauth session changed their email address?
+  ;; In that case, we ignore and don't make the email change.
+  (let ((old-user-for-email (auth:find-user
+                             *installation*
+                             :email email)))
+    (cond
+      ((and
+        old-user-for-email
+        (not (eql old-user-for-email user)))
+       ;; uh oh, there's already a user with that email, we're not
+       ;; going to update their primary email.
+       (values))
+      (t
+       (setf (user-email user) email)))))
 
 
 
