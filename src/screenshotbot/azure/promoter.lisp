@@ -151,6 +151,9 @@ into run warnings"
                                                        :name (check-key check)))))
    (cond
      ((gk:check :azure-commit-status (recorder-run-company run))
+      ;; This doesn't work yet. By default it seems like DevOps runs
+      ;; the build against the merge commit, and the override commit
+      ;; hash is not properly computed.
       (create-commit-status
        azure
        status
