@@ -129,7 +129,9 @@
 
 (defmethod auth:authenticate-request :after ((request request))
   (mark-active-user :user (auth:request-user request)
-                    :company (auth:request-account request)))
+                    :company (auth:request-account request)
+                    :ip (ignore-errors ;; might not be bound in tests
+                         (hunchentoot:real-remote-addr request))))
 
 (defvar *acceptor*
   (make-instance 'acceptor

@@ -39,9 +39,16 @@
      (%company :initarg :company
                :reader company)
      (%date :initarg :date
-            :reader active-user-date))
+            :reader active-user-date)
+     (%ip-address :initform (make-hash-table :test #'equal)
+                  :transient t
+                  :accessor active-user-ip-addresses
+                  :documentation "All the IP addresses this has been accessed from. This is a transient
+slot and is not stored to disk, so we don't need to hash the IP
+addresses."))
     (:class-indices (3d-coords :index +lookup-index+))
     (:metaclass persistent-class)))
+
 
 (defun active-users-for-company (company &key (days-ago 60)
                                            (company-test #'eql))
@@ -63,27 +70,34 @@ sub-companies, which this code can't be aware of."
     (declare (ignore second minute hour))
     (format nil "~4,'0d-~2,'0d-~2,'0d" year month date)))
 
-(defun mark-active-user-impl (&key user company (date (get-universal-time)))
+(defun mark-active-user-impl (&key user company (date (get-universal-time)) ip)
   (when (and user company)
     (let ((date (format-date date)))
-      (unless (index-get +lookup-index+ (list date user company))
-        (make-instance 'active-user
-                       :user user
-                       :company company
-                       :date date)))))
+      (let ((event
+              (or (index-get +lookup-index+ (list date user company))
+                  (make-instance 'active-user
+                                 :user user
+                                 :company company
+                                 :date date))))
+        (when ip
+          (setf (gethash ip (active-user-ip-addresses event)) t))
+        event))))
 
 (defvar *events* nil)
 
 (defun mark-active-user (&rest args)
   "We don't want to wait on locks in the happy path, and we don't want
 reads to depend on writes."
-  (unless (and
-           (boundp 'hunchentoot:*request*)
-           (impersonatedp (make-impersonation)))
+  (unless (%impersonatedp)
     (atomics:atomic-push
      (lambda ()
        (apply #'mark-active-user-impl args))
      *events*)))
+
+(defun %impersonatedp ()
+  (and
+   (boundp 'hunchentoot:*request*)
+   (impersonatedp (make-impersonation))))
 
 (defun flush-events ()
   (bt:with-lock-held (*lock*)

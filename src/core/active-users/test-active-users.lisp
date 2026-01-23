@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:core/active-users/active-users
+                #:active-user-ip-addresses
                 #:*lock*
                 #:flush-events
                 #:*events*
@@ -25,7 +26,12 @@
   (:import-from #:bknr.datastore
                 #:class-instances)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:alexandria
+                #:hash-table-keys)
+  (:import-from #:fiveam-matchers/lists
+                #:contains-in-any-order
+                #:contains))
 (in-package :core/active-users/test-active-users)
 
 (util/fiveam:def-suite)
@@ -85,3 +91,17 @@
     (flush-events)
     (assert-that (class-instances 'active-user)
                  (has-length 1))))
+
+(test mark-with-ip-address-logs-ip
+  (with-fixture state ()
+    (mark-active-user :user :foo :company :bleh :date (get-universal-time) :ip "1.2.3.4")
+    (finishes (flush-events))
+    (let ((event (first (class-instances 'active-user))))
+      (assert-that (hash-table-keys (active-user-ip-addresses event))
+                   (contains "1.2.3.4")))
+    (mark-active-user :user :foo :company :bleh :date (get-universal-time) :ip "1.2.3.4")
+    (mark-active-user :user :foo :company :bleh :date (get-universal-time) :ip "1::2")
+    (flush-events)
+    (let ((event (first (class-instances 'active-user))))
+      (assert-that (hash-table-keys (active-user-ip-addresses event))
+                   (contains-in-any-order "1.2.3.4" "1::2")))))
