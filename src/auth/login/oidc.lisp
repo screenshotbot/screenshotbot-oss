@@ -17,8 +17,7 @@
                 #:user-email)
   (:import-from #:bknr.datastore
                 #:persistent-class
-                #:store-object
-                #:with-transaction)
+                #:store-object)
   (:import-from #:core/installation/installation
                 #:*installation*)
   (:import-from #:nibble
@@ -174,18 +173,17 @@
   "Update the OIDC user, and return the corresponding USER (i.e. the
 user as used in Screenshotbot)"
   (declare (ignore user-id))
-  (with-transaction (:initial-setup)
-    (setf (oauth-user-email oauth-user) email)
-    (setf (oauth-user-full-name oauth-user) full-name)
-    (setf (oauth-user-avatar oauth-user) avatar))
+  (setf (oauth-user-email oauth-user) email)
+  (setf (oauth-user-full-name oauth-user) full-name)
+  (setf (oauth-user-avatar oauth-user) avatar)
   (multiple-value-bind (user first-time-p)
     (or
      (oauth-user-user oauth-user)
      (auth:find-or-create-user *installation* :email email))
-    (with-transaction (:ensure-two-way-mapping)
-      ;; ensure two way mapping.
-      (pushnew oauth-user (auth:oauth-users user))
-      (setf (oauth-user-user oauth-user) user))
+
+    ;; ensure two way mapping.
+    (pushnew oauth-user (auth:oauth-users user))
+    (setf (oauth-user-user oauth-user) user)
 
     (maybe-set-user-primary-email
      user
