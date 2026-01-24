@@ -128,6 +128,10 @@
   ())
 
 (defmethod auth:authenticate-request :after ((request request))
+  "Tracks active users for analytics. Note: API calls (/api/*) don't
+get logged here because this runs before API authentication. For API
+requests, user/company are nil at this point, and mark-active-user is
+a no-op when either is nil."
   (mark-active-user :user (auth:request-user request)
                     :company (auth:request-account request)
                     :ip (ignore-errors ;; might not be bound in tests
