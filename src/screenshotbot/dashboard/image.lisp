@@ -211,7 +211,7 @@
        ;; safe to just pass the string.
        (ironclad:hex-string-to-byte-array oid)))
     (t
-     (encrypt:decrypt-mongoid oid))))
+     (error "signature not present in image URL"))))
 
 (def-easy-macro with-access-checked-image (&binding image oid &key ts signature &fn fn)
   (handler-case

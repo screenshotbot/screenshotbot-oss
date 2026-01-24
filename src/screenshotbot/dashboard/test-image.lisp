@@ -146,9 +146,9 @@
 (test with-access-checked-image
   (with-fixture state ()
     (let ((result-im))
-      (with-access-checked-image (image (encrypt:encrypt-mongoid (oid-array im)))
-        (setf result-im image))
-      (is (eql im result-im)))))
+      (signals error
+       (with-access-checked-image (image (encrypt:encrypt-mongoid (oid-array im)))
+         (setf result-im image))))))
 
 (test |/image/resized.webp happy path|
   (with-fixture state ()
@@ -160,10 +160,8 @@
 (length (mongoid:oid))
 
 (test %decode-oid-on-eoid
-  "This could probably be removed in the future"
   (with-fixture state ()
    (let ((oid (mongoid:oid)))
-     (is (equalp oid (%decode-oid (encrypt:encrypt-mongoid oid))))
      (signals-error-matching (timestamp-is-too-old)
        (%decode-oid
         (mongoid:oid-str oid)
@@ -178,7 +176,6 @@
         (contains-string "signature does not match"))))))
 
 (test %decode-oid-correctly-when-signature-is-present
-  "This could probably be removed in the future"
   (with-fixture state ()
     (let* ((oid (mongoid:oid))
            (oid-str (mongoid:oid-str oid)))
