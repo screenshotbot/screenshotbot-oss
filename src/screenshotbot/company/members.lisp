@@ -39,6 +39,7 @@
   (:import-from #:auth/model/invite
                 #:all-unused-invites)
   (:import-from #:screenshotbot/invite
+                #:user-can-invite-p
                 #:invite-enabled-p)
   (:import-from #:screenshotbot/server
                 #:defhandler)
@@ -154,14 +155,26 @@
       </span>
     </taskie-row>))
 
+(defun no-permission-to-delete ()
+  <simple-card-page>
+    <p>
+    You do not have permission to delete invitations.
+    Please contact support@screenshotbot.io if you think this is an error.
+    </p>
+  </simple-card-page>)
+
 (defun delete-invite (invite company)
-  (confirmation-page
-   :yes (nibble ()
-          (with-transaction ()
-            (bknr.datastore:delete-object invite))
-          (hex:safe-redirect "/team"))
-   :no "/team"
-   <span>Delete invitation to ,(invite-email invite)?</span>))
+  (cond
+    ((user-can-invite-p company (auth:current-user))
+     (confirmation-page
+      :yes (nibble ()
+             (with-transaction ()
+               (bknr.datastore:delete-object invite))
+             (hex:safe-redirect "/team"))
+      :no "/team"
+      <span>Delete invitation to ,(invite-email invite)?</span>))
+    (t
+     (no-permission-to-delete))))
 
 
 (defun render-invite-row (invite company)
