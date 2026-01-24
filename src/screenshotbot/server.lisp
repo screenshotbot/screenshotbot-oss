@@ -240,6 +240,7 @@ a no-op when either is nil."
                   (setf (hunchentoot:header-out "Cache-Control") "max-age=3600000")))
                (setf (hunchentoot:header-out "X-Frame-Options") "DENY")
                (setf (hunchentoot:header-out "X-Content-Type-Options") "nosniff")
+               (set-content-security-policy)
                (when (and
                       (str:starts-with-p "/assets" script-name)
                       (not *is-localhost*))
@@ -247,6 +248,30 @@ a no-op when either is nil."
                         "Access-Control-Allow-Origin")
                        (installation-domain (installation))))
                (call-next-method)))))))))
+
+(defun set-content-security-policy ()
+  (setf (hunchentoot:header-out "Reporting-Endpoints")
+        "csp-endpoint=\"/csp-report\"")
+  (setf (hunchentoot:header-out "Content-Security-Policy")
+        (format nil "~{~a~^; ~}"
+                '("default-src 'self'"
+                  "script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://assets.calendly.com https://code.jquery.com https://js.hs-scripts.com https://js.hs-banner.com https://js.hs-analytics.net https://js.hscollectedforms.net https://js.usemessages.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://testimonial.to https://cdn.gdprlocal.com"
+                  "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://stackpath.bootstrapcdn.com https://assets.calendly.com https://fonts.googleapis.com"
+                  "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net"
+                  "img-src 'self' data: https:"
+                  "connect-src 'self' https: wss:"
+                  "frame-src 'self' https://www.youtube.com https://assets.calendly.com https://embed-v2.testimonial.to https://www.googletagmanager.com https://app.hubspot.com"
+                  "frame-ancestors 'none'"
+                  "base-uri 'self'"
+                  "form-action 'self'"
+                  "report-uri /csp-report"
+                  "report-to csp-endpoint"))))
+
+(defhandler (nil :uri "/csp-report" :method :post) ()
+  (let ((body (hunchentoot:raw-post-data :force-text t)))
+    (log:warn "CSP violation")
+    (warn "CSP violation: ~a" body)
+    ""))
 
 (defhandler (nil :uri "/force-crash") ()
   (error "ouch"))
