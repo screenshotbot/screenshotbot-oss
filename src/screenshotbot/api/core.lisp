@@ -160,15 +160,14 @@ function fn for the purpose of tests."
                         (error  (lambda (e)
                                   (when *wrap-internal-errors*
                                     (%set-error-code e)
-                                    (log:warn "Error: ~a" e)
+                                    (warn "Unhandled API error call: ~a" e)
                                     (sentry-client:capture-exception e)
                                     (return-from error-handling
                                       (make-instance 'error-result
                                                      :success nil
                                                      :stacktrace (%trace)
                                                      :error (format nil
-                                                                    "Internal error, please contact support@screenshotbot.io: ~a"
-                                                                    (princ-to-string e)))))
+                                                                    "Internal error, please contact support@screenshotbot.io"))))
                                   )))
            (cond
              (wrap-success
