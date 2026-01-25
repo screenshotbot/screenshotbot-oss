@@ -167,7 +167,8 @@ function fn for the purpose of tests."
                                                      :success nil
                                                      :stacktrace (%trace)
                                                      :error (format nil
-                                                                    "Internal error, please contact support@screenshotbot.io"))))
+                                                                    "Internal error, please contact support@screenshotbot.io: ~a"
+                                                                    (princ-to-string e)))))
                                   )))
            (cond
              (wrap-success

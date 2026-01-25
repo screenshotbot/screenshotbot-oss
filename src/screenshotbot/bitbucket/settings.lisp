@@ -60,6 +60,8 @@
   (:import-from #:core/installation/installation
                 #:*installation*
                 #:installation-domain)
+  (:import-from #:screenshotbot/login/common
+                #:allow-oauth-redirect-p)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:refresh-token))
@@ -165,14 +167,8 @@
   (cond
     ((str:containsp "," state)
      (destructuring-bind (state domain) (str:split "," state)
-       ;; Do we need to validate the domain? Probably not, an attacker
-       ;; would need to know the client secret to misuse the code. We
-       ;; can't force another Screenshotbot server to misuse the code,
-       ;; because we're encrypting the nibble id with the encryption
-       ;; key of the originating domain. However, if we want to be
-       ;; extra safe we could probably add a verification here to make
-       ;; sure that domain is always a subdomain of the current
-       ;; installation-domain.
+       (unless (allow-oauth-redirect-p *installation* domain)
+         (error "Cannot allow redirect for ~a" domain))
        (hunchentoot:redirect
         (quri:render-uri
          (quri:make-uri
