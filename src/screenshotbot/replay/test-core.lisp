@@ -557,6 +557,29 @@ background: url(   shttps://google.com?f=1   )
         (matches-regex
          "<html><body class=\" screenshotbot\"><div style=\"background-image:url(.*ynab.*)\">hello</div></body></html>"))))))
 
+(test bad-url-token
+  (with-fixture state ()
+    (cl-mock:if-called 'util/request:http-request
+                       (lambda (url &rest args)
+                         (values
+                          (flexi-streams:make-in-memory-input-stream
+                           (flexi-streams:string-to-octets
+                            "fake-image"
+                            :external-format :utf-8))
+                          200
+                          `((:content-type . "image/png")))))
+    (let ((html (plump:parse "<html><body><div style=\"background-image:url(/assets/img/img_ynab_most_important_money_video.a35777e6.png);\" >hello</div></body></html>")))
+      (process-node (make-instance 'context)
+                    html
+                    (make-instance 'snapshot :tmpdir tmpdir)
+                    "https://www.google.com")
+      (assert-that
+       (with-output-to-string (s)
+         (plump:serialize html s))
+       (does-not
+        (matches-regex
+         "<html><body class=\" screenshotbot\"><div style=\"background-image:url(.*ynab.*)\">hello</div></body></html>"))))))
+
 (test style-attributes-are-unchanged-in-the-good-case
   (with-fixture state ()
     (let ((html (plump:parse "<html><body><div style=\"background-image:none;\" >hello</div></body></html>")))
