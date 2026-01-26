@@ -260,7 +260,7 @@ a no-op when either is nil."
                   ,(format nil "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net ~a" util.cdn:*cdn-domain*)
                   "img-src 'self' data: https:"
                   "connect-src 'self' https: wss:"
-                  "frame-src 'self' https://www.youtube.com https://assets.calendly.com https://embed-v2.testimonial.to https://www.googletagmanager.com https://app.hubspot.com https://*.cookiebot.com"
+                  "frame-src 'self' https://www.youtube.com https://assets.calendly.com https://embed-v2.testimonial.to https://www.googletagmanager.com https://app.hubspot.com https://meetings.hubspot.com https://*.cookiebot.com"
                   "frame-ancestors 'none'"
                   "base-uri 'self'"
                   "form-action 'self'"
