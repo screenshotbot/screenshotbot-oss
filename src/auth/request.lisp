@@ -70,7 +70,7 @@
 
 (defun (setf current-user) (user &key expires-in
                                    viewer-context)
-  (auth:reset-session)
+  (maybe-reset-session user)
   (setf (auth:session-value :user :expires-in expires-in) user)
   (setf (auth:request-user hunchentoot:*request*) user)
   (setf (auth:viewer-context hunchentoot:*request*)
@@ -80,6 +80,15 @@
           hunchentoot:*request*
           user)))
   user)
+
+(defun maybe-reset-session (user)
+  ;; If the user has not changed, don't reset-sessions. This avoids
+  ;; race conditions when a user has two separate OAuth flows
+  ;; happening in parallel.
+  
+  (unless (equal user
+                 (auth:session-value :user))
+    (auth:reset-session)))
 
 (defun logged-in-p ()
   (auth:current-user))
