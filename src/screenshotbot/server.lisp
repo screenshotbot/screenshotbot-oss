@@ -258,7 +258,7 @@ a no-op when either is nil."
                   ,(format nil "script-src 'self' 'unsafe-inline' https://js.stripe.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://unpkg.com https://assets.calendly.com https://code.jquery.com https://js.hs-scripts.com https://js.hs-banner.com https://js.hs-analytics.net https://js.hscollectedforms.net https://js.usemessages.com https://www.googletagmanager.com https://googleads.g.doubleclick.net https://www.googleadservices.com https://testimonial.to https://cdn.gdprlocal.com https://*.hotjar.com https://*.cookiebot.com https://static.hsappstatic.net ~a" util.cdn:*cdn-domain* )
                   ,(format nil "style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://stackpath.bootstrapcdn.com https://assets.calendly.com https://fonts.googleapis.com ~a" util.cdn:*cdn-domain*)
                   ,(format nil "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net ~a" util.cdn:*cdn-domain*)
-                  "img-src 'self' data: https:"
+                  "img-src 'self' data: blob: https:"
                   ,(format nil "media-src 'self' ~a" util.cdn:*cdn-domain*)
                   "connect-src 'self' https: wss:"
                   "frame-src 'self' https://www.youtube.com https://assets.calendly.com https://embed-v2.testimonial.to https://www.googletagmanager.com https://app.hubspot.com https://meetings.hubspot.com https://*.cookiebot.com"
