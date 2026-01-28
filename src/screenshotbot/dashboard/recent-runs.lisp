@@ -98,7 +98,7 @@
         </span>)
        ((str:starts-with-p "gh-readonly-queue/" (recorder-run-work-branch run))
         <span>
-          Run on <commit repo= (channel-repo (recorder-run-channel run)) hash= (recorder-run-commit run) /> from the merge queue
+          Run on <conditional-commit repo= (channel-repo (recorder-run-channel run)) hash= (recorder-run-commit run) /> from the merge queue
         </span>)
        (t
         <span>
@@ -107,7 +107,7 @@
                       (hash (recorder-run-commit run)))
              <span>
                on
-               <commit repo= repo hash=hash />
+               <conditional-commit repo= repo hash=hash />
                ,(when (recorder-run-work-branch run)
                   <span>(,(recorder-run-work-branch run))</span>)
              </span>)

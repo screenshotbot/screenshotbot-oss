@@ -85,5 +85,6 @@
            (auth:with-sessions ()
              (render-history
               :screenshot-name "foo"
-              :channel (make-instance 'channel :name "foobar")))))))) ()
+              :channel (make-instance 'channel :name "foobar"
+                                      :github-repo "https://github.com/tdrhq/fast-example")))))))) ()
   (pass))

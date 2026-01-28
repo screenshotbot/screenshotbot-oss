@@ -37,7 +37,12 @@
                 #:anyone-can-review)
   (:import-from #:fiveam-matchers/lists
                 #:contains
-                #:contains-in-any-order))
+                #:contains-in-any-order)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
+  (:import-from #:screenshotbot/git-repo
+                #:repo-link
+                #:generic-git-repo))
 
 (util/fiveam:def-suite)
 
@@ -327,3 +332,22 @@
              (shortened-channel-name
               "foobar:bar:dar:blah:la:car"
               :length 9))))
+
+(test channel-repo-without-repo
+  (with-installation ()
+   (with-fixture state ()
+     (is (eql nil
+              (channel-repo (make-instance 'channel
+                                           :company :company-1
+                                           :github-repo nil)))))))
+
+(test channel-repo-with-repo
+  (with-installation ()
+    (with-fixture state ()
+      (let ((repo
+              (channel-repo (make-instance 'channel
+                                           :company :company-1
+                                           :github-repo "https://github.com/tdrhq/fast-example.git"))))
+        (is (typep repo 'generic-git-repo))
+        (is (equal "https://github.com/tdrhq/fast-example.git"
+                   (repo-link repo)))))))

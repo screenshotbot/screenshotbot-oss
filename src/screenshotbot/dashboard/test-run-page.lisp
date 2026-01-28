@@ -92,6 +92,7 @@
 (def-easy-macro with-archived-run (&key (oid "507f1f77bcf86cd799439011") &binding archived-run company &fn fn)
   (let* ((channel (make-instance 'channel
                                  :company company
+                                 :github-repo "git@github.com:/a/c.git"
                                  :name "test-channel"))
          (screenshot-map (make-instance 'screenshot-map
                                         :channel channel
