@@ -1072,11 +1072,11 @@ exists (or is too long), we return NIL.
 
 We return three values: the path, the hash associated with the current
 run, and the hash associated with the previous run."
-  (let* ((repo (channel-repo (recorder-run-channel run)))
-         (this-hash (recorder-run-commit run))
-         (prev-hash (?. recorder-run-commit to))
-         (commit-graph (commit-graph repo))
-         (dag (commit-graph-dag commit-graph)))
+  (when-let* ((repo (channel-repo (recorder-run-channel run)))
+              (this-hash (recorder-run-commit run))
+              (prev-hash (?. recorder-run-commit to))
+              (commit-graph (commit-graph repo))
+              (dag (commit-graph-dag commit-graph)))
     (when (and this-hash prev-hash)
       (values
        (dag:best-path dag
