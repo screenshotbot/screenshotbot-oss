@@ -133,8 +133,7 @@
   (with-installation ()
    (with-test-store ()
      (let* ((company (make-instance 'company))
-            (channel (make-instance 'channel :company company
-                                    :github-repo "https://github.com/tdrhq/fast-example")))
+            (channel (make-instance 'channel :company company)))
        (&body)))))
 
 (defun %render-run-headline-to-str (run)

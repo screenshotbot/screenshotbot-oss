@@ -289,16 +289,15 @@
     (setf repo-cache nil)))
 
 (defmethod channel-repo ((channel channel))
-  (when (github-repo channel)
-    (loop for plugin in (plugins (installation))
-          for repo = (plugin-parse-repo plugin
-                                        (channel-company channel)
-                                        (github-repo channel))
-          if repo
-            return repo
-          finally
-             (return (make-instance 'generic-git-repo :link (github-repo channel)
-                                                      :company (channel-company channel))))))
+  (loop for plugin in (plugins (installation))
+        for repo = (plugin-parse-repo plugin
+                                      (channel-company channel)
+                                      (github-repo channel))
+        if repo
+          return repo
+        finally
+           (return (make-instance 'generic-git-repo :link (github-repo channel)
+                                             :company (channel-company channel)))))
 
 (defmethod created-at (x)
   (local-time:universal-to-timestamp (%created-at x)))
