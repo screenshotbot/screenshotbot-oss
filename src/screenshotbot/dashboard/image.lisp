@@ -196,6 +196,10 @@
 (define-condition timestamp-is-too-old (error)
   ())
 
+(define-condition signature-not-present (error)
+  ()
+  (:report "signature not present in image URL"))
+
 (defun %decode-oid (oid &key ts signature)
   (cond
     ((not (str:emptyp signature))
@@ -211,7 +215,7 @@
        ;; safe to just pass the string.
        (ironclad:hex-string-to-byte-array oid)))
     (t
-     (error "signature not present in image URL"))))
+     (error 'signature-not-present))))
 
 (def-easy-macro with-access-checked-image (&binding image oid &key ts signature &fn fn)
   (handler-case
