@@ -23,7 +23,8 @@
    #:commit-link
    #:find-or-create-commit-graph
    #:commit-graph-dag
-   #:compute-merge-base))
+   #:compute-merge-base
+   #:null-repo))
 (in-package :screenshotbot/git-repo)
 
 
@@ -32,6 +33,15 @@
          :accessor repo-link)
    (company :initarg :company
             :accessor company)))
+
+(defclass null-repo ()
+  ((company :initarg :company
+            :accessor company))
+  (:documentation "Indicating that there's no repo attached"))
+
+(defmethod repo-link ((self null-repo))
+  nil)
+
 
 (defmethod commit-graph ((repo generic-git-repo))
   (find-or-create-commit-graph
@@ -57,6 +67,9 @@
   nil)
 
 (defmethod commit-link ((repo generic-git-repo) hash)
+  "#")
+
+(defmethod commit-link ((repo null-repo) hash)
   "#")
 
 (defmethod compute-merge-base (repo commit-1 commit-2)

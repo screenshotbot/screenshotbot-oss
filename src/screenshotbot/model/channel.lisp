@@ -11,6 +11,7 @@
         #:screenshotbot/user-api
         #:screenshotbot/model/view)
   (:import-from #:screenshotbot/git-repo
+                #:null-repo
                 #:generic-git-repo)
   (:import-from #:screenshotbot/plugin
                 #:plugin-parse-repo)
@@ -289,15 +290,20 @@
     (setf repo-cache nil)))
 
 (defmethod channel-repo ((channel channel))
-  (loop for plugin in (plugins (installation))
-        for repo = (plugin-parse-repo plugin
-                                      (channel-company channel)
-                                      (github-repo channel))
-        if repo
-          return repo
-        finally
-           (return (make-instance 'generic-git-repo :link (github-repo channel)
-                                             :company (channel-company channel)))))
+  (cond
+    ((null (github-repo channel))
+     (make-instance 'null-repo
+                    :company (channel-company channel)))
+    (t
+     (loop for plugin in (plugins (installation))
+           for repo = (plugin-parse-repo plugin
+                                         (channel-company channel)
+                                         (github-repo channel))
+           if repo
+             return repo
+           finally
+              (return (make-instance 'generic-git-repo :link (github-repo channel)
+                                                       :company (channel-company channel)))))))
 
 (defmethod created-at (x)
   (local-time:universal-to-timestamp (%created-at x)))
