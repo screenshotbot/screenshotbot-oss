@@ -376,6 +376,7 @@
                 :components ((:file "test-view")))
                (:file "test-artifacts")
                (:file "test-email-template")
+               (:file "test-git-repo")
                (:file "test-promote-api")
                (:file "test-diff-report")
                (:file "test-secret")

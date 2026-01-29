@@ -63,7 +63,7 @@
                  commit
                  branch-commit))
 
-(defmethod public-repo-p ((repo generic-git-repo))
+(defmethod public-repo-p (repo)
   nil)
 
 (defmethod commit-link ((repo generic-git-repo) hash)
