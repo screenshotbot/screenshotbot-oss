@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.17.0 - 2026-01-29
+
+### Changed
+
+- Lispworks upgraded to 8.1.2, likely we pulled in Quicklisp changes
+  too. But no intentional changes otherwise.
+
 ## 2.16.24 - 2025-11-18
 
 ### Changed
