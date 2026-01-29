@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.17.1 - 2026-01-29
+
+### Added
+
+- Added support for credential-helper when interacting with Git via
+  HTTP
+
 ## 2.17.0 - 2026-01-29
 
 ### Changed
