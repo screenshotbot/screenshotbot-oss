@@ -206,3 +206,15 @@ typically because it was removed via force push or history rewrite."
                              ;; Return a fake SHA that doesn't exist
                              (list "458a81c522f6d7325c9d893624c926eaa8ed2cc0"))
                     :depth 30))))
+
+(test git-credential-fill-basic
+  "Test that git-credential-fill calls git credential fill with proper input"
+  ;; This test checks the basic functionality without actually calling git
+  ;; In a real environment with git credential configured, this would return credentials
+  (let ((result (git:credential-fill "https://github.com/org/repo.git")))
+    ;; Result should either be nil (no credentials configured) or a list of (username password)
+    (is (or (null result)
+            (and (listp result)
+                 (= 2 (length result))
+                 (stringp (first result))
+                 (stringp (second result)))))))

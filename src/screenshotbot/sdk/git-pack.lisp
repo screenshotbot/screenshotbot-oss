@@ -378,7 +378,8 @@ If READ-MAGIC-P is true, we'll read the first four bytes of PACK magic."
                   auth
                   (read-netrc
                    (quri:uri-host
-                    (quri:uri (http-url p)))))))
+                    (quri:uri (http-url p))))
+                  (git:credential-fill (http-url p)))))
        (unless auth
          (log:info "Could not find authentication information for Git http, assuming this is a public repo"))
        (apply #'http-request (format nil "~a~a"
