@@ -45,7 +45,11 @@
   ((code :initarg :code
          :reader github-api-error-code)
    (message :initarg :message
-            :reader message))
+            :reader message)
+   (url :initarg :url
+        :initform nil
+        :reader github-api-error-url
+        :documentation "This is mainly used for filtering Sentry crashes"))
   (:report (lambda (e output)
              (with-slots (code message) e
                (format output "Got bad github error code: ~a (~S)"
@@ -81,5 +85,6 @@
       (unless (or (eql res 200) (eql res 201))
         (error 'github-api-error
                :code res
-               :message s))
+               :message s
+               :url url))
       (json:decode-json-from-string s))))
