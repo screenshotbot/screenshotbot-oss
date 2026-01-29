@@ -207,6 +207,8 @@ typically because it was removed via force push or history rewrite."
                              (list "458a81c522f6d7325c9d893624c926eaa8ed2cc0"))
                     :depth 30))))
 
+;; This will actually wait for user input, not ideal. Preventing deploys at the moment.
+#+nil 
 (test git-credential-fill-basic
   "Test that git-credential-fill calls git credential fill with proper input"
   ;; This test checks the basic functionality without actually calling git
