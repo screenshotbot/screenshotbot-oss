@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.17.2 - 2026-01-30
+
+- Don't use both extraheaders and auth
+
+
 ## 2.17.2 - 2026-01-29
 
 - Removed ignore-errors around credential-fill for better debugging
