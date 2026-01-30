@@ -367,24 +367,31 @@ If READ-MAGIC-P is true, we'll read the first four bytes of PACK magic."
     (values
      (quri:render-uri uri)
      (when user
-      (str:split ":" user :limit 2)))))
+       (str:split ":" user :limit 2)))))
+
+(defmethod %get-auth-ignoring-extra-headers ((p http-upload-pack))
+  (multiple-value-bind (git-url auth)
+      (remove-auth-from-uri (http-url p))
+    (declare (ignore git-url))
+    (or
+     auth
+     (read-netrc
+      (quri:uri-host
+       (quri:uri (http-url p))))
+     (git:credential-fill (http-url p)))))
+
+(defmethod %get-auth ((p http-upload-pack))
+  (let ((auth (unless (has-authorization-header-p (extra-headers p))
+                (%get-auth-ignoring-extra-headers p))))
+    (unless (or auth (has-authorization-header-p (extra-headers p)))
+      (log:info "Could not find authentication information for Git http, assuming this is a public repo"))
+    auth))
 
 (auto-restart:with-auto-restart (:retries 2)
  (defmethod git-http-request ((p http-upload-pack)
                               url &rest args)
-   (multiple-value-bind (git-url auth)
-       (remove-auth-from-uri (http-url p))
-     (let ((auth (or
-                  auth
-                  (read-netrc
-                   (quri:uri-host
-                    (quri:uri (http-url p))))
-                  (git:credential-fill (http-url p)))))
-       (unless auth
-         (log:info "Could not find authentication information for Git http, assuming this is a public repo"))
-       (when (and auth (extra-headers p))
-         ;; TODO: remove one.
-         (warn "We have both extra-headers and basic-authorization for git-http"))
+   (let ((git-url (remove-auth-from-uri (http-url p))))
+     (let ((auth (%get-auth p)))
        (apply #'http-request (format nil "~a~a"
                                      (str:ensure-suffix "/" git-url)
                                      url)
@@ -396,6 +403,11 @@ If READ-MAGIC-P is true, we'll read the first four bytes of PACK magic."
               :connection-timeout 15
               :force-binary t
               args)))))
+
+(defun has-authorization-header-p (extra-headers)
+  (loop for (key . value) in extra-headers
+        if (string-equal key "authorization")
+          return t))
 
 (auto-restart:with-auto-restart ()
   (defmethod read-commits ((p http-upload-pack)

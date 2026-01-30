@@ -12,6 +12,9 @@
   (:import-from #:fiveam-matchers/strings
                 #:starts-with)
   (:import-from #:screenshotbot/sdk/git-pack
+                #:http-upload-pack
+                #:%get-auth
+                #:has-authorization-header-p
                 #:upload-pack-error
                 #:remove-auth-from-uri
                 #:read-netrc
@@ -220,3 +223,31 @@ typically because it was removed via force push or history rewrite."
                  (= 2 (length result))
                  (stringp (first result))
                  (stringp (second result)))))))
+
+(test has-authorization-header-p
+  (is-true
+   (has-authorization-header-p
+    `((:authorization "sdfdsfd"))))
+  (is-false
+   (has-authorization-header-p
+    `((:fake-key "sdfdsfd")))))
+
+(test %get-auth
+  (let ((upload-pack (make-instance 'http-upload-pack
+                                    :extra-headers `(("Authorization" . "Bearer foo"))
+                                    :repo "https://arnold:bar@github.com/tdrhq/fast-example.git")))
+    (is (equal nil (%get-auth upload-pack))))
+  (let ((upload-pack (make-instance 'http-upload-pack
+                                    :extra-headers `(("X-car" . "foo"))
+                                    :repo "https://arnold:bar@github.com/tdrhq/fast-example.git")))
+    (is (equal '("arnold" "bar") (%get-auth upload-pack)))))
+
+(test %get-auth-does-not-call-netrc-at-all
+  (cl-mock:with-mocks ()
+    (cl-mock:if-called 'read-netrc
+                       (lambda (&rest args)
+                         (error "should not have been called")))
+    (let ((upload-pack (make-instance 'http-upload-pack
+                                      :extra-headers `(("Authorization" . "Bearer foo"))
+                                      :repo "https://github.com/tdrhq/fast-example.git")))
+      (is (equal nil (%get-auth upload-pack))))))
