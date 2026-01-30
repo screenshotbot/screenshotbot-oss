@@ -233,18 +233,28 @@ typically because it was removed via force push or history rewrite."
     `((:fake-key "sdfdsfd")))))
 
 (test %get-auth
-  (let ((upload-pack (make-instance 'http-upload-pack
-                                    :extra-headers `(("Authorization" . "Bearer foo"))
-                                    :repo "https://arnold:bar@github.com/tdrhq/fast-example.git")))
-    (is (equal nil (%get-auth upload-pack))))
-  (let ((upload-pack (make-instance 'http-upload-pack
-                                    :extra-headers `(("X-car" . "foo"))
-                                    :repo "https://arnold:bar@github.com/tdrhq/fast-example.git")))
-    (is (equal '("arnold" "bar") (%get-auth upload-pack)))))
+  (cl-mock:with-mocks ()
+    (cl-mock:if-called 'read-netrc
+                       (lambda (&rest args)
+                         (error "should not have been called")))
+    (cl-mock:if-called 'git:credential-fill
+                       (lambda (&rest args)
+                         (error "should not have been called")))
+   (let ((upload-pack (make-instance 'http-upload-pack
+                                     :extra-headers `(("Authorization" . "Bearer foo"))
+                                     :repo "https://arnold:bar@github.com/tdrhq/fast-example.git")))
+     (is (equal nil (%get-auth upload-pack))))
+    (let ((upload-pack (make-instance 'http-upload-pack
+                                      :extra-headers `(("X-car" . "foo"))
+                                      :repo "https://arnold:bar@github.com/tdrhq/fast-example.git")))
+      (is (equal '("arnold" "bar") (%get-auth upload-pack))))))
 
 (test %get-auth-does-not-call-netrc-at-all
   (cl-mock:with-mocks ()
     (cl-mock:if-called 'read-netrc
+                       (lambda (&rest args)
+                         (error "should not have been called")))
+    (cl-mock:if-called 'git:credential-fill
                        (lambda (&rest args)
                          (error "should not have been called")))
     (let ((upload-pack (make-instance 'http-upload-pack
