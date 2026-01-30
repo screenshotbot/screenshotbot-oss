@@ -236,28 +236,27 @@ rev-parse compares against the remote branch :/"
 (defmethod credential-fill (url)
   "Call git credential fill to retrieve credentials for the given URL.
 Returns a list of (username password) or NIL if no credentials found."
-  (ignore-errors
-   (let* ((input (format nil "url=~a"
-                         url)))
-     (multiple-value-bind (output error-output exit-code)
-         (uiop:run-program (list "git" "credential" "fill")
-                           :input (make-string-input-stream input)
-                           :output :string
-                           :error-output :string
-                           :ignore-error-status t)
-       (declare (ignore error-output))
-       (when (zerop exit-code)
-         (let ((lines (str:lines output))
-               username
-               password)
-           (dolist (line lines)
-             (let ((parts (str:split "=" line :limit 2)))
-               (when (= 2 (length parts))
-                 (cond
-                   ((equal "username" (first parts))
-                    (setf username (second parts)))
-                   ((equal "password" (first parts))
-                    (setf password (second parts)))))))
-           (when (and username password)
-             (list username password))))))))
+  (let* ((input (format nil "url=~a"
+                        url)))
+    (multiple-value-bind (output error-output exit-code)
+        (uiop:run-program (list "git" "credential" "fill")
+                          :input (make-string-input-stream input)
+                          :output :string
+                          :error-output :string
+                          :ignore-error-status t)
+      (declare (ignore error-output))
+      (when (zerop exit-code)
+        (let ((lines (str:lines output))
+              username
+              password)
+          (dolist (line lines)
+            (let ((parts (str:split "=" line :limit 2)))
+              (when (= 2 (length parts))
+                (cond
+                  ((equal "username" (first parts))
+                   (setf username (second parts)))
+                  ((equal "password" (first parts))
+                   (setf password (second parts)))))))
+          (when (and username password)
+            (list username password)))))))
 
