@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.17.2 - 2026-01-29
+
+- Removed ignore-errors around credential-fill for better debugging
+- Remove --local, so we can also see global extraheaders
+- Add a warning for when both extraheaders and a credential is available
+
 ## 2.17.1 - 2026-01-29
 
 ### Added
