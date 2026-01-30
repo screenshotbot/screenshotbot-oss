@@ -224,7 +224,7 @@ rev-parse compares against the remote branch :/"
   (ignore-errors
    (loop for line in (str:lines
                       ($ (git-command repo)
-                        "config" "--local" "--get-urlmatch"
+                        "config" "--get-urlmatch"
                         "http.extraheader"
                         (get-remote-url repo)))
          collect
