@@ -382,6 +382,9 @@ If READ-MAGIC-P is true, we'll read the first four bytes of PACK magic."
                   (git:credential-fill (http-url p)))))
        (unless auth
          (log:info "Could not find authentication information for Git http, assuming this is a public repo"))
+       (when (and auth (extra-headers p))
+         ;; TODO: remove one.
+         (warn "We have both extra-headers and basic-authorization for git-http"))
        (apply #'http-request (format nil "~a~a"
                                      (str:ensure-suffix "/" git-url)
                                      url)
