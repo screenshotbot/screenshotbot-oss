@@ -118,7 +118,8 @@ commits that are needed."
         (update-from-pack
          api-context
          upload-pack
-         remote-url
+         (or (repo-link repo)
+             remote-url)
          (list branch
                (git:current-branch repo))
          :current-commit (git:current-commit repo))))))

@@ -22,12 +22,16 @@
   (:import-from #:screenshotbot/git-repo
                 #:commit-graph-dag
                 #:commit-graph)
+  (:import-from #:screenshotbot/model/commit-graph
+                #:find-commit-graph)
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:fiveam-matchers/core
                 #:has-typep
                 #:assert-that)
   (:import-from #:screenshotbot/sdk/git
+                #:repo-link
+                #:get-remote-url
                 #:git-command
                 #:fetch-remote-branch)
   (:import-from #:cl-mock
@@ -170,6 +174,81 @@
           upload-pack
           "git@github.com:tdrhq/fast-example.git"
           (list (git:current-branch repo))))))))
+
+#+lispworks
+(test new-flow-uses-repo-link-not-git-remote
+  "When --repo-url is passed (e.g. GitHub URL), but the git remote points
+elsewhere (e.g. GitLab mirror), the commit graph should be uploaded to
+the --repo-url, not the git remote. See T2224."
+  (with-fixture state ()
+    (let ((github-url "https://github.com/example-org/my-project")
+          (gitlab-url "https://gitlab-ci-token:glcbt@gitlab.example.com/internal/my-project.git"))
+      ;; Create repo with :link set to GitHub URL (simulating --repo-url flag)
+      (test-git:with-git-repo (repo :link github-url :dir dir)
+        (test-git:make-commit repo "initial commit")
+        (test-git:enable-server-features repo)
+        ;; Set git remote to GitLab URL (simulating GitLab CI clone)
+        (git::$ (git-command repo) "remote" "add" "origin" gitlab-url)
+        ;; Verify the setup: repo-link is GitHub, git remote is GitLab
+        (is (equal github-url (repo-link repo)))
+        (is (equal gitlab-url (get-remote-url repo)))
+        ;; Run the new flow
+        (let ((upload-pack (local-upload-pack repo)))
+          (update-from-pack
+           self
+           upload-pack
+           ;; BUG: Currently this function is called with git:get-remote-url
+           ;; but it should use git:repo-link
+           github-url
+           (list (git:current-branch repo))
+           :current-commit (git:current-commit repo)))
+        ;; Verify: commit graph should exist for GitHub URL
+        (let ((github-commit-graph
+                (find-commit-graph
+                 company github-url)))
+          (is-true github-commit-graph
+                   "Commit graph should be created for --repo-url (GitHub)"))
+        ;; Verify: commit graph should NOT exist for GitLab URL
+        (let ((gitlab-commit-graph
+                (find-commit-graph
+                 company gitlab-url)))
+          (is-false gitlab-commit-graph
+                    "Commit graph should NOT be created for git remote (GitLab)"))))))
+
+#+lispworks
+(test update-commit-graph-new-style-uses-repo-link
+  "Regression test for T2224: update-commit-graph-new-style should use
+repo-link (--repo-url) not git:get-remote-url when identifying the repo
+on the server. This test will FAIL until the bug is fixed."
+  (with-fixture state ()
+    (gk:enable :cli-shallow-clones)
+    (let ((github-url "https://github.com/example-org/my-project")
+          (gitlab-url "https://gitlab.example.com/internal/my-project.git"))
+      (test-git:with-git-repo (repo :link github-url :dir dir)
+        (test-git:make-commit repo "initial commit")
+        (test-git:enable-server-features repo)
+        ;; Set git remote to GitLab (simulates GitLab CI environment)
+        (git::$ (git-command repo) "remote" "add" "origin" gitlab-url)
+        ;; Confirm new flow will be used
+        (is-true (new-flow-enabled-p self repo)
+                 "New flow should be enabled for this test")
+        ;; Mock fetch-remote-branch since we don't have a real remote
+        (cl-mock:if-called 'fetch-remote-branch
+                           (lambda (repo branch)
+                             (declare (ignore repo branch))
+                             (values)))
+        ;; Run update-commit-graph (the high-level function)
+        (update-commit-graph self repo "master")
+        ;; The commit graph SHOULD be created for repo-link (GitHub URL)
+        (let ((github-cg (find-commit-graph
+                          company github-url)))
+          (is-true github-cg
+                   "Commit graph should be created for --repo-url (GitHub), not git remote"))
+        ;; The commit graph should NOT be created for the git remote (GitLab URL)
+        (let ((gitlab-cg (find-commit-graph
+                          company gitlab-url)))
+          (is-false gitlab-cg
+                    "Commit graph should NOT be created for git remote (GitLab)"))))))
 
 #+lispworks
 (test want-remote-ref
