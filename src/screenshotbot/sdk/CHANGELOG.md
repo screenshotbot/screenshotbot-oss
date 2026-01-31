@@ -1,11 +1,21 @@
 # Changelog
 
-## 2.17.2 - 2026-01-30
+## 2.17.4 - 2026-01-31
+
+### Changed
+
+- For the commit-graph protocol, prefer the use of repo-link instead
+  of the remote-url from the git repo.
+
+## 2.17.3 - 2026-01-30
+
+### Changed
 
 - Don't use both extraheaders and auth
 
-
 ## 2.17.2 - 2026-01-29
+
+### Changed
 
 - Removed ignore-errors around credential-fill for better debugging
 - Remove --local, so we can also see global extraheaders
