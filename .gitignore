@@ -65,3 +65,5 @@ nfs-disk.vdi
 .phutil_module_cache
 
 screenshotbot*.deb
+
+vagrant-efs
