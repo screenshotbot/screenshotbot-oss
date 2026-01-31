@@ -361,7 +361,10 @@ right region within that.
         (originalp
          (make-image-cdn-url
           (hex:make-url "/image/original/:oid"
-                        :oid (format nil "~a.~a" oid (str:downcase (image-format image)))
+                        :oid (format nil "~a.~a" oid (str:downcase (handler-case
+                                                                       (image-format image)
+                                                                     (no-image-uploaded-yet ()
+                                                                       "webp"))))
                         :ts ts
                         :signature signature)))
         (type
