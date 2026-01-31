@@ -170,6 +170,10 @@ nibble or not."
           ;; /n/nnnnnnn, and for a short while Wordpress made it a
           ;; link. This resulted in crawlers continuing to crawl this
           ;; page, and it messes up our Sentry logs. Oh well. T1420.
+          (setf (hunchentoot:return-code*) 404)          
+          "Invalid URL")
+         ((equal "" id-str)
+          (setf (hunchentoot:return-code*) 404)
           "Invalid URL")
          (t
           (render-nibble self (parse-integer id-str))))))
