@@ -35,6 +35,9 @@
                 #:cluster-status/command)
   (:import-from #:server/cluster/leadership
                 #:cluster-leadership/command)
+  (:import-from #:server/cluster/peers
+                #:add-peer/command
+                #:remove-peer/command)
   #+lispworks
   (:import-from #:hunchentoot-extensions/existing-socket
                 #:existing-socket)
@@ -262,7 +265,9 @@
                                    (clingon:print-usage-and-exit cmd t))
                         :sub-commands (list
                                        (cluster-status/command)
-                                       (cluster-leadership/command))))
+                                       (cluster-leadership/command)
+                                       (add-peer/command)
+                                       (remove-peer/command))))
 
 
 (defun main/command (&key enable-store jvm acceptor
