@@ -8,7 +8,11 @@
   (:use #:cl)
   (:import-from #:bknr.datastore
                 #:store-object
-                #:persistent-class))
+                #:persistent-class)
+  (:import-from #:screenshotbot/login/oidc
+                #:oidc-provider)
+  (:export
+   #:make-oidc-provider))
 (in-package :screenshotbot/default-oidc-provider)
 
 (defclass default-oidc-provider (store-object)
@@ -23,6 +27,20 @@
                 :reader expiration)
    (%issuer :initarg :issuer
             :reader issuer)
-   (%company :initarg :company))
+   (%company :initarg :company
+             :reader company))
   (:metaclass persistent-class))
+
+(defun make-oidc-provider (stored-provider)
+  "Create an oidc-provider from a default-oidc-provider instance."
+  (make-instance 'oidc-provider
+                 :issuer (issuer stored-provider)
+                 :client-id (client-id stored-provider)
+                 :client-secret (client-secret stored-provider)
+                 :scope (scope stored-provider)
+                 :identifier 'default-oidc-provider
+                 :company-provider (lambda (&rest args)
+                                     (declare (ignore args))
+                                     (company stored-provider))
+                 :expiration-seconds (expiration stored-provider)))
 
