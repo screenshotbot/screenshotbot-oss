@@ -17,20 +17,28 @@
            #:remove-peer/command))
 (in-package :server/cluster/peers)
 
+(defun ip-to-peer (ip)
+  "Convert an IP address to a braft peer string by appending the default port and index.
+If the IP is IPv6 (contains a colon), it is wrapped in square brackets.
+The suffix :7070:0:0 is used to match the observed cluster configuration."
+  (if (find #\: ip)
+      (format nil "[~a]:7070:0:0" ip)
+      (format nil "~a:7070:0:0" ip)))
+
 (defun add-peer/command ()
   (clingon:make-command
    :name "add-peer"
    :description "Add a peer to the cluster"
-   :usage "PEER-ADDRESS"
+   :usage "PEER-IP"
    :handler #'add-peer/handler
    :options nil))
 
 (defun add-peer/handler (cmd)
   (let ((args (command-arguments cmd)))
     (unless (= 1 (length args))
-      (format t "Usage: screenshotbot cluster add-peer <peer-address>~%")
+      (format t "Usage: screenshotbot cluster add-peer <peer-ip>~%")
       (uiop:quit 1))
-    (let ((peer (first args))
+    (let ((peer (ip-to-peer (first args)))
           (pid (get-pid)))
       (cond
         (pid
@@ -55,16 +63,16 @@
   (clingon:make-command
    :name "remove-peer"
    :description "Remove a peer from the cluster"
-   :usage "PEER-ADDRESS"
+   :usage "PEER-IP"
    :handler #'remove-peer/handler
    :options nil))
 
 (defun remove-peer/handler (cmd)
   (let ((args (command-arguments cmd)))
     (unless (= 1 (length args))
-      (format t "Usage: screenshotbot cluster remove-peer <peer-address>~%")
+      (format t "Usage: screenshotbot cluster remove-peer <peer-ip>~%")
       (uiop:quit 1))
-    (let ((peer (first args))
+    (let ((peer (ip-to-peer (first args)))
           (pid (get-pid)))
       (cond
         (pid
