@@ -55,6 +55,8 @@
                #:clingon)
   :serial t
   :components ((:file "eval" :if-feature :lispworks)
+               (:module "cluster"
+                :components ((:file "status")))
                (:file "cli")))
 
 ;; For slynk support, load this before calling server:main. The reason

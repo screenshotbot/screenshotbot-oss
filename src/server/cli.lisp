@@ -31,6 +31,8 @@
                 #:*config-file*)
   (:import-from #:util/threading
                 #:make-thread)
+  (:import-from #:server/cluster/status
+                #:cluster-status/command)
   #+lispworks
   (:import-from #:hunchentoot-extensions/existing-socket
                 #:existing-socket)
@@ -251,6 +253,14 @@
                                      (benchmark:run-all)
                                      (uiop:quit 0)))))
 
+(defun cluster/command ()
+  (clingon:make-command :name "cluster"
+                        :description "Cluster management commands"
+                        :handler (lambda (cmd)
+                                   (clingon:print-usage-and-exit cmd t))
+                        :sub-commands (list
+                                       (cluster-status/command))))
+
 
 (defun main/command (&key enable-store jvm acceptor
                        (config-loader (error "must provide :config-loader")))
@@ -275,7 +285,8 @@
                                        :jvm jvm
                                        :acceptor acceptor)
                           #+lispworks
-                          (server/eval:eval/command)))))
+                          (server/eval:eval/command)
+                          (cluster/command)))))
 
 (defun legacy-mode-p (args)
   (and (second args)
