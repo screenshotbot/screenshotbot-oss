@@ -286,6 +286,10 @@
                           (when (find-package :screenshotbot/pro/installation)
                             (uiop:call-function
                              "screenshotbot/pro/installation:gen-config/command"))
+                          #-screenshotbot-oss
+                          (when (find-package :screenshotbot/pro/company-cli)
+                            (uiop:call-function
+                             "screenshotbot/pro/company-cli:company/command"))                          
                           (save-passphrases/command)
                           (benchmarks/command)
                           (run/command :enable-store enable-store
