@@ -110,6 +110,7 @@
    (:file "plugin")
    (:file "async")
    (:file "installation")
+   (:file "default-oidc-provider")
    (:file "throttler")
    (:file "raft-redirect")
    (:file "server" :depends-on ("analytics" "raft-redirect"))

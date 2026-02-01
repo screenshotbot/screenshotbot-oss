@@ -289,7 +289,11 @@
                           #-screenshotbot-oss
                           (when (find-package :screenshotbot/pro/company-cli)
                             (uiop:call-function
-                             "screenshotbot/pro/company-cli:company/command"))                          
+                             "screenshotbot/pro/company-cli:company/command"))
+                          #-screenshotbot-oss
+                          (when (find-package :screenshotbot/pro/sso-cli)
+                            (uiop:call-function
+                             "screenshotbot/pro/sso-cli:sso/command"))
                           (save-passphrases/command)
                           (benchmarks/command)
                           (run/command :enable-store enable-store
