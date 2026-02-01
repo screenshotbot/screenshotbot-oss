@@ -13,8 +13,13 @@
   (:import-from #:server/cluster/status
                 #:get-pid
                 #:eval-on-pid)
+  (:import-from #:str
+                #:rsplit
+                #:starts-with-p
+                #:ends-with-p)
   (:export #:add-peer/command
-           #:remove-peer/command))
+           #:remove-peer/command
+           #:peer-to-ip))
 (in-package :server/cluster/peers)
 
 (defun ip-to-peer (ip)
@@ -46,13 +51,13 @@ The suffix :7070:0:0 is used to match the observed cluster configuration."
          (handler-case
              (eval-on-pid
               pid
-              `(let* ((store bknr.datastore:*store*)
-                      (peers (bknr.cluster/server:list-peers store)))
-                 (if (member ,peer peers :test #'string=)
-                     (format t "Peer ~a is already in the cluster.~%" ,peer)
-                     (progn
-                       (bknr.cluster/server:update-conf store (cons ,peer peers))
-                       (format t "Added peer ~a.~%" ,peer)))))
+              `(let* ((store bknr.datastore:*store*))
+                 (let ((peers (bknr.cluster/server:list-peers store)))
+                   (if (member ,peer peers :test #'string=)
+                       (format t "Peer ~a is already in the cluster.~%" ,peer)
+                       (progn
+                         (bknr.cluster/server:update-conf store (cons ,peer peers))
+                         (format t "Added peer ~a.~%" ,peer))))))
            (error (e)
              (format t "Error: ~a~%" e)))
          #-lispworks
@@ -80,13 +85,13 @@ The suffix :7070:0:0 is used to match the observed cluster configuration."
          (handler-case
              (eval-on-pid
               pid
-              `(let* ((store bknr.datastore:*store*)
-                      (peers (bknr.cluster/server:list-peers store)))
-                 (if (not (member ,peer peers :test #'string=))
-                     (format t "Peer ~a is not in the cluster.~%" ,peer)
-                     (progn
-                       (bknr.cluster/server:update-conf store (remove ,peer peers :test #'string=))
-                       (format t "Removed peer ~a.~%" ,peer)))))
+              `(let* ((store bknr.datastore:*store*))
+                 (let ((peers (bknr.cluster/server:list-peers store)))
+                   (if (not (member ,peer peers :test #'string=))
+                       (format t "Peer ~a is not in the cluster.~%" ,peer)
+                       (progn
+                         (bknr.cluster/server:update-conf store (remove ,peer peers :test #'string=))
+                         (format t "Removed peer ~a.~%" ,peer))))))
            (error (e)
              (format t "Error: ~a~%" e)))
          #-lispworks

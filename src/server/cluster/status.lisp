@@ -18,6 +18,16 @@
            #:get-pid))
 (in-package :server/cluster/status)
 
+(defun peer-to-ip (peer)
+  "Convert a braft peer string back to an IP address.
+Strips the :port:index:index suffix and any surrounding square brackets for IPv6."
+  (let ((ip (first (str:rsplit ":" peer :limit 4))))
+    (if (and (str:starts-with-p "[" ip)
+             (str:ends-with-p "]" ip))
+        (subseq ip 1 (1- (length ip)))
+        ip)))
+
+
 (defvar *service-name* "screenshotbot"
   "The systemd service name for the screenshotbot server.")
 
@@ -91,12 +101,12 @@ Returns the result of the evaluation."
         (eval-on-pid pid
                      '(let ((store bknr.datastore:*store*))
                        (format t "Leader: ~a~%"
-                        (bknr.cluster/server:leader-id store))
+                        (peer-to-ip (bknr.cluster/server:leader-id store)))
                        (format t "Is current node Leader?: ~a~%"
                         (bknr.cluster/server:leaderp store))
                        (format t "Peers:~%")
                        (loop for peer in (bknr.cluster/server:list-peers store)
-                             do (format t "  ~a~%" peer)))))
+                             do (format t "  ~a~%" (peer-to-ip peer))))))
     (error (e)
       (format t "Error connecting to PID ~a: ~a~%" pid e)))
   #-lispworks
