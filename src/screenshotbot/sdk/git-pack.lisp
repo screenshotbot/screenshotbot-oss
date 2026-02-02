@@ -30,7 +30,10 @@
               two))))
 
 (defclass abstract-upload-pack ()
-  ())
+  ((multi-ack-p :initarg :multi-ack-p
+                :initform t
+                :reader multi-ack-p
+                :documentation "Whether the server supports multi_ack capability")))
 
 (defclass upload-pack (abstract-upload-pack)
   ((stream :initarg :stream
@@ -54,10 +57,7 @@
     (cl-ppcre:scan-to-strings +git@-regex+ repo)
     (cl-ppcre:scan-to-strings +ssh//-regex+ repo)
     (str:starts-with-p "https:" repo)
-    (str:starts-with-p "http:" repo))
-   (not
-    ;; T1892
-    (str:containsp "ssh.dev.azure.com" repo))))
+    (str:starts-with-p "http:" repo))))
 
 (defun get-ssh-parts (url)
   "Returns four arguments: the user, the host, the directory and finally the port"
@@ -479,7 +479,7 @@ If READ-MAGIC-P is true, we'll read the first four bytes of PACK magic."
   (log:debug "Got features: ~a" features)
   (unless (str:s-member features "allow-tip-sha1-in-want")
     (warn "Git server doesn't support allow-tip-sha1-in-want, features: ~s" features))
-  
+
   (unless (or
            (str:s-member features "allow-tip-sha1-in-want")
            (str:s-member features "allow-reachable-sha1-in-want"))
@@ -490,6 +490,11 @@ If READ-MAGIC-P is true, we'll read the first four bytes of PACK magic."
          collect (cons
                   (first this-branch) (second this-branch)))))
 
+(defun supports-multi-ack-p (features)
+  "Check if the server supports multi_ack or multi_ack_detailed capability"
+  (or (str:s-member features "multi_ack")
+      (str:s-member features "multi_ack_detailed")))
+
 (defun read-shallow-lines (p)
   "In SSH this happens after wants/deepen and before haves. In HTTP this happens after wants/deepen/haves."
   (log:debug "Reading shallow lines")
@@ -498,7 +503,11 @@ If READ-MAGIC-P is true, we'll read the first four bytes of PACK magic."
         do (log:debug "Ignoring: ~a" line)))
 
 (defun write-wants-and-haves (p wants haves &key depth filter-blobs features http?)
-  (want p (format nil "~a filter allow-tip-sha1-in-want allow-reachable-sha1-in-want shallow agent=screenshotbot-cli" (car wants)))
+  (let* ((multi-ack-p (supports-multi-ack-p features))
+         (capabilities (format nil "~a filter allow-tip-sha1-in-want allow-reachable-sha1-in-want shallow~a agent=screenshotbot-cli"
+                               (car wants)
+                               (if multi-ack-p " multi_ack" ""))))
+    (want p capabilities))
   (dolist (want (cdr wants))
     (want p want))
 

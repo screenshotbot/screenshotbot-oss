@@ -143,8 +143,9 @@ set st to idle when block timeout"))))
 
 
 
-(test azure-is-not-supported
-  (is-false (supported-remote-repo-p "git@ssh.dev.azure.com:v3/testsbot/fast-example/fast-example"))
+(test azure-IS-supported
+  "Used to say `is not supported`"
+  (is-true (supported-remote-repo-p "git@ssh.dev.azure.com:v3/testsbot/fast-example/fast-example"))
   (is-true (supported-remote-repo-p "git@github.com:fast-example/fast-example")))
 
 (test netrc
