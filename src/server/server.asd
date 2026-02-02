@@ -49,17 +49,22 @@
   :depends-on ()
   :components ((:file "config")))
 
-(defsystem #:server/cli
-  :depends-on (#:server
-               #:server/config
-               #:clingon)
-  :serial t
+(defsystem #:server/cluster
+  :depends-on (#:server/config)
   :components ((:file "eval" :if-feature :lispworks)
                (:module "cluster"
                 :components ((:file "status")
                              (:file "leadership")
-                             (:file "peers")))
-               (:file "cli")))
+                             (:file "peers"))
+                :if-feature (:and :lispworks :linux))))
+
+(defsystem #:server/cli
+  :depends-on (#:server
+               #:server/config
+               #:server/cluster
+               #:clingon)
+  :serial t
+  :components ((:file "cli")))
 
 ;; For slynk support, load this before calling server:main. The reason
 ;; we separate this into a separate system is for support with SLIME,
