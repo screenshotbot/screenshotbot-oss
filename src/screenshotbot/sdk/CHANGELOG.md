@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.17.5 - 2026-02-01
+
+### Changed
+
+- Bring back multi_ack again
+
+
 ## 2.17.4 - 2026-01-31
 
 ### Changed
