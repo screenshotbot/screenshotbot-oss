@@ -79,7 +79,7 @@ to cache the refs."))
 (defmethod update-commit-graph-old-style ((self commit-graph-updater) repo branch)
   "Update commit-graph by pulling, and then always push the top 1000 or
 so changes."
-  (log:info "Updating commit graph")
+  (log:info "Updating commit graph [old flow]")
   (let* ((dag (read-graph repo))
          (json (with-output-to-string (s)
                  (dag:write-to-stream dag s))))
