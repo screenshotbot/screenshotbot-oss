@@ -15,6 +15,7 @@
                 #:repo-link)
   #+lispworks
   (:import-from #:screenshotbot/sdk/git-pack
+                #:http-upload-pack
                 #:local-upload-pack
                 #:abstract-upload-pack
                 #:remote-ref-equals
@@ -175,10 +176,14 @@ commits that are needed."
                          :sha sha)
           (refs-to-update self))))
 
+#+lispworks
 (auto-restart:with-auto-restart (:retries 3)
-  (defun read-commits-with-retries (&rest args)
+  (defmethod read-commits-with-retries ((upload-pack http-upload-pack) &rest args)
     "GitLab's https endpoint is buggy, and occassionally returns 401. See T2111."
-    (apply #'read-commits args)))
+    (apply #'read-commits upload-pack args)))
+
+(defmethod read-commits-with-retries (upload-pack &rest args)
+  (apply #'read-commits upload-pack args))
 
 (defun remove-duplicate-commits (commits)
   "Remove duplicate commits by SHA, keeping the first occurrence."
