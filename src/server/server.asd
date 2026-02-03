@@ -50,7 +50,8 @@
   :components ((:file "config")))
 
 (defsystem #:server/cluster
-  :depends-on (#:server/config)
+  :depends-on (#:server/config
+               #:clingon)
   :components ((:file "eval" :if-feature :lispworks)
                (:module "cluster"
                 :components ((:file "status")
