@@ -1,9 +1,16 @@
 # Changelog
 
+## 2.17.7 - 2026-02-04
+
+- Fixes crash in 2.17.6
+- Also fixes a general hanging when using SSH based repos in certain
+  situations.
+
 ## 2.17.6 - 2026-02-03
 
 ### Changed
 
+- BAD RELEASE! DO NOT USE!
 - Now uses both local and remote commits during the upload-pack flow
 
 ## 2.17.5 - 2026-02-01
