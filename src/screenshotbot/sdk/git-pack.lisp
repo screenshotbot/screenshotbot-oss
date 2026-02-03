@@ -98,23 +98,34 @@
        "git-upload-pack"
        repo)))))
 
+(defmethod make-upload-pack-for-local-repo-only ((repo git:git-repo))
+  (make-upload-pack-from-cmd
+   (list
+    "/usr/bin/env"
+    "git-upload-pack"
+    (namestring (git:repo-dir repo)))))
+
 (defmethod make-upload-pack-command ((repo git:git-repo))
   (make-upload-pack-command (namestring (git:repo-dir repo))))
 
 (defun local-upload-pack (repo)
+  "TODO: badly named function. See also make-upload-pack-for-local-repo-only."
   (let ((cmd (make-upload-pack-command repo)))
     (log:debug "Upload pack command is: ~a" cmd)
-    (multiple-value-bind (stream)
-        (sys:run-shell-command
-         cmd
-         :output :stream
-         :input :stream
-         :wait nil
-         :element-type '(unsigned-byte 8))
-      (assert stream)
+    (make-upload-pack-from-cmd cmd)))
+
+(defun make-upload-pack-from-cmd (cmd)
+  (multiple-value-bind (stream)
+      (sys:run-shell-command
+       cmd
+       :output :stream
+       :input :stream
+       :wait nil
+       :element-type '(unsigned-byte 8))
+    (assert stream)
       
-      (make-instance 'upload-pack
-                     :stream stream))))
+    (make-instance 'upload-pack
+                   :stream stream)))
 
 (defmethod make-remote-upload-pack ((repo git:git-repo))
   (let ((repo-url (git:get-remote-url repo)))
@@ -134,8 +145,9 @@
 
 (defun read-length (self)
   (let ((len (make-array 4 :element-type '(unsigned-byte 8))))
-    (unless (= 4 (read-sequence len (%stream self)))
-      (error "Could not read length"))
+    (let ((num-bytes (read-sequence len (%stream self))))
+     (unless (= 4 num-bytes)
+       (error "Could not read length, got ~a bytes" num-bytes)))
 
     (when (equalp len #. (flex:string-to-octets "PACK"))
       (error 'pack-header-encountered))
@@ -686,7 +698,7 @@ a second value the headers that were initially provided (sha and refs)
 ;; Azure features: ( multi_ack thin-pack side-band side-band-64k no-progress multi_ack_detailed no-done shallow allow-tip-sha1-in-want filter symref=HEAD:refs/heads/master)
 ;; Azure also requires clients to support multi-ack :/
 ;; (read-commits "git@ssh.dev.azure.com:v3/testsbot/fast-example/fast-example" :wants (list "master") :depth 30)
-;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30))
+;; (length (read-commits "git@github.com:tdrhq/fast-example.git" :wants (list "master") :depth 30 :parse-parents t))
 ;; (length (read-commits "git@github.com:tdrhq/braft.git" :branch "master" :parse-parents t))
 ;; (read-commits "ssh://git@phabricator.tdrhq.com:2222/source/web.git" :wants (list "master") :extra-wants (list "4ec592fc02c8bf200e4e2b9902e9a71fd8de3aec") :depth 100)
 ;; (read-commits "/home/arnold/builds/web/.git" :wants (list "master") :depth 2)

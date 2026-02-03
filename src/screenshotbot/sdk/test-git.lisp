@@ -60,13 +60,13 @@
         do
         (run-in-dir repo (format nil "git config uploadpack.~a true" feature))))
 
-(defun make-commit (repo content)
-  (let ((file (path:catfile (repo-dir repo) "file.txt")))
-   (with-open-file (stream file
+(defun make-commit (repo content &key (file "file.txt"))
+  (let ((path (path:catfile (repo-dir repo) file)))
+   (with-open-file (stream path
                            :direction :output
                            :if-exists :supersede)
      (write-string content stream))
-    (run-in-dir repo "git add file.txt" )
+    (run-in-dir repo (format nil "git add ~a" file))
     (run-in-dir repo "git commit -a -m ...")))
 
 (defun make-directory-deletable (dir)

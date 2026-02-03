@@ -15,6 +15,7 @@
                 #:repo-link)
   #+lispworks
   (:import-from #:screenshotbot/sdk/git-pack
+                #:local-upload-pack
                 #:abstract-upload-pack
                 #:remote-ref-equals
                 #:read-commits
@@ -108,21 +109,42 @@ commits that are needed."
       :parameters `(("repo-url" . ,repo-url)
                     ("shas" . ,(json:encode-json-to-string commits)))))))
 
+(defun find-missing-commits (commits)
+  (fset:convert
+   'list
+   (fset:set-difference
+    (fset:convert 'fset:set
+                  (loop for (nil . parents) in  commits
+                        appending parents))
+    (fset:convert 'fset:set
+                  (loop for (commit . nil) in commits
+                        collect commit)))))
+
+(defun get-local-commits (repo)
+  (let ((dag (git::read-graph repo)))
+    (loop for commit in (dag:all-commits dag)
+          for parents = (dag:parents commit)
+          collect
+          (progn
+            (list* (dag:sha commit)
+                   parents)))))
+
 #+lispworks
 (defun update-commit-graph-new-style (api-context repo branch)
   (let ((remote-url (git:get-remote-url repo)))
     (with-extras (("remote-git-url" remote-url)
                   ("git-config-anonymized" (or (git:debug-git-config repo)
                                                "failed")))
-      (let ((upload-pack (make-remote-upload-pack repo)))
-        (update-from-pack
-         api-context
-         upload-pack
-         (or (repo-link repo)
-             remote-url)
-         (list branch
-               (git:current-branch repo))
-         :current-commit (git:current-commit repo))))))
+      (let ((local-commits (get-local-commits repo)))
+        (let ((upload-pack (make-remote-upload-pack repo)))
+          (update-from-pack
+           api-context
+           upload-pack
+           (or (repo-link repo)
+               remote-url)
+           (list branch
+                 (git:current-branch repo))
+           :local-commits local-commits))))))
 
 (defun ref-in-sync-p (known-refs sha ref)
   "At this point, we know we're interested in this ref. What we need to know is if this is in sync with the server"
@@ -158,12 +180,20 @@ commits that are needed."
     "GitLab's https endpoint is buggy, and occassionally returns 401. See T2111."
     (apply #'read-commits args)))
 
+(defun remove-duplicate-commits (commits)
+  "Remove duplicate commits by SHA, keeping the first occurrence."
+  (let ((seen (make-hash-table :test #'equal)))
+    (loop for commit in commits
+          unless (gethash (car commit) seen)
+            do (setf (gethash (car commit) seen) t)
+            and collect commit)))
+
 #+lispworks
 (defmethod update-from-pack ((self commit-graph-updater)
                              (upload-pack abstract-upload-pack)
                              (repo-url string)
                              branches
-                             &key current-commit)
+                             &key local-commits)
   (log:info "Getting known refs from Screenshotbot server")
   (let ((known-refs
           ;; Technically we could combine this with the /check-wants
@@ -171,26 +201,30 @@ commits that are needed."
           (get-commit-graph-refs self repo-url)))
     (check-type known-refs list)
     (log:info "Getting git graph via git-upload-pack")
-    (let ((commits (read-commits-with-retries
-                    upload-pack
-                    ;; TODO: also do release branches, but that will need a regex here
-                    :wants (lambda (list)
-                             (save-refs self list)
-                             ;; This might make a network call
-                             (build-wants self
-                                          :current-commit current-commit
-                                          :known-refs known-refs
-                                          :branches branches
-                                          :repo-url repo-url))
+    (let* ((missing-local-commits (find-missing-commits local-commits))
+           (commits (read-commits-with-retries
+                     upload-pack
+                     ;; TODO: also do release branches, but that will need a regex here
+                     :wants (lambda (list)
+                              (save-refs self list)
+                              ;; This might make a network call
+                              (let ((wants (build-wants self
+                                                        :missing-local-commits missing-local-commits
+                                                        :known-refs known-refs
+                                                        :branches branches
+                                                        :repo-url repo-url)))
+                               (log:debug "Wanting: ~a")
+                               wants))
                     :haves (loop for known-ref in known-refs
                                  collect (dto:git-ref-sha known-ref))
                     :parse-parents t)))
       (%finish-update-commit-graph self
-                                   :commits commits
+                                   :commits (remove-duplicate-commits
+                                             (append local-commits commits))
                                    :repo-url repo-url
                                    :refs (refs-to-update self)))))
 
-(defmethod build-wants ((self commit-graph-updater) &key current-commit
+(defmethod build-wants ((self commit-graph-updater) &key missing-local-commits
                                                       known-refs
                                                       branches
                                                       repo-url)
@@ -201,18 +235,20 @@ are actually needed.
 This function does have a side effect: it stores the the refs need to
 be updated in the REFS-TO-UPDATE slot.
 
-Returns a list of commit SHAs that should be included in the commit graph update."
-  (let ((shas (remove-if
-               #'null
-               (list*
-                current-commit
-                (loop for ref being the hash-keys of (all-remote-refs self)
-                        using (hash-value sha)
-                      if (want-remote-ref known-refs branches
-                                          sha ref)
-                        collect (progn
-                                  (maybe-push-ref-to-update self sha ref)
-                                  sha))))))
+Returns a list of commit SHAs that should be included in the commit graph update.
+
+LOCAL-COMMITS are of the form (list (commit . parents)*)"
+  (let* ((shas (remove-if
+                #'null
+                (append
+                 missing-local-commits
+                 (loop for ref being the hash-keys of (all-remote-refs self)
+                         using (hash-value sha)
+                       if (want-remote-ref known-refs branches
+                                           sha ref)
+                         collect (progn
+                                   (maybe-push-ref-to-update self sha ref)
+                                   sha))))))
     ;; This will make a network call
     (filter-wanted-commits
      (api-context self)
