@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.17.6 - 2026-02-03
+
+### Changed
+
+- Now uses both local and remote commits during the upload-pack flow
+
 ## 2.17.5 - 2026-02-01
 
 ### Changed
