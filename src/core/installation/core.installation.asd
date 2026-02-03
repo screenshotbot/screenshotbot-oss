@@ -9,6 +9,7 @@
   :depends-on (#:util/html2text
                #:lparallel
                #:util.threading
+               #:auto-restart
                #:easy-macros
                #:cl-smtp)
   :components ((:file "installation")

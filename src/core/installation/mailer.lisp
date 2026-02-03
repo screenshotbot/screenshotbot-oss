@@ -103,6 +103,10 @@
 (defmethod wrap-template (mailer html-message)
   html-message)
 
+(auto-restart:with-auto-restart (:retries 2 :sleep 30)
+  (defun send-email-with-retries (&rest args)
+    (apply #'cl-smtp:send-email args)))
+
 (defmethod send-mail ((mailer smtp-mailer)
                       &rest args
                       &key from subject to html-message
@@ -114,7 +118,7 @@
   (restart-case
       (multiple-value-bind (from display-name)
           (parse-from from display-name)
-       (cl-smtp:send-email
+       (send-email-with-retries
         (host mailer)
         (or from (from mailer))
         (fix-email-list to)
