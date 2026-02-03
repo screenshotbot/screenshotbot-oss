@@ -213,7 +213,7 @@ commits that are needed."
                                                         :known-refs known-refs
                                                         :branches branches
                                                         :repo-url repo-url)))
-                               (log:debug "Wanting: ~a")
+                               (log:debug "Wanting: ~a" wants)
                                wants))
                     :haves (loop for known-ref in known-refs
                                  collect (dto:git-ref-sha known-ref))
@@ -285,7 +285,7 @@ LOCAL-COMMITS are of the form (list (commit . parents)*)"
     ((new-flow-enabled-p self repo)
      (or
       (ignore-and-log-errors ()
-        (trivial-timeout:with-timeout (600)
+        (trivial-timeout:with-timeout (60)
           (update-commit-graph-new-style self repo branch))
         (log:debug "New commit graph uploaded successfully")
         t)
