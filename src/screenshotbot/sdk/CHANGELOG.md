@@ -1,10 +1,20 @@
 # Changelog
 
+## 2.18.0 - 2026-02-05
+
+### Added
+
+- Added support for CodeMagic
+
 ## 2.17.7 - 2026-02-04
+
+### Changed
 
 - Fixes crash in 2.17.6
 - Also fixes a general hanging when using SSH based repos in certain
   situations.
+- Note added later: this is the first release with the git-upload-pack
+  flow being very stable.
 
 ## 2.17.6 - 2026-02-03
 
