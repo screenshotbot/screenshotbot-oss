@@ -513,6 +513,39 @@ running in Docker."))
   (getenv self "CI_BRANCH"))
 
 
+(defclass codemagic-env-reader (base-env-reader)
+  ()
+  (:documentation "https://docs.codemagic.io/yaml-basic-configuration/environment-variables/"))
+
+(defmethod validp ((self codemagic-env-reader))
+  (not (null (getenv self "CM_BUILD_ID"))))
+
+(defmethod pull-request-url ((self codemagic-env-reader))
+  ;; Codemagic doesn't provide a repo URL, so we use a synthetic URL.
+  ;; The server only parses pulls/<id> from it.
+  (when-let ((pull-id (getenv self "CM_PULL_REQUEST_NUMBER")))
+    (format nil "https://codemagic.io/pull/~a" pull-id)))
+
+(defmethod pull-request-base-branch ((self codemagic-env-reader))
+  (getenv self "CM_PULL_REQUEST_DEST"))
+
+(defmethod sha1 ((self codemagic-env-reader))
+  (getenv self "CM_COMMIT"))
+
+(defmethod build-url ((self codemagic-env-reader))
+  (when-let ((project-id (getenv self "CM_PROJECT_ID"))
+             (build-id (getenv self "CM_BUILD_ID")))
+    (format nil "https://codemagic.io/app/~a/build/~a"
+            project-id
+            build-id)))
+
+(defmethod repo-url ((self codemagic-env-reader))
+  ;; Codemagic only provides CM_REPO_SLUG (owner/repo), not a full URL
+  nil)
+
+(defmethod work-branch ((self codemagic-env-reader))
+  (getenv self "CM_BRANCH"))
+
 (defparameter *all-readers*
   '(circleci-env-reader
     bitrise-env-reader
@@ -523,7 +556,8 @@ running in Docker."))
     gitlab-ci-env-reader
     github-actions-env-reader
     teamcity-env-reader
-    xcode-cloud-env-reader))
+    xcode-cloud-env-reader
+    codemagic-env-reader))
 
 
 (defun make-env-reader (&key overrides)

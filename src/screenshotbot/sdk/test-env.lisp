@@ -13,6 +13,7 @@
                 #:read-java-property
                 #:teamcity-env-reader
                 #:xcode-cloud-env-reader
+                #:codemagic-env-reader
                 #:remove-.git
                 #:*all-readers*
                 #:gitlab-ci-env-reader
@@ -222,6 +223,28 @@
     (is (equal "https://github.com/tdrhq/fast-example.git"
                (read-java-property input "vcsroot.url")))
     (is (eql nil (read-java-property input "does.not.exist")))))
+
+(test codemagic
+  (finishes (test-happy-fns (make-instance 'codemagic-env-reader
+                                           :overrides nil))))
+
+(test codemagic-environment-variables
+  (let ((reader (make-instance 'codemagic-env-reader
+                               :overrides `(("CM_BUILD_ID" . "a1b2c3d4")
+                                            ("CM_PROJECT_ID" . "proj-123")
+                                            ("CM_COMMIT" . "abc123def456")
+                                            ("CM_BRANCH" . "feature/new-feature")
+                                            ("CM_PULL_REQUEST_NUMBER" . "42")
+                                            ("CM_PULL_REQUEST_DEST" . "main")))))
+    (is (equal t (validp reader)))
+    (is (equal "abc123def456" (sha1 reader)))
+    (is (equal "feature/new-feature" (work-branch reader)))
+    (is (equal "main" (pull-request-base-branch reader)))
+    (is (equal "https://codemagic.io/app/proj-123/build/a1b2c3d4" (build-url reader)))
+    ;; repo-url is not provided by Codemagic (only CM_REPO_SLUG)
+    (is (equal nil (repo-url reader)))
+    ;; Server only parses pulls/<id> from the URL
+    (is (equal "https://codemagic.io/pull/42" (pull-request-url reader)))))
 
 (test happy-path-when-vcsroot.url-is-not-present
   (let ((env-reader (make-instance 'teamcity-env-reader)))
