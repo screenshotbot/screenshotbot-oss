@@ -264,7 +264,9 @@ a no-op when either is nil."
                   "frame-src 'self' https://www.youtube.com https://assets.calendly.com https://embed-v2.testimonial.to https://www.googletagmanager.com https://app.hubspot.com https://meetings.hubspot.com https://*.cookiebot.com"
                   "frame-ancestors 'none'"
                   "base-uri 'self'"
-                  "form-action 'self'"
+                  ;; Chrome enforces form-action on redirect targets,
+                  ;; so nibble forms that redirect to OAuth providers get blocked.
+                  "form-action 'self' https:"
                   "report-uri /csp-report"
                   "report-to csp-endpoint"))))
 
