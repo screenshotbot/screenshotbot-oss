@@ -190,6 +190,10 @@
 generate a GitHub markdown summary."
   (check-summary check))
 
+(defmethod %make-github-summary ((run unchanged-run) check)
+  "For unchanged runs, just use the check summary directly."
+  (check-summary check))
+
 (defun make-github-args (run check)
   (let* ((repo-url (recorder-run-repo-url run))
          (full-name (repo-full-name repo-url))

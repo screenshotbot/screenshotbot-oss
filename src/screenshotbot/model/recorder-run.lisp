@@ -76,7 +76,8 @@
                 #:hash-index)
   ;; classes
   (:export #:promotion-log
-           #:recorder-run)
+           #:recorder-run
+           #:unchanged-run)
 
   ;; methods
   (:export #:recorder-run-company
@@ -699,6 +700,9 @@ compare against the actual merge base.")))
 
 (defmethod recorder-run-company ((self unchanged-run))
   (screenshotbot/model/company:company (unchanged-run-channel self)))
+
+(defmethod recorder-run-repo-url ((self unchanged-run))
+  (github-repo (unchanged-run-channel self)))
 
 (def-store-migration ("Ensure :company slot is set to the channel company" :version 17)
   (ensure-slot-boundp 'recorder-run 'company)

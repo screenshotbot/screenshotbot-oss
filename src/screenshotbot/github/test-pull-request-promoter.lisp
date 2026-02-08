@@ -19,6 +19,7 @@
         #:screenshotbot/git-repo
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:unchanged-run
                 #:make-recorder-run
                 #:recorder-run
                 #:pull-request-url)
@@ -521,3 +522,21 @@
                                    :title "This is a test"))))
       (assert-that (mapcar #'str:trim (str:lines summary))
                    (is-not (has-item "" ))))))
+
+;; T2236: unchanged-run without batch crashes when calling make-github-args
+(test push-remote-check-for-unchanged-run-without-batch
+  (with-fixture state ()
+    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+      22)
+    (let* ((channel (make-instance 'dummy-channel
+                                   :company company
+                                   :github-repo "https://github.com/tdrhq/fast-example"))
+           (unchanged-run (make-instance 'unchanged-run
+                                         :channel channel
+                                         :commit "abcd"
+                                         :other-commit "1234"))
+           (check (make-check unchanged-run
+                              :status :success
+                              :title "No screenshots changed")))
+      (finishes
+        (push-remote-check promoter unchanged-run check)))))
