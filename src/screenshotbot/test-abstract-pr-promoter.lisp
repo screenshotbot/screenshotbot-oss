@@ -547,12 +547,19 @@
                    (contains (has-typep 'check))))))
 
 
-(test unchanged-run-without-batch-should-do-nothing
+(test unchanged-run-without-batch-should-push-check
   (with-fixture state ()
     (let ((unchanged-run (make-instance 'unchanged-run
-                                        :commit "abdc")))
-      (finishes
-        (maybe-promote promoter unchanged-run)))))
+                                        :channel channel
+                                        :commit "abdc"))
+          (checks))
+      (if-called 'push-remote-check
+                 (lambda (promoter run check)
+                   (push check checks)))
+      (maybe-promote promoter unchanged-run)
+      (assert-that checks (has-length 1))
+      (is (equal "Nothing to review" (check-title (car checks))))
+      (is (equal "foobar-channel" (check-key (car checks)))))))
 
 (def-fixture unchanged-run (&key (work-branch "foobar"))
   (let* ((batch (find-or-create-batch

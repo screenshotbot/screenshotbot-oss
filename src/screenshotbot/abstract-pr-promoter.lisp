@@ -633,6 +633,5 @@ we return NIL."
   (values))
 
 (defmethod maybe-promote :around ((promoter abstract-pr-promoter) (run unchanged-run))
-  (when (recorder-run-batch run)
-    (log:info "calling promotion for unchanged-run")
-    (call-next-method)))
+  (log:info "calling promotion for unchanged-run")
+  (call-next-method))
