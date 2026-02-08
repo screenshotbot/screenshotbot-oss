@@ -187,15 +187,6 @@
 
     </auth-template>)
 
-(defmethod maybe-verify-email (auth-provider &key email redirect)
-  (cond
-    ((verify-email-p auth-provider)
-     (verify-email email :redirect redirect))
-    (t
-     ;; We probably want to do this by default in OSS installations.
-     (hex:safe-redirect redirect))))
-
-
 (defmethod signup-after-email/post ((auth-provider standard-auth-provider)
                                     &rest args
                                       &key
@@ -208,10 +199,7 @@
                        :form-builder (signup-get :plan plan
                                                  :invite invite
                                                  :redirect redirect)
-                       :success (maybe-verify-email
-                                 auth-provider
-                                 :email email
-                                 :redirect
+                       :success (hex:safe-redirect
                                  (nibble ()
                                    (apply #'signup-after-email/get auth-provider args))))
     (push-event :signup-attempt :email email
@@ -399,6 +387,32 @@ bugs. (See corresponding tests.)"
      (let ((domain (car (last (str:split "@" email)))))
        (str:s-member (allowed-domains auth-provider) domain)))))
 
+(defun create-user-and-complete-signup (auth-provider
+                                        &key email password full-name plan redirect invite)
+  "Create the user account and complete the signup process.
+This is called after all validation (including email verification if required)."
+  (let ((user (auth:make-user
+               *installation*
+               :full-name full-name
+               :confirmed-p (verify-email-p auth-provider)
+               :email email)))
+    (with-transaction ()
+      (setf (auth:user-password user)
+            password))
+    (on-user-sign-in auth-provider user)
+    (setf (current-user) user)
+
+    (process-existing-invites user email :current-invite invite)
+    (unless (verify-email-p auth-provider)
+      (prepare-and-send-email-confirmation user))
+    (after-create-user *installation* user))
+
+  (cond
+    ((string= (string-upcase plan) (string :professional))
+     (hex:safe-redirect "/upgrade"))
+    (t
+     (hex:safe-redirect redirect))))
+
 (defun signup-post (auth-provider
                     &key email password full-name accept-terms-p plan redirect
                       invite)
@@ -446,28 +460,24 @@ bugs. (See corresponding tests.)"
               :invite invite
               :redirect redirect)))))
         (t
-         ;; everything looks good, let's create our user
-         (let ((user (auth:make-user
-                      *installation*
-                      :full-name full-name
-                      :confirmed-p (verify-email-p auth-provider)
-                      :email email)))
-           (with-transaction ()
-             (setf (auth:user-password user)
-                   password))
-           (on-user-sign-in auth-provider user)
-           (setf (current-user) user)
-
-           (process-existing-invites user email :current-invite invite)
-           (unless (verify-email-p auth-provider)
-             (prepare-and-send-email-confirmation user))
-           (after-create-user *installation* user))
-
-         (cond
-           ((string= (string-upcase plan) (string :professional))
-            (hex:safe-redirect "/upgrade"))
-           (t
-            (hex:safe-redirect redirect))))))))
+         ;; Validation passed - now either verify email or create user directly
+         (flet ((%create-user ()
+                  (create-user-and-complete-signup
+                   auth-provider
+                   :email email
+                   :password password
+                   :full-name full-name
+                   :plan plan
+                   :redirect redirect
+                   :invite invite)))
+           (cond
+             ((verify-email-p auth-provider)
+              ;; Email verification required - verify first, then create account
+              (verify-email email
+                            :redirect (nibble () (%create-user))))
+             (t
+              ;; No email verification - create account immediately
+              (%create-user)))))))))
 
 (defun prepare-and-send-email-confirmation (user)
   "Send an email confirmation to the USER"
