@@ -222,6 +222,15 @@
 
         ,(let ((channel (report-channel (acceptable-report acceptable))))
            (cond
+             ((null (auth:current-user))
+              (let ((redirect (hunchentoot:script-name*)))
+                <div class="dropdown-menu dropdown-menu-end review-dropdown-menu" aria-labelledby="reviewDropdownMenuButton" style= "z-index: 99999999; position: static" >
+                  <a class= "dropdown-item" href= (nibble ()
+                                                    (with-login ()
+                                                      (hex:safe-redirect redirect))) >
+                    Sign in to review
+                  </a>
+                </div>))
              ((can-review? (review-policy channel)
                            (acceptable-report acceptable)
                            (auth:current-user))
@@ -976,8 +985,7 @@ If the diff-report is cached, then we process the body immediately instead."
 
               </li>
 
-              ,(when (and acceptable (auth:can-viewer-edit (auth:viewer-context hunchentoot:*request*)
-                                                           acceptable))
+              ,(when acceptable
                  <li class= "nav-item" >
                    <render-acceptable acceptable=acceptable />
                  </li>)

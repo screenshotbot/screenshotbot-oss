@@ -391,6 +391,41 @@
         (assert-that dropdown-menu (has-length 1))
         (mquery:add-class dropdown-menu "show")))))
 
+(screenshot-test review-button-dropdown-when-not-logged-in
+  (with-fixture state ()
+    (with-test-user (:user user
+                     :company company
+                     :logged-in-p nil)
+      (with-fake-request ()
+        (auth:with-sessions ()
+          (let* ((channel (make-instance 'channel
+                                         :company company
+                                         :name "bleh"
+                                         :github-repo "git@github.com:a/b.gitq"))
+                 (one (make-recorder-run
+                       :channel channel
+                       :company company
+                       :screenshots (list (make-screenshot im1))))
+                 (two (make-recorder-run
+                       :channel channel
+                       :company company
+                       :screenshots (list (make-screenshot im2))))
+                 (report (make-instance 'report
+                                        :title "foobar"
+                                        :channel channel
+                                        :run one
+                                        :previous-run two))
+                 (acceptable (make-instance 'base-acceptable
+                                            :report report)))
+            (snap-all-images)
+            (expand-review-button
+             (app-template
+              :body-class "dashboard"
+              (render-diff-report
+               :diff-report (make-diff-report one two)
+               :acceptable acceptable
+               :script-name "/report/test")))))))))
+
 (test find-commit-path-to-ancestor-happy-path
   (with-fixture state ()
     (with-test-user (:user user
