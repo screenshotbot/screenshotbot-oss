@@ -29,7 +29,6 @@
 #+mswindows
 (register-tdrhq "nyaml" "28d43dae676ad013affeab3c2b0f0d9307490d53")
 
-(register-tdrhq "fiveam" "162bd30e6179fc787ee94e96104c8ce059d610ff")
 (register-tdrhq "cmd"  "29f1267d141b5117dc742bce74340711c99076f3")
 (register-tdrhq "opticl" "a33e3411d28ebff4b29a59a3619884c0f54ff586")
 
