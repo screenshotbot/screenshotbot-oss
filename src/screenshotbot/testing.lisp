@@ -106,17 +106,20 @@
             (body)))))))
 
 
-(defun snap-image-blob (im1)
-  "Copy the givem image blob into the screenshot assets"
-  (let ((dir (asdf:system-relative-pathname
-              :screenshotbot
-              "static-web-output/image/blob/")))
-    (let ((output (path:catfile
-                   dir
-                   (format nil "~a/default.webp"
-                           (oid im1)))))
-      (with-local-image (file im1)
-        (uiop:copy-file file (ensure-directories-exist output))))))
+(let ((cached-dir nil))
+ (defun snap-image-blob (im1)
+   "Copy the givem image blob into the screenshot assets"
+   (let ((dir (util:or-setf
+               cached-dir
+               (asdf:system-relative-pathname
+                :screenshotbot
+                "static-web-output/image/blob/"))))
+     (let ((output (path:catfile
+                    dir
+                    (format nil "~a/default.webp"
+                            (oid im1)))))
+       (with-local-image (file im1)
+         (uiop:copy-file file (ensure-directories-exist output)))))))
 
 (defun snap-all-images ()
   (loop for image in (bknr.datastore:class-instances 'image)
