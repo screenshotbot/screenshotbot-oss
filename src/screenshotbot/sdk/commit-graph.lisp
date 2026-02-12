@@ -31,7 +31,8 @@
   (:import-from #:screenshotbot/api/model
                 #:*api-version*)
   (:import-from #:screenshotbot/sdk/api-context
-                #:api-feature-enabled-p)
+                #:api-feature-enabled-p
+                #:remote-version)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
                     (#:git #:screenshotbot/sdk/git)))
 (in-package :screenshotbot/sdk/commit-graph)
@@ -106,7 +107,8 @@ commits that are needed."
       api-context
       "/api/commit-graph/check-wants"
       :decode-response nil
-      :method :get
+      ;; Use POST for API version >= 21 to avoid URL length limits (T2237)
+      :method (if (>= (remote-version api-context) 21) :post :get)
       :parameters `(("repo-url" . ,repo-url)
                     ("shas" . ,(json:encode-json-to-string commits)))))))
 
