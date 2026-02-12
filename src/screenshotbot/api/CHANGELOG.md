@@ -1,6 +1,7 @@
 
 Version
 
+* 21: /api/commit-graph/check-wants now accepts POST (for large SHA lists). See T2237.
 * 20: Added comparePixelTolerance to runs
 * Version unchanged
   - Added "features" to /api/version for server side control of features
