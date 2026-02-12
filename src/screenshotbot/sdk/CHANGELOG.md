@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.18.1 - 2026-02-12
+
+### Changed
+
+- Use POST for check-wants, since the shas parameter can be quite long
+
 ## 2.18.0 - 2026-02-05
 
 ### Added
