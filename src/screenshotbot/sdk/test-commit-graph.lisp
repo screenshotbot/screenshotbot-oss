@@ -246,6 +246,11 @@ on the server. This test will FAIL until the bug is fixed."
                            (lambda (repo branch)
                              (declare (ignore repo branch))
                              (values)))
+        ;; Mock make-remote-upload-pack to use local pack instead of trying
+        ;; to connect to the fake GitLab URL
+        (cl-mock:if-called 'make-remote-upload-pack
+                           (lambda (repo)
+                             (local-upload-pack repo)))
         ;; Run update-commit-graph (the high-level function)
         (update-commit-graph self repo "master")
         ;; The commit graph SHOULD be created for repo-link (GitHub URL)
