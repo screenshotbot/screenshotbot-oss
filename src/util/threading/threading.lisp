@@ -189,25 +189,43 @@ checkpoints called by `(safe-interrupte-checkpoint)`"
 (defclass unlimited-pool ()
   ())
 
+(defvar *thread-count* 0
+  "Keep track of active threads, just for testing purposes.")
+(defvar *thread-count-lock* (bt:make-lock))
+(defvar *thread-count-cv* (bt:make-condition-variable))
+
 (defvar *unlimited-pool* (make-instance' unlimited-pool))
 
 (defvar *propagated-symbols* nil
   "A list of symbols whose value will always be propagated to child
 threads.")
 
+(defun incf-thread-count (delta)
+  (bt:with-lock-held (*thread-count-lock*)
+    (incf *thread-count* delta)
+    (bt:condition-notify *thread-count-cv*)))
+
+(defun wait-for-zero-threads ()
+  (bt:with-lock-held (*thread-count-lock*)
+    (loop until (eql *thread-count* 0)
+          do (bt:condition-wait *thread-count-cv* *thread-count-lock*))))
+
 (defun make-thread (body &key (pool *unlimited-pool*) name)
   (let ((bindings (loop for sym in *propagated-symbols*
                         if (boundp sym)
                           collect (cons sym (symbol-value sym)))))
+    (incf-thread-count 1)
     (make-thread-impl
      pool
      (lambda ()
-       (ignore-and-log-errors ()
-         (with-tags (("hostname" (uiop:hostname)))
-           (progv
-               (mapcar #'car bindings)
-               (mapcar #'cdr bindings)
-            (funcall body)))))
+       (unwind-protect
+            (ignore-and-log-errors ()
+              (with-tags (("hostname" (uiop:hostname)))
+                (progv
+                    (mapcar #'car bindings)
+                    (mapcar #'cdr bindings)
+                  (funcall body))))
+         (incf-thread-count -1)))
      :name name)))
 
 (defmethod make-thread-impl ((self unlimited-pool) fn &key name)

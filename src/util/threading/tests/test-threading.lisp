@@ -9,6 +9,8 @@
         #:fiveam
         #:util/threading)
   (:import-from #:util/threading
+                #:wait-for-zero-threads
+                #:*thread-count*
                 #:*propagated-symbols*
                 #:scheduled-future
                 #:schedule-timer
@@ -334,3 +336,22 @@
                          (setf got-val *x-with-default*)))))
           (bt:join-thread thread))
         (is (eql :from-test got-val))))))
+
+(test test-threading-count
+  (with-fixture state ()
+    (let ((start-count *thread-count*)
+          (inner-count))
+      (let ((thread (make-thread
+                     (lambda ()
+                       (setf inner-count *thread-count*)))))
+        (Bt:join-thread thread))
+      (is (eql (1+ start-count)
+               inner-count)))))
+
+(test wait-for-zero-threads
+  (with-fixture state ()
+    (dotimes (i 10)
+      (make-thread
+       (lambda ())))
+    (wait-for-zero-threads)
+    (is (eql 0 *thread-count*))))
