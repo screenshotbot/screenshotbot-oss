@@ -339,14 +339,13 @@
 
 (test test-threading-count
   (with-fixture state ()
-    (let ((start-count *thread-count*)
-          (inner-count))
+    (wait-for-zero-threads)
+    (let ((inner-count))
       (let ((thread (make-thread
                      (lambda ()
                        (setf inner-count *thread-count*)))))
         (Bt:join-thread thread))
-      (is (eql (1+ start-count)
-               inner-count)))))
+      (is (eql 1 inner-count)))))
 
 (test wait-for-zero-threads
   (with-fixture state ()
