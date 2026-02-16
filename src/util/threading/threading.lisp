@@ -208,7 +208,8 @@ threads.")
 (defun wait-for-zero-threads ()
   (bt:with-lock-held (*thread-count-lock*)
     (loop until (eql *thread-count* 0)
-          do (bt:condition-wait *thread-count-cv* *thread-count-lock*))))
+          do (unless (bt:condition-wait *thread-count-cv* *thread-count-lock* :timeout 60)
+               (error "Thread count did not drop in time, there's probably some background threads blocking in a test")))))
 
 (defun make-thread (body &key (pool *unlimited-pool*) name)
   (let ((bindings (loop for sym in *propagated-symbols*
