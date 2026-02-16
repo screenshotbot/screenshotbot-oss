@@ -27,6 +27,7 @@
       (+ 1 1)))
   (signals my-error
     (with-cli-sentry (:dry-run t
+                      :stream (make-string-output-stream)
                       :on-error (lambda ()))
       (error 'my-error))))
 
