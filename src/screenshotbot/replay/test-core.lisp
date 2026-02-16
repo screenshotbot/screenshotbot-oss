@@ -596,6 +596,9 @@ background: url(   shttps://google.com?f=1   )
 (test link-integrity-tags-are-removed
   (with-fixture state ()
     (let ((html (plump:parse "<html><head><link rel=\"stylesheet\" href=\"https://example.com/style.css\" integrity=\"sha384-fake-hash-value\"></head><body>hello</body></html>")))
+      (cl-mock:if-called 'drakma:http-request
+                         (lambda (&rest args)
+                           (values (make-string-input-stream "") 200 nil)))
       (process-node (make-instance 'context)
                     html
                     (make-instance 'snapshot :tmpdir tmpdir)
