@@ -1,7 +1,6 @@
 (defpackage :scheduled-jobs/scheduled-jobs.asd
   (:use #:cl
-        #:asdf)
-  (:local-nicknames (#:a #:alexandria)))
+        #:asdf))
 (in-package :scheduled-jobs/scheduled-jobs.asd)
 
 (defclass lib-source-file (c-source-file)
@@ -52,6 +51,7 @@
   :depends-on (#:cl-cron
                #:scheduled-jobs/headers
                #:util/throttler
+               #:alexandria
                #:util/native-module
                #:util
                #:util/health-check

@@ -28,6 +28,7 @@
 
 (defsystem :bknr.indices/tests
   :depends-on (:bknr.indices
+               :bknr.datastore
                :fiveam
                :fiveam-matchers)
   :components ((:module "indices"

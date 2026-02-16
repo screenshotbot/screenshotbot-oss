@@ -11,6 +11,7 @@
                #:nibble
                #:hunchentoot-extensions
                #:cl-json
+               #:util/request
                #:dexador
                #:pkg
                #:hunchentoot
@@ -23,6 +24,7 @@
   :serial t
   :depends-on (#:oidc
                #:util/fiveam
+               #:util.testing
                #:cl-mock
                #:fiveam-matchers)
   :components ((:file "test-oauth")

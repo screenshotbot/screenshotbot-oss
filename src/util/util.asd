@@ -152,6 +152,7 @@
 (defsystem :util/lru-cache
   :serial t
   :depends-on (:easy-macros
+               :util.misc
                :trivial-file-size
                :cl-fad)
   :components ((:file "lru-cache")))
@@ -249,6 +250,7 @@
 
 (defsystem :util/native-module
   :depends-on (:util/fake-fli
+               :log4cl
                :util.misc)
   :components ((:file "native-module")))
 
@@ -298,13 +300,14 @@
   :depends-on (:local-time
                :fset
                :atomics
+               :hunchentoot
                :easy-macros
                :cl-fad)
   :serial t
   :components ((:file "throttler")))
 
 (defsystem :util/simple-queue
-  :depends-on ()
+  :depends-on (:bordeaux-threads)
   :components ((:file "simple-queue")))
 
 (defsystem :util/tests

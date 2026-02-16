@@ -10,6 +10,7 @@
   :serial t
   :depends-on (:str
                :pkg
+               :log4cl
                :iterate
                :closer-mop
                ;; We never want to load cl+j through quicklisp, always

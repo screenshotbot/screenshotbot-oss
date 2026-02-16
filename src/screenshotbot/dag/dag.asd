@@ -8,6 +8,7 @@
   :serial t
   :depends-on (:pkg
                :util/simple-queue
+               :util.threading
                :util.misc
                :cl-json
                :util.store/encodable

@@ -51,7 +51,7 @@
              (let ((threads (loop for i from 0 to 10
                                   collect (bt:make-thread
                                            (lambda ()
-                                             (util:or-setf
+                                             (util/misc:or-setf
                                               val
                                               (incf ctr)
                                               :thread-safe t))))))

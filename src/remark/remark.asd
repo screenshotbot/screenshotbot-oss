@@ -9,6 +9,8 @@
   :depends-on (:markup
                :str
                :nibble
+               :util/throttler
+               :util
                :util/events
                :iterate)
   :components ((:file "nodes")
@@ -28,7 +30,9 @@
 (defsystem :remark/tests
   :serial t
   :depends-on (:remark
-               :fiveam)
+               :fiveam
+               :fiveam-matchers
+               :util/fiveam)
   :components ((:file "test-nodes")
                (:file "test-search")
                (:file "test-markdown")))

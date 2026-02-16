@@ -4,6 +4,7 @@
                :util/request
                :util/lru-cache
                :util/digests
+               :tmpdir
                :ironclad
                :quri)
   :components ((:file "server")))

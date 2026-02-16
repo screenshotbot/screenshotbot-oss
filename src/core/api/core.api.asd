@@ -20,6 +20,7 @@
   :serial t
   :depends-on (:core.api
                :util/fiveam
+               :util.testing
                :fiveam-matchers)
   :components ((:module "model"
                 :components ((:file "test-api-key")))

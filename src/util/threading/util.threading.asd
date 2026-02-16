@@ -25,8 +25,11 @@
   :depends-on (:util.threading
                :fiveam
                :fiveam-matchers
+               :util/fiveam
                :util.testing
+               :util
                :cl-mock
+               :util.threading
                :alexandria
                :serapeum)
   :serial t

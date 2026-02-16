@@ -51,7 +51,7 @@
 (test simple-create-thread
   (with-fixture state ()
    (let ((var nil))
-     (let ((thread (util:make-thread
+     (let ((thread (util/threading:make-thread
                     (lambda ()
                       (setf var t)))))
        (bt:join-thread thread)

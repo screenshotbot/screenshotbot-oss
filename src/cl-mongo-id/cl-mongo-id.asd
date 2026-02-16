@@ -8,5 +8,7 @@
   :components ((:file "mongo-id")))
 
 (defsystem :cl-mongo-id/tests
-  :depends-on (:cl-mongo-id)
+  :depends-on (:cl-mongo-id
+               :tmpdir
+               :fiveam)
   :components ((:file "test-mongo-id")))

@@ -8,7 +8,12 @@
   :serial t
   :depends-on (:markup
                :trivial-garbage
+               :parenscript
                :util/timeago
+               :core.installation
+               :hunchentoot-extensions
+               :hunchentoot
+               :util
                :fset)
   :components ((:file "template")
                (:file "post")
@@ -24,6 +29,7 @@
 (defsystem :core.ui/tests
   :serial t
   :depends-on (:core.ui
+               :fiveam-matchers
                :util/fiveam)
   :components ((:file "test-paginated")
                (:file "test-taskie")))

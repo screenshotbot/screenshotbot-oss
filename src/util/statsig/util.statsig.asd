@@ -13,5 +13,7 @@
 
 (defsystem :util.statsig/tests
   :depends-on (:util.statsig
+               :fiveam-matchers
+               :util.testing
                :util/fiveam)
   :components ((:file "test-statsig")))

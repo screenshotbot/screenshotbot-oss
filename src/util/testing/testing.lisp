@@ -108,7 +108,7 @@
 
 (let ((cache (make-hash-table :test #'equal)))
   (defun static-web-output-dir (project)
-    (util:or-setf
+    (util/misc:or-setf
      (gethash project cache)
      (asdf:system-relative-pathname project "static-web-output/"))))
 

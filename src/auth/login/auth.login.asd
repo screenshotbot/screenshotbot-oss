@@ -6,6 +6,7 @@
                :hunchentoot-extensions
                :nibble
                :core.installation
+               :parenscript
                :util
                :util/throttler
                :util/events
@@ -30,6 +31,7 @@
 (defsystem :auth.login/tests
   :serial t
   :depends-on (:auth.login
+               :util.testing
                :fiveam-matchers
                :util/fiveam)
   :components ((:file "test-roles-auth-provider")
