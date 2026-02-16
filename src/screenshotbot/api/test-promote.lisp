@@ -52,7 +52,9 @@
   (:import-from #:screenshotbot/promote-api
                 #:maybe-promote)
   (:import-from #:util/logger
-                #:format-log))
+                #:format-log)
+  (:import-from #:screenshotbot/api/recorder-run
+                #:*synchronous-promotion*))
 (in-package :screenshotbot/api/test-promote)
 
 (util/fiveam:def-suite)
@@ -289,7 +291,8 @@ the promotion history."
 
 (test delegating-promoter-logs-errors
   (with-fixture state ()
-    (let* ((channel (make-instance 'channel))
+    (let* ((*synchronous-promotion* t)
+           (channel (make-instance 'channel))
            (run (make-recorder-run :channel channel
                                    :screenshots nil))
            (delegate (make-instance 'crashing-promoter))           
@@ -298,11 +301,13 @@ the promotion history."
                                           delegate)))
            (loggedp nil))
       (cl-mock:with-mocks ()
+        (cl-mock:if-called 'trivial-backtrace:print-backtrace
+                           (lambda (e &rest args)))
         (cl-mock:if-called 'format-log
                            (lambda (logger level &rest args)
                              (let ((str (apply #'format  nil args)))
-                               (if (Str:containsp "should be logged" str)
-                                   (Setf loggedp t)))))
+                               (if (str:containsp "should be logged" str)
+                                   (setf loggedp t)))))
         (finishes
           (maybe-promote dp run))
         (is-true loggedp)))))
@@ -405,6 +410,7 @@ the parent-not-ready condition and calls wait-for-run with the proper wait-timeo
             (is (equal "a2" commit) "Parent commit should be a2")
             (is (eql 1 amount) "Wait timeout should be 1")
             (is (eql :minute unit) "Unit should be :minute")))))))
+
 
 
 
