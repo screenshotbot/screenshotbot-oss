@@ -205,34 +205,63 @@
                (push (cons system suite) result)))
     (nreverse result)))
 
+(defun test-missing-dep-for (test)
+  (log:info "Trying out ~a" test)
+  (restart-case 
+      (uiop:run-program
+       (list "./build/lw-console-8-1-0"
+             "-eval"
+             (format nil "(progn (ql:quickload :~a) (uiop:quit 0))" test))
+       :error-output t
+       :output t)
+    (ignore-error-and-continue ()
+      (values))
+    (retry-system ()
+      (test-missing-dep-for test))))
+
+(defun test-missing-deps ()
+  (loop for test in (find-tests)
+        do
+        (test-missing-dep-for test)))
+
 (defun image-main ()
   "The main function when called the test-runner is saved to build/t"
-  (call-with-main-wrapper
-   (lambda ()
-     #+lispworks
-     (let* ((non-flag-args (loop for name in (cdr system:*line-arguments-list*)
-                                 if (not (eql #\- (elt name 0)))
-                                   collect name))
-            (system-suite-pairs (parse-system-and-suite-args non-flag-args))
-            (systems (mapcar #'car system-suite-pairs)))
-       (setup-backtrace)
-       (format t "Running tests: ~S~%" systems)
-       (handler-bind ((error (lambda (e)
-                               (format t "Error: ~a" e)
-                               (dbg:output-backtrace :verbose)
-                               (uiop:quit 1))))
-         (progn
-           (dolist (system systems)
-             (ql:quickload (fix-system-name system)))
-           (format t "Loaded tests~%" systems)
-           (maybe-hide-outputs)
-           (loop for (system . suite) in system-suite-pairs
-                 for suite-to-run = (if suite
-                                        (intern (str:upcase suite) "KEYWORD")
-                                        (guess-fiveam-suite system))
-                 do (format t "Running suite ~a for system ~a~%" suite-to-run system)
-                 collect (fiveam:run suite-to-run)
-                   into all-results
-                 finally
-                    (unless (fiveam:explain! (alexandria:flatten all-results))
-                      (uiop:quit 1)))))))))
+  (cond
+    #+lispworks
+    ((str:s-member system:*line-arguments-list* "-list-tests")
+     (format t "~s~%" (find-tests))
+     (uiop:quit 0))
+    #+lispworks
+    ((str:s-member system:*line-arguments-list* "-test-missing-deps")
+     (test-missing-deps)
+     (uiop:quit 0))
+    (t
+     (call-with-main-wrapper
+      (lambda ()
+        #+lispworks
+        (let* ((non-flag-args (loop for name in (cdr system:*line-arguments-list*)
+                                    if (not (eql #\- (elt name 0)))
+                                      collect name))
+               (system-suite-pairs (parse-system-and-suite-args non-flag-args))
+               (systems (mapcar #'car system-suite-pairs)))
+          (setup-backtrace)
+          (format t "Running tests: ~S~%" systems)
+          (handler-bind ((error (lambda (e)
+                                  (format t "Error: ~a" e)
+                                  (dbg:output-backtrace :verbose)
+                                  (uiop:quit 1))))
+            (progn
+              (dolist (system systems)
+                (ql:quickload (fix-system-name system)))
+              (format t "Loaded tests~%" systems)
+              (maybe-hide-outputs)
+              (loop for (system . suite) in system-suite-pairs
+                    for suite-to-run = (if suite
+                                           (intern (str:upcase suite) "KEYWORD")
+                                           (guess-fiveam-suite system))
+                    do (format t "Running suite ~a for system ~a~%" suite-to-run system)
+                    collect (fiveam:run suite-to-run)
+                      into all-results
+                    finally
+                       (unless (fiveam:explain! (alexandria:flatten all-results))
+                         (uiop:quit 1)))))))))))
