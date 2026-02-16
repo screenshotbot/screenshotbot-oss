@@ -511,15 +511,31 @@ on the server. This test will FAIL until the bug is fixed."
 
           ;; Create a branch with a commit (use a different file to avoid merge conflict)
           (git::$ (git-command repo2) "checkout" "-b" "feature")
+
           (test-git:make-commit repo2 "feature content" :file "feature.txt")
+
           (let ((feature-commit (git:current-commit repo2)))
 
             ;; Go back to master and make a different commit (writes to file.txt)
             (git::$ (git-command repo2) "checkout" "master")
+            (test-git::run-in-dir
+             repo2
+             "rm feature.txt")
+
             (test-git:make-commit repo2 "master commit")
 
+
             ;; Merge feature into master (creates a merge commit with 2 parents)
-            (git::$ (git-command repo2) "merge" "--no-edit" "feature")
+            (test-git::run-in-dir
+             repo2
+             " git merge --no-edit -m message feature"
+             :error-output t
+             :output t)
+
+            (test-git::run-in-dir
+             repo2
+             "test -f feature.txt")
+
             (let ((merge-commit (git:current-commit repo2)))
 
               ;; Verify local commits include the merge commit with multiple parents

@@ -67,7 +67,7 @@
                            :if-exists :supersede)
      (write-string content stream))
     (run-in-dir repo (format nil "git add ~a" file))
-    (run-in-dir repo "git commit -a -m ...")))
+    (run-in-dir repo (format nil "git commit -a -m Updating-~a" file))))
 
 (defun make-directory-deletable (dir)
   "On windows, git might have read-only files"
@@ -155,7 +155,7 @@
 (test git-message
   (with-fixture git-repo ()
     (make-commit repo "foobar")
-    (is (equal "..." (git-message repo)))))
+    (is (equal "Updating-file.txt" (git-message repo)))))
 
 (test get-git-root
   (with-tmpdir (dir)
