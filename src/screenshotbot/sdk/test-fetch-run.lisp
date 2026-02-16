@@ -28,6 +28,8 @@
 
 (def-fixture state (&key (screenshot-name "foo"))
   (cl-mock:with-mocks ()
+    (cl-mock:if-called 'trivial-backtrace:print-backtrace
+                       (lambda (&rest args)))
     (let ((*download-engine* (make-instance 'fake-engine)))
      (let ((run (make-instance 'dto:run
                                :screenshots
