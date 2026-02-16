@@ -110,7 +110,6 @@
           (setf systems (test-runner/affected-systems:filter-affected-systems
                          systems
                          files)))))
-    (log:info "Running the following tests: ~S" systems)
 
     #+lispworks
     (when test-redefinitions-p
@@ -128,7 +127,7 @@
       (setf dspec:*redefinition-action* :error))
     (dolist (system systems)
       (log:info "Loading: ~s" system)
-      (ql:quickload system))
+      (ql:quickload system :silent t))
     #+lispworks
     (setf dspec:*redefinition-action* :warn)))
 
