@@ -90,7 +90,9 @@
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex)
   (:import-from #:fiveam-matchers/described-as
-                #:described-as))
+                #:described-as)
+  (:import-from #:screenshotbot/dashboard/compare
+                #:warmup-comparison-images))
 (in-package :screenshotbot/github/test-pull-request-promoter)
 
 (util/fiveam:def-suite)
@@ -332,6 +334,8 @@
   (cl-mock:with-mocks ()
    (with-installation ()
      (with-test-store ()
+       (cl-mock:if-called 'warmup-comparison-images
+                          (lambda (&rest args)))
        (let ((company (make-instance 'company))
              (diff-report (make-instance
                            'diff-report
