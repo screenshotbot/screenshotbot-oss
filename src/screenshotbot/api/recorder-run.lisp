@@ -452,6 +452,15 @@
         collect (cons (dto:metadata-key metadata)
                       (dto:metadata-value metadata))))
 
+(defun default-pixel-tolerance (company)
+  "Add a global pixel tolerance for all runs in the company, useful if
+the company is having flaky screenshots."
+  (cond
+    ((gk:check :default-pixel-tolerance company)
+     1)
+    (t
+     0)))
+
 (defun %put-run-helper (run &key
                               (company (error "provide :company"))
                               (channel (error "provide :channel"))
@@ -495,7 +504,10 @@ computed differently if we're using sharding."
                         :github-repo (dto:run-repo run)
                         :tags (dto:run-tags run)
                         :compare-threshold (dto:compare-threshold run)
-                        :compare-tolerance (dto:compare-pixel-tolerance run))))
+                        :compare-tolerance
+                        (max
+                         (dto:compare-pixel-tolerance run)
+                         (default-pixel-tolerance company)))))
 
     (with-transaction ()
       (setf (channel-branch channel) (dto:main-branch run)))

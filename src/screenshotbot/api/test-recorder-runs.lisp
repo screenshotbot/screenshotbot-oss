@@ -793,6 +793,40 @@ storing release-branch-p, we'll update this test."
       (assert-that (compare-tolerance run)
                    (is-equal-to 5)))))
 
+(test pixel-tolerance-with-gk
+  (with-fixture state ()
+    (gk:create :default-pixel-tolerance)
+    (gk:allow :default-pixel-tolerance company)
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :commit-hash "deadbeef"
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1))))
+              :api-key api-key)
+    (let ((run (car (last (class-instances 'recorder-run)))))
+      (is-true run)
+      (assert-that (compare-tolerance run)
+                   (is-equal-to 1)))))
+
+(test pixel-tolerance-without-gk
+  (with-fixture state ()
+    (%put-run company
+              (make-instance 'dto:run
+                             :channel "foo"
+                             :commit-hash "deadbeef"
+                             :screenshots (list
+                                           (make-instance 'dto:screenshot
+                                                          :name "foo"
+                                                          :image-id (oid img1))))
+              :api-key api-key)
+    (let ((run (car (last (class-instances 'recorder-run)))))
+      (is-true run)
+      (assert-that (compare-tolerance run)
+                   (is-equal-to 0)))))
+
 (test validate-pixel-tolerance-too-bid
   (with-fixture state ()
     (validate-dto
