@@ -831,10 +831,12 @@ the slots are read from the snapshot and ignored."
       ;; Will return a lambda!
       (encode-object-slots subsystem class-layouts (nreverse objects) snapshot-pathname))))
 
+(defvar *crash-output-stream* t)
+
 (defun %log-crash (e)
-  (format t "Error in background snapshot thread: ~a~%" e)
+  (format *crash-output-stream* "Error in background snapshot thread: ~a~%" e)
   #+lispworks
-  (dbg:output-backtrace :brief t)
+  (dbg:output-backtrace :brief :stream *crash-output-stream*)
   #-lispworks
   (trivial-backtrace:print-backtrace e))
 

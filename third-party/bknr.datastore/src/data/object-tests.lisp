@@ -3,6 +3,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:bknr.datastore
+                #:*crash-output-stream*
                 #:persistent-effective-slot-definition
                 #:%id-cache
                 #:*in-restore-p*
@@ -444,9 +445,10 @@
   ())
 
 (defdstest %log-crash-happy-path ()
-  (signals fake-error ;; as opposed to any errors from log-crash
-   (handler-bind ((error #'%log-crash))
-     (error 'fake-error))))
+  (let ((*crash-output-stream* (make-string-output-stream)))
+    (signals fake-error ;; as opposed to any errors from log-crash
+      (handler-bind ((error #'%log-crash))
+        (error 'fake-error)))))
 
 
 (defdstest encode-create-object-updates-the-class-layouts ()
@@ -604,10 +606,11 @@
 
 
 (defdstest snapshotting-deleted-objects ()
-  (let* ((one (make-instance 'parent))
-         (two (make-instance 'parent :child one)))
-    (finishes
-      (snapshot))
-    (delete-object one)
-    (signals error
-      (snapshot))))
+  (let ((*crash-output-stream* (make-string-output-stream)))    
+   (let* ((one (make-instance 'parent))
+          (two (make-instance 'parent :child one)))
+     (finishes
+       (snapshot))
+     (delete-object one)
+     (signals error
+       (snapshot)))))
