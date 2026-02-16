@@ -58,6 +58,7 @@
   (:import-from #:util/cron
                 #:cron-enabled-on-store-p)
   (:import-from #:util/threading
+                #:wait-for-zero-threads
                 #:make-thread
                 #:ignore-and-log-errors
                 #:with-extras
@@ -69,6 +70,8 @@
   #+bknr.cluster
   (:import-from #:util/store/clone-logs-store
                 #:clone-logs-store)
+  (:import-from #:util/threading
+                #:*thread-count*)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:prepare-store-for-test
@@ -336,11 +339,19 @@ In original bknr.datastore:
          (funcall fn)
       (release-file-lock file-lock))))
 
+(def-easy-macro with-wait-for-threads (&fn fn)
+  (unwind-protect
+       (fn)
+    (wait-for-zero-threads)))
+
 (defun %%call-with-test-store (fn &key (globally nil)
                                 store-class
                                 dir)
   (when (boundp 'bknr.datastore:*store*)
     (error "Don't run this test in a live program with an existing store"))
+  (unless (eql 0 *thread-count*)
+    ;; We need this so we know how to clean up
+    (error "There's some stale background threads from a previous test, crashing early"))
   (flet ((inner-work ()
            (labels ((all-objects ()
                       (bknr.datastore:all-store-objects))
@@ -356,7 +367,8 @@ In original bknr.datastore:
                         (unwind-protect
                              (progn
                                (without-sync ()
-                                 (funcall fn))
+                                 (with-wait-for-threads ()
+                                   (funcall fn)))
                                #+nil
                                (let ((objs (all-objects)))
                                  (when objs
