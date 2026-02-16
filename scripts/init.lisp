@@ -12,7 +12,7 @@
 
 (in-package #:tdrhq-init)
 
-(ql:quickload :quick-patch)
+(ql:quickload :quick-patch :silent t)
 
 (defun register-tdrhq (name commit)
   (quick-patch:register (format nil "https://github.com/tdrhq/~a" name)

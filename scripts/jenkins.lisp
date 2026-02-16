@@ -7,7 +7,7 @@
 ;; these quickloads are required because we need to load them before
 ;; we set dspec:*redefinition-action* to :error
 
-(ql:quickload :test-runner)
+(ql:quickload :test-runner :silent t)
 
 (format t "Test runner loaded~%")
 
