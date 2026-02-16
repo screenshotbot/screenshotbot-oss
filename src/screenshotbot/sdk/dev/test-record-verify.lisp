@@ -45,8 +45,11 @@
        (if-called 'homedir (lambda ()
                              %homedir))
        (tmpdir:with-tmpdir (dir)
-         (with-open-file (stream (path:catfile dir "foo.png") :direction :output)
-           (write-string "dummy" stream))
+         (uiop:copy-file
+          #.(asdf:system-relative-pathname
+             :screenshotbot.sdk
+             "fixture/dir1/rose.png")
+          (path:catfile dir "foo.png"))
          (&body))))))
 
 (test record-happy-path

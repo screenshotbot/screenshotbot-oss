@@ -38,7 +38,7 @@
 
 (def-easy-macro with-sdk-integration (&binding api-context &key &binding company &fn fn)
   (with-installation ()
-   (with-test-store ()
+   (with-test-store (:globally t)
      (let* ((company (make-instance 'company))
             (user (make-instance 'user))
             (api-key (make-instance 'api-key:api-key

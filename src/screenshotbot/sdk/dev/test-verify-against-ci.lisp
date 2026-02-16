@@ -33,6 +33,8 @@
                 #:matches-regex)
   (:import-from #:auto-restart
                 #:*global-enable-auto-retries-p*)
+  (:import-from #:screenshotbot/api/recorder-run
+                #:*synchronous-promotion*)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
                     (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/dev/test-verify-against-ci)
@@ -45,7 +47,9 @@
    (cl-mock:with-mocks ()
      (cl-mock:if-called 'uiop:quit (lambda (err)))
      (with-sdk-integration (api-context :company company)
-       (let* ((channel (find-or-create-channel company "foobar"))
+       
+       (let* ((*synchronous-promotion* t)
+              (channel (find-or-create-channel company "foobar"))
               (run (make-recorder-run
                     :company company
                     :commit-hash "abcd"
