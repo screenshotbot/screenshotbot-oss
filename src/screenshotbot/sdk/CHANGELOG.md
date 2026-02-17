@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.18.2 - 2026-02-17
+
+### Added
+
+- Added --html-list argument for static-websites
+
 ## 2.18.1 - 2026-02-12
 
 ### Changed
