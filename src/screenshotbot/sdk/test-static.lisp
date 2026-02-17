@@ -10,6 +10,7 @@
   (:import-from #:screenshotbot/server
                 #:acceptor)
   (:import-from #:screenshotbot/sdk/static
+                #:make-html-provider
                 #:static-website/command
                 #:parse-config-from-file
                 #:find-all-index.htmls
@@ -18,6 +19,7 @@
                 #:is-not
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
+                #:contains
                 #:has-item)
   (:import-from #:util/digests
                 #:md5-file)
@@ -126,3 +128,16 @@
 (test simple-make-command
   (finishes
    (static-website/command)))
+
+(test make-html-provider
+  (is (equal #'find-all-index.htmls (make-html-provider nil)))
+  (uiop:with-temporary-file (:pathname html-list :stream stream :direction :output)
+    (format stream "hello.html~%~%bar.html~%car.html")
+    (finish-output stream)
+    (let ((fn (make-html-provider (namestring html-list))))
+      (assert-that
+       (funcall fn "fake-dir")
+       (contains
+        "hello.html"
+        "bar.html"
+        "car.html")))))

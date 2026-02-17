@@ -217,8 +217,11 @@ upload blobs that haven't been uploaded before."
                                 &key production
                                   repo-url
                                   main-branch
+                                  (html-provider #'find-all-index.htmls) 
                                   assets-root
-                                  &allow-other-keys)
+                                &allow-other-keys)
+    "HTML-PROVIDER is a function that takes a directory, and returns all
+the HTML files in it that we will render. Defaults to FIND-ALL-INDEX.HTMLS."
     (assert (path:-d location))
     (let ((git-repo (make-instance 'git:git-repo :link repo-url))
           (commit-graph-updater (make-instance 'commit-graph-updater :api-context api-context)))
@@ -229,7 +232,8 @@ upload blobs that haven't been uploaded before."
          main-branch))
       (let ((schedule-args
               (remove-from-plist args
-                                 :main-branch :assets-root))
+                                 :main-branch :assets-root
+                                 :html-provider))
             (main-branch (or main-branch
                              (guess-master-branch git-repo))))
         (with-cache-dir ()
@@ -244,7 +248,7 @@ upload blobs that haven't been uploaded before."
               (unwind-protect
                    (progn
                      (hunchentoot:start acceptor)
-                     (loop for index.html in (find-all-index.htmls location)
+                     (loop for index.html in (funcall html-provider location)
                            do
                               (replay:load-url-into
                                context
@@ -290,10 +294,17 @@ upload blobs that haven't been uploaded before."
               :long-name "browser-configs"
               :description "A JSON file that specifies which browsers to run this on."
               :key :browser-configs)
+             (make-option
+              :string
+              :long-name "html-list"
+              :key :html-list
+              :description "A file containing a newline separated list of relative pathnames to
+all the HTML files to snapshot. If not provided, we will scan through
+directory to find the html files. This might be useful to filter the
+HTML files to render.")
              (common-run-options))
    :description "Upload a directory of HTML assets with images/CSS and have Screenshotbot render them in browsers of your choice"
    :handler (lambda (cmd)
-              (log:config :debug)
               (with-clingon-api-context (api-context cmd)
                 (let ((env (e:make-env-reader)))
                   (apply #'record-static-website
@@ -302,10 +313,21 @@ upload blobs that haven't been uploaded before."
                                            (e:pull-request-url env))
                          :repo-url (or (getopt cmd :repo-url)
                                        (e:repo-url env))
+                         :html-provider (make-html-provider (getopt cmd :html-list))
                          :browser-configs (getopt cmd :browser-configs)
                          :main-branch (getopt cmd :main-branch)
                          (loop for key  in `(:assets-root :production
                                              :channel)
                                append (list key (getopt cmd key)))))))))
+
+(defun make-html-provider (html-list)
+  (cond
+    (html-list
+     (lambda (dir)
+       (declare (ignore dir))
+       (remove-if #'str:blankp
+        (uiop:read-file-lines html-list))))
+    (t
+     #'find-all-index.htmls)))
 
 (register-root-command 'static-website/command)
