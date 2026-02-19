@@ -197,7 +197,8 @@ a no-op when either is nil."
       (throttled-error (e)
         (declare (ignore e))
         (setf (hunchentoot:return-code*) 429)
-        (warn "Too many request: ~a" e)
+        (when (= 0 (random 10))
+          (warn "Too many request: ~a (warning fired only 10% of the time)" e))
         "Too many requests"))))
 
 (defmacro defhandler ((name &key uri method intern
