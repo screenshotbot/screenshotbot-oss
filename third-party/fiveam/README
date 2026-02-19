@@ -1,8 +1,0 @@
-This is FiveAM, a common lisp testing framework.
-
-The documentation can be found in the docstrings, start with the
-package :it.bese.fiveam (nicknamed 5AM).
-
-The mailing list for FiveAM is fiveam-devel@common-lisp.net
-
-All the code is Copyright (C) 2002-2006 Edward Marco Baringer.
