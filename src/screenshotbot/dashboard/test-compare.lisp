@@ -2,6 +2,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:sort-pixels
+                #:pixel-str-to-components
                 #:%render-commits-path
                 #:find-commit-path-to-ancestor
                 #:render-diff-report
@@ -537,3 +539,21 @@
 
 
 
+
+(test pixel-str-to-components
+  (is (equal '(10 20 30)
+             (pixel-str-to-components
+              "srgb(10,20,30)"))))
+
+(test sort-pixels
+  (is
+   (equalp
+    '(2 0 1)
+    (sort-pixels
+     #2A((1 2) (3 4) (5 6))
+     '("srgb(243,246,248)"
+       "srgb(242,244,247)"
+       "srgb(242,245,248)")
+     '("srgb(243,245,248)"
+       "srgb(242,245,247)"
+       "srgb(242,245,246)")))))

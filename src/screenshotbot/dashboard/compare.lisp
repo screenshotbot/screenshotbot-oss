@@ -807,28 +807,54 @@ If the diff-report is cached, then we process the body immediately instead."
 (defvar +metrics-page-changed-limit+ 9999
   "The max number of pixels we're willing to detect.")
 
+(defun pixel-str-to-components (pixel-str)
+  "Technically I shouldn't have to do this, I'm doing this to avoid a
+native change in prod."
+  (multiple-value-bind (res parts)
+      (cl-ppcre:scan-to-strings "^srgb[(](.*),(.*),(.*)[)]$" pixel-str)
+    (assert res)
+    (loop for part across parts
+          collect (parse-integer part))))
+
+(defun sort-pixels (pixels before-values after-values)
+  "Sort the pixels in descending order of which pixels changed the most. Stable sorted."
+  (let ((indices (loop for x below (first (array-dimensions pixels))
+                       collect x)))
+    (let ((indices (stable-sort
+                    indices
+                    #'>
+                    :key (lambda (i)
+                           (let ((px1 (pixel-str-to-components (elt before-values i)))
+                                 (px2 (pixel-str-to-components (elt after-values i))))
+                             (labels ((sq (x) (* x x))
+                                      (diff (j)
+                                        (sq (- (elt px1 j) (elt px2 j))) ))
+                               (+ (diff 0) (diff 1) (diff 2))))))))
+      indices)))
+
 (defun metrics-page (image-comparison masks)
   
   (with-local-image (file (image-comparison-result image-comparison))
     (with-wand (wand :file file)
       (log:debug"random-zoom-to-on-result on ~a" file)
-      (multiple-value-bind (pixels) (get-non-alpha-pixels wand :masks masks :limit (1+ +metrics-page-changed-limit+))
+      (multiple-value-bind (pixels) 
+          (get-non-alpha-pixels wand :masks masks :limit (1+ +metrics-page-changed-limit+))
         (flet ((read-px-values (image)
                  (with-local-image (file image)
                    (with-wand (wand :file file)
-                     (loop for _ from 0 to 3
-                           for i from 0 below (car (array-dimensions pixels))
+                     (loop for i from 0 below (car (array-dimensions pixels))
                            collect
                            (get-px-as-string wand
                                              (aref pixels i 0)
                                              (aref pixels i 1)))))))
-         (let ((num-changed (car (array-dimensions pixels)))
-               (width (magick-get-image-width wand))
-               (height (magick-get-image-height wand))
-               (before-values (read-px-values
-                               (image-comparison-before image-comparison)))
-               (after-values (read-px-values
-                              (image-comparison-after image-comparison))))
+         (let* ((num-changed (car (array-dimensions pixels)))
+                (width (magick-get-image-width wand))
+                (height (magick-get-image-height wand))
+                (before-values (read-px-values
+                                (image-comparison-before image-comparison)))
+                (after-values (read-px-values
+                               (image-comparison-after image-comparison)))
+                (pixel-indices (sort-pixels pixels before-values after-values)))
            <app-template>
              <div class= "main-content">
                <div class= "card-page-container mx-auto">
@@ -899,7 +925,8 @@ If the diff-report is cached, then we process the body immediately instead."
                          </tr>
                        </thead>
                        <tbody>
-                       ,@ (loop for i below (car (array-dimensions pixels))
+                       ,@ (loop for i in pixel-indices
+                                for _ below 4
                                 for before in before-values
                                 for after in after-values
                                 collect
