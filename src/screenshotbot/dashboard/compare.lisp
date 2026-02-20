@@ -790,8 +790,6 @@ If the diff-report is cached, then we process the body immediately instead."
                 <a class= "dropdown-item metrics-link" href= "#" >
                   Metrics
                 </a>
-
-
               </li>
 
             </ul>
@@ -927,8 +925,8 @@ native change in prod."
                        <tbody>
                        ,@ (loop for i in pixel-indices
                                 for _ below 4
-                                for before in before-values
-                                for after in after-values
+                                for before = (elt before-values i)
+                                for after = (elt after-values i)
                                 collect
                                 <tr>
                                   <td> ,(aref pixels i 0),,(aref pixels i 1)</td>
