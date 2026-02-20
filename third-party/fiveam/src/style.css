@@ -1,0 +1,64 @@
+body {
+  background-color: #FFFFFF;
+  color: #000000;
+  padding: 0px; margin: 0px;
+}
+
+.qbook { width: 600px; background-color: #FFFFFF; margin: 0px; 
+         border-left: 3em solid #660000; padding: 3px; }
+
+h1 { text-align: center; margin: 0px;
+     color: #333333; 
+     border-bottom: 0.3em solid #660000; 
+}
+
+p { padding-left: 1em; }
+
+h2 { border-bottom: 0.2em solid #000000; font-family: verdana; }
+
+h3 { border-bottom: 0.1em solid #000000; }
+
+pre.code {
+	background-color: #eeeeee;
+	border: solid 1px #d0d0d0;
+        overflow: auto;
+}
+
+pre.code * .paren { color: #666666; } 
+
+pre.code a:active  { color: #000000; }
+pre.code a:link    { color: #000000; }
+pre.code a:visited { color: #000000; }
+
+pre.code .first-line { font-weight: bold; }
+
+div.contents { font-family: verdana; }
+
+div.contents a:active  { color: #000000; }
+div.contents a:link    { color: #000000; }
+div.contents a:visited { color: #000000; }
+
+div.contents div.contents-heading-1 { padding-left: 0.5em; font-weight: bold; }
+div.contents div.contents-heading-1 a:active  { color: #660000; }
+div.contents div.contents-heading-1 a:link    { color: #660000; }
+div.contents div.contents-heading-1 a:visited { color: #660000; }
+
+div.contents div.contents-heading-2 { padding-left: 1.0em; }
+div.contents div.contents-heading-2 a:active  { color: #660000; }
+div.contents div.contents-heading-2 a:link    { color: #660000; }
+div.contents div.contents-heading-2 a:visited { color: #660000; }
+
+div.contents div.contents-heading-3 { padding-left: 1.5em; }
+div.contents div.contents-heading-3 a:active  { color: #660000; }
+div.contents div.contents-heading-3 a:link    { color: #660000; }
+div.contents div.contents-heading-3 a:visited { color: #660000; }
+
+div.contents div.contents-heading-4 { padding-left: 2em; }
+div.contents div.contents-heading-4 a:active  { color: #660000; }
+div.contents div.contents-heading-4 a:link    { color: #660000; }
+div.contents div.contents-heading-4 a:visited { color: #660000; }
+
+div.contents div.contents-heading-5 { padding-left: 2.5em; }
+div.contents div.contents-heading-5 a:active  { color: #660000; }
+div.contents div.contents-heading-5 a:link    { color: #660000; }
+div.contents div.contents-heading-5 a:visited { color: #660000; }

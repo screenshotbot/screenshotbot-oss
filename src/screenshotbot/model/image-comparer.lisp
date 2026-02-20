@@ -105,7 +105,6 @@
                                        :result result
                                        :pixel-tolerance (compare-tolerance self)
                                        :in-place-p t)
-                 ;; TODO(T844): factor in tolerance
                  (let ((bad-pixels (get-non-alpha-pixels
                                     result
                                     ;; Why +2 instead of +1? I think it might
