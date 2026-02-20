@@ -24,6 +24,7 @@
   (:import-from #:util/store
                 #:location-for-oid)
   (:import-from #:screenshotbot/model/recorder-run
+                #:compare-tolerance
                 #:recorder-run-metadata
                 #:recorder-run-batch
                 #:compare-threshold
@@ -282,6 +283,7 @@ NIL or 0, this will use exact pixel comparisons.")
     :initform nil
     :json-key "compareTolerance"
     :json-type (or null :number)
+    :accessor compare-tolerance
     :accessor archived-run-compare-tolerance)
    (created-at
     :initform nil

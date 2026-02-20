@@ -44,6 +44,7 @@
   (:import-from #:screenshotbot/model/image
                 #:image-dimensions)
   (:import-from #:screenshotbot/model/recorder-run
+                #:compare-tolerance
                 #:delete-run
                 #:recorder-run-tags
                 #:gitlab-merge-request-iid
@@ -295,6 +296,7 @@
             <li>Number of screenshots: ,(length (recorder-run-screenshots run))</li>
             <li>Total run size: ,(run-size run)kB</li>
             <li>Comparison threshold: ,(compare-threshold run)</li>
+            <li>Pixel tolerance: ,(compare-tolerance run)</li>
             <li>Batch: ,(when-let ((batch (recorder-run-batch run)))
                           <span>
                             ,(batch-name batch)
