@@ -457,7 +457,7 @@
 the company is having flaky screenshots."
   (cond
     ((gk:check :default-pixel-tolerance company)
-     1)
+     4)
     (t
      0)))
 

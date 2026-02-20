@@ -809,7 +809,7 @@ storing release-branch-p, we'll update this test."
     (let ((run (car (last (class-instances 'recorder-run)))))
       (is-true run)
       (assert-that (compare-tolerance run)
-                   (is-equal-to 1)))))
+                   (is-equal-to 4)))))
 
 (test pixel-tolerance-without-gk
   (with-fixture state ()
