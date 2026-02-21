@@ -64,16 +64,6 @@
 (defun scale-provider ()
   (make-instance 'vagrant))
 
-(defmacro def-registry-handler ((&rest args1) (&rest args2) &body body)
-  `(defhandler ,args1 ,args2
-     (multiple-value-bind (user pass) (hunchentoot:authorization)
-       (assert (equal user "replay"))
-       (assert (equal pass (replay-password (installation)))))
-     ,@body))
-
-(def-registry-handler (nil :uri "/replay/register" :method :put) ()
-  (log:info "Dummy replay register method"))
-
 (defun selenium-server (&key (type (error "specify type")))
   (assert (member type '("firefox" "chrome") :test #'equal))
   (make-instance 'selenium-server
