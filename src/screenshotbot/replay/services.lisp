@@ -28,11 +28,6 @@
 
 (named-readtables:in-readtable :interpol-syntax)
 
-(defclass registry ()
-  ())
-
-(defvar *registry* (make-instance 'registry))
-
 (defclass selenium-server ()
   ((host :initarg :host
          :reader selenium-host)
@@ -52,9 +47,6 @@
                 (format nil "[~a]" host)
                 host)
             (selenium-port self))))
-
-(defun scale-provider ()
-  (make-instance 'vagrant))
 
 (defun selenium-server (&key (type (error "specify type")))
   (assert (member type '("firefox" "chrome") :test #'equal))
