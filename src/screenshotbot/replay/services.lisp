@@ -53,33 +53,18 @@
                 host)
             (selenium-port self))))
 
-(defun linode? ()
-  (or
-   (equal "localhost" (uiop:hostname))
-   (equal "prod1.screenshotbot.io" (uiop:hostname))
-   (equal "prod1.intern.screenshotbot.io" (uiop:hostname))
-   ;; TODO(T2022): fix this:
-   (equal "ip-172-30-5-43" (uiop:hostname))))
-
 (defun scale-provider ()
   (make-instance 'vagrant))
 
 (defun selenium-server (&key (type (error "specify type")))
   (assert (member type '("firefox" "chrome") :test #'equal))
   (make-instance 'selenium-server
-                  :host (cond
-                          ((linode?)
-                           "172.30.1.180")
-                          (t
-                           "172.17.0.1"))
-                  :squid-proxy (cond
-                                 ((equal "thecharmer" (uiop:hostname))
-                                  "172.17.0.1:3129")
-                                 (t
-                                  ;; docker
-                                  "squid:3128"))
-                  :port 5004
-                  :type nil))
+                 ;; This is the IP of the replay server.
+                 :host "172.30.1.180"
+                 ;; This is a docker instance that is running on the the replay server.
+                 :squid-proxy "squid:3128"
+                 :port 5004
+                 :type nil))
 
 
 (defclass static-selenium-provider ()
