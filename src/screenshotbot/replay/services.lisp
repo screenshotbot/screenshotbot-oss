@@ -53,17 +53,13 @@
                 host)
             (selenium-port self))))
 
-(defun oss? ()
-  (progn #+screenshotbot-oss t))
-
 (defun linode? ()
-  (unless (oss?)
-    (or
-     (equal "localhost" (uiop:hostname))
-     (equal "prod1.screenshotbot.io" (uiop:hostname))
-     (equal "prod1.intern.screenshotbot.io" (uiop:hostname))
-     ;; TODO(T2022): fix this:
-     (equal "ip-172-30-5-43" (uiop:hostname)))))
+  (or
+   (equal "localhost" (uiop:hostname))
+   (equal "prod1.screenshotbot.io" (uiop:hostname))
+   (equal "prod1.intern.screenshotbot.io" (uiop:hostname))
+   ;; TODO(T2022): fix this:
+   (equal "ip-172-30-5-43" (uiop:hostname))))
 
 (defun scale-provider ()
   (make-instance 'vagrant))
@@ -82,8 +78,6 @@
   (assert (member type '("firefox" "chrome" #-screenshotbot-oss "safari") :test #'equal))
   (make-instance 'selenium-server
                   :host (cond
-                          ((oss?)
-                           "selenium-hub")
                           ((linode?)
                            "172.30.1.180")
                           (t
@@ -101,11 +95,7 @@
                                  (t
                                   ;; docker
                                   "squid:3128"))
-                  :port (cond
-                         ((or (oss?))
-                          4444)
-                         (t
-                          5004))
+                  :port 5004
                   :type nil))
 
 
