@@ -75,7 +75,7 @@
   (log:info "Dummy replay register method"))
 
 (defun selenium-server (&key (type (error "specify type")))
-  (assert (member type '("firefox" "chrome" #-screenshotbot-oss "safari") :test #'equal))
+  (assert (member type '("firefox" "chrome") :test #'equal))
   (make-instance 'selenium-server
                   :host (cond
                           ((linode?)
@@ -83,13 +83,6 @@
                           (t
                            "172.17.0.1"))
                   :squid-proxy (cond
-                                 #-screenshotbot-oss
-                                 ((equal "safari" type)
-                                  (cond
-                                    ((equal "thecharmer" (uiop:hostname))
-                                     "172.17.0.1:3129")
-                                    (t
-                                     "192.168.1.120:3128")))
                                  ((equal "thecharmer" (uiop:hostname))
                                   "172.17.0.1:3129")
                                  (t
