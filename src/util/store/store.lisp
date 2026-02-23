@@ -195,9 +195,23 @@ to the directory that was just snapshotted.")
 uses sane defaults."))
 
 (defun ec2-get-local-ipv4 ()
-  (str:trim
-   (uiop:run-program "ec2metadata --local-ipv4"
-                     :output 'string)))
+  (cond
+    ((equal 0(nth-value 2 (uiop:run-program "which ec2metadata" :ignore-error-status t)))
+     ;; We're actually running in EC2
+     (str:trim
+      (uiop:run-program "ec2metadata --local-ipv4"
+                        :output 'string)))
+    (t
+     ;; At the time of writing, this probably means we're running in Vagrant.
+     (log:warn "ec2metadata not available, using `ip addr` instead")
+     (multiple-value-bind (result parts)
+         (cl-ppcre:scan-to-strings "inet ([0-9.]*)/24"
+                                   (uiop:run-program "ip -4 addr show scope global"
+                                                     :output 'string))
+       (unless result
+         (error "Could not figure out IP address"))
+       (log:info "Using IP address ~a" (elt parts 0))
+       (elt parts 0)))))
 
 (defmethod bknr.datastore::snapshot-store :around ((store base-raft-store))
   (let ((start-time (local-time:now)))
