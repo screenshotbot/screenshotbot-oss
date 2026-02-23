@@ -183,6 +183,12 @@
               :initial-value nil
               :long-name "only-screenshotbot"
               :key :only-screenshotbot-p)
+             (make-option
+              :string
+              :description "The environment name used for raft, this is not required if we're using raft-config.lisp"
+              :initial-value nil
+              :long-name "raft-environment"
+              :key :raft-environment)
              (common-options))))
 
 (defun save-passphrases/command ()
