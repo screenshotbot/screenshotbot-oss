@@ -218,11 +218,11 @@ uses sane defaults."))
     (with-extras (("snapshot-start-time" start-time))
       (call-next-method))))
 
-(defmethod initialize-instance :around ((self ec2-store) &rest args &key ips group port &allow-other-keys)
+(defmethod initialize-instance :around ((self ec2-store) &rest args &key ips group port data-path &allow-other-keys)
   (apply
    #'call-next-method
    self
-   :data-path (format nil "/home/~a/raft-data/" group)
+   :data-path (or data-path (format nil "/home/~a/raft-data/" group))
    :ip (ec2-get-local-ipv4)
    :priority
    (cond

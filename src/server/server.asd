@@ -56,6 +56,7 @@
                (:module "cluster"
                 :components ((:file "status")
                              (:file "leadership")
+                             (:file "cluster-init")
                              (:file "peers"))
                 :if-feature (:and :lispworks :linux))))
 

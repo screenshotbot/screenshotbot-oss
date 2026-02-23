@@ -41,6 +41,8 @@
   #+lispworks
   (:import-from #:hunchentoot-extensions/existing-socket
                 #:existing-socket)
+  (:import-from #:server/cluster/cluster-init
+                #:cluster-init/command)
   (:export
    #:main))
 (in-package :server/cli)
@@ -273,6 +275,7 @@
                                        (cluster-status/command)
                                        (cluster-leadership/command)
                                        (add-peer/command)
+                                       (cluster-init/command)
                                        (remove-peer/command))))
 
 
