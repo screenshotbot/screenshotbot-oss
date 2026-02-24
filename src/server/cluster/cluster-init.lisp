@@ -22,14 +22,21 @@
               :string
               :key :store
               :description "The store directory to create the raft-config.lisp in"
-              :long-name "store"))))
+              :long-name "store")
+             (clingon:make-option
+              :string
+              :key :other-peers
+              :long-name "other-peers"
+              :description "The other peers (excluding this one). Command separated IP addresses without port numbers."))))
 
 (defun cluster-init/handler (cmd)
  (let ((store (str:ensure-suffix "/" (clingon:getopt cmd :store))))
-   (init-raft-config store)))
+   (init-raft-config store
+                     (remove-if #'str:emptyp
+                                (str:split (or (clingon:getopt cmd :other-peers)))))))
 
 
-(defun init-raft-config (store)
+(defun init-raft-config (store other-peers)
   (let ((raft-config (path:catfile store "raft-config.lisp")))
     (uiop:with-staging-pathname (raft-config raft-config)
       (with-open-file (stream raft-config :direction :output :if-exists :append)
@@ -41,5 +48,8 @@
                     :data-path ,(namestring store)
                     :port 7070
                     :ips (list
-                          ,(ec2-get-local-ipv4)))))))
+                          ,(ec2-get-local-ipv4)
+                          ,@(loop for peer in other-peers
+                                  collect (format nil "~a" peer))))))))
     (log:info "Updated ~a" raft-config)))
+
