@@ -33,7 +33,8 @@
  (let ((store (str:ensure-suffix "/" (clingon:getopt cmd :store))))
    (init-raft-config store
                      (remove-if #'str:emptyp
-                                (str:split (or (clingon:getopt cmd :other-peers)))))))
+                                (str:split "," (or (clingon:getopt cmd :other-peers)
+                                                   ""))))))
 
 
 (defun init-raft-config (store other-peers)
@@ -45,7 +46,7 @@
                   `(make-default-store
                     'ec2-store
                     :group "screenshotbot"
-                    :data-path ,(namestring store)
+                    :data-path ,(namestring "~/raft-data/")
                     :port 7070
                     :ips (list
                           ,(ec2-get-local-ipv4)
