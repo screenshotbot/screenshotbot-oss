@@ -25,9 +25,14 @@
               :long-name "store"))))
 
 (defun cluster-init/handler (cmd)
-  (let ((store (str:ensure-suffix "/" (clingon:getopt cmd :store))))
-    (let ((raft-config (path:catfile store "raft-config.lisp")))
-      (with-open-file (stream raft-config :direction :output :if-exists :supersede)
+ (let ((store (str:ensure-suffix "/" (clingon:getopt cmd :store))))
+   (init-raft-config store)))
+
+
+(defun init-raft-config (store)
+  (let ((raft-config (path:catfile store "raft-config.lisp")))
+    (uiop:with-staging-pathname (raft-config raft-config)
+      (with-open-file (stream raft-config :direction :output :if-exists :append)
         (let ((*package* (find-package :cl-user)))
           (format stream "~s"
                   `(make-default-store
@@ -36,6 +41,5 @@
                     :data-path ,(namestring store)
                     :port 7070
                     :ips (list
-                          ,(ec2-get-local-ipv4))))))
-      (log:info "Updated ~a" raft-config))))
-
+                          ,(ec2-get-local-ipv4)))))))
+    (log:info "Updated ~a" raft-config)))
