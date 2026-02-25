@@ -43,3 +43,15 @@
     (setf (config "installation.domain") "https://foobar.com")
     (signals simple-warning
       (installation-domain *installation*))))
+
+
+(test validation-of-domain
+  (with-fixture state ()
+    (setf (config "installation.domain") "https://example.com")
+    (signals error
+      (setf (config "installation.domain") "foobar"))
+    (signals error
+      (setf (config "installation.domain") "https://example.com/bar/"))
+    (signals error
+      ;; trailing /
+      (setf (config "installation.domain") "https://example.com/"))))

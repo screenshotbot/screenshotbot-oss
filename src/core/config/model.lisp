@@ -14,7 +14,10 @@
                 #:persistent-class
                 #:store-object)
   (:import-from #:util/misc
-                #:?.))
+                #:?.)
+  (:import-from #:core/config/api
+                #:validate
+                #:config))
 (in-package :core/config/model)
 
 (defindex +keys+
@@ -34,13 +37,18 @@
            :reader config-setting-value))
   (:metaclass persistent-class))
 
-(defun config (key)
+(defmethod config (key)
   (?. config-setting-value (config-setting-for-key key)))
 
-(defun (setf config) (value key)
+(defmethod (setf config) (value key)
+  (handler-bind ((error (lambda (e)
+                          (format t "Got error: ~a~%" e))))
+    (validate (intern (str:upcase key) :keyword) value))
   (?. bknr.datastore:delete-object (config-setting-for-key key))
   (make-instance 'config-setting
                  :key key
                  :value value))
+
+
 
 

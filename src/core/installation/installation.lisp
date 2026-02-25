@@ -6,7 +6,8 @@
 
 (defpackage :core/installation/installation
   (:use #:cl)
-  (:import-from #:core/config/model
+  (:import-from #:core/config/api
+                #:validate
                 #:config)
   (:local-nicknames (#:a #:alexandria))
   (:export
@@ -53,3 +54,16 @@ per process.")
 
 (defmethod site-alert (installation)
   nil)
+
+(defmethod validate ((key (eql :installation.domain)) value)
+  (unless (or
+           (str:starts-with-p "http://" value)
+           (str:starts-with-p "https://" value))
+    (error "URL must be of the form https://... or http://..."))
+
+  ;; validate parsing
+  (let ((uri (quri:uri value)))
+    (when (equal "/" (quri:uri-path uri))
+      (error "Don't use the trailing / in the URI"))
+    (unless (str:emptyp (quri:uri-path uri))
+      (error "The URL must be a root URL, not ~a" (quri:uri-path uri)))))

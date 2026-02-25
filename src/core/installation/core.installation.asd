@@ -10,7 +10,8 @@
                #:lparallel
                #:util.threading
                #:auto-restart
-               #:core.config
+               #:core.config/api
+               #:quri
                #:easy-macros
                #:cl-smtp)
   :components ((:file "installation")

@@ -1,7 +1,12 @@
+(defsystem :core.config/api
+  :depends-on ()
+  ::components ((:file "api")))
+
 (defsystem :core.config
   :serial t
   :depends-on (:bknr.datastore
                :util.misc
+               :core.config/api
                :util.store)
   :components ((:file "model")))
 
