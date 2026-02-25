@@ -43,6 +43,8 @@
                 #:existing-socket)
   (:import-from #:server/cluster/cluster-init
                 #:cluster-init/command)
+  (:import-from #:server/config-cli
+                #:config/command)
   (:export
    #:main))
 (in-package :server/cli)
@@ -311,6 +313,7 @@
                                        :acceptor acceptor)
                           #+lispworks
                           (server/eval:eval/command)
+                          (config/command)
                           (cluster/command)))))
 
 (defun legacy-mode-p (args)

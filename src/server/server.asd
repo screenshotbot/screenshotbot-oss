@@ -51,6 +51,7 @@
 
 (defsystem #:server/cluster
   :depends-on (#:server/config
+               #:core.config
                #:clingon)
   :components ((:file "eval" :if-feature :lispworks)
                (:module "cluster"
@@ -58,7 +59,8 @@
                              (:file "leadership")
                              (:file "cluster-init")
                              (:file "peers"))
-                :if-feature (:and :lispworks :linux))))
+                :if-feature (:and :lispworks :linux))
+               (:file "config-cli" :if-feature :lispworks)))
 
 (defsystem #:server/cli
   :depends-on (#:server
