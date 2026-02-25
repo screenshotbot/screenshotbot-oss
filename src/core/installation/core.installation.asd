@@ -10,6 +10,7 @@
                #:lparallel
                #:util.threading
                #:auto-restart
+               #:core.config
                #:easy-macros
                #:cl-smtp)
   :components ((:file "installation")
@@ -24,4 +25,5 @@
                #:fiveam-matchers
                #:util/fiveam)
   :components ((:file "test-mailer")
+               (:file "test-installation")
                (:file "test-request")))

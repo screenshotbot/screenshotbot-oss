@@ -6,6 +6,8 @@
 
 (defpackage :core/installation/installation
   (:use #:cl)
+  (:import-from #:core/config/model
+                #:config)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:abstract-installation
@@ -26,6 +28,20 @@ name will be used from data to represent which installation it belongs to.")))
 
 (defmethod installation-domain ((self null))
   nil)
+
+(defmethod installation-domain :around (installation)
+  (let ((config-value (config "installation.domain"))
+        (installation-value (call-next-method)))
+
+    (when (and
+           config-value
+           installation-value
+           (not (equal "https://example.com" installation-value))
+           (not (equal config-value installation-value)))
+      (warn "Domain from config and installation does not match: "))
+    (or
+     config-value
+     installation-value)))
 
 (defvar *secondary-installations* nil
   "Non default installations, when allowing for multiple installations
