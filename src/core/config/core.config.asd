@@ -1,6 +1,6 @@
 (defsystem :core.config/api
   :depends-on ()
-  ::components ((:file "api")))
+  :components ((:file "api")))
 
 (defsystem :core.config
   :serial t

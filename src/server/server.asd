@@ -53,6 +53,7 @@
   :depends-on (#:server/config
                #:core.config
                #:clingon)
+  :serial t
   :components ((:file "eval" :if-feature :lispworks)
                (:module "cluster"
                 :components ((:file "status")
@@ -60,7 +61,7 @@
                              (:file "cluster-init")
                              (:file "peers"))
                 :if-feature (:and :lispworks :linux))
-               (:file "config-cli" :if-feature :lispworks)))
+               (:file "config-cli" :if-feature (:and :lispworks :linux))))
 
 (defsystem #:server/cli
   :depends-on (#:server
@@ -74,6 +75,7 @@
 ;; we separate this into a separate system is for support with SLIME,
 ;; which is needed if you're using Atom's SLIMA.
 (defsystem "server/slynk"
+  :serial t
   :depends-on ("server"
                "slynk"
                "slynk/arglists"
@@ -96,6 +98,7 @@
                :util/fiveam
                :fiveam-matchers
                :server/slynk)
+  :serial t
   :components ((:file "test-server")
                (:file "test-config")
                (:file "test-util" :if-feature :lispworks)

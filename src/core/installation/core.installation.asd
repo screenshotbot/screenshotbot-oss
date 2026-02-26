@@ -23,6 +23,7 @@
 (defsystem #:core.installation/tests
   :serial t
   :depends-on (#:core.installation
+               #:core.config
                #:fiveam-matchers
                #:util/fiveam)
   :components ((:file "test-mailer")

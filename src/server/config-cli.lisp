@@ -28,6 +28,7 @@
                                        (get/command)
                                        (set/command))))
 
+
 (defun get/command ()
   (make-command :name "get"
                 :description "Get a config value"

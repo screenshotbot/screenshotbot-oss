@@ -43,6 +43,7 @@
                 #:existing-socket)
   (:import-from #:server/cluster/cluster-init
                 #:cluster-init/command)
+  #+lispworks
   (:import-from #:server/config-cli
                 #:config/command)
   (:export
@@ -313,6 +314,7 @@
                                        :acceptor acceptor)
                           #+lispworks
                           (server/eval:eval/command)
+                          #+lispworks
                           (config/command)
                           (cluster/command)))))
 
