@@ -8,7 +8,13 @@
     (:use #:cl
           #:alexandria
           #:fiveam
-          #:screenshotbot/installation))
+          #:screenshotbot/installation)
+  (:import-from #:screenshotbot/installation
+                #:installation)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:core/config/api
+                #:config))
 
 (util/fiveam:def-suite)
 
@@ -22,3 +28,14 @@
     (signals simple-error
       (find-plugin (make-instance 'installation)
                    'my-plugin))))
+
+(test default-oidc-provider-happy-path-with-config
+  (with-test-store ()
+   (let ((installation (make-instance 'installation)))
+     (is (eql nil (default-oidc-provider installation)))
+     (setf (config "sso.oidc.client-id") "abcd")
+     (is (eql nil (default-oidc-provider installation)))
+     (setf (config "sso.oidc.client-secret") "car")
+     (setf (config "sso.oidc.issuer")
+           "https://example.com/")
+     (is (not (null (default-oidc-provider installation)))))))

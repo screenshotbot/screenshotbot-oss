@@ -22,6 +22,10 @@
                 #:standard-auth-provider)
   (:import-from #:util/recaptcha
                 #:installation-with-recaptcha)
+  (:import-from #:alexandria
+                #:when-let)
+  (:import-from #:core/config/api
+                #:config)
   (:export
    #:installation
    #:installation-domain
@@ -126,3 +130,21 @@ every user will have only one company that they are an owner of."))
      ,@body))
 
 (defgeneric default-logged-in-page (installation))
+
+(defmethod default-oidc-provider :around ((self installation))
+  (or
+   (call-next-method)
+   (get-default-oidc-provider-from-config)))
+
+(defun get-default-oidc-provider-from-config ()
+  (when-let ((client-id (config "sso.oidc.client-id"))
+             (client-secret (config "sso.oidc.client-secret"))
+             (issuer (config "sso.oidc.issuer"))
+             (scope (or (config "sso.oidc.scope")
+                        "openid email profile")))
+    (make-instance 'screenshotbot/login/oidc:oidc-provider
+                   :client-id client-id
+                   :client-secret client-secret
+                   :issuer issuer
+                   :scope scope
+                   :identifier 'default-oidc-provider)))
