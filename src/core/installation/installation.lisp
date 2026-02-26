@@ -31,7 +31,7 @@ name will be used from data to represent which installation it belongs to.")))
   nil)
 
 (defmethod installation-domain :around (installation)
-  (let ((config-value (config "installation.domain"))
+  (let ((config-value (ignore-errors (config "installation.domain")))
         (installation-value (call-next-method)))
 
     (when (and
