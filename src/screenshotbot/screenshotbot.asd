@@ -36,6 +36,7 @@
                :util/logger
                #+ (and bknr.cluster (not :screenshotbot-oss))
                :cluster
+               :core.config/api
                :util.store/raft-state
                :lparallel
                :zip
@@ -358,6 +359,7 @@
   :serial t
   :depends-on (:fiveam
                :util
+               :core.config
                :util/fiveam
                :fiveam-matchers
                :util/random-port
