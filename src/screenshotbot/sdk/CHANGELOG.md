@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.18.4 - 2026-02-27
+
+### Changed
+
+- Fixed build URL for BuildKite
+- This will be the first release where we'll also publish the binary
+  artifacts directly (not just the installer). At the time of writing
+  this script isn't ready yet.
+
 ## 2.18.3 - 2026-02-18
 
 - This should be a no-op, or at least no intentional changes. Testing
