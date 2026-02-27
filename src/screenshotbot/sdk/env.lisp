@@ -271,7 +271,10 @@ information is available, so we can't have complex logic rely on it."))
   (getenv self "BUILDKITE_COMMIT"))
 
 (defmethod build-url ((self buildkite-env-reader))
-  (getenv self "BUILDKITE_BUILD_URL"))
+  (format nil
+          "~a#~a"
+          (getenv self "BUILDKITE_BUILD_URL")
+          (getenv self "BUILDKITE_JOB_ID")))
 
 (defmethod repo-url ((Self buildkite-env-reader))
   (getenv self "BUILDKITE_REPO"))

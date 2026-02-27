@@ -250,3 +250,13 @@
   (let ((env-reader (make-instance 'teamcity-env-reader)))
     (is (equal nil
                (repo-url env-reader)))))
+
+(test buildkite-includes-job-id
+  (let ((env-reader (make-instance
+                     'buildkite-env-reader
+                     ;; These examples come from here: https://buildkite.com/docs/apis/rest-api/jobs
+                     :overrides `(("BUILDKITE_BUILD_URL" . "https://buildkite.com/my-great-org/my-pipeline/builds/1")
+                                  ("BUILDKITE_JOB_ID" . "b63254c0-3271-4a98-8270-7cfbd6c2f14e")))))
+    (is (equal
+         "https://buildkite.com/my-great-org/my-pipeline/builds/1#b63254c0-3271-4a98-8270-7cfbd6c2f14e"
+         (build-url env-reader)))))
