@@ -26,7 +26,8 @@
                                    (clingon:print-usage-and-exit cmd t))
                         :sub-commands (list
                                        (get/command)
-                                       (set/command))))
+                                       (set/command)
+                                       (setup-sso/command))))
 
 
 (defun get/command ()
@@ -73,3 +74,31 @@
 
     (eval-on-pid (get-pid)
                  `(setf (config ,key) ,value))))
+
+(defun setup-sso/command ()
+  (make-command :name "setup-sso"
+                :description "A helper tool to setup SSO via OpenID Connect"
+                :handler #'setup-sso/handler))
+
+(defun setup-sso/handler (cmd)
+  (declare (ignore cmd))
+  (let ((args))
+   (labels ((read-config (config input)
+              (format t "~a [~a]: " input config)
+              (finish-output t)
+              (let ((arg (read-line)))
+                (cond
+                  ((str:blankp arg)
+                   (read-config config input))
+                  (t
+                   (push (list config (str:trim arg)) args))))))
+     (read-config "sso.oidc.issuer" "Issuer URL")
+     (read-config "sso.oidc.client-id" "Client ID")
+     (read-config "sso.oidc.client-secret" "Client Secret")
+     (loop for (key value) in args
+           do
+              (log:info "Setting ~a" key)
+              (eval-on-pid
+               (get-pid)
+               `(setf (config ,key) ,value)))
+     (log:info "SSO has been configured, try testing it"))))
