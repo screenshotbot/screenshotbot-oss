@@ -143,3 +143,21 @@ rm -f $INSTALLER
   (setf (hunchentoot:content-type*) "application/x-sh")
   (hunchentoot:handle-static-file
    (asdf:system-relative-pathname :screenshotbot "setup-oss.sh")))
+
+
+(defhandler (nil :uri "/screenshotbot-cli-versions") ()
+  "Used by `mise` to figure out all the versions of the CLI"
+  (let ((lines (mapcar #'str:trim
+                       (str:lines
+                        (uiop:run-program
+                         "ls /mnt/efs/fs1/production/object-store/artifacts/releases/*/recorder-darwin-without-installer.tar.gz"
+                         :output 'string
+                         :error-output t)))))
+    (json:encode-json-to-string
+     (sort
+      (loop for line in lines
+            for ver = (elt (reverse (str:split "/" line)) 1)
+            unless (or (equal ver "NIL")
+                       (str:containsp "-" ver))
+              collect ver)
+      #'uiop:version<))))
