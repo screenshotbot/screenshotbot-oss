@@ -28,13 +28,13 @@ Strips the :port:index:index suffix and any surrounding square brackets for IPv6
         ip)))
 
 
-(defvar *service-name* "screenshotbot"
-  "The systemd service name for the screenshotbot server.")
+(defun service-name ()
+  "screenshotbot")
 
 (defun get-pid ()
   "Get the PID of the running screenshotbot service from systemd."
   (let* ((output (uiop:run-program
-                  (list "systemctl" "show" "--property" "MainPID" "--value" *service-name*)
+                  (list "systemctl" "show" "--property" "MainPID" "--value" (service-name))
                   :output :string))
          (pid-string (string-trim '(#\Space #\Newline #\Return) output)))
     (let ((pid (parse-integer pid-string :junk-allowed t)))
@@ -89,7 +89,7 @@ Returns the result of the evaluation."
       (pid
        (show-status-for-pid pid))
       (t
-       (format t "No running server found (service: ~a)~%" *service-name*))))
+       (format t "No running server found (service: ~a)~%" (service-name)))))
   (values))
 
 (defun show-status-for-pid (pid)
