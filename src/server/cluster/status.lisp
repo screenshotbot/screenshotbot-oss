@@ -29,7 +29,12 @@ Strips the :port:index:index suffix and any surrounding square brackets for IPv6
 
 
 (defun service-name ()
-  "screenshotbot")
+  (let ((user (uiop:getenv "USER")))
+    (cond
+      ((equal "arnold" user)
+       "screenshotbot")
+      (t
+       (format nil "screenshotbot-~a" user)))))
 
 (defun get-pid ()
   "Get the PID of the running screenshotbot service from systemd."
