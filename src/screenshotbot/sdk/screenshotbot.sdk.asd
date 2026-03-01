@@ -69,6 +69,7 @@
                (:file "install")
                (:file "fetch-run")
                (:file "clingon-api-context")
+               (:file "pull")
                (:file "upload-commit-graph")
                (:file "batch")
                (:file "cli-common")

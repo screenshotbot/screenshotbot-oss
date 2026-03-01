@@ -27,6 +27,8 @@
                 #:upload-commit-graph/command)
   (:import-from #:screenshotbot/sdk/batch
                 #:batch/command)
+  (:import-from #:screenshotbot/sdk/pull
+                #:download-run/command)
   (:export
    #:with-clingon-api-context
    #:common-run-options
@@ -76,48 +78,6 @@
     :key :verbose
     :long-name "verbose"
     :description "Verbose logging")))
-
-(defun download-run/command ()
-  (clingon:make-command
-   :name "download-run"
-   :handler (lambda (cmd)
-              (with-clingon-api-context (api-context cmd)
-                (save-run
-                 api-context
-                 (getopt cmd :run-id)
-                 :output
-                 (format nil "~a/" (or
-                                    (getopt cmd :output)
-                                    (format nil "./~a" (getopt cmd :run-id))))
-                 :channel (getopt cmd :channel)
-                 :branch (getopt cmd :branch))))
-   :description "Use this to download a run and all of its images locally."
-   :options (list
-             (make-option
-              :string
-              :long-name "id"
-              :initial-value nil
-              :description "The ID of the run, this is the ID you see in https://screenshotbot.io/runs/<ID>. Be aware that you cannot use a report ID here."
-              :key :run-id)
-             (make-option
-              :string
-              :long-name "channel"
-              :initial-value nil
-              :key :channel
-              :description "A channel name, to provide instead of the --id, which will be used to download the active channel")
-             (make-option
-              :string
-              :long-name "branch"
-              :initial-value nil
-              :key :branch
-              :description "The branch to disambiguate active runs on the channel. By default, we'll pick a branch that matches `main` or `master`.")
-             (make-option
-              :string
-              :long-name "output"
-              :initial-value nil
-              :description "The output directory to save the images. If not present it will default to  ./<id>"
-              :key :output))))
-
 
 (defun root/command ()
   (make-instance
