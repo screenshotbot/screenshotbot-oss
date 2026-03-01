@@ -41,6 +41,7 @@
   (:import-from #:screenshotbot/model/screenshot-map
                 #:make-screenshot-map)
   (:import-from #:screenshotbot/model/recorder-run
+                #:runs-for-company
                 #:shard-key
                 #:shard-screenshots
                 #:shard-number
@@ -91,6 +92,8 @@
                 #:with-hash-lock-held)
   (:import-from #:util/threading
                 #:with-extras)
+  (:import-from #:serapeum
+                #:collecting)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -585,7 +588,19 @@ promotion thread starts. Used by the API and by Replay"
   (let ((masks (assoc-value (masks channel)
                             (getf args :name)
                             :test 'string=)))
-   (apply 'make-screenshot :masks masks args)))
+    (apply 'make-screenshot :masks masks args)))
+
+(defapi (%find-runs :uri "/api/run" :method :get :wrap-success nil)
+        (commit)
+  "Find all the runs that match the given requirements. Currently, only
+COMMIT is supported."
+  (or
+   (when commit
+     (collecting
+       (fset:do-set (run (runs-for-company (auth:current-company)))
+         (when (equal (recorder-run-commit run) commit)
+           (collect (run-to-dto run))))))
+   #()))
 
 (defapi (%find-base-run :uri "/api/find-base-run" :wrap-success nil) (channel commit)
   "Find an appropriate base run for the given channel and commit.

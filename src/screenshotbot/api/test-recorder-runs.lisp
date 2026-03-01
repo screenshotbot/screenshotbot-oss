@@ -18,6 +18,7 @@
   (:import-from #:screenshotbot/server
                 #:logged-in-p)
   (:import-from #:screenshotbot/api/recorder-run
+                #:%find-runs
                 #:%find-base-run
                 #:production-run-without-ci-permission
                 #:validation-error
@@ -840,3 +841,30 @@ storing release-branch-p, we'll update this test."
     (validate-dto
      (make-instance 'dto:run
                     :compare-pixel-tolerance 0))))
+
+(test fetch-runs-for-commit
+  (with-fixture state ()
+    (let ((run1 (make-recorder-run :company company
+                                   :channel (find-or-create-channel company "foo")
+                                   :commit-hash "deadbeef"
+                                   :screenshots nil)))
+      (assert-that
+       (%find-runs
+        :commit "deadbeef")
+       (has-length 1))
+      (assert-that
+       (%find-runs
+        :commit "beefdead")
+       (has-length 0))
+      (let* ((other-company (make-instance 'company))
+             (run2 (make-recorder-run :company other-company
+                                      :channel (find-or-create-channel company "foo")
+                                      :commit-hash "deadbeef"
+                                      :screenshots nil)))
+        (assert-that
+         (%find-runs
+          :commit "deadbeef")
+         (has-length 1))
+        (assert-that
+         (dto:run-id (elt (%find-runs :commit "deadbeef") 0))
+         (is-equal-to (oid run1)))))))
