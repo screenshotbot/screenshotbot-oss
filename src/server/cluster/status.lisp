@@ -48,7 +48,7 @@ Strips the :port:index:index suffix and any surrounding square brackets for IPv6
 
 (defun sockets-dir ()
   "Return the directory where control sockets are stored."
-  "/home/arnold/sockets/")
+  (namestring (pathname "~/sockets/")))
 
 (defun get-socket-file (pid)
   "Return the socket file path for a given PID."
