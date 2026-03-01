@@ -13,12 +13,16 @@
   (:import-from #:screenshotbot/sdk/clingon-api-context
                 #:with-clingon-api-context)
   (:import-from #:screenshotbot/sdk/fetch-run
-                #:save-run))
+                #:save-run)
+  (:export
+   #:pull/command))
 (in-package :screenshotbot/sdk/pull)
 
-(defun download-run/command ()
+(defun download-run/command (&key
+                               (name "download-run")
+                               (description "[DEPRECATED] Use `pull run` instead."))
   (clingon:make-command
-   :name "download-run"
+   :name name
    :handler (lambda (cmd)
               (with-clingon-api-context (api-context cmd)
                 (save-run
@@ -30,7 +34,7 @@
                                     (format nil "./~a" (getopt cmd :run-id))))
                  :channel (getopt cmd :channel)
                  :branch (getopt cmd :branch))))
-   :description "Use this to download a run and all of its images locally."
+   :description description
    :options (list
              (make-option
               :string
@@ -56,6 +60,20 @@
               :initial-value nil
               :description "The output directory to save the images. If not present it will default to  ./<id>"
               :key :output))))
+
+(defun run/command ()
+  (download-run/command
+   :name "run"
+   :description "Use this to download a run and all of its images locally."))
+
+(defun pull/command ()
+  (clingon:make-command
+   :name "pull"
+   :handler (lambda (cmd)
+              (clingon:print-usage-and-exit cmd t))
+   :description "Commands to existing screenshots from Screenshotbot"
+   :sub-commands (list
+                  (run/command))))
 
 
 

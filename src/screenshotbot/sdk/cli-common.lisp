@@ -28,6 +28,7 @@
   (:import-from #:screenshotbot/sdk/batch
                 #:batch/command)
   (:import-from #:screenshotbot/sdk/pull
+                #:pull/command
                 #:download-run/command)
   (:export
    #:with-clingon-api-context
@@ -97,6 +98,7 @@ as opposed to `recorder help`."
     (ci/command)
     (dev/command)
     (download-run/command)
+    (pull/command)
     (batch/command))))
 
 

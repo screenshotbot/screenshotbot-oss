@@ -201,6 +201,7 @@ SCREENSHOTBOT_API_HOSTNAME environment variable.")
            (str:s-member argv "ci")
            (str:s-member argv "batch")
            (str:s-member argv "download-run")
+           (str:s-member argv "pull")
            #+nil ;; References "ci record" which doesn't exit
            (str:s-member argv "help"))
           (log:debug "Enabling V2 of Screenshotbot CLI interface")
