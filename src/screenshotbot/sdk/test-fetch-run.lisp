@@ -13,7 +13,24 @@
                 #:*download-engine*
                 #:%save-run)
   (:import-from #:util/request
+                #:engine
                 #:http-request-impl)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:screenshotbot/sdk/integration-fixture
+                #:with-sdk-integration)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run)
+  (:import-from #:screenshotbot/model/image
+                #:make-image-from-fixture)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:screenshotbot/screenshot-api
+                #:make-screenshot)
+  (:import-from #:screenshotbot/api/recorder-run
+                #:run-to-dto)
+  (:import-from #:screenshotbot/sdk/api-context
+                #:api-engine)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/test-fetch-run)
 
@@ -27,17 +44,20 @@
    (flex:string-to-octets "foobar")))
 
 (def-fixture state (&key (screenshot-name "foo"))
-  (cl-mock:with-mocks ()
-    (cl-mock:if-called 'trivial-backtrace:print-backtrace
-                       (lambda (&rest args)))
+  (with-sdk-integration (api-context :company company)
     (let ((*download-engine* (make-instance 'fake-engine)))
-     (let ((run (make-instance 'dto:run
-                               :screenshots
-                               (list
-                                (make-instance 'dto:screenshot
-                                               :name screenshot-name
-                                               :url "https://example.com")))))
-       (&body)))))
+     (let* ((img (make-image-from-fixture :company company
+                                          :fixture "rose.png"))
+            (screenshot (make-screenshot
+                         :name screenshot-name
+                         :image img)))
+       (let* ((run (make-recorder-run
+                    :company company
+                    :screenshots
+                    (list
+                     screenshot)))
+              (run (run-to-dto run :include-screenshots t)))
+         (&body))))))
 
 (test simple-save-run
   (with-fixture state ()

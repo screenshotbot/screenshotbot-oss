@@ -770,3 +770,11 @@ recognized the file, we'll return nil."
 
 (def-cron update-company-image-size (:minute 13 :step-hour 3)
   (update-company-image-size))
+
+(defun make-image-from-fixture (&key company fixture)
+  "Convenience function to make an image from the fixture/ directory,
+only for testing purposes."
+  (let ((dir #.(asdf:system-relative-pathname :screenshotbot "fixture/")))
+    (make-image
+     :company company
+     :pathname (path:catfile dir fixture))))
