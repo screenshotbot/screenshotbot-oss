@@ -25,6 +25,10 @@
                 #:def-easy-macro)
   (:import-from #:screenshotbot/api/core
                 #:*wrap-internal-errors*)
+  (:import-from #:screenshotbot/sdk/backoff
+                #:too-many-requests)
+  (:import-from #:util/throttler
+                #:ignore-throttling)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:run-context #:screenshotbot/sdk/run-context)
                     (#:a #:alexandria)

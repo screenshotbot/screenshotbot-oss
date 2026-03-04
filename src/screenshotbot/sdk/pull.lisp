@@ -13,6 +13,7 @@
   (:import-from #:screenshotbot/sdk/clingon-api-context
                 #:with-clingon-api-context)
   (:import-from #:screenshotbot/sdk/fetch-run
+                #:save-runs-from-commit
                 #:save-run)
   (:export
    #:pull/command))
@@ -66,6 +67,31 @@
    :name "run"
    :description "Use this to download a run and all of its images locally."))
 
+(defun commit/command ()
+  (clingon:make-command
+   :name "commit"
+   :handler #'commit/handler
+   :options (list
+             (make-option
+              :string
+              :long-name "output"
+              :initial-value nil
+              :key :output
+              :description "The output directory to save the images. If not present it will default to ./<commit>"))
+   :description "Pull all screenshots for a given commit"))
+
+(defun commit/handler (cmd)
+  (with-clingon-api-context (api-context cmd)
+   (let ((args (clingon:command-arguments cmd)))
+     (unless (equal 1 (length args))
+       (error "You must provide one argument, which is the commit SHA"))
+     (let ((sha (elt args 0)))
+       (pull-commit api-context sha :output (clingon:getopt cmd :output))))))
+
+(defun pull-commit (api-context sha &key output)
+  (save-runs-from-commit api-context sha
+                         :output (or output (format nil "./~a/" sha))))
+
 (defun pull/command ()
   (clingon:make-command
    :name "pull"
@@ -73,7 +99,8 @@
               (clingon:print-usage-and-exit cmd t))
    :description "Commands to existing screenshots from Screenshotbot"
    :sub-commands (list
-                  (run/command))))
+                  (run/command)
+                  (commit/command))))
 
 
 

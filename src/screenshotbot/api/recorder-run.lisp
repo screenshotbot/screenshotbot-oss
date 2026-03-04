@@ -26,6 +26,7 @@
   (:import-from #:screenshotbot/server
                 #:make-thread)
   (:import-from #:screenshotbot/user-api
+                #:%created-at
                 #:current-user
                 #:current-company)
   (:import-from #:util #:oid)
@@ -169,8 +170,8 @@
       (after-run-created recorder-run)
       resp)))
 
-(defvar *fetch-throttler* (make-instance 'throttler
-                                         :tokens 100))
+(defparameter *fetch-throttler* (make-instance 'throttler
+                                               :tokens 1000))
 
 (defapi (api-run-get :uri "/api/run/:oid" :method :get :wrap-success nil) (oid)
   (let ((run (util:find-by-oid oid)))
@@ -595,12 +596,20 @@ promotion thread starts. Used by the API and by Replay"
   "Find all the runs that match the given requirements. Currently, only
 COMMIT is supported."
   (or
-   (when commit
-     (collecting
-       (fset:do-set (run (runs-for-company (auth:current-company)))
-         (when (equal (recorder-run-commit run) commit)
-           (collect (run-to-dto run))))))
+   ;; The sorting is only to make it deterministic for tests
+   (mapcar
+    #'run-to-dto
+    (sort
+     (when commit
+       (collecting
+         (let ((runs (runs-for-company (auth:current-company))))
+           (fset:do-set (run runs)
+             (when (equal (recorder-run-commit run) commit)
+               (collect run))))))
+     #'>
+     :key #'%created-at))
    #()))
+
 
 (defapi (%find-base-run :uri "/api/find-base-run" :wrap-success nil) (channel commit)
   "Find an appropriate base run for the given channel and commit.

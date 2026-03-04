@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/fetch-run
+                #:save-runs-from-commit
                 #:Safe-name-p
                 #:unsafe-screenshot-name
                 #:*download-engine*
@@ -24,6 +25,7 @@
   (:import-from #:screenshotbot/model/image
                 #:make-image-from-fixture)
   (:import-from #:screenshotbot/model/company
+                #:find-or-create-channel
                 #:company)
   (:import-from #:screenshotbot/screenshot-api
                 #:make-screenshot)
@@ -31,6 +33,8 @@
                 #:run-to-dto)
   (:import-from #:screenshotbot/sdk/api-context
                 #:api-engine)
+  (:import-from #:screenshotbot/user-api
+                #:%created-at)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/test-fetch-run)
 
@@ -51,8 +55,13 @@
             (screenshot (make-screenshot
                          :name screenshot-name
                          :image img)))
-       (let* ((run (make-recorder-run
+       (let* ((channel (find-or-create-channel
+                        company
+                        "zoidberg"))
+              (run (make-recorder-run
+                    :commit-hash "deadbeef"
                     :company company
+                    :channel channel
                     :screenshots
                     (list
                      screenshot)))
@@ -84,3 +93,83 @@
       (%save-run run :output dir)
       (is (uiop:file-exists-p (path:catfile  dir "foo/bar.png")))
       (is (equal "foobar" (uiop:read-file-string (path:catfile  dir "foo/bar.png")))))))
+
+(test save-runs-from-commit--easiest-path
+  (with-fixture state ()
+    (tmpdir:with-tmpdir (dir)
+      (save-runs-from-commit api-context "deadbeef" :output dir)
+      (is (uiop:file-exists-p (path:catfile dir "zoidberg/foo.png"))))))
+
+(test save-runs-from-commit--two-channels
+  (with-fixture state ()
+    (tmpdir:with-tmpdir (dir)
+      (let* ((channel (find-or-create-channel
+                       company
+                       "foobar"))
+             (run (make-recorder-run
+                   :commit-hash "deadbeef"
+                   :company company
+                   :channel channel
+                   :screenshots
+                   (list
+                    screenshot))))
+        (save-runs-from-commit api-context "deadbeef" :output dir)
+        (is (uiop:file-exists-p (path:catfile dir "zoidberg/foo.png")))
+        (is (uiop:file-exists-p (path:catfile dir "foobar/foo.png")))))))
+
+(test channel-name-has-/
+  (with-fixture state ()
+    (tmpdir:with-tmpdir (dir)
+      (let* ((channel (find-or-create-channel
+                       company
+                       "foo/bar"))
+             (run (make-recorder-run
+                   :commit-hash "deadbeef"
+                   :company company
+                   :channel channel
+                   :screenshots
+                   (list
+                    screenshot))))
+        (save-runs-from-commit api-context "deadbeef" :output dir)
+        (is (uiop:file-exists-p (path:catfile dir "zoidberg/foo.png")))
+        (is (uiop:file-exists-p (path:catfile dir "foo/bar/foo.png")))))))
+
+(test channel-name-ends-with-/
+  (with-fixture state ()
+    (tmpdir:with-tmpdir (dir)
+      (let* ((channel (find-or-create-channel
+                       company
+                       "foo/bar/"))
+             (run (make-recorder-run
+                   :commit-hash "deadbeef"
+                   :company company
+                   :channel channel
+                   :screenshots
+                   (list
+                    screenshot))))
+        (save-runs-from-commit api-context "deadbeef" :output dir)
+        (is (uiop:file-exists-p (path:catfile dir "zoidberg/foo.png")))
+        (is (uiop:file-exists-p (path:catfile dir "foo/bar/foo.png")))))))
+
+(test two-runs-for-same-commit
+  (with-fixture state ()
+    (tmpdir:with-tmpdir (dir)
+      (let* ((channel (find-or-create-channel
+                       company
+                       "zoidberg"))
+             (run (make-recorder-run
+                   :commit-hash "deadbeef"
+                   :company company
+                   :channel channel
+                   :screenshots
+                   (list
+                    (make-screenshot
+                     :name "other-screenshot"
+                     :image img)))))
+        ;; Ensure the new run is actually *newer*
+        (setf (%created-at run)
+              (1+ (get-universal-time)))
+        (save-runs-from-commit api-context "deadbeef" :output dir)
+
+        (is (uiop:file-exists-p (path:catfile dir "zoidberg/other-screenshot.png")))
+        (is (not (uiop:file-exists-p (path:catfile dir "zoidberg/foo.png"))))))))

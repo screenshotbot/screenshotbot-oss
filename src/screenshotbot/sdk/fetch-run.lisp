@@ -26,6 +26,10 @@
   (:import-from #:util/reused-ssl
                 #:reused-ssl-mixin
                 #:with-reused-ssl)
+  (:import-from #:screenshotbot/sdk/request
+                #:request)
+  (:import-from #:screenshotbot/api/model
+                #:decode-json)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/sdk/fetch-run)
 
@@ -153,6 +157,27 @@
           (t
            (error "Some threads failed to complete and we don't know why")))))))
 
+(defun runs-for-commit (api-context commit)
+  (decode-json
+   (request
+    api-context
+    (format nil "/api/run?commit=~a" commit)
+    :method :get
+    :decode-response nil
+    :parameters `(("commit" . ,commit)))
+   `(:list dto:run)))
+
+(defun save-runs-from-commit (api-context commit &key output)
+  (let ((seen (make-hash-table :test #'equal)))
+    (let ((runs (runs-for-commit api-context commit)))
+      (loop for run in runs
+            if (not (gethash (dto:run-channel run) seen))
+              do
+                 (setf (gethash (dto:run-channel run) seen) t)
+                 (save-run
+                  api-context
+                  (dto:run-id run) ;; The run doesn't have screenshots, so we need to refetch it.
+                  :output (path:catdir output (str:ensure-suffix "/" (dto:run-channel run))))))))
 
 
 
