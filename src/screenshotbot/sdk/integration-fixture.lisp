@@ -23,6 +23,8 @@
                 #:hunchentoot-engine)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:screenshotbot/api/core
+                #:*wrap-internal-errors*)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:run-context #:screenshotbot/sdk/run-context)
                     (#:a #:alexandria)
@@ -38,18 +40,19 @@
 
 (def-easy-macro with-sdk-integration (&binding api-context &key &binding company &fn fn)
   (with-installation ()
-   (with-test-store (:globally t)
-     (let* ((company (make-instance 'company))
-            (user (make-instance 'user))
-            (api-key (make-instance 'api-key:api-key
-                                    :user user
-                                    :company company))
-            (api-context (make-instance 'fake-api-context
-                                        :key (api-key:api-key-key api-key)
-                                        :hostname "localhost"
-                                        :secret (api-key:api-key-secret-key api-key))))
-       (let ((*wrap-internal-errors* nil))
-        (fn api-context company))))))
+    (with-test-store (:globally t)
+      (let ((auto-restart:*global-enable-auto-retries-p* nil))
+        (let* ((company (make-instance 'company))
+               (user (make-instance 'user))
+               (api-key (make-instance 'api-key:api-key
+                                       :user user
+                                       :company company))
+               (api-context (make-instance 'fake-api-context
+                                           :key (api-key:api-key-key api-key)
+                                           :hostname "localhost"
+                                           :secret (api-key:api-key-secret-key api-key))))
+          (let ((*wrap-internal-errors* nil))
+            (fn api-context company)))))))
 
 
 

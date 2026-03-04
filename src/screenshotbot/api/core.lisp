@@ -150,38 +150,38 @@ function fn for the purpose of tests."
     (with-extras (("stacktrace-id" stacktrace-id)
                   ("x-client-version" (hunchentoot:header-in* :x-client-version))
                   ("x-client-api-version" (hunchentoot:header-in* :x-client-api-version)))
-     (block error-handling
-       (flet ((%trace ()
-                (format nil "Stacktrace ID: ~a. Please share this ID if contacting support." stacktrace-id)))
-         (handler-bind ((api-error (lambda (e)
-                                     (when *wrap-internal-errors*
-                                       (%set-error-code e)
-                                       (log:warn "API error: ~a" (api-error-msg e))
-                                       (return-from error-handling
-                                         (make-instance 'error-result
-                                                        :success nil
-                                                        :stacktrace (%trace)
-                                                        :error (princ-to-string e))))))
-                        (error  (lambda (e)
-                                  (when *wrap-internal-errors*
-                                    (%set-error-code e)
-                                    (warn "Unhandled API error call: ~a" e)
-                                    (sentry-client:capture-exception e)
-                                    (return-from error-handling
-                                      (make-instance 'error-result
-                                                     :success nil
-                                                     :stacktrace (%trace)
-                                                     :error (format nil
-                                                                    "Internal error, please contact support@screenshotbot.io"))))
-                                  )))
-           (cond
-             (wrap-success
-              (make-instance 'result
-                             :success t
-                             :response
-                             (fn)))
-             (t
-              (fn)))))))))
+      (block error-handling
+        (flet ((%trace ()
+                 (format nil "Stacktrace ID: ~a. Please share this ID if contacting support." stacktrace-id)))
+          (handler-bind ((api-error (lambda (e)
+                                      (when *wrap-internal-errors*
+                                        (%set-error-code e)
+                                        (log:warn "API error: ~a" (api-error-msg e))
+                                        (return-from error-handling
+                                          (make-instance 'error-result
+                                                         :success nil
+                                                         :stacktrace (%trace)
+                                                         :error (princ-to-string e))))))
+                         (error  (lambda (e)
+                                   (when *wrap-internal-errors*
+                                     (%set-error-code e)
+                                     (warn "Unhandled API error call: ~a" e)
+                                     (sentry-client:capture-exception e)
+                                     (return-from error-handling
+                                       (make-instance 'error-result
+                                                      :success nil
+                                                      :stacktrace (%trace)
+                                                      :error (format nil
+                                                                     "Internal error, please contact support@screenshotbot.io"))))
+                                   )))
+            (cond
+              (wrap-success
+               (make-instance 'result
+                              :success t
+                              :response
+                              (fn)))
+              (t
+               (fn)))))))))
 
 (defmacro defapi ((name &key uri method intern
                           (type :v1)
