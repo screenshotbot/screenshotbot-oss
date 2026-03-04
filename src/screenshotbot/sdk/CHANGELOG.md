@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.18.5 - 2026-03-04
+
+### Added
+
+- Added `pull commit` subcommand to pull all runs associated with a commit
+
+### Changed
+
+- Added `pull run` subcommand, and deprecated the `download-run`
+  subcommand.
+
+
 ## 2.18.4 - 2026-02-27
 
 ### Changed
