@@ -31,7 +31,7 @@
                 #:active-screenshot-key-date
                 #:active-screenshot-keys)
   (:import-from #:screenshotbot/insights/pull-requests
-                #:user-reviews-last-30-days
+                #:user-reviews-last-n-days
                 #:pr-to-actions)
   (:import-from #:core/ui/taskie
                 #:taskie-page-title)
@@ -298,7 +298,7 @@ monthly-active."
 
 (defun generate-top-users (company id &key fuzz days)
   (let ((*num-days* days)
-        (top-users (user-reviews-last-30-days company))
+        (top-users (user-reviews-last-n-days company))
         (data (make-hash-table :test #'equal)))
     (flet ((user-name (idx)
              (if fuzz
@@ -330,7 +330,7 @@ monthly-active."
 (defun generate-top-users-csv (company &key num-days output)
   (with-open-file (output output :if-exists :supersede :direction :output)
     (let ((data (let ((*num-days* num-days))
-                  (user-reviews-last-30-days company))))
+                  (user-reviews-last-n-days company))))
       (loop for (user num) in data
             do
             (format output "~a,~a~%" (user-full-name user) num)))))
