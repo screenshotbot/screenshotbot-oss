@@ -110,3 +110,12 @@
            collect (list user count))
      #'>
      :key #'second)))
+
+(defun user-reviews-last-n-days-csv (company &key num-days output)
+  "Prints the user-reviews for num-days as a CSV into stdout"
+  (with-open-file (out output :direction :output)
+    (format out "EMAIL,NUMBER OF REVIEWS~%")
+    (loop for (user count) in (user-reviews-last-n-days company :num-days num-days)
+          do
+             (format out "~a,~a~%" (auth:user-email user) count))))
+
