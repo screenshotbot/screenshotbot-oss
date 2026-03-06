@@ -45,6 +45,7 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:screenshotbot/api/promote
+                #:estimate-wait-timeout
                 #:find-complete-run
                 #:work-branch-matches-p
                 #:with-log-errors
@@ -54,7 +55,9 @@
   (:import-from #:util/logger
                 #:format-log)
   (:import-from #:screenshotbot/api/recorder-run
-                #:*synchronous-promotion*))
+                #:*synchronous-promotion*)
+  (:import-from #:core/config/api
+                #:config))
 (in-package :screenshotbot/api/test-promote)
 
 (util/fiveam:def-suite)
@@ -196,6 +199,31 @@
     (is-false (activep run2))))
 
 (test dont-promote-older-hash
+  (with-fixture state ()
+    (%maybe-promote-run run2 channel :wait-timeout 0)
+    (%maybe-promote-run run1 channel)
+    (is-true (activep run2))
+    (is-false (activep run1))))
+
+(test wait-timeout-nil-happy-path
+  (cl-mock:with-mocks ()
+   (with-fixture state ()
+     (cl-mock:if-called 'estimate-wait-timeout
+                        (lambda (channel)
+                          0))
+     (finishes
+       (%maybe-promote-run run2 channel :wait-timeout nil)))) ())
+
+(test estimate-wait-timeout-happy-path
+  (with-fixture state ()
+    (is (eql 1 (estimate-wait-timeout channel)))))
+
+(test estimate-wait-timeout-without-override-config
+  (with-fixture state ()
+    (setf (config "promotion.wait-timeout") "15")
+    (is (eql 15 (estimate-wait-timeout channel)))))
+
+(test invoking-estimation-happy-path
   (with-fixture state ()
     (%maybe-promote-run run2 channel :wait-timeout 0)
     (%maybe-promote-run run1 channel)

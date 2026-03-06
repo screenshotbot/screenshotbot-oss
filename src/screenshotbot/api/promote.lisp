@@ -52,6 +52,8 @@
                 #:push-event)
   (:import-from #:util/store/object-id
                 #:oid)
+  (:import-from #:core/config/api
+                #:config)
   (:export
    #:with-promotion-log
    #:default-promoter)
@@ -206,31 +208,43 @@
   ((parent-commit :initarg :parent-commit
                   :reader parent-commit)))
 
+(defmethod estimate-wait-timeout (channel)
+  "Returns the timeout in minutes to wait for a previous commit's screenshots"
+  (declare  (ignore channel))
+  (let ((config (config "promotion.wait-timeout")))
+    (cond
+      ((str:emptyp config)
+       1)
+      (t
+       (parse-integer config)))))
+
 (defun maybe-promote-run (run &rest args &key channel
-                                           (wait-timeout 1 #| minute |#)
+                                           wait-timeout
                                            (start-time (get-universal-time)))
   (declare (type recorder-run run)
            (optimize (debug 3) (speed 0)))
   (unless channel
     (setf channel (recorder-run-channel run)))
 
-  (restart-case
-      (loop for i from 1 to 1000
-            do
-               (handler-case
-                   (return (promotion-with-lock run channel :start-time start-time :wait-timeout wait-timeout))
-                 (parent-not-ready (e)
-                   ;; Why don't we just do an exponential backoff here? Well,
-                   ;; consider the case that there are 10 commits, and the last
-                   ;; nine are done: if the first commit comes in, some of the
-                   ;; promotions will be haphazard. (Because with exponential
-                   ;; backoff, definitely all 9 commits won't be able to complete
-                   ;; in the 5 minutes).
-                   (wait-for-run channel (parent-commit e) wait-timeout :minute)))
-            finally
-            (error "Promotion didn't succeed after 1000 attempts, we should not be here"))
-    (retry-promote ()
-      (apply 'maybe-promote-run run args))))
+  (let ((wait-timeout (or wait-timeout
+                          (estimate-wait-timeout channel))))
+    (restart-case
+        (loop for i from 1 to 1000
+              do
+                 (handler-case
+                     (return (promotion-with-lock run channel :start-time start-time :wait-timeout wait-timeout))
+                   (parent-not-ready (e)
+                     ;; Why don't we just do an exponential backoff here? Well,
+                     ;; consider the case that there are 10 commits, and the last
+                     ;; nine are done: if the first commit comes in, some of the
+                     ;; promotions will be haphazard. (Because with exponential
+                     ;; backoff, definitely all 9 commits won't be able to complete
+                     ;; in the 5 minutes).
+                     (wait-for-run channel (parent-commit e) wait-timeout :minute)))
+              finally
+                 (error "Promotion didn't succeed after 1000 attempts, we should not be here"))
+      (retry-promote ()
+        (apply 'maybe-promote-run run args)))))
 
 (defun promotion-with-lock (run channel &key start-time wait-timeout)
   (let ((*channel-repo-overrides*
