@@ -7,6 +7,8 @@
 (defpackage :screenshotbot/insights/pull-requests
   (:use #:cl)
   (:import-from #:screenshotbot/model/recorder-run
+                #:%run-build-url
+                #:build-url
                 #:phabricator-diff-id
                 #:gitlab-merge-request-iid)
   (:import-from #:screenshotbot/user-api
@@ -21,9 +23,12 @@
   (:import-from #:alexandria
                 #:when-let)
   (:import-from #:screenshotbot/report-api
+                #:report-run
                 #:report-acceptable)
   (:import-from #:screenshotbot/insights/variables
-                #:*num-days*))
+                #:*num-days*)
+  (:import-from #:screenshotbot/dashboard/reports
+                #:report-link))
 (in-package :screenshotbot/insights/pull-requests)
 
 (defun safe-pr (run)
@@ -88,11 +93,18 @@
   (with-open-file (output output :direction :output :if-exists :supersede)
     (multiple-value-bind (actions failure-examples)
         (pr-to-actions company :num-days num-days)
-     (loop for pr being the hash-keys of actions
-             using (hash-value state)
+      (format output
+              "PR URL,INTERESTING FEEDBACK,REPORT URL,BUILD URL~%")
+      (loop for pr being the hash-keys of actions
+              using (hash-value state)
            do
-              (format output "~a,~a,~a~%" pr (string-downcase state)
-                      (util/misc:?. util/store/object-id:oid (gethash pr failure-examples)))))))
+              (format output "~a,~a,~a,~a~%" pr (string-downcase state)
+                      (util/misc:?.
+                       report-link
+                       (gethash pr failure-examples))
+                      (util/misc:?.
+                       %run-build-url
+                       (util/misc:?. report-run (gethash pr failure-examples))))))))
 
 (defun user-reviews-last-n-days (company &key (num-days *num-days*))
   (let ((result (make-hash-table)))
