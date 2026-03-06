@@ -315,7 +315,7 @@
              channel
              (recorder-run-commit run)
              (recorder-run-commit previous-run)))
-       (log:info  "The current run is an ancestor of the previous run, skipping promotion"))
+       (log :info  "The current run is an ancestor of the previous run, skipping promotion"))
       (t
        (cond
          ((not (if previous-run
