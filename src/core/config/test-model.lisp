@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:core/config/model
+                #:value-must-be-string
                 #:config)
   (:import-from #:util/store/store
                 #:with-test-store))
@@ -27,3 +28,9 @@
     (is (equal "car" (config "foo.bar")))
     (setf (config "foo.bar") "zoidberg")
     (is (equal "zoidberg" (config "foo.bar")))))
+
+(test cant-set-integer
+  (with-fixture state ()
+    (signals value-must-be-string
+      (setf (config "foo.bar") 15))
+    (is (equal nil (config "foo.bar")))))
