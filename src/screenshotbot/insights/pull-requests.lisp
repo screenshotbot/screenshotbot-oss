@@ -94,9 +94,9 @@
               (format output "~a,~a,~a~%" pr (string-downcase state)
                       (util/misc:?. util/store/object-id:oid (gethash pr failure-examples)))))))
 
-(defun user-reviews-last-n-days (company)
+(defun user-reviews-last-n-days (company &key (num-days *num-days*))
   (let ((result (make-hash-table)))
-    (do-run-report (run report company :num-days *num-days*)
+    (do-run-report (run report company :num-days num-days)
       (when-let ((acceptable (report-acceptable report)))
         (dolist (user
                  (remove-duplicates
