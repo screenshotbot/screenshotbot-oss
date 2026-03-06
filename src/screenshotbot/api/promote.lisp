@@ -62,11 +62,6 @@
    #:%maybe-send-tasks))
 (in-package :screenshotbot/api/promote)
 
-(defvar *disable-ancestor-checks-p* nil
-  "If the previous commit is not in the current master branch, future
-  promotions will fail. Setting this to true will temporarily let you
-  fix the promotion.")
-
 (defvar *current-logger* nil)
 
 (defvar *loggers* (make-mp-hash-table
@@ -212,9 +207,7 @@
                   :reader parent-commit)))
 
 (defun maybe-promote-run (run &rest args &key channel
-                                           (wait-timeout (if *disable-ancestor-checks-p*
-                                                             0
-                                                             1))
+                                           (wait-timeout 1 #| minute |#)
                                            (start-time (get-universal-time)))
   (declare (type recorder-run run)
            (optimize (debug 3) (speed 0)))
