@@ -130,9 +130,6 @@
 
   </simple-card-page>)
 
-(defmethod can-invite-more-users-p (company plan)
-  t)
-
 (defun %user-count (company)
   (+
    (length
@@ -167,10 +164,7 @@
            ;; new style:
            (and
             (gk:check :limit-invites (auth:current-company))
-            (>= (%user-count (auth:current-company)) 5))
-           ;; old style, most likely not being hit
-           (not (can-invite-more-users-p (current-company)
-                                         (plan))))
+            (>= (%user-count (auth:current-company)) 5)))
         (warn "Invite limit reached for ~a [not a crash, just a warning to go upsell now]" (current-company))
         (push
          <span>
