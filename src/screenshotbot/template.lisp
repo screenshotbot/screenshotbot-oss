@@ -125,6 +125,9 @@
   <selenium-css />
     </head>)
 
+(defmethod billing-banner (installation company user)
+  nil)
+
 (deftag dashboard-template (children &key stripe
                             scripts
                             (title "Screenshotbot")
@@ -147,11 +150,17 @@
           data-user-email= (when user (user-email user))
           data-user-name= (when user (user-full-name user)) >
       <!-- Begin page -->
-      ,(let ((alert (site-alert (installation))))
-         (when alert
-           <div class="site-alert-container">
-             ,(progn alert)
-           </div>))
+      
+      ,(or
+        ;; Don't show both site-alert and billing banner, just to
+        ;; avoid breakages
+        (let ((alert (site-alert (installation))))
+          (when alert
+            <div class="site-alert-container">
+            ,(progn alert)
+            </div>))
+        (billing-banner (installation) (auth:current-company) user))
+
 
       ,(when left-nav-bar
          <left-side-bar user=user company=company script-name=script-name />)
