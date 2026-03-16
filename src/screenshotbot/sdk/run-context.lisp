@@ -359,7 +359,6 @@ pull-request looks incorrect."
      (handler-case
          (git:merge-base repo main-branch-hash (commit-hash self))
        (uiop:subprocess-error (e)
-         (warn "merge-base computation failed: ~a" e)
          nil)))))
 
 (defmethod repo-clean-p :around ((self env-reader-run-context))
