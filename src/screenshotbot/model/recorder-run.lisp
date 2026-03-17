@@ -796,7 +796,7 @@ list of warnings for RUN."
 
 (defun %count-screenshots (company &key (num-days 30))
   "Used for collecting data for our Pay-as-you-go migration plan"
-  (let ((time (- (get-universal-time) (* 30 24 2600))))
+  (let ((time (- (get-universal-time) (* num-days 24 2600))))
    (loop for run in (fset:convert 'list (runs-for-company company))
          if (> (%created-at run) time)
            summing (length (recorder-run-screenshots run)))))
