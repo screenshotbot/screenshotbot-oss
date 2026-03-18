@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.18.6 - 2026-03-18
+
+### Changed
+
+- Removed noisy warning about being unable to compute merge-base
+
 ## 2.18.5 - 2026-03-04
 
 ### Added
