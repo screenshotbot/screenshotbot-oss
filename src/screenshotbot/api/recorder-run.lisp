@@ -95,6 +95,8 @@
                 #:with-extras)
   (:import-from #:serapeum
                 #:collecting)
+  (:import-from #:screenshotbot/billing-metrics
+                #:incr-billing-metric)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -512,7 +514,10 @@ computed differently if we're using sharding."
                         (max
                          (dto:compare-pixel-tolerance run)
                          (default-pixel-tolerance company)))))
-
+    (incr-billing-metric
+     company
+     :screenshot
+     (length screenshots))
     (with-transaction ()
       (setf (channel-branch channel) (dto:main-branch run)))
     (with-transaction ()
