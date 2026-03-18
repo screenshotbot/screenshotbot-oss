@@ -10,7 +10,10 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/billing-metrics
-                #:incr-billing-metric))
+                #:incr-billing-metric-impl
+                #:incr-billing-metric)
+  (:import-from #:core/installation/installation
+                #:*installation*))
 (in-package :screenshotbot/test-billing-metrics)
 
 
@@ -22,3 +25,12 @@
       (incr-billing-metric :company
                            :my-metric-name
                            20))))
+
+(test impl-metric-happy-path-
+  (with-installation ()
+    (finishes
+      (incr-billing-metric-impl
+       *installation*
+       :company
+       :my-metric-name
+       20))))

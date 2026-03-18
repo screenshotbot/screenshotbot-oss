@@ -7,7 +7,9 @@
 (defpackage :screenshotbot/billing-metrics
   (:use #:cl)
   (:import-from #:core/installation/installation
-                #:*installation*))
+                #:*installation*)
+  (:import-from #:util/threading
+                #:ignore-and-log-errors))
 (in-package :screenshotbot/billing-metrics)
 
 (defgeneric incr-billing-metric-impl (installation company name value)
@@ -22,9 +24,10 @@ By default this does nothing.")
     nil))
 
 (defmethod incr-billing-metric (company name value)
-  (incr-billing-metric-impl
-   *installation*
-   company
-   name
-   value))
+  (ignore-and-log-errors ()
+   (incr-billing-metric-impl
+    *installation*
+    company
+    name
+    value)))
 
