@@ -4,17 +4,17 @@
 ;;;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;;;; file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-(defpackage :screenshotbot/test-billing-metrics
+(defpackage :screenshotbot/test-billing-meter
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
-  (:import-from #:screenshotbot/billing-metrics
-                #:incr-billing-metric-impl
-                #:incr-billing-metric)
+  (:import-from #:screenshotbot/billing-meter
+                #:incr-billing-meter-impl
+                #:incr-billing-meter)
   (:import-from #:core/installation/installation
                 #:*installation*))
-(in-package :screenshotbot/test-billing-metrics)
+(in-package :screenshotbot/test-billing-meter)
 
 
 (util/fiveam:def-suite)
@@ -22,14 +22,14 @@
 (test unimpl-metric-happy-path
   (with-installation ()
     (finishes
-      (incr-billing-metric :company
+      (incr-billing-meter :company
                            :my-metric-name
                            20))))
 
 (test impl-metric-happy-path-
   (with-installation ()
     (finishes
-      (incr-billing-metric-impl
+      (incr-billing-meter-impl
        *installation*
        :company
        :my-metric-name
