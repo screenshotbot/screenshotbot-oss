@@ -67,3 +67,4 @@ nfs-disk.vdi
 screenshotbot*.deb
 
 vagrant-efs
+*fasl
