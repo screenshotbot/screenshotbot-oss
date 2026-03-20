@@ -10,10 +10,16 @@
   (:import-from :screenshotbot/android/api
                 :context-delegate)
   (:import-from #:screenshotbot/android/view
+                #:add-view
                 #:delegate
                 #:view)
   (:import-from #:screenshotbot/android/text-view
                 #:text-view)
+  (:import-from #:screenshotbot/android/edit-text
+                #:edit-text)
+  (:import-from #:screenshotbot/android/linear-layout
+                #:set-orientation
+                #:linear-layout)
   (:export
    #:set-current-activity))
 (in-package :screenshotbot/android/activity)
@@ -38,5 +44,20 @@
   (setf *current-activity* (make-instance 'activity :delegate activity))
   nil)
 
-;; (hcl:android-funcall-in-main-thread (lambda () (set-content-view *current-activity* (make-instance 'text-view :context *current-activity* :text "blahbalhadsfdfdfcar"))))
+(defun simple-test ()
+  (hcl:android-funcall-in-main-thread
+   (lambda ()
+     (let ((view1 (make-instance 'text-view :context *current-activity*
+                                            :text "foo"))
+           (view2 (make-instance 'text-view :context *current-activity*
+                                            :text "bar"))
+           (linear-layout (make-instance 'linear-layout :context *current-activity*)))
+       (set-orientation linear-layout :vertical)
+       (add-view linear-layout view1)
+       (add-view linear-layout view2)
+      (set-content-view *current-activity* linear-layout)))))
+
+;; (simple-test)
+
+
 

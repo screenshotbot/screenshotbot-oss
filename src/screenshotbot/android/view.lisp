@@ -33,3 +33,15 @@
   (setf (delegate self)
         (funcall (java-constructor self) (context-delegate context))))
 
+(def-view view-group (view) "android.view.ViewGroup"
+  ())
+
+(lw-ji:define-java-callers "android.view.ViewGroup"
+  (%add-view "addView"))
+
+(defmethod add-view ((self view-group)
+                     (view view))
+  (%add-view (delegate self) (delegate view)))
+
+
+
