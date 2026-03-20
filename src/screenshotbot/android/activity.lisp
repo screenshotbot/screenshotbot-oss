@@ -38,5 +38,5 @@
   (setf *current-activity* (make-instance 'activity :delegate activity))
   nil)
 
-;; (hcl:android-funcall-in-main-thread (lambda () (set-content-view *current-activity* (make-instance 'text-view :context *current-activity*))))
+;; (hcl:android-funcall-in-main-thread (lambda () (set-content-view *current-activity* (make-instance 'text-view :context *current-activity* :text "blahbalhadsfdfdfcar"))))
 

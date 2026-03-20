@@ -9,22 +9,18 @@
   (:import-from #:screenshotbot/android/api
                 #:context-delegate)
   (:import-from #:screenshotbot/android/view
+                #:def-view
                 #:view
                 #:delegate))
 (in-package :screenshotbot/android/text-view)
 
-(lw-ji:define-java-constructor %new-text-view "android.widget.TextView")
-
-
-(defclass text-view (view)
+(def-view text-view (view) "android.widget.TextView"
   ())
 
 (lw-ji:define-java-callers "android.widget.TextView"
   (%set-text "setText"))
 
 (defmethod initialize-instance :after ((self text-view) &key context text &allow-other-keys)
-  (setf (delegate self)
-        (%new-text-view (context-delegate context)))
   (when text
     (set-text self text)))
 
