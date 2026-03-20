@@ -61,6 +61,7 @@
                "log4cl"
                "util.threading"
                "util.store"
+               "util/emacs"
                "util.misc"
                "util/html2text"
                "util/random-port"
@@ -70,7 +71,6 @@
   :components ((:file "ret-let")
                (:file "copying")
                (:file "make-instance-with-accessors")
-               (:file "emacs")
                (:file "cookies")
                (:file "bind-form")
                (:file "cdn")
@@ -89,6 +89,11 @@
                (:file "form-errors")
                (:file "debugger-hook")
                (:file "rb-tree")))
+
+(defsystem "util/emacs"
+  :depends-on (#:alexandria)
+  :serial t
+  :components ((:file "emacs")))
 
 (defsystem :util/copy-file
   :serial t

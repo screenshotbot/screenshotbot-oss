@@ -1,3 +1,6 @@
 (defsystem :screenshotbot.android
   :serial t
-  :components ((:file "activity")))
+  :components ((:file "api")
+               (:file "view")
+               (:file "text-view")
+               (:file "activity")))
