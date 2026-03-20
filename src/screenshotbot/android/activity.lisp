@@ -51,10 +51,13 @@
                                             :text "foo"))
            (view2 (make-instance 'text-view :context *current-activity*
                                             :text "bar"))
+           (username (make-instance 'edit-text :context *current-activity*
+                                    :text "carbar"))
            (linear-layout (make-instance 'linear-layout :context *current-activity*)))
        (set-orientation linear-layout :vertical)
        (add-view linear-layout view1)
        (add-view linear-layout view2)
+       (add-view linear-layout username)
       (set-content-view *current-activity* linear-layout)))))
 
 ;; (simple-test)
