@@ -537,7 +537,7 @@ on the server. This test will FAIL until the bug is fixed."
             ;; Merge feature into master (creates a merge commit with 2 parents)
             (test-git::run-in-dir
              repo2
-             " git merge --no-edit -m message feature"
+             "git merge --no-edit -m message feature"
              :error-output t
              :output t)
 
