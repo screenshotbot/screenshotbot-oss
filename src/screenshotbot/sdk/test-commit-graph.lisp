@@ -31,6 +31,7 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:has-typep
                 #:assert-that)
   (:import-from #:screenshotbot/sdk/git
@@ -56,6 +57,8 @@
                 #:is-not-null)
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
+  (:import-from #:fiveam-matchers/any-of
+                #:any-of)
   (:local-nicknames (#:dto #:screenshotbot/api/model)
                     (#:test-git #:screenshotbot/sdk/test-git)
                     (#:git #:screenshotbot/sdk/git)))
@@ -506,7 +509,13 @@ on the server. This test will FAIL until the bug is fixed."
         (uiop:run-program
          (list "git" "clone" (namestring dir1)
                (namestring (path:catdir dir "repo2/"))))
-        (let ((repo2 (make-instance 'git-repo :dir (path:catdir dir "repo2/") :link (namestring dir1))))
+        (let* ((repo2 (make-instance 'git-repo :dir (path:catdir dir "repo2/") :link (namestring dir1)))
+               (master (git::$ (git-command repo2) "rev-parse" "--abbrev-ref" "HEAD")))
+
+          (assert-that master
+                       (any-of
+                        (is-equal-to "master")))
+          
           (test-git:enable-server-features repo2)
 
           ;; Create a branch with a commit (use a different file to avoid merge conflict)
