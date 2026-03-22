@@ -118,10 +118,6 @@
  #-lispworks defparameter +e+ "0123456789abcdef")
 
 (defun fast-oid-str (oid)
-  (declare (optimize (speed 3)
-                     (debug 0)
-                     (safety 0))
-           (type (array (unsigned-byte 8))))
   (let ((hex-string (make-string 24)))
     (loop for i fixnum from 0 below 12
           do (let ((out (* 2 i)))
