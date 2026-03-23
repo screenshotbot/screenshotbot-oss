@@ -306,6 +306,12 @@ right region within that.
        (setf (hunchentoot:header-out :content-type) "image/webp")
        (handle-static-file p)))))
 
+(defun guess-content-type (type)
+  (cond
+    ((equal "bin" type)
+     "application/octet-stream")
+    (t
+     (format nil "image/~a"  type))))
 
 
 (defhandler (image-blob-get-original :uri "/image/original/:eoid") (eoid ts signature)
@@ -315,9 +321,9 @@ right region within that.
         (set-cors-header)
         (cond
           (type
-           (assert (str:s-member '("png" "webp" "jpeg")
+           (assert (str:s-member '("png" "webp" "jpeg" "bin")
                                  type))
-           (setf (hunchentoot:header-out :content-type) (format nil "image/~a"  type))
+           (setf (hunchentoot:header-out :content-type) (guess-content-type type))
            (handle-static-file file))
           (t
            ;; No type argument provided, let's figure it out and redirect
