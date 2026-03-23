@@ -67,6 +67,8 @@
                 #:contains-string)
   (:import-from #:screenshotbot/screenshot-api
                 #:image-public-url)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/dashboard/test-image)
 
@@ -228,4 +230,17 @@
       (with-fake-request ()
         (finishes
          (catch 'hunchentoot::handler-done
-           (handle-resized-image image :tiny :warmup t)))))))
+           (handle-resized-image image :tiny)))
+        (assert-that
+         (assoc-value (hunchentoot:headers-out hunchentoot:*reply*)
+                      :location)
+         (contains-string
+          "invalid-image.png"))))))
+
+(test warmup-of-invalid-image
+  (with-fixture state ()
+    (let* ((filename #. (asdf:system-relative-pathname :screenshotbot "fixture/invalid-image.png"))
+           (image (make-image :pathname filename)))
+      (with-fake-request ()
+        (finishes
+         (handle-resized-image image :tiny :warmup t))))))

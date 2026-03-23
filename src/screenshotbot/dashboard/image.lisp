@@ -187,7 +187,8 @@
                 output-file
                 (format nil "image/~a" (pathname-type output-file))))))))
     (invalid-image ()
-      (hex:safe-redirect (util.cdn:make-cdn "/assets/images/invalid-image.png")))))
+      (unless warmup
+       (hex:safe-redirect (util.cdn:make-cdn "/assets/images/invalid-image.png"))))))
 
 (defun send-404 (reason)
   (setf (hunchentoot:header-out :content-type) "text/html")
