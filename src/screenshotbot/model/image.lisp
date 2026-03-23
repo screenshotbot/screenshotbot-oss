@@ -49,6 +49,7 @@
   (:import-from #:auto-restart
                 #:with-auto-restart)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:magick-exception
                 #:get-non-alpha-pixels
                 #:with-image-comparison
                 #:ping-image-metadata
@@ -134,13 +135,18 @@
    #:find-image-by-oid
    #:base-image-comparer
    #:dimension=
-   #:image-size))
+   #:image-size
+   #:invalid-image))
 (in-package :screenshotbot/model/image)
 
 (hex:declare-handler 'image-blob-get)
 
 (defvar *image-creation-hooks*
   nil)
+
+(define-condition invalid-image (error)
+  ()
+  (:documentation "The image we're looking at is invalid"))
 
 #+screenshotbot-oss
 (with-class-validation
@@ -641,7 +647,14 @@
                                        :width width)))))))
 
 (defmethod image-dimensions (image)
-  (metadata-image-dimensions (image-metadata image)))
+  (handler-bind ((magick-exception (lambda (e)
+                                     ;; in the crash in question, this was "NoDecodeDelegateForThisImageFormat"
+                                     ;; on thecharmer, this is "no decode delegate for this image format"
+                                     ;; I should try to confirm out why there's this disparity.
+                                     (when (cl-ppcre:scan-to-strings ".*no.*decode.*delegate.*"
+                                                                     (str:downcase (princ-to-string e)))
+                                       (error 'invalid-image)))))
+      (metadata-image-dimensions (image-metadata image))))
 
 (defun image-file-dimensions (file)
   (destructuring-bind (width height) (ping-image-dimensions (magick) file)

@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/model/image)
   (:import-from #:screenshotbot/model/image
+                #:invalid-image
                 #:delete-image
                 #:image-file-deleted
                 #:update-company-image-size
@@ -364,3 +365,10 @@ uses the base-image-comparer."
         (is-false (path:-e image-file))
         (finishes
           (delete-image image))))))
+
+(test invalid-image-dimensions
+  (with-fixture state ()
+    (let* ((filename #. (asdf:system-relative-pathname :screenshotbot "fixture/invalid-image.png"))
+           (image (make-image :pathname filename)))
+      (signals invalid-image
+        (image-dimensions image)))))
