@@ -212,3 +212,20 @@
                (handle-resized-image temp-image :tiny :warmup t)))
         (ignore-errors (delete-object temp-image))))))
 
+
+(test invalid-image-url
+  (with-fixture state ()
+    (let* ((filename #. (asdf:system-relative-pathname :screenshotbot "fixture/invalid-image.png"))
+           (image (make-image :pathname filename)))
+      (assert-that
+       (image-public-url image :originalp t)
+       (contains-string ".bin")))))
+
+(test resizing-invalid-image
+  (with-fixture state ()
+    (let* ((filename #. (asdf:system-relative-pathname :screenshotbot "fixture/invalid-image.png"))
+           (image (make-image :pathname filename)))
+      (with-fake-request ()
+        (finishes
+         (catch 'hunchentoot::handler-done
+           (handle-resized-image image :tiny :warmup t)))))))

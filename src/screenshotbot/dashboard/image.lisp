@@ -19,6 +19,8 @@
   (:import-from #:hunchentoot
                 #:handle-static-file)
   (:import-from #:screenshotbot/model/image
+                #:with-invalid-image-handling
+                #:invalid-image
                 #:abstract-image
                 #:no-image-uploaded-yet
                 #:find-image-by-oid
@@ -125,63 +127,67 @@
 
 (defun %build-resized-image (image size-name &key (type :webp))
   "Synchronous version. Do not call directly."
-  (let ((size (or
-               (assoc-value *size-map* size-name :test #'string-equal)
-               (error "invalid image size: ~a" size-name))))
-    (flet ((output-file (type)
-             (pathname-for-resized-image (oid image) :type type :size size))
-           (respond (res)
-             res))
-      (ecase type
-        (:png
-         (let ((webp (%build-resized-image
-                      image size-name
-                      :type :webp)))
-           (let ((png (output-file "png")))
-             (unless (uiop:file-exists-p png)
-               (push-event :live-png-creation
-                           :name (oid image)
-                           :size-name size-name)
-               (with-wand (wand :file webp)
-                 (uiop:with-staging-pathname (png)
-                   (save-wand-to-file
-                    wand png))))
-             (respond png))))
-        (:webp
-         (let* ((output-file (output-file "webp")))
-           (cond
-             ((uiop:file-exists-p output-file)
-              (respond output-file))
-             (t
-              (unless (uiop:file-exists-p output-file)
-                (with-local-image (input image)
-                  (uiop:with-staging-pathname (output-file)
-                    (resize-image input
-                                  :output output-file
-                                  :size size))))
-              (respond output-file)))))))))
+  (with-invalid-image-handling ()
+    (let ((size (or
+                 (assoc-value *size-map* size-name :test #'string-equal)
+                 (error "invalid image size: ~a" size-name))))
+      (flet ((output-file (type)
+               (pathname-for-resized-image (oid image) :type type :size size))
+             (respond (res)
+               res))
+        (ecase type
+          (:png
+           (let ((webp (%build-resized-image
+                        image size-name
+                        :type :webp)))
+             (let ((png (output-file "png")))
+               (unless (uiop:file-exists-p png)
+                 (push-event :live-png-creation
+                             :name (oid image)
+                             :size-name size-name)
+                 (with-wand (wand :file webp)
+                   (uiop:with-staging-pathname (png)
+                     (save-wand-to-file
+                      wand png))))
+               (respond png))))
+          (:webp
+           (let* ((output-file (output-file "webp")))
+             (cond
+               ((uiop:file-exists-p output-file)
+                (respond output-file))
+               (t
+                (unless (uiop:file-exists-p output-file)
+                  (with-local-image (input image)
+                    (uiop:with-staging-pathname (output-file)
+                      (resize-image input
+                                    :output output-file
+                                    :size size))))
+                (respond output-file))))))))))
 
 (defun handle-resized-image (image size &key warmup
                                           type)
-  (with-extras (("image" image))
-   (with-hash-lock-held ((list image size type) *image-resize-lock*)
-     (cond
-       (warmup
-        (with-semaphore ()
-          (%build-resized-image image size)))
-       (t
-        (let ((output-file
-                (with-semaphore ()
-                  (%build-resized-image
-                   image size
-                   :type (cond
-                           ((string= type "png")
-                            :png)
-                           (t
-                            :webp))))))
-          (handle-static-file
-           output-file
-           (format nil "image/~a" (pathname-type output-file)))))))))
+  (handler-case
+      (with-extras (("image" image))
+        (with-hash-lock-held ((list image size type) *image-resize-lock*)
+          (cond
+            (warmup
+             (with-semaphore ()
+               (%build-resized-image image size)))
+            (t
+             (let ((output-file
+                     (with-semaphore ()
+                       (%build-resized-image
+                        image size
+                        :type (cond
+                                ((string= type "png")
+                                 :png)
+                                (t
+                                 :webp))))))
+               (handle-static-file
+                output-file
+                (format nil "image/~a" (pathname-type output-file))))))))
+    (invalid-image ()
+      (hex:safe-redirect (util.cdn:make-cdn "/assets/images/invalid-image.png")))))
 
 (defun send-404 (reason)
   (setf (hunchentoot:header-out :content-type) "text/html")
@@ -356,7 +362,7 @@ right region within that.
               (apply #'hex:make-url 'image-blob-get :oid oid
                                                     :ts ts
                                                     :signature signature
-                     args))))
+                                                    args))))
       (cond
         (originalp
          (make-image-cdn-url
@@ -364,7 +370,9 @@ right region within that.
                         :oid (format nil "~a.~a" oid (str:downcase (handler-case
                                                                        (image-format image)
                                                                      (no-image-uploaded-yet ()
-                                                                       "webp"))))
+                                                                       "webp")
+                                                                     (invalid-image ()
+                                                                       "bin"))))
                         :ts ts
                         :signature signature)))
         (type

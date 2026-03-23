@@ -629,24 +629,7 @@
 
 (def-store-local *metadata-cache* (make-hash-table))
 
-(defmethod image-metadata ((image abstract-image))
-  (with-extras (("image" image))
-    (util:or-setf
-     (gethash image *metadata-cache*)
-     (with-local-image (file image)
-       (destructuring-bind (width height type)
-           (ping-image-metadata (magick) file)
-         (assert (member type '("WEBP" "PNG" "JPEG"
-                                "JXL" "HEIC")
-                         :test #'string=))
-         (make-instance 'metadata
-                        :image-format (intern type "KEYWORD")
-                        :dimensions
-                        (make-instance 'dimension
-                                       :height height
-                                       :width width)))))))
-
-(defmethod image-dimensions (image)
+(def-easy-macro with-invalid-image-handling (&fn fn)
   (handler-bind ((magick-exception (lambda (e)
                                      ;; in the crash in question, this was "NoDecodeDelegateForThisImageFormat"
                                      ;; on thecharmer, this is "no decode delegate for this image format"
@@ -654,7 +637,28 @@
                                      (when (cl-ppcre:scan-to-strings ".*no.*decode.*delegate.*"
                                                                      (str:downcase (princ-to-string e)))
                                        (error 'invalid-image)))))
-      (metadata-image-dimensions (image-metadata image))))
+    (fn)))
+
+(defmethod image-metadata ((image abstract-image))
+  (with-invalid-image-handling ()
+   (with-extras (("image" image))
+     (util:or-setf
+      (gethash image *metadata-cache*)
+      (with-local-image (file image)
+        (destructuring-bind (width height type)
+            (ping-image-metadata (magick) file)
+          (assert (member type '("WEBP" "PNG" "JPEG"
+                                 "JXL" "HEIC")
+                          :test #'string=))
+          (make-instance 'metadata
+                         :image-format (intern type "KEYWORD")
+                         :dimensions
+                         (make-instance 'dimension
+                                        :height height
+                                        :width width))))))))
+
+(defmethod image-dimensions (image)
+  (metadata-image-dimensions (image-metadata image)))
 
 (defun image-file-dimensions (file)
   (destructuring-bind (width height) (ping-image-dimensions (magick) file)
