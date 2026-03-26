@@ -325,6 +325,7 @@
                  (:file "core")
                  (:file "rules")
                  (:file "task-integration")
+                 (:file "rules-card")
                  (:file "settings")
                  (:file "all")))
    (:module "email-tasks"

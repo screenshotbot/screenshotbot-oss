@@ -40,6 +40,8 @@
   (:import-from #:screenshotbot/dashboard/audit-log
                 #:describe-audit-log
                 #:render-audit-logs)
+  (:import-from #:screenshotbot/slack/rules-card
+                #:rules-list)
   (:export #:post-settings-slack))
 (in-package :screenshotbot/slack/settings)
 
@@ -135,61 +137,65 @@
                                    :enabledp (not (str:emptyp enabledp)))))
            (hex:safe-redirect "/settings/slack")))))))
 
+
 (defun get-settings-slack ()
-    (let* ((slack-config
-             (find-or-create-slack-config (current-company)))
-           (result (nibble (slack-token default-channel enabledp :method :post)
-                     (declare (ignore slack-token))
-                     (post-settings-slack default-channel enabledp)))
-           (test-nibble (nibble (default-channel :method :post)
-                          (slack-settings-test
-                           :slack-token (access-token (access-token slack-config))
-                           :channel default-channel)) ))
-      <settings-template>
-            <form action=result method= "POST">
+  (let* ((slack-config
+           (find-or-create-slack-config (current-company)))
+         (result (nibble (slack-token default-channel enabledp :method :post)
+                   (declare (ignore slack-token))
+                   (post-settings-slack default-channel enabledp)))
+         (test-nibble (nibble (default-channel :method :post)
+                        (slack-settings-test
+                         :slack-token (access-token (access-token slack-config))
+                         :channel default-channel)) ))
+    <settings-template>
+    <form action=result method= "POST">
 
     <div class= "card mt-3">
-      <div class= "card-header">
-        <h3>Slack Integration</h3>
-      </div>
-      <div class= "card-body">
+    <div class= "card-header">
+    <h3>Slack Integration</h3>
+    </div>
+    <div class= "card-body">
 
-        <add-to-slack company= (current-company) />
+    <add-to-slack company= (current-company) />
 
-      <div class= "form-group mb-3">
-        <label class= "form-label" for= "default-channel">Slack Default Channel</label>
-        <input type= "text" name= "default-channel" id= "default-channel"
-               class= "form-control"
-               value= (slack-config-channel slack-config) />
-      </div>
+    <div class= "form-group mb-3">
+    <label class= "form-label" for= "default-channel">Slack Default Channel</label>
+    <input type= "text" name= "default-channel" id= "default-channel"
+    class= "form-control"
+    value= (slack-config-channel slack-config) />
+    </div>
 
-      <div class= "form-check">
-        <input type= "checkbox" name= "enabledp" id= "enabledp"
-               class= "form-check-input"
-               value= (enabledp slack-config)
-               checked= (if (enabledp slack-config) "checked") />
-        <label for= "enabledp" class= "form-check-label" >
-          Enable global Slack notifications
-        </label>
+    <div class= "form-check">
+    <input type= "checkbox" name= "enabledp" id= "enabledp"
+    class= "form-check-input"
+    value= (enabledp slack-config)
+    checked= (if (enabledp slack-config) "checked") />
+    <label for= "enabledp" class= "form-check-label" >
+    Enable global Slack notifications
+    </label>
 
-        <p class= "text-muted">You can also enable Slack notifications on individual <a href= "/channels">Screenshotbot channels</a>.</p>
-      </div>
-
-      </div>
-
-      <div class= "card-footer">
-        <input type= "submit" class= "btn btn-primary" value= "Save" />
-        <input type= "submit" class= "btn btn-danger" value= "Test"
-               disabled= (unless (access-token slack-config) "disabled")
-               formaction=test-nibble />
-      </div>
-
+    <p class= "text-muted">You can also enable Slack notifications on individual <a href= "/channels">Screenshotbot channels</a>.</p>
+    </div>
 
     </div>
 
+    <div class= "card-footer">
+    <input type= "submit" class= "btn btn-primary" value= "Save" />
+    <input type= "submit" class= "btn btn-danger" value= "Test"
+    disabled= (unless (access-token slack-config) "disabled")
+    formaction=test-nibble />
+    </div>
+
+
+    </div>
+    ,(when (gk:check :slack-rules (auth:current-company))
+       <rules-list />)
+    
+
     <audit-logs />
-      </form>
-  </settings-template>))
+    </form>
+    </settings-template>))
 
 (deftag audit-logs ()
   (render-audit-logs
@@ -211,3 +217,4 @@
   :section :tasks
   :plugin 'slack-plugin
   :handler 'get-settings-slack)
+
