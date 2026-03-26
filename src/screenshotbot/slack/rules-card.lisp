@@ -14,7 +14,14 @@
                 #:tag-rule
                 #:tag-rules-for-company)
   (:import-from #:core/ui/simple-card-page
+                #:confirmation-page
                 #:simple-card-page)
+  (:import-from #:core/ui/mdi
+                #:mdi)
+  (:import-from #:util/copying
+                #:copying)
+  (:import-from #:bknr.datastore
+                #:delete-object)
   
   
   )
@@ -40,21 +47,43 @@
     </div>
   </div>)
 
+(markup:deftag delete-button (&key action)
+  <form>
+    <button type= "submit" class="btn btn-link" value= "Delete" formaction=action >
+      <mdi name= "delete" class= "text-danger" />
+    </button>
+  </form>)
+
+
 (defun render-rules-table (rules)
   <table class= "table" >
-    <tr>
-      <td>Condition</td>
-      <td>Slack channel</td>
-    </tr>
+    <thead>
+      <tr>
+        <th>Condition</th>
+        <th>Slack channel</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
     <tbody>
     ,@(loop for rule in (fset:convert 'list rules)
             collect
-            <tr>
-              <td>If the tag name is <tt>,(tag-rule-tag rule)</tt></td>
-              <td><tt>,(str:ensure-prefix "#" (slack-channel rule)) </tt></td>
-            </tr>)
+            (copying (rule)
+              <tr>
+                <td class= "align-middle" >If the tag name is <tt>,(tag-rule-tag rule)</tt></td>
+                <td class= "align-middle" ><tt>,(str:ensure-prefix "#" (slack-channel rule)) </tt></td>
+                <td class= "align-middle" ><delete-button action= (nibble () (%delete rule)) /> </td>
+              </tr>))
     </tbody>
   </table>)
+
+(defun go-home ()
+  (hex:safe-redirect "/settings/slack"))
+
+(defun %delete (rule)
+  <confirmation-page yes= (nibble () (delete-object rule) (go-home))
+                     no= (nibble () (go-home))>
+    Are you sure you want to delete the rule for <tt>,(str:ensure-prefix "#" (slack-channel rule))</tt>?
+  </confirmation-page>)
 
 (defun create-rule ()
   <simple-card-page form-action= (nibble (tag slack-channel :method :post) (%post tag slack-channel)) >
@@ -83,4 +112,4 @@
                  :tag tag
                  :company (auth:current-company)
                  :slack-channel slack-channel)
-  (hex:safe-redirect "/settings/slack"))
+  (go-home))
