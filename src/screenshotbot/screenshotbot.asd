@@ -323,6 +323,7 @@
     :serial t
     :components ((:file "plugin")
                  (:file "core")
+                 (:file "rules")
                  (:file "task-integration")
                  (:file "settings")
                  (:file "all")))
@@ -508,6 +509,7 @@
                (:module "slack"
                 :components ((:file "test-settings")
                              (:file "test-core")
+                             (:file "test-rules")
                              (:file "test-task-integration")))
                (:file "test-analytics" :if-feature (:not :windows))
                (:module "email-tasks"
