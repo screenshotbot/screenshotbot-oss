@@ -41,7 +41,9 @@
                 #:oid)
   (:import-from #:core/installation/installation
                 #:*installation*
-                #:installation-domain))
+                #:installation-domain)
+  (:import-from #:screenshotbot/slack/rules
+                #:find-slack-channels-for-run))
 (in-package :screenshotbot/slack/task-integration)
 
 (defclass slack-task-integration (task-integration)
@@ -144,7 +146,10 @@
 
         (mapc #'post-on-channel
               (channel-slack-channels
-               (report-channel report)))))))
+               (report-channel report)))
+
+        (mapc #'post-on-channel
+              (find-slack-channels-for-run (report-run report)))))))
 
 (defun test-message (report-id)
   "A function to test how a slack messages renders. This is an
