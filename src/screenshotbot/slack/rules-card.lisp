@@ -9,6 +9,9 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/slack/rules
+                #:slack-channel
+                #:tag-rule-tag
+                #:tag-rule
                 #:tag-rules-for-company)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
@@ -33,12 +36,28 @@
               Click Add Rule above to create your first rule
             </div>)
            (t
-            <div> hello ,(progn rules) </div>)))
+            (render-rules-table rules))))
     </div>
   </div>)
 
+(defun render-rules-table (rules)
+  <table class= "table" >
+    <tr>
+      <td>Condition</td>
+      <td>Slack channel</td>
+    </tr>
+    <tbody>
+    ,@(loop for rule in (fset:convert 'list rules)
+            collect
+            <tr>
+              <td>If the tag name is <tt>,(tag-rule-tag rule)</tt></td>
+              <td><tt>,(str:ensure-prefix "#" (slack-channel rule)) </tt></td>
+            </tr>)
+    </tbody>
+  </table>)
+
 (defun create-rule ()
-  <simple-card-page>
+  <simple-card-page form-action= (nibble (tag slack-channel :method :post) (%post tag slack-channel)) >
     <div class= "card-header">
       <h3>Add Slack Notification Rule</h3>
     </div>
@@ -49,7 +68,7 @@
       </div>
 
       <div class= "mb-3">
-        <label for= "slack-channel" class= "form-label" >... then send a notification to the following Slack channel:</label>
+        <label for= "slack-channel" class= "form-label" >... then ping to the following Slack channel:</label>
         <input type= "text" name= "slack-channel" id= "slack-channel" class= "form-control" placeholder= "#my-team" />
       </div>
     </div>
@@ -58,3 +77,10 @@
       <a href= "#" class= "ms-3" >Cancel</a>
     </div>
   </simple-card-page>)
+
+(defun %post (tag slack-channel)
+  (make-instance 'tag-rule
+                 :tag tag
+                 :company (auth:current-company)
+                 :slack-channel slack-channel)
+  (hex:safe-redirect "/settings/slack"))
