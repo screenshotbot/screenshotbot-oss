@@ -44,3 +44,12 @@
   (str:s-member
    (recorder-run-tags run)
    (tag-rule-tag self)))
+
+(defmethod find-slack-channels-for-run ((run recorder-run))
+  "Returns the list of slack channels. There might be duplicates if
+multiple rules match."
+  (loop for tag-rule in (fset:convert 'list
+                                      (tag-rules-for-company
+                                       (recorder-run-company run)))
+        if (matches-rule tag-rule run)
+          collect (slack-channel tag-rule)))
