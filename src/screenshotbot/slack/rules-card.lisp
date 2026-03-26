@@ -22,6 +22,8 @@
                 #:copying)
   (:import-from #:bknr.datastore
                 #:delete-object)
+  (:import-from #:util/form-errors
+                #:with-error-builder)
   
   
   )
@@ -108,8 +110,20 @@
   </simple-card-page>)
 
 (defun %post (tag slack-channel)
-  (make-instance 'tag-rule
-                 :tag tag
-                 :company (auth:current-company)
-                 :slack-channel slack-channel)
-  (go-home))
+  (with-error-builder (:check check
+                       :errors errors
+                       :form-builder (create-rule)
+                       :form-args (:tag tag
+                                   :slack-channel slack-channel)
+                       :success (progn
+                                  (make-instance 'tag-rule
+                                                 :tag tag
+                                                 :company (auth:current-company)
+                                                 :slack-channel slack-channel)
+                                  (go-home)))
+    (check :tag (str:non-blank-string-p tag)
+           "Must provide a tag name")
+    (check :slack-channel (str:non-blank-string-p slack-channel)
+           "Must provide a slack-channel name")
+    (check :slack-channel (not (str:containsp "," slack-channel))
+           "Only provide one slack-channel")))
