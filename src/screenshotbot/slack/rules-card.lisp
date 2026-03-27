@@ -48,14 +48,14 @@
 
 (markup:deftag delete-button (&key action)
   <form class= "d-inline" >
-    <button type= "submit" class="btn btn-danger" value= "Delete" formaction=action >
+    <button type= "submit" class="btn btn-outline-danger" value= "Delete" formaction=action >
       <mdi name= "delete" /> Delete
     </button>
   </form>)
 
 (markup:deftag test-button (&key action)
   <form class= "d-inline" >
-    <button type= "submit" class="btn btn-success" value= "Test" formaction=action >
+    <button type= "submit" class="btn btn-outline-secondary" value= "Test" formaction=action >
       <mdi name= "play_arrow" /> Test
     </button>
   </form>)

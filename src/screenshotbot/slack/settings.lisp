@@ -42,6 +42,8 @@
                 #:render-audit-logs)
   (:import-from #:screenshotbot/slack/rules-card
                 #:rules-list)
+  (:import-from #:core/ui/mdi
+                #:mdi)
   (:export #:post-settings-slack))
 (in-package :screenshotbot/slack/settings)
 
@@ -184,9 +186,11 @@
 
           <div class= "card-footer">
             <input type= "submit" class= "btn btn-primary" value= "Save" />
-            <input type= "submit" class= "btn btn-danger" value= "Test"
-                   disabled= (unless (access-token slack-config) "disabled")
-                   formaction=test-nibble />
+            <button type= "submit" class= "btn btn-outline-secondary"
+                    disabled= (unless (access-token slack-config) "disabled")
+                    formaction=test-nibble >
+              <mdi name= "play_arrow" /> Test
+            </button>
           </div>
 
 
