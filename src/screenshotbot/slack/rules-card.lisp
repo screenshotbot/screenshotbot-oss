@@ -23,15 +23,12 @@
   (:import-from #:bknr.datastore
                 #:delete-object)
   (:import-from #:util/form-errors
-                #:with-error-builder)
-  
-  
-  )
+                #:with-error-builder))
 (in-package :screenshotbot/slack/rules-card)
 
 (named-readtables:in-readtable markup:syntax)
 
-(markup:deftag rules-list ()
+(markup:deftag rules-list (&key test-slack-channel-callback)
   <div class= "card mt-3">
     <div class= "card-header d-flex justify-content-between align-items-center">
       <h3>Notification Rules</h3>
@@ -45,19 +42,26 @@
               Click Add Rule above to create your first rule
             </div>)
            (t
-            (render-rules-table rules))))
+            (render-rules-table rules :test-slack-channel-callback test-slack-channel-callback))))
     </div>
   </div>)
 
 (markup:deftag delete-button (&key action)
-  <form>
-    <button type= "submit" class="btn btn-link" value= "Delete" formaction=action >
-      <mdi name= "delete" class= "text-danger" />
+  <form class= "d-inline" >
+    <button type= "submit" class="btn btn-danger" value= "Delete" formaction=action >
+      <mdi name= "delete" /> Delete
+    </button>
+  </form>)
+
+(markup:deftag test-button (&key action)
+  <form class= "d-inline" >
+    <button type= "submit" class="btn btn-success" value= "Test" formaction=action >
+      <mdi name= "play_arrow" /> Test
     </button>
   </form>)
 
 
-(defun render-rules-table (rules)
+(defun render-rules-table (rules &key test-slack-channel-callback)
   <table class= "table" >
     <thead>
       <tr>
@@ -73,7 +77,10 @@
               <tr>
                 <td class= "align-middle" >If the tag name is <tt>,(tag-rule-tag rule)</tt></td>
                 <td class= "align-middle" ><tt>,(str:ensure-prefix "#" (slack-channel rule)) </tt></td>
-                <td class= "align-middle" ><delete-button action= (nibble () (%delete rule)) /> </td>
+                <td class= "align-middle" >
+                  <test-button action= (nibble () (funcall test-slack-channel-callback (slack-channel rule))) />
+                  <delete-button action= (nibble () (%delete rule)) />
+                </td>
               </tr>))
     </tbody>
   </table>)
