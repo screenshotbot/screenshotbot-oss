@@ -1155,37 +1155,58 @@ run, and the hash associated with the previous run."
     (%commits-between run to)))
 
 (defun info-modal (run to)
-  <div class="modal" tabindex="-1" id= "comparison-info-modal" >
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"
-              title= (channel-name (recorder-run-channel run)) >,(shortened-channel-name (channel-name (recorder-run-channel run)) :length 40) </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <p>Comparing <link-to-run run=run /> to <link-to-run run=to />.</p>
+  (let ((repo (channel-repo (recorder-run-channel run)))
+        (this-hash (recorder-run-commit run))
+        (prev-hash (?. recorder-run-commit to)))
+    <div class="modal" tabindex="-1" id= "comparison-info-modal" >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title"
+                title= (channel-name (recorder-run-channel run)) >,(shortened-channel-name (channel-name (recorder-run-channel run)) :length 40) </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>
 
-          ,(when-let* ((repo (channel-repo (recorder-run-channel run)))
-                       (this-hash (recorder-run-commit run))
-                       (prev-hash (?. recorder-run-commit to)))
-             (let ((review-link (review-link :run run)))
+              <table class= "table border" >
+                <thead>
+                  <th>Comparing:</th>
+                  <th>Link to run</th>
+                  <th>Commit</th>
+                </thead>
+                <tr>
+                  <td>This run</td>
+                  <td><link-to-run run=run /></td>
+                  <td>
+                    ,(when (and repo this-hash)
+                       <commit repo=repo hash=this-hash />)
+                    ,(let ((review-link (review-link :run run)))
+                       (when review-link
+                         <span> on ,(progn review-link)</span>))
+                  </td>
+                </tr>
+                <tr>
+                  <td>Previous Baseline</td>
+                  <td><link-to-run run=to /></td>
+                  <td>,(when (and repo prev-hash)
+                         <commit repo=repo hash=prev-hash />)
+                  </td>
+                </tr>
+              </table>
+            </p>
+
+            ,(when-let* ()
                <p class= "mt-2" >
-                 This commit: <commit repo= repo hash=this-hash />
-                 ,(when review-link
-                    <span> on ,(progn review-link)</span>)
-                 <br />
-                 Previous commit: <commit repo= repo hash=prev-hash />
-                 <br />
                  <a href= (format nil "/blame/~a/to/~a" (oid run) (oid to)) >View commits between these commits</a>
-               </p>))
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+               </p>)
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
         </div>
       </div>
-    </div>
-  </div>)
+    </div>))
 
 (defun group-matches-p (group search)
   (or
