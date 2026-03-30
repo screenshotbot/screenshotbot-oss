@@ -148,10 +148,10 @@ function prepareMaskEditorHelper(img, overlay) {
         console.log("will draw on: ", startX, startY, x, y);
 
         var rect = addRect({
-            left: startX,
-            top: startY,
-            height: y - startY,
-            width: x - startX,
+            left: Math.min(startX, x),
+            top: Math.min(startY, y),
+            height: Math.abs(y - startY),
+            width: Math.abs(x - startX),
         });
 
         canvas.setActiveObject(rect);
