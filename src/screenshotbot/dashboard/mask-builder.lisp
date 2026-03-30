@@ -22,7 +22,11 @@
                 #:dimension-width
                 #:image-dimensions)
   (:import-from #:core/ui/mdi
-                #:mdi))
+                #:mdi)
+  (:import-from #:screenshotbot/mask-rect-api
+                #:mask-rect-width
+                #:mask-rect-top
+                #:mask-rect-left))
 (in-package :screenshotbot/dashboard/mask-builder)
 
 
@@ -84,7 +88,7 @@
 
 
              <canvas id= "mask-editor" width=(dimension-width dim) height= (dimension-height dim)
-                     data-rects= (json:encode-json-to-string (coerce mask 'vector ))
+                     data-rects= (json:encode-json-to-string (coerce (mapcar #'fix-mask mask) 'vector ))
                      style= "max-width: 100%; max-height: 100%"
                      />
              <style>
@@ -104,3 +108,15 @@
          </div>
        </form>
      </app-template>)))
+
+(defun fix-mask (mask)
+  (let ((ht (make-hash-table :test #'equal)))
+    (setf (gethash "left" ht)
+          (mask-rect-left mask))
+    (setf (gethash "top" ht)
+          (mask-rect-top mask))
+    (setf (gethash "width" ht)
+          (mask-rect-width mask))
+    (setf (gethash "height" ht)
+          (mask-rect-height mask))
+    ht))
