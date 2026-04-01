@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:info-modal
                 #:sort-pixels
                 #:pixel-str-to-components
                 #:%render-commits-path
@@ -557,3 +558,9 @@
      '("srgb(243,245,248)"
        "srgb(242,245,247)"
        "srgb(242,245,246)")))))
+
+(test info-modal-when-theres-no-TO-provided
+  (with-fixture state ()
+   (with-fixture single-change ()
+     (finishes
+       (info-modal one nil)))))

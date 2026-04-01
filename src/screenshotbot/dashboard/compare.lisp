@@ -1196,7 +1196,7 @@ run, and the hash associated with the previous run."
               </table>
             </p>
 
-            ,(when-let* ()
+            ,(when (and to run)
                <p class= "mt-2" >
                  <a href= (format nil "/blame/~a/to/~a" (oid run) (oid to)) >View commits between these commits</a>
                </p>)
