@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/run-context
+                #:git-repo
                 #:fix-commit-hash
                 #:run-context-dto
                 #:run-context-to-dto
@@ -341,3 +342,55 @@ making sure that the doc is giving a good example."
       (let ((run-context (make-instance 'flags-run-context)))
         (assert-that (run-context:pixel-tolerance run-context)
                      (is-equal-to 3))))))
+
+(defclass run-context-with-fixed-git-repo (env-reader-run-context
+                                           run-context)
+  ((git-repo :initarg :git-repo
+             :reader git-repo)
+   (build-url :initarg :build-url
+              :initform ""
+              :reader run-context:build-url)))
+
+(test cleanp-doesnt-calls-git-status-when-build-url-is-not-present
+  (cl-mock:with-mocks ()
+    (with-fixture state ()
+      (test-git:with-git-repo (repo)
+        (test-git:make-commit repo "foo")
+
+        (is-true (git:cleanp repo))       
+        (let ((run-context (make-instance 'run-context-with-fixed-git-repo
+                                          :git-repo repo)))
+          (is-true (run-context:repo-clean-p run-context)))))))
+
+(defun dirty-the-repo (repo)
+  (with-open-file (stream (path:catfile (git:repo-dir repo) "file.txt") :direction :output
+                                                                        :if-exists :supersede)
+    (format stream "dsfsdfdsfdsfdf")))
+
+(test cleanp-doesnt-call-git-status-if-not-needed
+  (cl-mock:with-mocks ()
+    (with-fixture state ()
+      (test-git:with-git-repo (repo)
+        (test-git:make-commit repo "foo")
+
+        (dirty-the-repo repo)
+        (is-false (git:cleanp repo))
+
+        (let ((run-context (make-instance 'run-context-with-fixed-git-repo
+                                          :build-url "https://example.com"
+                                          :git-repo repo)))
+          (is-true (run-context:repo-clean-p run-context)))))))
+
+(test cleanp-is-called-if-its-a-blank-string-too
+  (cl-mock:with-mocks ()
+    (with-fixture state ()
+      (test-git:with-git-repo (repo)
+        (test-git:make-commit repo "foo")
+
+        (dirty-the-repo repo)
+        (is-false (git:cleanp repo))
+
+        (let ((run-context (make-instance 'run-context-with-fixed-git-repo
+                                          :build-url ""
+                                          :git-repo repo)))
+          (is-false (run-context:repo-clean-p run-context)))))))

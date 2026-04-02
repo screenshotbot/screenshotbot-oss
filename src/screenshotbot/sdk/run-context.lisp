@@ -363,6 +363,11 @@ pull-request looks incorrect."
 
 (defmethod repo-clean-p :around ((self env-reader-run-context))
   (cond
+    ((not (str:blankp (build-url self)))
+     ;; In CI, `git status` can be slow especially on large
+     ;; repos. Let's just assume that if we know for a fact that we're
+     ;; running on CI, then we always treat it as a clean repo
+     t)
     ((slot-boundp self 'repo-clean-p)
      (call-next-method))
     (t
