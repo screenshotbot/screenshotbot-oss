@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.18.7 - 2026-04-01
+
+### Changed
+
+- Avoid doing a `git status` when running in CI. On larger repos this
+  can be quite slow
+
 ## 2.18.6 - 2026-03-18
 
 ### Changed
