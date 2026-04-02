@@ -47,6 +47,7 @@
 (util/fiveam:def-suite)
 
 (defun run-in-dir (repo cmd &rest args)
+  (declare (optimize (debug 3) (speed 0)))
   (let ((cmd (cl-ppcre:regex-replace
               "^git " cmd
               "git -c user.name=FooBar -c user.email=foo@example.com ")))

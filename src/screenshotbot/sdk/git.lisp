@@ -70,10 +70,15 @@
   (list
    "git"
    "--git-dir"
-   (namestring (repo-git-dir repo))))
+   (namestring (repo-git-dir repo))
+   "--work-tree"
+   (namestring (repo-dir repo))))
+
+(defmethod %git-status-porcelain ((repo git-repo))
+  ($ (git-command repo) "status" "--porcelain"))
 
 (defmethod cleanp ((repo git-repo))
-  (str:emptyp ($ (git-command repo) "status" "--porcelain")))
+  (str:emptyp (%git-status-porcelain repo)))
 
 (defmethod git-message ((repo git-repo) &key (ref "HEAD"))
   "Shows the message of the given ref, which defaults to HEAD"

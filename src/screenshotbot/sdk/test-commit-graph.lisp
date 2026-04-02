@@ -515,7 +515,7 @@ on the server. This test will FAIL until the bug is fixed."
           (assert-that master
                        (any-of
                         (is-equal-to "master")))
-          
+
           (test-git:enable-server-features repo2)
 
           ;; Create a branch with a commit (use a different file to avoid merge conflict)
@@ -524,15 +524,10 @@ on the server. This test will FAIL until the bug is fixed."
           (test-git:make-commit repo2 "feature content" :file "feature.txt")
 
           (let ((feature-commit (git:current-commit repo2)))
-
             ;; Go back to master and make a different commit (writes to file.txt)
             (git::$ (git-command repo2) "checkout" "master")
-            (test-git::run-in-dir
-             repo2
-             "rm feature.txt")
-
+            (is-false (path:-e (path:catfile (git:repo-dir repo2) "feature.txt")))
             (test-git:make-commit repo2 "master commit")
-
 
             ;; Merge feature into master (creates a merge commit with 2 parents)
             (test-git::run-in-dir
