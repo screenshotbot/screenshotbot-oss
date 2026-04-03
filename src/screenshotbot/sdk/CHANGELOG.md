@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.18.8 - 2026-04-03
+
+### Changed
+
+- Avoid git-fetch when using the new commit graph flow
+- Add more warning logs for slow parts of the code (such as `git status`)
+
 ## 2.18.7 - 2026-04-01
 
 ### Changed
