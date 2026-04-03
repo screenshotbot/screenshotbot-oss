@@ -214,3 +214,13 @@ In the error case, it's hard to distinguish between a real error (e.g.
         finally
            (when cell
              (setf (cdr cell) nil))))
+
+(def-easy-macro with-slow-logging (message &fn fn)
+  (let ((start-time (get-internal-real-time)))
+    (prog1
+        (fn)
+      (let ((diff (/ (- (get-internal-real-time) start-time)
+                     internal-time-units-per-second)))
+        (when (> diff 0.2)
+          (log:warn "~a was slow: ~as" message (* 1.0 diff)))))))
+

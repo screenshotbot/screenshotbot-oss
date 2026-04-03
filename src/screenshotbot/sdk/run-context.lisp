@@ -14,6 +14,7 @@
                 #:remove-from-plist
                 #:when-let)
   (:import-from #:util/misc
+                #:with-slow-logging
                 #:?.)
   (:import-from #:easy-macros
                 #:def-easy-macro)
@@ -220,7 +221,8 @@
 (defmethod author :around ((self env-reader-run-context))
   (or
    (call-next-method)
-   (git:author (git-repo self))))
+   (with-slow-logging ("Figuring out git author")
+     (git:author (git-repo self)))))
 
 (defmethod build-url :around ((self env-reader-run-context))
   (or
@@ -235,7 +237,8 @@
    ;; information, for example on GitLab CI. We might want to remove
    ;; this before we default to the Git repository URL instead of from
    ;; the environment.
-   (git:get-remote-url (%git-repo self))))
+   (with-slow-logging ("Getting git remote URL")
+     (git:get-remote-url (%git-repo self)))))
 
 (defmethod work-branch :around ((self env-reader-run-context))
   (or
@@ -333,7 +336,8 @@ pull-request looks incorrect."
     ((eql 40 (length sha))
      sha)
     (t
-     (let ((parsed (git:rev-parse-local (git-repo self) sha)))
+     (let ((parsed (with-slow-logging ("Fixing the git commit hash")
+                     (git:rev-parse-local (git-repo self) sha))))
        (when (str:emptyp parsed)
          (warn "Could not rev-parse ~a, please use the full hash instead" sha)
          sha)
@@ -349,7 +353,8 @@ pull-request looks incorrect."
 (defmethod commit-hash :around ((self env-reader-run-context))
   (or
    (call-next-method)
-   (?. current-commit (git-repo self))))
+   (with-slow-logging ("git rev-parse for current commit")
+     (?. current-commit (git-repo self)))))
 
 (defmethod merge-base :around ((self env-reader-run-context))
   (or
@@ -357,7 +362,8 @@ pull-request looks incorrect."
    (when-let ((repo (git-repo self))
               (main-branch-hash (main-branch-hash self)))
      (handler-case
-         (git:merge-base repo main-branch-hash (commit-hash self))
+         (with-slow-logging ("git merge-base")
+           (git:merge-base repo main-branch-hash (commit-hash self)))
        (uiop:subprocess-error (e)
          nil)))))
 
@@ -371,11 +377,13 @@ pull-request looks incorrect."
     ((slot-boundp self 'repo-clean-p)
      (call-next-method))
     (t
-     (git:cleanp (git-repo self)))))
+     (with-slow-logging ("git status --porcelain")
+       (git:cleanp (git-repo self))))))
 
 (defmethod guess-master-branch (repo)
   (flet ((check (x)
-           (rev-parse repo x)))
+           (with-slow-logging ("Guessing main branch")
+             (rev-parse repo x))))
     (cond
       ((check "main")
        "main")

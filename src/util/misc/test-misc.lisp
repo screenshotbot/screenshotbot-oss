@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/misc
+                #:with-slow-logging
                 #:ntrim-list
                 #:random-selection
                 #:safe-with-open-file
@@ -116,3 +117,9 @@
     (ntrim-list x 3)
     (is (equal (list 1 2 3) x))
     (finishes (ntrim-list nil 3))))
+
+(test with-slow-logging-happy-path
+  (is(equal
+      2
+      (with-slow-logging ("hello")
+        2))))
