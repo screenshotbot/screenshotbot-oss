@@ -9,7 +9,6 @@
   (:import-from #:core/installation/installation
                 #:installation-domain)
   (:import-from #:core/ui/assets
-                #:%handle-asdf-output
                 #:*asset-list*
                 #:define-css
                 #:define-js

@@ -6,14 +6,11 @@
 
 (defpackage :core/ui/assets
   (:use #:cl)
-  (:import-from #:core/installation/installation
-                #:*installation*)
   (:export
    #:*asset-list*
    #:ensure-asset
    #:define-css
    #:handle-asdf-output
-   #:%handle-asdf-output
    #:define-js))
 (in-package :core/ui/assets)
 
@@ -32,8 +29,7 @@ cause the asset to be immediately compiled."
 
 (defmacro handle-asdf-output (op component &optional (output-num 0))
   (let ((output-files (eval `(util:relative-output-files ,op (asdf:find-component ,component nil)))))
-    `(%handle-asdf-output
-      *installation*
+    `(%handle-asdf-output-v2
       ,op
       ,component
       ',output-files
@@ -63,11 +59,10 @@ cause the asset to be immediately compiled."
 
 
 
-(defmethod %handle-asdf-output (installation
-                                op
-                                component
-                                output-files
-                                output-num )
+(defun %handle-asdf-output-v2 (op
+                                   component
+                                   output-files
+                                   output-num )
   (bt:with-lock-held (*lock*)
     (let ((output (elt output-files output-num)))
       (when (or
