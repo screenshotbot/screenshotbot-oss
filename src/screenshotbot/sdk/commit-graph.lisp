@@ -24,6 +24,7 @@
                 #:upload-pack
                 #:supported-remote-repo-p)
   (:import-from #:util/misc
+                #:with-slow-logging
                 #:?.)
   (:import-from #:util/threading
                 #:with-extras
@@ -83,6 +84,9 @@ to cache the refs."))
   "Update commit-graph by pulling, and then always push the top 1000 or
 so changes."
   (log:info "Updating commit graph [old flow]")
+  (with-slow-logging ("git fetch")
+    (fetch-remote-branch repo branch))
+
   (let* ((dag (read-graph repo))
          (json (with-output-to-string (s)
                  (dag:write-to-stream dag s))))
@@ -284,9 +288,6 @@ LOCAL-COMMITS are of the form (list (commit . parents)*)"
 
 
 (defmethod update-commit-graph ((self commit-graph-updater) repo branch &key)
-  ;; TODO: we don't need to fetch-remote branch in the new flow, but
-  ;; for now keep this here. (See: T1928)
-  (fetch-remote-branch repo branch)
   (log:info "Updating commit graph")
   (cond
     ((new-flow-enabled-p self repo)
