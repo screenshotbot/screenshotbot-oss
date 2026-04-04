@@ -9,6 +9,7 @@
   :depends-on (:local-time
                :cl-fad
                :easy-macros
+               :log4cl
                :str)
   :components ((:file "misc")
                (:file "lists")))
