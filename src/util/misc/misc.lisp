@@ -19,7 +19,8 @@
    #:relpath
    #:safe-with-open-file
    #:nested-assoc-value
-   #:ntrim-list))
+   #:ntrim-list
+   #:s-or))
 (in-package :util/misc)
 
 
@@ -224,3 +225,17 @@ In the error case, it's hard to distinguish between a real error (e.g.
         (when (> diff 0.2)
           (log:warn "~a was slow: ~as" message (* 1.0 diff)))))))
 
+
+;; This is taken from: https://github.com/vindarel/cl-str/pull/133 temporarily
+(defmacro s-or (&rest args)
+  "Similar to CL:OR, but returns the first non-empty string. If all the
+strings are empty or NIL, then we return NIL.
+
+Like OR, expressions are evaluated from left to right, until the first
+expression returns a non-empty string."
+  (let ((var (gensym)))
+   `(or
+     ,@ (loop for arg in args
+              collect `(let ((,var ,arg))
+                         (unless (str:emptyp ,var)
+                           ,var))))))
