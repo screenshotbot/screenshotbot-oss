@@ -41,10 +41,8 @@
          (not (exclude-from-raft-redirect-p request)))
     
     (cond
-      ((not (wait-for-leader bknr.datastore:*store* :timeout 6))
-       (warn "Did not get a leader in time, we're probably in a read-only state")
-       (log:warn "Did not get a leader in time, we're probably in a read-only state")
-       (values))
+      ((not (wait-for-leader bknr.datastore:*store* :timeout 10))
+       (error "Did not get a leader in time, we're probably in a read-only state"))
       ((leaderp bknr.datastore:*store*)
        ;; If we've become the leader while we were waiting then just
        ;; continue.
