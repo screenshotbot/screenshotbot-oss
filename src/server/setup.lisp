@@ -368,37 +368,50 @@
 (defun %run (&key (enable-store (required))
                (acceptor (required))
                (port (parse-integer *port*))
+               (early-hunchentoot nil)
                (shell *shell*))
-  (log:info "The port is now ~a" port)
-
-
+  "If EARLY-HUNCHENTOOT is set, then the hunchentoot server is started
+before the store is loaded. Only do this if you already have a
+mechanism to redirect requests, otherwise you'll be responding to HTTP
+requests from an incomplete data source, and could potentially lead to
+corruption."
   ;; set this to t for 404 page. :/
   (setf hunchentoot:*show-lisp-errors-p* t)
 
   (setf hunchentoot:*rewrite-for-session-urls* nil)
 
+  ;; In the OSS version, we don't have bknr.cluster, so we always load the store first to avoid 
+  (unless early-hunchentoot
+    (%prepare-store :enable-store enable-store))
+
+  (cond
+    (shell
+     (when early-hunchentoot
+       (%prepare-store :enable-store enable-store))     
+     (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
+    (t
+     (unless acceptor
+       (init-multi-acceptor :port port)
+       (setf acceptor *multi-acceptor*))
+     (with-running-acceptor (acceptor)
+       (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
+                 (hunchentoot:acceptor-port acceptor))
+
+       (log:info "Now we wait indefinitely for shutdown notifications")
+
+       (when early-hunchentoot
+         (%prepare-store :enable-store enable-store))
+       ;; Cron should only be started once the store is up and running
+       (with-cron ()
+         (loop (sleep 60)))))))
+
+(defun %prepare-store (&key enable-store)
   (when enable-store
     (util/store:prepare-store))
   (log:info "Store is prepared, moving on...")
-
+  
   #+screenshotbot-oss
-  (run-migrations)
-
-  ;; Cron should only be started once the store is up and running
-  (with-cron ()
-    (cond
-      (shell
-       (log:info "Slynk has started up, but we're not going to start hunchentoot. Call (QUIT) from slynk when done."))
-      (t
-       (unless acceptor
-         (init-multi-acceptor :port port)
-         (setf acceptor *multi-acceptor*))
-       (with-running-acceptor (acceptor)
-         (log:info "The web server is live at port ~a. See logs/logs for more logs~%"
-                   (hunchentoot:acceptor-port acceptor))
-
-         (log:info "Now we wait indefinitely for shutdown notifications")
-         (loop (sleep 60)))))))
+  (run-migrations))
 
 #+lispworks
 (defun wait-for-processes ()

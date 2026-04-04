@@ -156,6 +156,7 @@
                 (sys:set-signal-handler 10
                                         'sigusr1-handler)
                 (%run :enable-store enable-store
+                      :early-hunchentoot (clingon:getopt cmd :early-hunchentoot)
                       :acceptor
                       (apply-socket
                        (cond
@@ -188,6 +189,15 @@
               :initial-value nil
               :long-name "only-screenshotbot"
               :key :only-screenshotbot-p)
+             (make-option
+              :flag
+              :description "By default, we start Hunchentoot after the store is loaded. If you
+have forwarding code enabled (which we do for Screenshotbot with
+Braft), then pass this argument to start Hunchentoot first. This way
+the server will respond"
+              :initial-value nil
+              :long-name "start-hunchentoot-before-store"
+              :key :early-hunchentoot)             
              (make-option
               :string
               :description "The environment name used for raft, this is not required if we're using raft-config.lisp"
