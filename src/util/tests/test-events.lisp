@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/events
+                #:format-ts
                 #:event-extras
                 #:event-name
                 #:flush-counter-events
@@ -167,3 +168,21 @@
       (is (equal "{\"value\":9}" (event-extras event))))
     (assert-that *events*
                  (has-length 1))))
+
+(test format-ts-tests
+  (let ((time (local-time:parse-timestring "2026-04-05T18:16:26.315579Z")))
+    (is (equal
+         "2026-04-05 18:16:26.315"
+         (format-ts time))))
+  (let ((time (local-time:parse-timestring "2026-04-05T18:16:26.015579Z")))
+    (is (equal
+         "2026-04-05 18:16:26.015"
+         (format-ts time))))
+  (let ((time (local-time:parse-timestring "2026-04-05T18:16:26.010579Z")))
+    (is (equal
+         "2026-04-05 18:16:26.010"
+         (format-ts time))))
+    (let ((time (local-time:parse-timestring "2026-04-05T18:16:26.00000Z")))
+    (is (equal
+         "2026-04-05 18:16:26.000"
+         (format-ts time)))))

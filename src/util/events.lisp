@@ -99,7 +99,9 @@
      (:day  2) " "
      (:hour 2) ":"
      (:min  2) ":"
-     (:sec  2))))
+     (:sec  2) "."
+     (:msec 3))
+   :timezone local-time:+utc-zone+))
 
 (defun insert-multiple-items (db table events columns row-builder)
   (when events
