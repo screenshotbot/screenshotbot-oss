@@ -21,7 +21,9 @@
   (:import-from #:screenshotbot/api/core
                 #:authenticate-api-request)
   (:import-from #:util/threading
-                #:ignore-and-log-errors))
+                #:ignore-and-log-errors)
+  (:import-from #:util/events
+                #:push-event))
 (in-package :screenshotbot/api/version)
 
 (defhandler (api-version :uri "/api/version") ()
@@ -33,7 +35,12 @@
       ;; particular the client may not be handling failure
       ;; properly. So we always return.
       (authenticate-api-request hunchentoot:*request*)))
-  (log:debug "Got session id as: ~a" (hunchentoot:header-in* :x-cli-session-id))
+
+  (push-event
+   :session-id-version-map
+   :client-session-id (hunchentoot:header-in* :x-cli-session-id)
+   :client-version (hunchentoot:header-in* :x-client-version))
+
   (encode-json
    (make-instance 'version
                   :version *api-version*
