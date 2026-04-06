@@ -6,6 +6,7 @@
 
 - In 2.28.7, we thought we removed the `git status` but that was
   incorrect and is fixed correctly here.
+- Added the ability to control the --verbose flag from the server side
 
 ## 2.18.8 - 2026-04-03
 
