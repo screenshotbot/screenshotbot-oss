@@ -279,8 +279,11 @@ run-context that was created here."
       api-context
       run-context
       screenshots
-      :cleanp (cleanp repo)
+      ;; TODO: cleanp should be able to come from run-context, but we
+      ;; should probably get rid of cleanp completely.
+      :cleanp (run-context:repo-clean-p run-context)
       :periodic-job-p periodic-job-p))))
+
 (defun run-context-to-dto (run-context screenshots &key periodic-job-p cleanp)
   (make-instance 'dto:run
                  :channel (run-context:channel run-context)

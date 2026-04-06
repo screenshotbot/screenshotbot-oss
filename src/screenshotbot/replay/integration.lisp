@@ -273,6 +273,7 @@ accessing the urls or sitemap slot."
                                            :channel (channel run)
                                            :productionp t
                                            :main-branch "master"
+                                           :repo-clean-p t
                                            :commit-hash (when request (replay:commit request))
                                            :merge-base (when request (replay:merge-base request))
                                            :main-branch-hash (when request (replay:branch-hash request)))))

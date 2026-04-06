@@ -282,7 +282,6 @@
                    (lambda (git-repo main-branch commit-hash)
                      "0001"))
         (answer (repo-link repo) "https://github.com/tdrhq/fast-example")
-        (answer (cleanp repo) t)
         (let ((context (make-instance 'api-context
                                       :remote-version *api-version*)))
           (finishes
@@ -296,6 +295,7 @@
                       :run-context (make-instance 'run-context:run-context
                                                   :main-branch "main"
                                                   :commit-hash "0002"
+                                                  :repo-clean-p t
                                                   :merge-base "0003"
                                                   :repo-url "https://example.com/foo.git")))
           (is-true (typep %content 'dto:run))

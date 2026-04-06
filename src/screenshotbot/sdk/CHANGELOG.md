@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.18.9 - 2026-04-05
+
+### Changed
+
+- In 2.28.7, we thought we removed the `git status` but that was
+  incorrect and is fixed correctly here.
+
 ## 2.18.8 - 2026-04-03
 
 ### Changed
