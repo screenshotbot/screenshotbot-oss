@@ -180,10 +180,7 @@
                               url &rest args
                               &key want-stream
                               &allow-other-keys)
-  (let ((reuse-context (assoc-value *reuse-contexts* self))
-        (loggable-args (ignore-errors
-                        (alexandria:remove-from-plist args
-                                                      :basic-authorization))))
+  (let ((reuse-context (assoc-value *reuse-contexts* self)))
     (cond
      ((not reuse-context)
       (warn "no reuse-context available")
@@ -198,8 +195,7 @@
                               (tracked-stream-key
                                (puri:uri url)))
              (let* ((connection anaphora:it))
-               (log:debug "Reusing an existing stream ~a, ~a" (connection-stream connection)
-                          loggable-args)
+               (log:debug "Reusing an existing stream ~a" (connection-stream connection))
                (apply #'call-next-method
                       self
                       url
