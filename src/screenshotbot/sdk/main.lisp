@@ -109,6 +109,8 @@ SCREENSHOTBOT_API_HOSTNAME environment variable.")
           (when (api-feature-enabled-p api-context :server-cli-logs)
             (log4cl:add-appender log4cl:*root-logger*
                                  server-appender))
+          (when (api-feature-enabled-p api-context :debug-cli-logs)
+            (log:config :debug))
           (unwind-protect
                (funcall fn api-context)
             (when (api-feature-enabled-p api-context :server-cli-logs)

@@ -49,7 +49,8 @@
                   (%build-features (auth:current-company)))))
 
 (defparameter *gk-list* `((:cli-shallow-clones t)
-                          (:server-cli-logs nil)))
+                          (:server-cli-logs nil)
+                          (:debug-cli-logs nil)))
 
 (defmethod %build-features ((company company))
   (loop for (gk default) in *gk-list*
