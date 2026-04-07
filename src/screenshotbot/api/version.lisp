@@ -50,7 +50,12 @@
 
 (defparameter *gk-list* `((:cli-shallow-clones t)
                           (:server-cli-logs nil)
-                          (:debug-cli-logs nil)))
+                          (:debug-cli-logs nil)
+
+                          ;; Always run `git fetch origin main` before
+                          ;; running the commit-graph code, even in
+                          ;; the new upload-pack style.
+                          (:always-git-fetch nil)))
 
 (defmethod %build-features ((company company))
   (loop for (gk default) in *gk-list*

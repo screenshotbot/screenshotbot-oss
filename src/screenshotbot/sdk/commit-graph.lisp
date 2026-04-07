@@ -289,6 +289,9 @@ LOCAL-COMMITS are of the form (list (commit . parents)*)"
 
 (defmethod update-commit-graph ((self commit-graph-updater) repo branch &key)
   (log:info "Updating commit graph")
+  (when (api-feature-enabled-p (api-context self) :always-git-fetch)
+    (log:info "The always-git-fetch feature is enabled, so we'll run a git fetch now")
+    (fetch-remote-branch repo branch))
   (cond
     ((new-flow-enabled-p self repo)
      (or
