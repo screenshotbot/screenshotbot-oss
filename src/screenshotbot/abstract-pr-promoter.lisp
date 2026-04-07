@@ -410,6 +410,10 @@ reviewable.)"
                             :title +nothing-to-review+
                             :summary "NA")))
       ((not (pr-merge-base promoter run))
+       (unless (recorder-run-branch-hash run)
+         ;; This is likely because there's a bug in the logic of how
+         ;; we computed the main branch hash. See T2274 for an example
+         (warn "[BAD!] Main branch was not provided, and we could not compute the merge base"))
        (format-log run :info "No merge base on run, this is probably a bug on the CI job (Usually missing a `git fetch origin main`"))
       ((equal (pr-merge-base promoter run)
               (actual-sha run))
