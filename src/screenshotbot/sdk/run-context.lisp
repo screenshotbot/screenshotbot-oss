@@ -404,10 +404,7 @@ pull-request looks incorrect."
   (or
    (call-next-method)
    (let ((branch (main-branch self)))
-    (when-let ((hash (rev-parse (git-repo self) branch)))
-      (unless hash
-        (error "Could not rev-parse origin/~a" branch))
-      hash))))
+     (rev-parse (git-repo self) branch))))
 
 (defun parse-tags (tags-str)
   (when tags-str
