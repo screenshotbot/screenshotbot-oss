@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.18.10 - 2026-04-08
+
+- Enables the git-fetch by default, behind a GK, because of
+  side-effects from 2.18.8. T2274
+
+### Changed
+
 ## 2.18.9 - 2026-04-05
 
 ### Changed
@@ -14,6 +21,7 @@
 
 - Avoid git-fetch when using the new commit graph flow
 - Add more warning logs for slow parts of the code (such as `git status`)
+- NOTE: Slightly buggy release, see T2274. Fixed in 2.18.10 behind a GK.
 
 ## 2.18.7 - 2026-04-01
 
