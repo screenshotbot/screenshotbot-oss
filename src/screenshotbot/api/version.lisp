@@ -55,7 +55,7 @@
                           ;; Always run `git fetch origin main` before
                           ;; running the commit-graph code, even in
                           ;; the new upload-pack style.
-                          (:always-git-fetch nil)))
+                          (:always-git-fetch t)))
 
 (defmethod %build-features ((company company))
   (loop for (gk default) in *gk-list*
