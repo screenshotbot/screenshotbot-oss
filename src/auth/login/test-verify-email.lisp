@@ -45,7 +45,7 @@
          (let ((state (make-instance 'auth/login/verify-email::state
                                      :code 123456
                                      :email "foo@example.com"
-                                     :redirect "/runs")))
+                                     :callback (lambda ()))))
            (&body)))))))
 
 (defun %post-errors (state code)

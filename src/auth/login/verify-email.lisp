@@ -36,8 +36,8 @@
 (defclass state ()
   ((code :initarg :code
          :reader %code)
-   (redirect :initarg :redirect
-             :reader %redirect)
+   (callback :initarg :callback
+             :reader %callback)
    (ts :initform (get-universal-time)
        :reader %ts)
    (attempts :initform 0
@@ -45,14 +45,15 @@
    (email :initarg :email
           :reader %email)))
 
-(defun verify-email (email &key redirect)
+(defun verify-email (email &key callback)
   "Triggers an email verification flow, and once the email has been
-verified, redirects to the given redirect."
+verified, the callback is called during the POST http method (so you
+can mutate state)."
   (assert (eql :post (hunchentoot:request-method*)))
   (throttle! *throttler*)
   (let ((state (make-instance 'state
                               :email email
-                              :redirect redirect
+                              :callback callback
                               :code (+ 100000 (secure-random:number 900000)))))
     (send-code-email email (%code state))
     (hex:safe-redirect
@@ -86,7 +87,7 @@ verified, redirects to the given redirect."
         </div>
       </form>
 
-      <form method="POST" action=(nibble (:method :post) (verify-email (%email state) :redirect (%redirect state))) >
+      <form method="POST" action=(nibble (:method :post) (verify-email (%email state) :callback (%callback state))) >
         <div class= "form-group mb-3 text-center">
           <button class= "btn btn-link text-muted" type= "submit" >
             Request a new code
@@ -103,7 +104,7 @@ verified, redirects to the given redirect."
     (incf (%attempts state)))
   (with-error-builder (:check check :errors errors
                        :form-builder (enter-code-screen state)
-                       :success (hex:safe-redirect (%redirect state)))
+                       :success (funcall (%callback state)))
     (cond
       ((bt:with-lock-held (*lock*)
          (> (%attempts state) 20))

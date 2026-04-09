@@ -474,7 +474,7 @@ This is called after all validation (including email verification if required)."
              ((verify-email-p auth-provider)
               ;; Email verification required - verify first, then create account
               (verify-email email
-                            :redirect (nibble () (%create-user))))
+                            :callback (lambda () (%create-user))))
              (t
               ;; No email verification - create account immediately
               (%create-user)))))))))
