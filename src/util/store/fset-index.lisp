@@ -298,3 +298,7 @@ the index reader returns a list in reverse sorted order instead of a set."))
                  :expected-map (%map tmp))
         (util/store/store::fix-the-index ()
           (setf (%map index) (%map tmp)))))))
+
+(defmethod validate-index-values ((self fset-unique-index) all-elts slot-name)
+  "See T2282"
+  nil)

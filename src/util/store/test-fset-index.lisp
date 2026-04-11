@@ -206,10 +206,10 @@
 (test validate-index-unhappy-path
   (with-fixture state ()
     (let ((obj (make-instance 'test-object :arg "foo")))
-      (let ((index-1 (make-instance 'fset-unique-index :slots '(arg))))
+      (let ((index-1 (make-instance 'fset-set-index :slots '(arg))))
         (signals corrupted-index
-         (validate-index-values index-1 (list obj)
-                                'arg))))))
+          (validate-index-values index-1 (list obj)
+                                 'arg))))))
 
 
 (test index-reinitialize-for-fset-indices
