@@ -196,8 +196,11 @@ rev-parse compares against the remote branch :/"
   nil)
 
 (defmethod get-remote-url ((repo git-repo))
-  (ignore-errors
-   ($ (git-command repo) "remote" "get-url" (origin repo))))
+  (handler-case
+      ($ (git-command repo) "remote" "get-url" (origin repo))
+    (uiop:subprocess-error ()
+      (warn "git remote get-url failed for ~a" (origin repo))
+      nil)))
 
 (def-health-check verify-git-is-present ()
   (uiop:run-program (list "git" "--help")))
