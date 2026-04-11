@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:tx-populate-run-id
+                #:recorder-run-id
                 #:find-run-by-run-id
                 #:recorder-run-uname
                 #:delete-old-unchanged-runs
@@ -407,3 +409,14 @@
                 :run-id 22
                 :company company)))
       (is (eql run (find-run-by-run-id company 22))))))
+
+(test tx-populate-run-id
+  (with-fixture state ()
+    (let ((run1 (make-recorder-run
+                 :company company))
+          (run2 (make-recorder-run
+                 :run-id 22
+                 :company company))
+          (run3 (make-recorder-run)))
+      (tx-populate-run-id (list run1 run2 run3))
+      (is (eql 1 (recorder-run-id run1))))))

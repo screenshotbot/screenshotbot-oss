@@ -11,6 +11,7 @@
         #:screenshotbot/model/view)
   (:nicknames #:%r)
   (:import-from #:bknr.datastore
+                #:deftransaction
                 #:class-instances
                 #:persistent-class
                 #:with-transaction
@@ -78,6 +79,8 @@
                 #:hash-index)
   (:import-from #:screenshotbot/model/counter
                 #:defcounter)
+  (:import-from #:util/misc/lists
+                #:with-batches)
   ;; classes
   (:export #:promotion-log
            #:recorder-run
@@ -819,3 +822,18 @@ list of warnings for RUN."
 (defun find-run-by-run-id (company run-id)
   (index-get +company-plus-id-index+
              (list company run-id)))
+
+(deftransaction tx-populate-run-id (runs)
+  (loop for run in runs
+        if (recorder-run-company run)
+          unless (slot-boundp run '%run-id)
+            do
+               (setf (slot-value run '%run-id)
+                     (next-recorder-run-counter (recorder-run-company run)))))
+
+(defun populate-run-id ()
+  (with-batches (runs (bknr.datastore:class-instances 'recorder-run) :batch-size 100)
+    (when-let ((runs (loop for run in runs
+                           unless (slot-boundp run '%run-id)
+                             collect run)))
+      (tx-populate-run-id runs))))
