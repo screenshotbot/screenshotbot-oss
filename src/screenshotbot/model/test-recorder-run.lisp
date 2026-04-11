@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:find-run-by-run-id
                 #:recorder-run-uname
                 #:delete-old-unchanged-runs
                 #:%run-build-url
@@ -399,3 +400,10 @@
     (let ((warning (first (recorder-run-warnings run))))
       (is (not (null warning)))
       (is (eq run (slot-value warning '%run))))))
+
+(test find-run-by-run-id
+  (with-fixture state ()
+    (let ((run (make-recorder-run
+                :run-id 22
+                :company company)))
+      (is (eql run (find-run-by-run-id company 22))))))

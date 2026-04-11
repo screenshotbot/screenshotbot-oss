@@ -74,6 +74,7 @@
                 #:constant-string
                 #:constant-string-string)
   (:import-from #:bknr.indices
+                #:index-get
                 #:hash-index)
   (:import-from #:screenshotbot/model/counter
                 #:defcounter)
@@ -137,7 +138,8 @@
    #:shard-screenshots
    #:shard-key
    #:recorder-run-metadata
-   #:recorder-run-uname)
+   #:recorder-run-uname
+   #:find-run-by-run-id)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -813,3 +815,7 @@ list of warnings for RUN."
    (loop for run in (fset:convert 'list (runs-for-company company))
          if (> (%created-at run) time)
            summing (length (recorder-run-screenshots run)))))
+
+(defun find-run-by-run-id (company run-id)
+  (index-get +company-plus-id-index+
+             (list company run-id)))
