@@ -44,6 +44,7 @@
   (:import-from #:util/store/store
                 #:defindex)
   (:import-from #:util/store/fset-index
+                #:fset-unique-index
                 #:fset-many-to-many-index
                 #:fset-set-index)
   (:import-from #:util/store/store-migrations
@@ -74,6 +75,8 @@
                 #:constant-string-string)
   (:import-from #:bknr.indices
                 #:hash-index)
+  (:import-from #:screenshotbot/model/counter
+                #:defcounter)
   ;; classes
   (:export #:promotion-log
            #:recorder-run
@@ -205,10 +208,18 @@ we can write methods that are generic to both."))
              (eql channel (shard-channel shard)))
            collect shard)))
 
+(defcounter recorder-run-counter ())
+
+(defindex +company-plus-id-index+
+  'fset-unique-index
+  :slots '(company %run-id))
+
 (with-class-validation
   (defclass recorder-run (object-with-oid abstract-run
                           bknr-or-archived-run-mixin)
-    ((channel
+    ((%run-id :initarg :run-id
+              :reader recorder-run-id)
+     (channel
       :initarg :channel
       :initform nil
       :relaxed-object-reference t
@@ -362,6 +373,8 @@ associated report is rendered.")
                 :reader recorder-run-metadata
                 :documentation "An alist of metadata. The keys and values are both strings."))
     (:metaclass has-created-at)
+    (:class-indices (company-plus-id-index
+                     :index +company-plus-id-index+))
     (:default-initargs :screenshot-map (error "need screenshot-map")
                        :compare-tolerance nil
                        :release-branch-p nil
