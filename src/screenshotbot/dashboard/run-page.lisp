@@ -44,6 +44,7 @@
   (:import-from #:screenshotbot/model/image
                 #:image-dimensions)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-id
                 #:compare-tolerance
                 #:delete-run
                 #:recorder-run-tags
@@ -273,6 +274,7 @@
              <div class="alert alert-info mt-3">,(progn alert)</div>)
 
           <ul>
+            <li>Run ID: ,(ignore-errors (recorder-run-id run)) </li>
             <li>Organization: ,(?. company-name (recorder-run-company run))</li>
             <li>Channel: <a href= (format nil "/channels/~a" (store-object-id channel)) >,(channel-name channel)</a> </li>            
             <li>Repo url: ,(github-repo run)</li>
