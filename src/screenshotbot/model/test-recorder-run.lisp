@@ -134,6 +134,7 @@
   (with-fixture state ()
     (let* ((channel (make-instance 'channel))
            (run (make-recorder-run
+                 :company company
                  :override-commit-hash "bleh")))
       (is (equal "bleh" (recorder-run-commit run))))))
 
@@ -141,7 +142,8 @@
   "Then we return nil without failing"
   (with-fixture state ()
     (let* ((channel (make-instance 'channel))
-           (run (make-recorder-run)))
+           (run (make-recorder-run
+                 :company company)))
       (is (equal nil (recorder-run-commit run))))))
 
 (test finding-runs-by-tags
@@ -406,9 +408,10 @@
 (test find-run-by-run-id
   (with-fixture state ()
     (let ((run (make-recorder-run
-                :run-id 22
                 :company company)))
-      (is (eql run (find-run-by-run-id company 22))))))
+      (is (eql run (find-run-by-run-id
+                    company
+                    1 #| since this is the first run |#))))))
 
 (test tx-populate-run-id
   (with-fixture state ()
