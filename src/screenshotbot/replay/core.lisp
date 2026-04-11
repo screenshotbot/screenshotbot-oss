@@ -12,6 +12,7 @@
   (:import-from #:auto-restart
                 #:with-auto-restart)
   (:import-from #:util/misc
+                #:not-null!
                 #:or-setf)
   (:import-from #:util/threading
                 #:with-extras
@@ -256,10 +257,6 @@ shipped by the time you're reading this.)"))
          (funcall fn))
     (bt:with-lock-held (*request-counter-lock*)
       (decf (request-counter snapshot)))))
-
-(defun not-null! (expr)
-  (assert expr)
-  expr)
 
 (defun root-assets (snapshot)
   (let ((url-to-asset-map
