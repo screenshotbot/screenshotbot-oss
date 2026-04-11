@@ -12,6 +12,7 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:util/misc
+                #:not-null!
                 #:?.)
   (:import-from #:util/health-check
                 #:def-health-check)
@@ -138,7 +139,7 @@
                      :repo repo-url))
      (t
       (local-upload-pack
-       repo-url)))))
+       (not-null! repo-url))))))
 
 (defmethod close-upload-pack (self)
   (close (%stream self)))
