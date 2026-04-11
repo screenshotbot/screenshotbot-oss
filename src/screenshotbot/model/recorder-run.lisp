@@ -43,6 +43,7 @@
                 #:ensure-slot-boundp
                 #:non-root-object)
   (:import-from #:util/store/store
+                #:validate-index-values
                 #:defindex)
   (:import-from #:util/store/fset-index
                 #:fset-unique-index
@@ -848,3 +849,12 @@ list of warnings for RUN."
 
 (def-store-migration ("Backfill run-id, step 1" :version 38)
   (populate-run-id))
+
+
+(defmethod validate-index-values ((self fset-unique-index) all-elts (slot-name (eql '%run-id)))
+  "See T2282"
+  nil)
+
+(defmethod validate-index-values ((self fset-unique-index) all-elts (slot-name (eql 'company)))
+  "See T2282"
+  nil)
