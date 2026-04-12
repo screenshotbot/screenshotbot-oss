@@ -380,6 +380,7 @@ associated report is rendered.")
                 :documentation "An alist of metadata. The keys and values are both strings."))
     (:metaclass has-created-at)
     (:class-indices (company-plus-id-index
+                     :slots (company %run-id)
                      :index +company-plus-id-index+))
     (:default-initargs :screenshot-map (error "need screenshot-map")
                        :compare-tolerance nil
