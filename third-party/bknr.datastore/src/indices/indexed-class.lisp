@@ -383,19 +383,8 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 (defmethod make-instance :around ((class indexed-class) &key)
   (let* ((*in-make-instance-p* t)
-         (object (call-next-method))
-         (added-indices)
-         (error t))
-    (unwind-protect
-         (progn
-           (dolist (index (mapcar #'index-holder-index (indexed-class-indices class)))
-             (index-add index object)
-             (push index added-indices))
-           (setf error nil)
-           object)
-      (when error
-        (dolist (index added-indices)
-          (index-remove index object))))
+         (object (call-next-method)))
+    (parallel-index-add object (mapcar #'index-holder-index (indexed-class-indices class)))
     object))
 
 
@@ -518,6 +507,10 @@ also index subclasses of the class to which the slot belongs, default is T")
 
 (defmethod object-destroyed-p ((object null))
   nil)
+
+(defun parallel-index-add (object indices)
+  (dolist (index indices)
+    (index-add index object)))
 
 (defmethod object-destroyed-p ((object base-indexed-object))
   (and

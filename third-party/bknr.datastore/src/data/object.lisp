@@ -647,8 +647,7 @@ the slots are read from the snapshot and ignored."
                 (%id-cache object) object-id
                 (next-object-id (store-object-subsystem)) (max (1+ object-id)
                                                                (next-object-id (store-object-subsystem))))
-          (dolist (index (class-slot-indices class 'id))
-            (index-add index object)))))))
+          (parallel-index-add object (class-slot-indices class 'id)))))))
 
 (defun snapshot-read-slots (stream layouts)
   (let* ((layout-id (%decode-integer stream))
