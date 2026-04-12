@@ -508,9 +508,18 @@ also index subclasses of the class to which the slot belongs, default is T")
 (defmethod object-destroyed-p ((object null))
   nil)
 
+(defvar *kernel* nil)
+
 (defun parallel-index-add (object indices)
-  (dolist (index indices)
-    (index-add index object)))
+  (unless *kernel*
+    (setf *kernel* (lparallel:make-kernel 10 :name "index modification threads")))
+  (let ((lparallel:*kernel* *kernel*))
+   (mapc
+    #'lparallel:force
+    (loop for index in indices
+          collect (let ((index index))
+                    (lparallel:future
+                      (index-add index object)))))))
 
 (defmethod object-destroyed-p ((object base-indexed-object))
   (and

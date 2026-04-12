@@ -15,16 +15,18 @@
   :licence "BSD"
   :description "CLOS class indices"
   :long-description ""
-
-  :depends-on (:cl-interpol :bknr.utils :bknr.skip-list :closer-mop)
-
+  :depends-on (:cl-interpol
+               :bknr.utils
+               :bknr.skip-list
+               :closer-mop
+               :lparallel)
   :components ((:module "indices"
-			:components
-			((:file "package")
-			 (:file "protocol" :depends-on ("package"))
-			 (:file "indices" :depends-on ("package" "protocol"))
-			 (:file "indexed-class" :depends-on ("package" "indices"))
-			 (:file "category-index" :depends-on ("package" "protocol" "indices"))))))
+			    :components
+			    ((:file "package")
+			     (:file "protocol" :depends-on ("package"))
+			     (:file "indices" :depends-on ("package" "protocol"))
+			     (:file "indexed-class" :depends-on ("package" "indices"))
+			     (:file "category-index" :depends-on ("package" "protocol" "indices"))))))
 
 (defsystem :bknr.indices/tests
   :depends-on (:bknr.indices
