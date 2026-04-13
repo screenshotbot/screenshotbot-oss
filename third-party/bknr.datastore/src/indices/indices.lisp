@@ -472,13 +472,6 @@ the new skip-list."
 		               skip-list)
 	    (nreverse res)))))
 
-(defun copy-skip-list (skip-list)
-  (let ((new-skip-list (make-instance 'skip-list)))
-    (map-skip-list #'(lambda (key val)
-		               (setf (skip-list-get new-skip-list key) val))
-		           skip-list)
-    new-skip-list))
-
 (defmethod index-reinitialize ((new-index class-skip-index)
 			                   (old-index class-skip-index))
   (let* ((new-hash (class-skip-index-hash-table new-index))
