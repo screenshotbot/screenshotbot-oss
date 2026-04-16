@@ -111,8 +111,13 @@
 
 (defmethod index-reinitialize ((new-index fset-set-index)
                                (old-index fset-unique-index))
-  (mapcar (curry #'index-add new-index)
-          (index-values old-index))
+  (mapcar
+   (lambda (obj)
+     (restart-case
+         (index-add new-index obj)
+       (ignore-adding-object ()
+         nil)))
+   (index-values old-index))
   new-index)
 
 (defclass fset-many-to-many-index (fset-set-index)
