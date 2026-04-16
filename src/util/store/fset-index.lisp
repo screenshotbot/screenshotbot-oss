@@ -109,6 +109,12 @@
 (defclass fset-set-index (abstract-fset-index)
   ((map :initform (fset:empty-map (fset:empty-set)))))
 
+(defmethod index-reinitialize ((new-index fset-set-index)
+                               (old-index fset-unique-index))
+  (mapcar (curry #'index-add new-index)
+          (index-values old-index))
+  new-index)
+
 (defclass fset-many-to-many-index (fset-set-index)
   ()
   (:documentation "An index where a slot can have multiple values, and you can
