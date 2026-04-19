@@ -246,15 +246,6 @@
 #-openmcl(test-encoding hash.2 (make-hash-table :size 0 :test #'equal))
 #+openmcl(5am:test hash.2 (5am:skip "the hash-table-size is not preserved - do we need to fix this?"))
 
-;; (defvar *hash* (let ((in (make-hash-table :test #'equal
-;;                                           :rehash-threshold 0.4 :size 20
-;;                                           :rehash-size 40)))
-;;                  (dotimes (x 1000) (setf (gethash (format nil "~R" x) in) x))
-;;                  in))
-
-;; (test-encoding hash.3 *hash*)
-(5am:test hash.3 (5am:skip "will be fixed later - http://trac.common-lisp.net/bknr/ticket/29"))
-
 ;; ;; packages
 ;; (test-encoding package.1 (find-package :cl-store))
 
