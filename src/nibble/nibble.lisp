@@ -303,7 +303,7 @@ certain cases where the user object might change."
 stored in the nibble itself, because we want this for debugging
 purposes to be maintained across server restarts."
   (when (boundp 'hunchentoot:*request*)
-    (let ((param (hunchentoot:parameter "_src")))
+    (let ((param (hunchentoot:get-parameter "_src")))
      (cond
        (param
         param)
