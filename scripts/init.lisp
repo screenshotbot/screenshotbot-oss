@@ -76,6 +76,13 @@
   (register-tdrhq "cl-unix-sockets" "master")
   (register-tdrhq "bknr.cluster" "main"))
 
+;; https://github.com/slburson/fset/issues/112
+(quick-patch:register "https://github.com/slburson/fset"
+                      "b4a4d37f9175a1dca243ef592cd46316f0942834")
+;; https://github.com/slburson/fset/issues/112
+(quick-patch:register "https://github.com/slburson/misc-extensions"
+                      "d3d24809daf8667dafa2ac39c5b203c88afb9781")
+
 ;; Sharplisper forks
 (quick-patch:register "https://github.com/sharplispers/lparallel"
                       "95b162b152e43bae9a19bf7085db2aeb108a74d5")
@@ -85,5 +92,4 @@
                           (namestring cl-user::*cwd*))))
   (format t "Checking out quick-patch repos in: ~a~%" output-dir)
   (quick-patch:checkout-all output-dir))
-
 

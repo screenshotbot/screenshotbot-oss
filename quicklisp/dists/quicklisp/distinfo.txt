@@ -1,7 +1,7 @@
 name: quicklisp
-version: 2025-06-22
-system-index-url: http://beta.quicklisp.org/dist/quicklisp/2025-06-22/systems.txt
-release-index-url: http://beta.quicklisp.org/dist/quicklisp/2025-06-22/releases.txt
+version: 2026-01-01
+system-index-url: http://beta.quicklisp.org/dist/quicklisp/2026-01-01/systems.txt
+release-index-url: http://beta.quicklisp.org/dist/quicklisp/2026-01-01/releases.txt
 archive-base-url: http://beta.quicklisp.org/
-canonical-distinfo-url: http://beta.quicklisp.org/dist/quicklisp/2025-06-22/distinfo.txt
+canonical-distinfo-url: http://beta.quicklisp.org/dist/quicklisp/2026-01-01/distinfo.txt
 distinfo-subscription-url: http://beta.quicklisp.org/dist/quicklisp.txt
