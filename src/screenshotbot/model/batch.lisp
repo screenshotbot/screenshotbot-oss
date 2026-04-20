@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/model/batch
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:class-instances
                 #:persistent-class
                 #:store-object)
   (:import-from #:util/store/store
@@ -16,6 +17,7 @@
                 #:fset-set-index
                 #:fset-unique-index)
   (:import-from #:bknr.indices
+                #:should-index-objects-for-class-p
                 #:hash-index
                 #:index-get)
   (:import-from #:util/store/object-id
@@ -219,3 +221,11 @@ code."
 (def-store-migration ("Ensure some slots are bound" :version 23)
   (ensure-slot-boundp 'batch-item '%status)
   (ensure-slot-boundp 'batch-item '%run))
+
+(defmethod should-index-objects-for-class-p ((self batch-item))
+  nil)
+
+(defmethod class-instances ((class (eql (find-class 'batch-item))))
+  (loop for obj in (bknr.datastore:all-store-objects)
+        if (typep obj 'batch-item)
+          collect obj))
