@@ -435,31 +435,34 @@ actual class (not the name) as the argument."
   t)
 
 (defmethod index-add ((index class-skip-index) object)
-  (labels ((index-object (object class)
-             (let ((key (class-name class))
-                   (hash-table (class-skip-index-hash-table index))
-                   (id-key (slot-value object (class-skip-index-slot-name index))))
-               (cond
-                 ((should-index-objects-for-class-p class)
-                  (multiple-value-bind (skip-list presentp)
-                      (gethash key hash-table)
-                    (if presentp
-                        (setf (skip-list-get id-key skip-list) object)
-                        (let ((skip-list
-                                (setf (gethash key hash-table)
-                                      (make-instance 'skip-list))))
-                          (setf (skip-list-get id-key skip-list) object)))))
-                 (t
-                  ;; We still need the keys to discover all the class
-                  ;; types to clear indices later.
-                  (unless (gethash key hash-table)
-                    (setf (gethash key hash-table) (make-instance 'skip-list))))))))
+  (let ((id-key
+          ;; Avoid calling slot-value for each skip-list. We're very
+          ;; likely to need it at least once for store-object.
+          (slot-value object (class-skip-index-slot-name index))))
+    (labels ((index-object (object class)
+               (let ((key (class-name class))
+                     (hash-table (class-skip-index-hash-table index)))
+                 (cond
+                   ((should-index-objects-for-class-p class)
+                    (multiple-value-bind (skip-list presentp)
+                       (gethash key hash-table)
+                     (if presentp
+                         (setf (skip-list-get id-key skip-list) object)
+                         (let ((skip-list
+                                 (setf (gethash key hash-table)
+                                       (make-instance 'skip-list))))
+                           (setf (skip-list-get id-key skip-list) object)))))
+                  (t
+                   ;; We still need the keys to discover all the class
+                   ;; types to clear indices later.
+                   (unless (gethash key hash-table)
+                     (setf (gethash key hash-table) (make-instance 'skip-list))))))))
 
-    (if (class-skip-index-index-superclasses index)
-	    (dolist (class (cons (class-of object)
-			                 (class-all-indexed-superclasses (class-of object))))
-	      (index-object object class))
-	    (index-object object (class-of object)))))
+     (if (class-skip-index-index-superclasses index)
+	     (dolist (class (cons (class-of object)
+			                  (class-all-indexed-superclasses (class-of object))))
+	       (index-object object class))
+	     (index-object object (class-of object))))))
 
 (defmethod index-remove ((index class-skip-index) object)
   (flet ((remove-object (object class)
