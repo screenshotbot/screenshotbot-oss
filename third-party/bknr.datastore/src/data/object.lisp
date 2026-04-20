@@ -253,7 +253,7 @@ reads will return nil.")))
                              :index-reader store-objects-with-class
                              :slots (id))))
 
-(defun class-instances (class)
+(defmethod class-instances (class)
   (find-class class)                 ; make sure that the class exists
   (store-objects-with-class class))
 

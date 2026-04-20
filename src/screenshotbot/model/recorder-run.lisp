@@ -76,6 +76,7 @@
                 #:constant-string
                 #:constant-string-string)
   (:import-from #:bknr.indices
+                #:should-index-objects-for-class-p
                 #:index-get
                 #:hash-index)
   (:import-from #:screenshotbot/model/counter
@@ -180,6 +181,9 @@ we can write methods that are generic to both."))
 (defclass abstract-run (store-object)
   ()
   (:metaclass persistent-class))
+
+(defmethod should-index-objects-for-class-p ((class (eql (find-class 'abstract-run))))
+  nil)
 
 (defindex +shard-key-index+
   'fset-set-index
@@ -390,6 +394,9 @@ associated report is rendered.")
                        :tags nil
                        :was-promoted-p nil)))
 
+(defmethod should-index-objects-for-class-p ((class (eql (find-class 'recorder-run))))
+  nil)
+
 (defun recorder-run-uname (run)
   (assoc-value (recorder-run-metadata run)
                "uname" :test #'equal))
@@ -489,6 +496,9 @@ associated report is rendered.")
                       :created-at (get-universal-time)
                       :merge-base nil)
    (:documentation "Annotates that this commit should have identical screenshots to the other commit")))
+
+(defmethod should-index-objects-for-class-p ((class (eql (find-class 'unchanged-run))))
+  nil)
 
 (defun unchanged-run-for-commit (channel commit)
   (let ((runs
@@ -862,3 +872,13 @@ list of warnings for RUN."
 (defmethod validate-index-values ((self fset-unique-index) all-elts (slot-name (eql 'company)))
   "See T2282"
   nil)
+
+(defmethod bknr.datastore:class-instances ((name (eql 'recorder-run)))
+  (loop for obj in (bknr.datastore:all-store-objects)
+        if (typep obj 'recorder-run)
+          collect obj))
+
+(defmethod bknr.datastore:class-instances ((name (eql 'unchanged-run)))
+  (loop for obj in (bknr.datastore:all-store-objects)
+        if (typep obj 'unchanged-run)
+          collect obj))
