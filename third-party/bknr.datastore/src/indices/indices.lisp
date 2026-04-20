@@ -428,19 +428,26 @@ the new skip-list."
 	  slot-name (first slots)
 	  (slot-value index 'index-superclasses) index-superclasses)))
 
+(defmethod should-index-objects-for-class-p (class)
+  "Set this to false if you don't care
+about (bknr.datastore:class-instances 'class-name). This takes the
+actual class (not the name) as the argument."
+  t)
+
 (defmethod index-add ((index class-skip-index) object)
   (labels ((index-object (object class)
-	         (let ((key (class-name class))
-		           (hash-table (class-skip-index-hash-table index))
-		           (id-key (slot-value object (class-skip-index-slot-name index))))
-	           (multiple-value-bind (skip-list presentp)
-		           (gethash key hash-table)
-		         (if presentp
-		             (setf (skip-list-get id-key skip-list) object)
-		             (let ((skip-list
-			                 (setf (gethash key hash-table)
-				                   (make-instance 'skip-list))))
-		               (setf (skip-list-get id-key skip-list) object)))))))
+             (when (should-index-objects-for-class-p class)
+	           (let ((key (class-name class))
+		             (hash-table (class-skip-index-hash-table index))
+		             (id-key (slot-value object (class-skip-index-slot-name index))))
+	             (multiple-value-bind (skip-list presentp)
+		             (gethash key hash-table)
+		           (if presentp
+		               (setf (skip-list-get id-key skip-list) object)
+		               (let ((skip-list
+			                   (setf (gethash key hash-table)
+				                     (make-instance 'skip-list))))
+		                 (setf (skip-list-get id-key skip-list) object))))))))
 
     (if (class-skip-index-index-superclasses index)
 	    (dolist (class (cons (class-of object)

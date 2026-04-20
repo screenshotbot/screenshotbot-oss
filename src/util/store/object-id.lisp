@@ -9,6 +9,7 @@
   (:use #:cl
         #:bknr.datastore)
   (:import-from #:bknr.indices
+                #:should-index-objects-for-class-p
                 #:unique-index)
   (:import-from #:util/store
                 #:location-for-oid
@@ -78,8 +79,14 @@
   (:metaclass persistent-class)
   (:default-initargs :oid (%make-oid)))
 
+(defun all-object-with-oids ()
+  "object-with-oid is not class-indexed, so we look it up inefficiently"
+  (loop for object in (bknr.datastore:all-store-objects)
+        if (typep object 'object-with-oid)
+          collect object))
+
 (defun migrate-oids ()
-  (loop for obj in (class-instances 'object-with-oid)
+  (loop for obj in (all-object-with-oids)
         do (let ((oid (oid-struct-or-array obj)))
              (unless (or (stringp oid) (oid-p oid))
                (assert (vectorp oid))
@@ -173,3 +180,6 @@ oid to a string. Otherwise we return the OID object as is."
 
 (defmethod generate-sync-test-for-object ((obj object-with-oid) output)
   (format output "oid:~a " (store-object-id obj) (oid obj)))
+
+(defmethod should-index-objects-for-class-p ((class (eql (find-class 'object-with-oid))))
+  nil)

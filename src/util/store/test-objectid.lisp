@@ -36,7 +36,9 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:bknr.datastore
-                #:class-instances))
+                #:class-instances)
+  (:import-from #:util/store/object-id
+                #:all-object-with-oids))
 (in-package :util/store/test-object-id)
 
 (util/fiveam:def-suite)
@@ -127,4 +129,4 @@
      (with-test-store (:dir dir)
        (is (equalp oid
                    (oid (car
-                         (class-instances 'object-with-oid)))))))))
+                         (all-object-with-oids)))))))))

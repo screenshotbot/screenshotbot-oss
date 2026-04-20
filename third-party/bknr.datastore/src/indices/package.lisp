@@ -46,4 +46,5 @@
 	   #:tree-find-siblings
 	   #:parent-category
 	   #:parent-categories
-	   #:tree-categories))
+	   #:tree-categories
+       #:should-index-objects-for-class-p))
