@@ -296,4 +296,8 @@ SCREENSHOTBOT_API_HOSTNAME environment variable.")
 (lw:defadvice (clingon.utils:exit clingon-exit-warning :before) (&optional (code 0))
   (unless (= code 0)
     (warn "Exiting with code: ~a~%" code))
-  (finish-output *error-output*))
+  (finish-output *error-output*)
+
+  ;; The actual clingon implementation will not exit, because it will
+  ;; check for SLY. :/ So we're hardcoding an exit for now.
+  (uiop:quit code))
