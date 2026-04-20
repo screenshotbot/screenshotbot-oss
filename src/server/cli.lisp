@@ -51,7 +51,7 @@
 (in-package :server/cli)
 
 (def-easy-macro with-store (cmd &fn fn)
-  (with-global-binding ((*object-store* (serapeum:ensure-suffix (clingon:getopt cmd :store) "/"))
+  (with-global-binding ((*object-store* (serapeum:ensure-suffix (namestring (clingon:getopt cmd :store)) "/"))
                         (*start-slynk* (clingon:getopt cmd :start-slynk))
                         (*slynk-loopback-interface* (clingon:getopt cmd :slynk-loopback-interface))
                         (*slynk-port* (format nil "~a" (clingon:getopt cmd :slynk-port))))
