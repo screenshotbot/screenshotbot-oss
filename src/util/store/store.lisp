@@ -97,7 +97,8 @@
    #:raft-store
    #:fix-the-index
    #:make-default-store
-   #:raft-store-final))
+   #:raft-store-final
+   #:nsort-store-objects))
 (in-package :util/store)
 
 (defvar *object-store*)
@@ -925,3 +926,7 @@ snapshots can happen again")
  :step-min 5
  :hash-key 'backup-indices)
 
+
+(defun nsort-store-objects (objects)
+  "Convenience function to implement custom class-instances overrides"
+  (sort objects #'< :key #'bknr.datastore:store-object-id))

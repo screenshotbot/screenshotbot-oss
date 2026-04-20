@@ -11,6 +11,7 @@
                 #:persistent-class
                 #:store-object)
   (:import-from #:util/store/store
+                #:nsort-store-objects
                 #:defindex
                 #:with-class-validation)
   (:import-from #:util/store/fset-index
@@ -226,6 +227,7 @@ code."
   nil)
 
 (defmethod class-instances ((class (eql (find-class 'batch-item))))
-  (loop for obj in (bknr.datastore:all-store-objects)
-        if (typep obj 'batch-item)
-          collect obj))
+  (nsort-store-objects
+   (loop for obj in (bknr.datastore:all-store-objects)
+         if (typep obj 'batch-item)
+           collect obj)))

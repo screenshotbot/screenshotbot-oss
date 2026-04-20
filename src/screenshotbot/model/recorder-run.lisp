@@ -43,6 +43,7 @@
                 #:ensure-slot-boundp
                 #:non-root-object)
   (:import-from #:util/store/store
+                #:nsort-store-objects
                 #:validate-index-values
                 #:defindex)
   (:import-from #:util/store/fset-index
@@ -874,11 +875,13 @@ list of warnings for RUN."
   nil)
 
 (defmethod bknr.datastore:class-instances ((name (eql 'recorder-run)))
-  (loop for obj in (bknr.datastore:all-store-objects)
-        if (typep obj 'recorder-run)
-          collect obj))
+  (nsort-store-objects
+   (loop for obj in (bknr.datastore:all-store-objects)
+         if (typep obj 'recorder-run)
+           collect obj)))
 
 (defmethod bknr.datastore:class-instances ((name (eql 'unchanged-run)))
-  (loop for obj in (bknr.datastore:all-store-objects)
-        if (typep obj 'unchanged-run)
-          collect obj))
+  (nsort-store-objects
+   (loop for obj in (bknr.datastore:all-store-objects)
+         if (typep obj 'unchanged-run)
+           collect obj)))
