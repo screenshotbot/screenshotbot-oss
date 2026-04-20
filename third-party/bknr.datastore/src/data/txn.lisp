@@ -109,6 +109,10 @@
               :initarg :log-guard)
    (subsystems :reader store-subsystems
                :initarg :subsystems)
+   (store-object-subsystem-cache :accessor %store-object-subsystem-cache
+                                 :initform nil
+                                 :documentation "A special cache to look up the store-object-subsystem quickly from the
+list of subsystems")
    (transaction-run-time :accessor store-transaction-run-time
                          :initform 0
                          :documentation "The total run time of all application transaction code since last snapshot"))

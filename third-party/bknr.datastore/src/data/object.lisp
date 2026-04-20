@@ -54,11 +54,14 @@ kernel is trying to write to bknr.datastore")
                      :documentation "Number of threads to use when snapshotting.")))
 
 (defun store-object-subsystem ()
-  (let ((subsystem (find-if (alexandria:rcurry #'typep 'store-object-subsystem)
-                            (store-subsystems *store*))))
-    (unless subsystem
-      (error 'object-subsystem-not-found-in-store :store *store*))
-    subsystem))
+  (or
+   (%store-object-subsystem-cache *store*)
+   (setf (%store-object-subsystem-cache *store*)
+         (let ((subsystem (find-if (alexandria:rcurry #'typep 'store-object-subsystem)
+                                   (store-subsystems *store*))))
+           (unless subsystem
+             (error 'object-subsystem-not-found-in-store :store *store*))
+           subsystem))))
 
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (finalize-inheritance
