@@ -1,3 +1,6 @@
+;;;; This test is valuable. As of 2026-04, it caught a bug with how we
+;;;; clear indices. See D12787
+
 (pkg:define-package :screenshotbot/test-store
   (:use #:cl
         #:alexandria
