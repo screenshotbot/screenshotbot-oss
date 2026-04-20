@@ -7,6 +7,7 @@
 (defpackage :util/store/validate
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:class-instances
                 #:base-store-object
                 #:%id-cache
                 #:store-objects-with-class
@@ -174,7 +175,7 @@
                    (= (length indices) 1)
                    (index-direct-slot-definition-index direct-slot))
            (dolist (index indices)
-             (let ((all-elts (store-objects-with-class class-name)))
+             (let ((all-elts (class-instances class-name)))
                (handler-bind ((error (lambda (e)
                                        (declare (ignore e))
                                        (format t "Errors while processing index for ~a ~a ~a~%" class slot indices))))
