@@ -6,6 +6,7 @@
         :bknr.indices :bknr.statistics
         :alexandria)
   (:import-from #:bknr.indices
+                #:object-destroyed-p-v2
                 #:parallel-index-add
                 #:allow-destroyed-access-p
                 #:base-indexed-object-required

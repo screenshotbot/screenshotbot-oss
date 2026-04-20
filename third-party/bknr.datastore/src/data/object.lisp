@@ -646,9 +646,11 @@ the slots are read from the snapshot and ignored."
       ;; running Lisp image and objects of this class will be ignored.
       (when class
         (let ((object (allocate-instance class)))
-          (setf (slot-value object 'id) object-id
-                (%id-cache object) object-id
-                (next-object-id (store-object-subsystem)) (max (1+ object-id)
+          (setf
+           (object-destroyed-p-v2 object) nil
+           (slot-value object 'id) object-id
+           (%id-cache object) object-id
+           (next-object-id (store-object-subsystem)) (max (1+ object-id)
                                                                (next-object-id (store-object-subsystem))))
           (parallel-index-add object (class-slot-indices class 'id)))))))
 
