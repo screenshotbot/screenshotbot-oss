@@ -23,14 +23,14 @@
 
 (defmethod decode-fset-object ((code (eql #\m)) stream)
   (let ((length (decode stream)))
-    (let ((res (fset:empty-map)))
-      (loop for i below length
-            do (setf res
-                     (fset:with
-                      res
-                      (decode stream)
-                      (decode stream))))
-      res)))
+    (fset:convert
+     'fset:map
+     (loop for i below length
+           collect
+           (cons
+            (decode stream)
+            (decode stream)))
+     :input-sorted? t)))
 
 (defmethod encode-object ((map fset:map) stream)
   (%write-tag #\F stream)
