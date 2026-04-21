@@ -1132,3 +1132,12 @@ string designating an integer."
    (progn
      (warn "shouldn't attempt to use the old slot value!")
      (slot-value object 'id))))
+
+(defmethod should-index-objects-for-class-p ((class (eql (find-class 'store-object))))
+  nil)
+
+(defmethod class-instances ((name (eql 'store-object)))
+  (sort
+   (all-store-objects)
+   #'<
+   :key #'store-object-id))
