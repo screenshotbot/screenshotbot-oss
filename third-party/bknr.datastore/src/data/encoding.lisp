@@ -351,11 +351,9 @@
 (defun %decode-char (stream)
   (%read-char stream))
 
-(defvar *string-decoding-cache* (make-hash-table :test #'equalp
-                                                 #+lispworks #+lispworks
-                                                 :weak-kind :value
-                                                 #+sbcl #+sbcl
-                                                 :weakness :value))
+(defvar *max-string-decoding-cache-size* 100000000)
+
+(defvar *string-decoding-cache* (make-hash-table :test #'equalp))
 
 (defun octets-to-string (octets)
   (labels ((octets-to-string-safe (octets) ; safe and portable
@@ -373,6 +371,9 @@
         (octets-to-string-safe octets)))))
 
 (defun octets-to-string-deduped (octets)
+  (when (>= (hash-table-count *string-decoding-cache*) *max-string-decoding-cache-size*)
+    (clrhash *string-decoding-cache*))
+
   (let ((existing (gethash octets *string-decoding-cache*)))
     (or
      existing

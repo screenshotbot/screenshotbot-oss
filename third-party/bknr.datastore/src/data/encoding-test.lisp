@@ -5,6 +5,8 @@
   (:import-from #:alexandria
                 #:ensure-list)
   (:import-from #:bknr.datastore
+                #:*string-decoding-cache*
+                #:*max-string-decoding-cache-size*
                 #:decode
                 #:encode))
 (in-package :bknr.datastore/encoding-test)
@@ -674,6 +676,7 @@
 ;;     (ignore-errors (delete-file *test-file*))))
 
 (test strings-are-the-same-over-multiple-decodings
+  (clrhash *string-decoding-cache*)
   (let ((str (copy-seq "hello world")))
     (let ((str1 (copy-by-encoding str))
           (str2 (copy-by-encoding str)))
@@ -681,4 +684,14 @@
       (is (eq str1 str2))
       (is (eq str1 (copy-by-encoding "hello world")))
       (is (equal "bar" (copy-by-encoding "bar"))))))
+
+(test strings-are-not-the-same-once-were-above-the-max-size
+  (clrhash *string-decoding-cache*)
+  (let ((*max-string-decoding-cache-size* 3))
+    (let ((str (copy-seq "hello world")))
+      (let ((str1 (copy-by-encoding str)))
+        (copy-by-encoding "one")
+        (is (eql str1 (copy-by-encoding str)))
+        (copy-by-encoding "two")
+        (is (not (eql str1 (copy-by-encoding str))))))))
 
