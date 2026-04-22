@@ -377,3 +377,20 @@ $(function () {
         }
     }
 });
+
+$(function () {
+    $(".nibble-span").map(function () {
+        var $span = $(this);
+        var url = $(this).data("nibble-span");
+        $.ajax({
+            method: "GET",
+            url: url,
+            success: function (data) {
+                $span.html(data);
+            },
+            error: function(data) {
+                $span.html("error");
+            }
+        });
+    });
+});

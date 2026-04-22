@@ -24,6 +24,7 @@
                (:file "paginated")
                (:file "taskie")
                (:file "fonts")
+               (:file "nibble-span")
                (:file "left-side-bar")))
 
 (defsystem :core.ui/tests
