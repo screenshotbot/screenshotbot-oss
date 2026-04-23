@@ -910,3 +910,11 @@ list of warnings for RUN."
    (loop for obj in (bknr.datastore:all-store-objects)
          if (typep obj 'unchanged-run)
            collect obj)))
+
+(deftransaction %bulk-add-to-persistent-commit-map-index (runs)
+  (mapc #'%update-commit-map runs))
+
+(def-store-migration ("Add to persistent commit-map index" :version 40)
+  (with-batches (runs (bknr.datastore:class-instances 'recorder-run)
+                 :batch-size 1000)
+    (%bulk-add-to-persistent-commit-map-index runs)))
