@@ -56,3 +56,17 @@
            (decode stream)
            large-map)))))
 
+(test empty-set
+  (with-fixture state ()
+    (encode (fset:empty-set) stream)
+    (is (fset:equal?
+         (decode-back)
+         (fset:empty-set)))))
+
+(test set-with-stuff
+  (with-fixture state ()
+    (encode (fset:convert 'fset:set (list 1 2 3)) stream)
+    (is (fset:equal?
+         (fset:convert 'fset:set (list 1 2 3))
+         (decode-back)))))
+

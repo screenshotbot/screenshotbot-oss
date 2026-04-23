@@ -40,6 +40,22 @@
     (encode key stream)
     (encode val stream)))
 
+(defmethod encode-object ((set fset:set) stream)
+  (%write-tag #\F stream)
+  (%write-tag #\s stream)
+  (encode (fset:size set) stream)
+  (fset:do-set (val set)
+    (encode val stream)))
+
+(defmethod decode-fset-object ((code (eql #\s)) stream)
+  (let ((length (decode stream)))
+    (fset:convert
+     'fset:set
+     (loop for i below length
+           collect
+           (decode stream))
+     :input-sorted? t)))
+
 
 (defmethod object-neighbors ((map fset:map))
   (let ((ret))
