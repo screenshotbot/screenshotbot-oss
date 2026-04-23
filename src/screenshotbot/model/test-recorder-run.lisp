@@ -74,6 +74,8 @@
                 #:cli-api-key)
   (:import-from #:screenshotbot/model/constant-string
                 #:constant-string)
+  (:import-from #:util/store/slot-subsystem
+                #:externalized-slot-value)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/model/test-recorder-run)
 
@@ -423,3 +425,49 @@
           (run3 (make-recorder-run)))
       (tx-populate-run-id (list run1 run2 run3))
       (is (eql 1 (recorder-run-id run1))))))
+
+
+(test commit-map-serialized-index
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run1 (make-recorder-run
+                  :channel channel
+                  :commit-hash "abcd"
+                  :screenshots nil)))
+      (is (fset:equal?
+           (fset:convert 'fset:map
+                         `(("abcd" . ,(fset:convert 'fset:set (list run1)))))
+           (externalized-slot-value channel '%r::commit-map))))))
+
+(test commit-map-serialized-index-multiple-runs
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run1 (make-recorder-run
+                  :channel channel
+                  :commit-hash "abcd"
+                  :screenshots nil))
+           (run2 (make-recorder-run
+                  :channel channel
+                  :commit-hash "carbar"
+                  :screenshots nil)))
+      (is (fset:equal?
+           (fset:convert 'fset:map
+                         `(("abcd" . ,(fset:convert 'fset:set (list run1)))
+                           ("carbar" . ,(fset:convert 'fset:set (list run2)))))
+           (externalized-slot-value channel '%r::commit-map))))))
+
+(test commit-map-serialized-index-always-picks-everything
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run1 (make-recorder-run
+                  :channel channel
+                  :commit-hash "abcd"
+                  :screenshots nil))
+           (run2 (make-recorder-run
+                  :channel channel
+                  :commit-hash "abcd"
+                  :screenshots nil)))
+      (is (fset:equal?
+           (fset:convert 'fset:map
+                         `(("abcd" . ,(fset:convert 'fset:set (list run1 run2)))))
+           (externalized-slot-value channel '%r::commit-map))))))

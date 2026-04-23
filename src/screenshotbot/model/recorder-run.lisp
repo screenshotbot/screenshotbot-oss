@@ -84,6 +84,10 @@
                 #:defcounter)
   (:import-from #:util/misc/lists
                 #:with-batches)
+  (:import-from #:util/store/slot-subsystem
+                #:externalized-slot-value)
+  (:import-from #:fset
+                #:@)
   ;; classes
   (:export #:promotion-log
            #:recorder-run
@@ -497,6 +501,27 @@ associated report is rendered.")
                       :created-at (get-universal-time)
                       :merge-base nil)
    (:documentation "Annotates that this commit should have identical screenshots to the other commit")))
+
+(defmethod initialize-instance :after ((self recorder-run) &key &allow-other-keys)
+  (%update-commit-map self))
+
+(defmethod %update-commit-map ((self recorder-run))
+  (let ((commit-hash (constant-string-string (recorder-run-commit self)))
+        (channel (recorder-run-channel self)))
+    (when (and channel
+               (not (str:emptyp commit-hash)))
+      (let ((existing-map (or
+                           (externalized-slot-value channel 'commit-map)
+                           (fset:empty-map))))
+        (let ((old-set (or
+                        (@ existing-map commit-hash)
+                        (fset:empty-set))))
+          (setf
+           (externalized-slot-value channel 'commit-map)
+           (fset:with existing-map
+                      commit-hash
+                      (fset:with old-set self))))))))
+
 
 (defmethod should-index-objects-for-class-p ((class (eql (find-class 'unchanged-run))))
   nil)
