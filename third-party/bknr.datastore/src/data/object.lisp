@@ -89,31 +89,11 @@ kernel is trying to write to bknr.datastore")
       (error 'must-inherit-store-object))))
 
 
-(defun update-instances-for-changed-class (class)
-  "Update all instances of CLASS after the class definition has changed.
-
-Note: This is a DEFUN, not DEFTRANSACTION (unlike upstream bknr.datastore).
-Using DEFTRANSACTION prevents code deployments to follower nodes in bknr.cluster.
-See D7646 for historical context."
-  (let ((instances (class-instances class)))
-    (let ((instance-count (length instances)))
-      (when (plusp instance-count)
-        (unless *suppress-schema-warnings*
-          (report-progress "~&; updating ~A instances of ~A for class changes~%"
-                           instance-count class))
-        (mapc #'reinitialize-instance instances)))))
-
 (defvar *wait-for-tx-p* t
-  "If true, we wait for the transaction to apply before proceeding. This
-is only applicable for bknr.cluster.")
+  "Unused.")
 
 (defmethod reinitialize-instance :after ((class persistent-class) &key)
   (when (and (boundp '*store*) *store*)
-    (let (#+lispworks (*wait-for-tx-p* nil))
-      ;; At least on Lispworks, we might be inside here when the
-      ;; entire process is blocked, which means any transactions being
-      ;; applied on another thread will never run.
-      (update-instances-for-changed-class (class-name class)))
     (unless *suppress-schema-warnings*
       (report-progress "~&; class ~A has been changed. To ensure correct schema ~
                               evolution, please snapshot your datastore.~%"
@@ -151,7 +131,6 @@ is only applicable for bknr.cluster.")
 that the slot is relaxed.  If a relaxed slot holds a pointer to
 another persistent object and the pointed-to object is deleted, slot
 reads will return nil.")))
-
 
 
 (defun undo-set-slot (object slot-name value)
@@ -311,6 +290,24 @@ reads will return nil.")))
               appending (list
                          (first initarg)
                          (funcall (third initarg))))))))
+
+(defmethod update-instance-for-redefined-class ((instance store-object)
+                                                added-slots
+                                                discarded-slots
+                                                property-list
+                                                &rest initargs
+                                                &key &allow-other-keys)
+  "We never reinitialize slots on existing objects. Doing so creates
+complicated and expensive semantics with respect to
+transactions. Newer objects will still be initialized though. (So when
+using bknr.cluster, you might still have to be careful with :initform
+when doing a rolling deploy)"
+  (apply #'call-next-method
+         instance
+         nil
+         discarded-slots
+         property-list
+         initargs))
 
 (defmethod make-instance :around ((class persistent-class) &rest initargs
                                   &key
