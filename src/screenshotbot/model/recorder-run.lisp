@@ -887,7 +887,7 @@ list of warnings for RUN."
 (def-store-migration ("Backfill run-id, step 1" :version 38)
   (populate-run-id))
 
-(def-store-migration ("Backfill run-id, step 2" :version 38)
+(def-store-migration ("Backfill run-id, step 2" :version 41)
   "Intentionally running this a second time to fill any missed runs"
   (populate-run-id))
 
