@@ -42,7 +42,7 @@
   (:import-from #:screenshotbot/model/screenshot-map
                 #:make-screenshot-map)
   (:import-from #:screenshotbot/model/recorder-run
-                #:runs-for-company
+                #:run-id-to-run-map
                 #:shard-key
                 #:shard-screenshots
                 #:shard-number
@@ -607,8 +607,9 @@ COMMIT is supported."
     (sort
      (when commit
        (collecting
-         (let ((runs (runs-for-company (auth:current-company))))
-           (fset:do-set (run runs)
+         (let ((run-id-map (run-id-to-run-map (auth:current-company))))
+           (fset:do-map (run-id run run-id-map)
+             (declare (ignore run-id))
              (when (equal (recorder-run-commit run) commit)
                (collect run))))))
      #'>
