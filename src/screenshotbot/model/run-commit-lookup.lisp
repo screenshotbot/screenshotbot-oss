@@ -11,6 +11,7 @@
 (defpackage :screenshotbot/model/run-commit-lookup
   (:use #:cl)
   (:import-from #:screenshotbot/model/recorder-run
+                #:do-runs-for-company
                 #:github-repo
                 #:runs-for-company
                 #:recorder-run)
@@ -18,7 +19,9 @@
                 #:recorder-run-channel
                 #:recorder-run-commit)
   (:import-from #:util/misc
-                #:or-setf))
+                #:or-setf)
+  (:import-from #:serapeum/iter
+                #:collecting))
 (in-package :screenshotbot/model/run-commit-lookup)
 
 (defvar *cache* (make-hash-table :test #'equal
@@ -42,9 +45,10 @@ provide a :company of :all.
                  ((eql :all company)
                   (bknr.datastore:class-instances 'recorder-run))
                  (company
-                  (loop for run in (fset:convert 'list (runs-for-company company))
-                        if (equal repo (github-repo (recorder-run-channel run)))
-                          collect run)))))
+                  (collecting
+                    (do-runs-for-company (run company)
+                      (when (equal repo (github-repo (recorder-run-channel run)))
+                        (collect run))))))))
      (loop for run in runs
            if (str:starts-with-p commit (recorder-run-commit run))
              collect run))))
