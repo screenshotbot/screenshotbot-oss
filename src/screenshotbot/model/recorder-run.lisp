@@ -149,7 +149,8 @@
    #:shard-key
    #:recorder-run-metadata
    #:recorder-run-uname
-   #:find-run-by-run-id)
+   #:find-run-by-run-id
+   #:commit-map)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 

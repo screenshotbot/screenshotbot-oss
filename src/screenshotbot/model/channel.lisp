@@ -60,6 +60,8 @@
                 #:api-viewer-context)
   (:import-from #:screenshotbot/model/api-key
                 #:api-key-company)
+  (:import-from #:util/store/slot-subsystem
+                #:externalized-slot-value)
   (:export
    #:channel
    #:set-channel-screenshot-mask
@@ -85,7 +87,8 @@
   ;; forward decls
   (:export
    #:make-gitlab-repo
-   #:github-get-canonical-repo))
+   #:github-get-canonical-repo)
+  (:local-nicknames (#:recorder-run #:screenshotbot/model/recorder-run)))
 (in-package :screenshotbot/model/channel)
 
 
@@ -340,6 +343,24 @@
                             :commit (unchanged-run-other-commit unchanged-run)
                             :seen (fset:with seen commit)))))))
 
+(defmethod %runs-for-commit ((channel channel) commit)
+  (let ((old-version
+          (fset:lookup
+           (commit-to-run-map channel)
+           commit))
+        (new-version
+          (reverse
+           (fset:convert
+            'list
+            (fset:lookup
+             (or
+              (externalized-slot-value channel 'recorder-run:commit-map)
+              (fset:empty-map))
+             commit)))))
+    (unless (equal new-version old-version)
+      (warn "new runs-for-commit doesn't match old runs-for-commit"))
+    new-version))
+
 (defun %find-direct-production-run (channel &key commit)
   (let ((large-int most-positive-fixnum))
     (reduce
@@ -350,9 +371,7 @@
            y))
      (fset:filter
       #'trunkp
-      (fset:lookup
-       (commit-to-run-map channel)
-       commit))
+      (%runs-for-commit channel commit))
      :initial-value nil)))
 
 (defmethod channel-active-run ((channel channel))
