@@ -500,7 +500,8 @@ associated report is rendered.")
    (:documentation "Annotates that this commit should have identical screenshots to the other commit")))
 
 (defmethod initialize-instance :after ((self recorder-run) &key &allow-other-keys)
-  (%update-commit-map self))
+  (%update-commit-map self)
+  (%update-run-id-map self))
 
 (defmethod %update-commit-map ((self recorder-run) &key (removep nil))
   "Update the commit map for run.
@@ -522,6 +523,24 @@ from the map without too much code duplication"
            (fset:with existing-map
                       commit-hash
                       (funcall (if removep #'fset:less #'fset:with) old-set self))))))))
+
+(defmethod %update-run-id-map ((run recorder-run) &key (removep nil))
+  (when-let ((company (recorder-run-company run))
+             (run-id (handler-case
+                         (recorder-run-id run)
+                       (unbound-slot ()
+                         nil))))
+    (symbol-macrolet ((place (externalized-slot-value company 'run-id-map (fset:empty-map))))
+     (cond
+       (removep
+        (fset:excludef
+         place
+         run-id))
+       (t
+        (fset:includef
+         place
+         run-id
+         run))))))
 
 
 (defmethod should-index-objects-for-class-p ((class (eql (find-class 'unchanged-run))))
@@ -597,7 +616,8 @@ from the map without too much code duplication"
 (defmethod bknr.datastore::destroy-object :before ((run recorder-run))
   (when-let ((channel (recorder-run-channel run)))
     (unless (bknr.datastore::object-destroyed-p channel)
-      (%update-commit-map run :removep t))))
+      (%update-commit-map run :removep t)))
+  (%update-run-id-map run :removep t))
 
 (defmethod auth:can-view ((run bknr-or-archived-run-mixin) user)
   (auth:can-view-with-normal-viewer-context
@@ -763,6 +783,9 @@ compare against the actual merge base.")))
 
 (defmethod recorder-run-company ((self unchanged-run))
   (screenshotbot/model/company:company (unchanged-run-channel self)))
+
+(defmethod (setf recorder-run-company) :before ((val null) (self recorder-run))
+  (%update-run-id-map self :removep t))
 
 (defmethod recorder-run-repo-url ((self unchanged-run))
   (github-repo (unchanged-run-channel self)))

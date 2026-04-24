@@ -32,9 +32,11 @@ O(log (nm)) access time, but it allows for very fast snapshots."))
   ;; objects.
   :priority 12)
 
-(defmethod externalized-slot-value (obj slot-name)
-  (fset:lookup *map*
-               (cons obj slot-name)))
+(defmethod externalized-slot-value (obj slot-name &optional (default-value nil))
+  (or
+   (fset:lookup *map*
+                (cons obj slot-name))
+   default-value))
 
 (deftransaction tx-set-slot-value (value obj slot-name)
   (bt:with-lock-held (*lock*)
@@ -45,7 +47,8 @@ O(log (nm)) access time, but it allows for very fast snapshots."))
      (cons obj slot-name)
      value))))
 
-(defmethod (setf externalized-slot-value) (value obj slot-name)
+(defmethod (setf externalized-slot-value) (value obj slot-name &optional default-value)
+  (declare (ignore default-value))
   (tx-set-slot-value value obj slot-name))
 
 (defmethod restore-subsystem ((store bknr.datastore:store)

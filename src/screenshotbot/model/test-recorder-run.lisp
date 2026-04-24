@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-company
                 #:tx-populate-run-id
                 #:recorder-run-id
                 #:find-run-by-run-id
@@ -44,6 +45,7 @@
                 #:has-typep
                 #:assert-that)
   (:import-from #:bknr.datastore
+                #:delete-object
                 #:class-instances
                 #:with-transaction)
   (:import-from #:bknr.datastore
@@ -492,3 +494,64 @@
            (fset:convert 'fset:map
                          `(("abcd" . ,(fset:convert 'fset:set (list run1)))))
            (externalized-slot-value channel '%r::commit-map))))))
+
+(test maintains-run-id-map
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :company company
+                  :screenshots nil)))
+      (is (fset:equal?
+           (fset:convert 'fset:map
+                         `((1 . ,run1)))
+           (externalized-slot-value company '%r::run-id-map))))))
+
+(test maintains-run-id-map-for-two-runs
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :company company
+                  :screenshots nil))
+           (run2 (make-recorder-run
+                  :company company
+                  :screenshots nil))
+           (run3 (make-recorder-run
+                  :company (make-instance 'company)
+                  :screenshots nil)))
+      (is (fset:equal?
+           (fset:convert 'fset:map
+                         `((1 . ,run1)
+                           (2 . ,run2)))
+           (externalized-slot-value company '%r::run-id-map))))))
+
+(test deletes-from-run-id-map
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :company company
+                  :screenshots nil))
+           (run2 (make-recorder-run
+                  :company company
+                  :screenshots nil))
+           (run3 (make-recorder-run
+                  :company (make-instance 'company)
+                  :screenshots nil)))
+      (delete-object run1)
+      (is (fset:equal?
+           (fset:convert 'fset:map
+                         `((2 . ,run2)))
+           (externalized-slot-value company '%r::run-id-map))))))
+
+(test deletes-from-run-id-map-when-company-is-set-to-NIL
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :company company
+                  :screenshots nil))
+           (run2 (make-recorder-run
+                  :company company
+                  :screenshots nil))
+           (run3 (make-recorder-run
+                  :company (make-instance 'company)
+                  :screenshots nil)))
+      (setf (recorder-run-company run1) nil)
+      (is (fset:equal?
+           (fset:convert 'fset:map
+                         `((2 . ,run2)))
+           (externalized-slot-value company '%r::run-id-map))))))
