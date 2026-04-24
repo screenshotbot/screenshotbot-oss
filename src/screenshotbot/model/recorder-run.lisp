@@ -888,8 +888,8 @@ list of warnings for RUN."
            summing (length (recorder-run-screenshots run)))))
 
 (defun find-run-by-run-id (company run-id)
-  (index-get +company-plus-id-index+
-             (list company run-id)))
+  (fset:lookup (externalized-slot-value company 'run-id-map (fset:empty-map))
+               run-id))
 
 (deftransaction tx-populate-run-id (runs)
   (loop for run in runs
