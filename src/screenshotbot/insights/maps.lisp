@@ -15,7 +15,7 @@
                 #:recorder-run-channel
                 #:%created-at)
   (:import-from #:screenshotbot/model/recorder-run
-                #:runs-for-company
+                #:run-id-to-run-map
                 #:run-screenshot-map)
   (:import-from #:priority-queue
                 #:pqueue-empty-p
@@ -23,6 +23,8 @@
                 #:pqueue-pop
                 #:pqueue-push
                 #:make-pqueue)
+  (:import-from #:serapeum/iter
+                #:collecting)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map))
   (:export
    #:screenshot-count-map))
@@ -132,7 +134,10 @@ won't be listed here."
   (date-to-screenshots-count (date-channel-maxLength (date-channel-map runs))))
 
 (defun screenshot-count-map-by-filter (company prefix &key file)
-  (let* ((runs (fset:convert 'list (runs-for-company company)))
+  (let* ((runs (collecting
+                 (fset:do-map (run-id run (run-id-to-run-map company))
+                   (declare (ignore run-id))
+                   (collect run))))
          (runs (loop for run in runs
                      if (str:starts-with-p prefix (channel-name (recorder-run-channel run)))
                        collect run)))
