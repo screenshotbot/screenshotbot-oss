@@ -88,6 +88,8 @@
                 #:externalized-slot-value)
   (:import-from #:fset
                 #:@)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   ;; classes
   (:export #:promotion-log
            #:recorder-run
@@ -148,7 +150,8 @@
    #:recorder-run-metadata
    #:recorder-run-uname
    #:find-run-by-run-id
-   #:commit-map)
+   #:commit-map
+   #:do-runs-for-company)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
@@ -944,3 +947,8 @@ list of warnings for RUN."
   (with-batches (runs (bknr.datastore:class-instances 'recorder-run)
                  :batch-size 1000)
     (%bulk-add-to-run-id-map runs)))
+
+(def-easy-macro do-runs-for-company (&binding run company &fn fn)
+  (fset:do-map (run-id run (run-id-to-run-map company))
+    (declare (ignore run-id))
+    (fn run)))

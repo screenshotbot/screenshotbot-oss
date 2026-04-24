@@ -10,6 +10,10 @@
         #:screenshotbot/model/user
         #:screenshotbot/model/recorder-run
         #:screenshotbot/model/report)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:do-runs-for-company)
+  (:import-from #:serapeum/iter
+                #:collecting)
   (:local-nicknames (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/metrics)
 
@@ -25,9 +29,10 @@
                      val)))
         (metric :num-users
                 (length (roles:users-for-company *company*)))
-        (let ((runs (loop for run in (fset:convert 'list (runs-for-company *company*))
-                          if (local-time:timestamp> (screenshotbot/user-api:created-at run) (local-time:timestamp- (local-time:now) interval :day))
-                            collect run)))
+        (let ((runs (collecting
+                      (do-runs-for-company (run *company*)
+                        (when (local-time:timestamp> (screenshotbot/user-api:created-at run) (local-time:timestamp- (local-time:now) interval :day))
+                          (collect run))))))
           (metric :num-runs (length runs))
 
           (let ((channels (remove-duplicates
