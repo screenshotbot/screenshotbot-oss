@@ -132,6 +132,7 @@
 (defmethod head-and-tail (elements n)
   (head elements n))
 
+
 (defmethod head-and-tail ((s fset:wb-set) n)
   "Our sorting order on datastore objects is by store object ids. This
 means, that the newest elements are the greatest elements in our set."
@@ -146,6 +147,20 @@ means, that the newest elements are the greatest elements in our set."
                    (1- n)
                    (list* next so-far)))))))
     (build-page s n nil)))
+
+(defmethod head-and-tail ((map fset:wb-map) n)
+  "This is similar to set, but we treat the key as an ascending ID. So
+we'll return the last N values, and the remaining map as a tail."
+  (let ((tail map)
+        (head nil))
+    (loop for i from 0 below n
+          while (not (fset:empty? tail))
+          do
+          (let* ((next-key (fset:greatest tail))
+                 (next-value (fset:lookup tail next-key)))
+            (push next-value head)
+            (setf tail (fset:less tail next-key))))
+    (values (nreverse head) tail)))
 
 (defun empty-data-p (next-page-data)
   "Either nil, or an empty set"

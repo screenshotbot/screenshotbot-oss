@@ -873,6 +873,9 @@ list of warnings for RUN."
         (unless (slot-boundp warning '%run)
           (setf (slot-value warning '%run) run))))))
 
+(defun run-id-to-run-map (company)
+  (externalized-slot-value company 'run-id-map (fset:empty-map)))
+
 (defun %count-screenshots (company &key (num-days 30))
   "Used for collecting data for our Pay-as-you-go migration plan"
   (let ((time (- (get-universal-time) (* num-days 24 2600))))
@@ -881,7 +884,7 @@ list of warnings for RUN."
            summing (length (recorder-run-screenshots run)))))
 
 (defun find-run-by-run-id (company run-id)
-  (fset:lookup (externalized-slot-value company 'run-id-map (fset:empty-map))
+  (fset:lookup (run-id-to-run-map company)
                run-id))
 
 (deftransaction tx-populate-run-id (runs)

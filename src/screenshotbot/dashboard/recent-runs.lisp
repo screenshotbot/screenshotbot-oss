@@ -33,6 +33,7 @@
   (:import-from #:screenshotbot/dashboard/review-link
                 #:review-link)
   (:import-from #:screenshotbot/model/recorder-run
+                #:run-id-to-run-map
                 #:recorder-run-work-branch
                 #:recorder-run-branch
                 #:was-promoted-p
@@ -49,7 +50,7 @@
 (defun find-recent-runs ()
   (let ((company (current-company)))
     (can-view! company)
-    (runs-for-company company)))
+    (run-id-to-run-map company)))
 
 (deftag conditional-commit (&key repo hash)
 
