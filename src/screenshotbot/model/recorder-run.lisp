@@ -224,10 +224,6 @@ we can write methods that are generic to both."))
 
 (defcounter recorder-run-counter ())
 
-(defindex +company-plus-id-index+
-  'fset-unique-index
-  :slots '(company %run-id))
-
 (with-class-validation
   (defclass recorder-run (object-with-oid abstract-run
                           bknr-or-archived-run-mixin)
@@ -385,9 +381,6 @@ associated report is rendered.")
                 :reader recorder-run-metadata
                 :documentation "An alist of metadata. The keys and values are both strings."))
     (:metaclass has-created-at)
-    (:class-indices (company-plus-id-index
-                     :slots (company %run-id)
-                     :index +company-plus-id-index+))
     (:default-initargs :screenshot-map (error "need screenshot-map")
                        :compare-tolerance nil
                        :release-branch-p nil
