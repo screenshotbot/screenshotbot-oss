@@ -505,7 +505,11 @@ associated report is rendered.")
 (defmethod initialize-instance :after ((self recorder-run) &key &allow-other-keys)
   (%update-commit-map self))
 
-(defmethod %update-commit-map ((self recorder-run))
+(defmethod %update-commit-map ((self recorder-run) &key (removep nil))
+  "Update the commit map for run.
+
+REMOVEP is the opposite, it's just a conveience for deleting the run
+from the map without too much code duplication"
   (let ((commit-hash (constant-string-string (recorder-run-commit self)))
         (channel (recorder-run-channel self)))
     (when (and channel
@@ -520,7 +524,7 @@ associated report is rendered.")
            (externalized-slot-value channel 'commit-map)
            (fset:with existing-map
                       commit-hash
-                      (fset:with old-set self))))))))
+                      (funcall (if removep #'fset:less #'fset:with) old-set self))))))))
 
 
 (defmethod should-index-objects-for-class-p ((class (eql (find-class 'unchanged-run))))
@@ -598,7 +602,8 @@ associated report is rendered.")
 (defmethod bknr.datastore::destroy-object :before ((run recorder-run))
   (when-let ((channel (recorder-run-channel run)))
     (unless (bknr.datastore::object-destroyed-p channel)
-      (remove-run-from-channel channel run))))
+      (remove-run-from-channel channel run)
+      (%update-commit-map run :removep t))))
 
 (defmethod auth:can-view ((run bknr-or-archived-run-mixin) user)
   (auth:can-view-with-normal-viewer-context

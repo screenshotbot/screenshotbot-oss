@@ -471,3 +471,24 @@
            (fset:convert 'fset:map
                          `(("abcd" . ,(fset:convert 'fset:set (list run1 run2)))))
            (externalized-slot-value channel '%r::commit-map))))))
+
+(test delete-run-removes-from-commit-map
+  (with-fixture state ()
+    (let* ((channel (make-instance 'channel))
+           (run1 (make-recorder-run
+                  :channel channel
+                  :commit-hash "abcd"
+                  :screenshots nil))
+           (run2 (make-recorder-run
+                  :channel channel
+                  :commit-hash "abcd"
+                  :screenshots nil)))
+      (is (fset:equal?
+           (fset:convert 'fset:map
+                         `(("abcd" . ,(fset:convert 'fset:set (list run1 run2)))))
+           (externalized-slot-value channel '%r::commit-map)))
+      (bknr.datastore:delete-object run2)
+      (is (fset:equal?
+           (fset:convert 'fset:map
+                         `(("abcd" . ,(fset:convert 'fset:set (list run1)))))
+           (externalized-slot-value channel '%r::commit-map))))))
