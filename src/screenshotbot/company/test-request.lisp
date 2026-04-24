@@ -34,6 +34,7 @@
   (:import-from #:screenshotbot/login/common
                 #:signin-get)
   (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run
                 #:recorder-run)
   (:import-from #:bknr.datastore
                 #:with-transaction)
@@ -91,7 +92,7 @@
   (with-fixture state ()
     (let ((company-1 (make-instance 'company)))
       (is (eql nil (most-recent-company (list company-1))))
-      (let ((run (make-instance 'recorder-run
+      (let ((run (make-recorder-run
                      :screenshot-map nil
                      :company company-1)))
         (is (eql company-1 (most-recent-company (list company-1))))))))

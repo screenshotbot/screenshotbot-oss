@@ -20,7 +20,7 @@
                 #:timestamp>
                 #:timestamp-)
   (:import-from #:screenshotbot/model/recorder-run
-                #:runs-for-company)
+                #:run-id-to-run-map)
   (:import-from #:auth/viewer-context
                 #:viewer-context-user)
   (:import-from #:alexandria
@@ -58,7 +58,9 @@
    (sort
     (let ((cutoff (timestamp- (local-time:now) 60 :day)))
       (loop for company in companies
-            for run = (fset:greatest (runs-for-company company))
+            for map = (run-id-to-run-map company)
+            for run-id = (fset:greatest map)
+            for run = (fset:lookup map run-id)
             for created-at = (when run (created-at run))
             if (and created-at (timestamp> created-at cutoff))
               collect
