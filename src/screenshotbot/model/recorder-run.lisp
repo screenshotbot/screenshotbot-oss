@@ -917,7 +917,7 @@ list of warnings for RUN."
   "See T2282"
   nil)
 
-(defmethod validate-index-values ((self fset-unique-index) all-elts (slot-name (eql 'company)))
+(defmethod validate-index-values ((self fset-set-index) all-elts (slot-name (eql 'company)))
   "See T2282"
   nil)
 
@@ -940,3 +940,4 @@ list of warnings for RUN."
   (with-batches (runs (bknr.datastore:class-instances 'recorder-run)
                  :batch-size 1000)
     (%bulk-add-to-persistent-commit-map-index runs)))
+
