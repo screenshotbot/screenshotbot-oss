@@ -23,7 +23,6 @@
                 #:recorder-run-channel
                 #:recorder-run-commit
                 #:recorder-run-screenshots
-                #:runs-for-company
                 #:activep)
   (:import-from #:screenshotbot/user-api
                 #:current-company

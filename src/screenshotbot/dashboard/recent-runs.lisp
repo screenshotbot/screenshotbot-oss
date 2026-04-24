@@ -38,8 +38,7 @@
                 #:recorder-run-branch
                 #:was-promoted-p
                 #:recorder-run-tags
-                #:runs-for-tag
-                #:runs-for-company)
+                #:runs-for-tag)
   (:export #:recent-runs))
 (in-package :screenshotbot/dashboard/recent-runs)
 
