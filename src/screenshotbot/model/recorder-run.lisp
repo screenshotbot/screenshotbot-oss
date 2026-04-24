@@ -109,7 +109,6 @@
            #:finalize-promotion
            #:trunkp
            #:channel-runs
-           #:push-run-to-channel
            #:promotion-log
            #:publicp
            #:active-run
@@ -132,7 +131,6 @@
    #:not-fast-forward-promotion-warning
    #:run-screenshot-map
    #:make-recorder-run
-   #:remove-run-from-channel
    #:runs-for-company
    #:recorder-run-work-branch
    #:recorder-run-batch
@@ -595,15 +593,12 @@ from the map without too much code duplication"
   (make-instance 'transient-promotion-log
                  :oid-array (oid-array run)))
 
-(defmethod bknr.datastore:initialize-transient-instance :after ((run recorder-run))
-  (let ((channel (recorder-run-channel run)))
-    (when channel
-      (push-run-to-channel channel run))))
+;; TODO: delete
+(defmethod bknr.datastore:initialize-transient-instance :after ((run recorder-run)))
 
 (defmethod bknr.datastore::destroy-object :before ((run recorder-run))
   (when-let ((channel (recorder-run-channel run)))
     (unless (bknr.datastore::object-destroyed-p channel)
-      (remove-run-from-channel channel run)
       (%update-commit-map run :removep t))))
 
 (defmethod auth:can-view ((run bknr-or-archived-run-mixin) user)

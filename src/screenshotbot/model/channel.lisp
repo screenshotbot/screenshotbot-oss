@@ -33,14 +33,12 @@
                 #:unchanged-run-other-commit
                 #:unchanged-run-for-commit
                 #:unchanged-runs-for-commit
-                #:remove-run-from-channel
                 #:recorder-run
                 #:recorder-run-commit
                 #:master-branch
                 #:active-run
                 #:recorder-previous-run
                 #:channel-runs
-                #:push-run-to-channel
                 #:github-repo
                 #:activep
                 #:publicp
@@ -139,7 +137,7 @@
     (%commit-to-run-map
      :initform (fset:empty-map)
      :transient t
-     :accessor commit-to-run-map)
+     :documentation "Deprecated: do not use")
     (lock
      :initform (bt:make-lock)
      :transient t
@@ -224,19 +222,6 @@
          (bt:with-lock-held (*updatef-lock*)
            (setf
             ,map (update ,map)))))))
-
-(defmethod push-run-to-channel ((channel channel) run)
-  (when-let ((commit (recorder-run-commit run)))
-    (updatef (slot-value channel '%commit-to-run-map)
-             commit (lambda (items)
-                      (list* run items)))))
-
-(defmethod remove-run-from-channel ((channel channel) run)
-  (when-let ((commit (recorder-run-commit run)))
-    (updatef (slot-value channel '%commit-to-run-map)
-             commit
-             (lambda (items)
-               (remove run items)))))
 
 (defmacro with-channel-lock ((channel) &body body)
   `(flet ((body () ,@body))
@@ -344,11 +329,7 @@
                             :seen (fset:with seen commit)))))))
 
 (defmethod %runs-for-commit ((channel channel) commit)
-  (let ((old-version
-          (fset:lookup
-           (commit-to-run-map channel)
-           commit))
-        (new-version
+  (let ((new-version
           (reverse
            (fset:convert
             'list
@@ -357,8 +338,6 @@
               (externalized-slot-value channel 'recorder-run:commit-map)
               (fset:empty-map))
              commit)))))
-    (unless (equal new-version old-version)
-      (warn "new runs-for-commit doesn't match old runs-for-commit"))
     new-version))
 
 (defun %find-direct-production-run (channel &key commit)
