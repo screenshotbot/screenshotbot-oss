@@ -13,8 +13,8 @@
                 #:screenshot-name
                 #:created-at)
   (:import-from #:screenshotbot/model/recorder-run
-                #:run-screenshot-map
-                #:runs-for-company)
+                #:run-id-to-run-map
+                #:run-screenshot-map)
   (:import-from #:screenshotbot/model/company
                 #:sub-companies-of)
   (:import-from #:screenshotbot/model/screenshot-map
@@ -46,12 +46,12 @@
    (let* ((start-time (local-time:timestamp-
                        (local-time:now)
                        num-days :day))
-          (all-runs (runs-for-company company))
+          (all-runs (run-id-to-run-map company))
           (next-rank (1- (fset:size all-runs)))
           (res nil))
      (loop for next = (and
                        (>= next-rank 0)
-                       (fset:at-rank all-runs next-rank))
+                       (nth-value 1 (fset:at-rank all-runs next-rank)))
            if (not next)
              return res
            else if (local-time:timestamp< (created-at next)
