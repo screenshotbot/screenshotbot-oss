@@ -880,7 +880,8 @@ list of warnings for RUN."
   (externalized-slot-value company 'run-id-map (fset:empty-map)))
 
 (defun %count-screenshots (company &key (num-days 30))
-  "Used for collecting data for our Pay-as-you-go migration plan"
+  "Used for collecting data for our Pay-as-you-go migration plan. This is
+only run on a REPL."
   (let ((time (- (get-universal-time) (* num-days 24 2600))))
    (loop for run in (fset:convert 'list (runs-for-company company))
          if (> (%created-at run) time)
