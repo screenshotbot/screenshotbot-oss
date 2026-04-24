@@ -941,3 +941,10 @@ list of warnings for RUN."
                  :batch-size 1000)
     (%bulk-add-to-persistent-commit-map-index runs)))
 
+(deftransaction %bulk-add-to-run-id-map (runs)
+  (mapc #'%update-run-id-map runs))
+
+(def-store-migration ("Add to persistent run-id map" :version 42)
+  (with-batches (runs (bknr.datastore:class-instances 'recorder-run)
+                 :batch-size 1000)
+    (%bulk-add-to-run-id-map runs)))
