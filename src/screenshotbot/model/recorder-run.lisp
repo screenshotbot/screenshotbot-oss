@@ -168,10 +168,6 @@
 
 (defvar *warning-lock* (bt:make-lock))
 
-(defindex +run-company-index+
-  'fset-set-index
-  :slot-name 'company)
-
 (defindex +tags-index-v2+
   'fset-many-to-many-index
   :slot-name 'tags)
@@ -243,8 +239,6 @@ we can write methods that are generic to both."))
       :initarg :company
       :initform nil
       :accessor recorder-run-company
-      :index +run-company-index+
-      :index-reader runs-for-company
       :documentation "Heads up! This can be NIL for deleted runs, which might be referenced from non-deleted reports (T1876)")
      (commit-hash
       :initarg :commit-hash
@@ -953,3 +947,7 @@ only run on a REPL."
   (fset:do-map (run-id run (run-id-to-run-map company))
     (declare (ignore run-id))
     (fn run)))
+
+(defun runs-for-company (company)
+  (warn "runs-for-company being called, this is slow and should not be used in production")
+  (fset:range (run-id-to-run-map company)))

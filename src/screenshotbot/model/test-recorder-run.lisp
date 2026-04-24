@@ -204,6 +204,14 @@
       (finishes
         (delete-run run)))))
 
+(test runs-for-company-happy-path
+  (with-fixture state ()
+    (is (fset:equal? (fset:empty-set)
+                     (runs-for-company company)))
+    (let ((run (make-recorder-run :company company)))
+      (is (fset:equal? (fset:with (fset:empty-set) run)
+                       (runs-for-company company))))))
+
 
 (test can-save-and-restore-unchanged-runs
   (tmpdir:with-tmpdir (dir)
@@ -555,3 +563,4 @@
            (fset:convert 'fset:map
                          `((2 . ,run2)))
            (externalized-slot-value company '%r::run-id-map))))))
+
