@@ -300,8 +300,12 @@
   (%write-tag #\a stream)
   (%encode-array object stream))
 
+(defun encode-null (stream)
+  (%write-tag #\n stream))
+
 (defun encode (object stream)
   (typecase object
+    (null (encode-null stream))
     (integer (encode-integer object stream))
     (rational (encode-rational object stream))
     (symbol (encode-symbol object stream))
@@ -506,6 +510,7 @@
 (defun decode (stream)
   (let ((tag (%read-tag stream)))
     (case tag
+      (#\n nil)
       (#\a (%decode-array stream))
       (#\i (%decode-integer stream))
       (#\y (%decode-symbol stream))

@@ -695,3 +695,4 @@
         (copy-by-encoding "two")
         (is (not (eql str1 (copy-by-encoding str))))))))
 
+
