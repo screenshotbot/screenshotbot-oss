@@ -1,11 +1,22 @@
 # Changelog
 
+## 2.18.10 - 2026-04-27
+
+### Added
+
+- Added support for Harness.io 
+
+### Changed
+
+- Upgraded Quicklisp
+
 ## 2.18.10 - 2026-04-08
+
+### Changed
 
 - Enables the git-fetch by default, behind a GK, because of
   side-effects from 2.18.8. T2274
 
-### Changed
 
 ## 2.18.9 - 2026-04-05
 
