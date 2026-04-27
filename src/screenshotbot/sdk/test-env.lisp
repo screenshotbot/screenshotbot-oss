@@ -14,6 +14,7 @@
                 #:teamcity-env-reader
                 #:xcode-cloud-env-reader
                 #:codemagic-env-reader
+                #:harness-env-reader
                 #:remove-.git
                 #:*all-readers*
                 #:gitlab-ci-env-reader
@@ -260,3 +261,24 @@
     (is (equal
          "https://buildkite.com/my-great-org/my-pipeline/builds/1#b63254c0-3271-4a98-8270-7cfbd6c2f14e"
          (build-url env-reader)))))
+
+(test harness
+  (finishes (test-happy-fns (make-instance 'harness-env-reader
+                                           :overrides nil))))
+
+(test harness-environment-variables
+  (let ((reader (make-instance 'harness-env-reader
+                               :overrides `(("HARNESS_BUILD_ID" . "12345")
+                                            ("DRONE_COMMIT" . "abc123def456")
+                                            ("DRONE_SOURCE_BRANCH" . "feature/new-feature")
+                                            ("DRONE_PULL_REQUEST" . "42")
+                                            ("DRONE_TARGET_BRANCH" . "main")
+                                            ("CI_BUILD_LINK" . "https://app.harness.io/builds/12345")
+                                            ("DRONE_GIT_HTTP_URL" . "https://github.com/org/repo")))))
+    (is (equal t (validp reader)))
+    (is (equal "abc123def456" (sha1 reader)))
+    (is (equal "feature/new-feature" (work-branch reader)))
+    (is (equal "main" (pull-request-base-branch reader)))
+    (is (equal "https://app.harness.io/builds/12345" (build-url reader)))
+    (is (equal "https://github.com/org/repo" (repo-url reader)))
+    (is (equal "https://github.com/org/repo/pulls/42" (pull-request-url reader)))))

@@ -520,6 +520,34 @@ running in Docker."))
   ()
   (:documentation "https://docs.codemagic.io/yaml-basic-configuration/environment-variables/"))
 
+(defclass harness-env-reader (base-env-reader)
+  ()
+  (:documentation "https://developer.harness.io/docs/continuous-integration/troubleshoot-ci/ci-env-var/"))
+
+(defmethod validp ((self harness-env-reader))
+  (str:non-empty-string-p
+   (getenv self "HARNESS_BUILD_ID")))
+
+(defmethod pull-request-url ((self harness-env-reader))
+  (when-let ((repo-url (repo-url self))
+             (pull-id (getenv self "DRONE_PULL_REQUEST")))
+    (link-to-github-pull-request repo-url pull-id)))
+
+(defmethod pull-request-base-branch ((self harness-env-reader))
+  (getenv self "DRONE_TARGET_BRANCH"))
+
+(defmethod sha1 ((self harness-env-reader))
+  (getenv self "DRONE_COMMIT"))
+
+(defmethod build-url ((self harness-env-reader))
+  (getenv self "CI_BUILD_LINK"))
+
+(defmethod repo-url ((self harness-env-reader))
+  (getenv self "DRONE_GIT_HTTP_URL"))
+
+(defmethod work-branch ((self harness-env-reader))
+  (getenv self "DRONE_SOURCE_BRANCH"))
+
 (defmethod validp ((self codemagic-env-reader))
   (not (null (getenv self "CM_BUILD_ID"))))
 
@@ -560,7 +588,8 @@ running in Docker."))
     github-actions-env-reader
     teamcity-env-reader
     xcode-cloud-env-reader
-    codemagic-env-reader))
+    codemagic-env-reader
+    harness-env-reader))
 
 
 (defun make-env-reader (&key overrides)
