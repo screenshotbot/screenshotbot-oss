@@ -10,6 +10,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:dag
+                #:merge-bases-for-depth
                 #:%dfs-topo-sort-from-starting-nodes
                 #:dfs-topo-sort
                 #:*use-dfs-p*
@@ -42,11 +43,13 @@
                 #:has-any
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
+                #:has-item
                 #:contains-in-any-order
                 #:contains)
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:fiveam-matchers/strings
+                #:is-not-empty
                 #:contains-string))
 (in-package :screenshotbot/dag/test-dag)
 
@@ -629,3 +632,53 @@ for you."
 (test invalid-commit-hash
   (with-fixture state ()
     (is (eql nil (dag:get-commit dag "abcdef2")))))
+
+#+nil ;; Use this an example to test against real DAGs
+(test edge-case-for-merge-base
+  (with-fixture state ()
+    (with-open-file (stream "~/builds/web/file.dag" :element-type '(unsigned-byte 8) :direction :input)
+      (let ((dag (dag:read-from-stream stream)))
+        (let ((commit (dag:get-commit dag "f6cb9011f7f123de6539a26c7d8f0dd65d19cc33" )))
+          (is
+           (equal
+            '("1be2f4c53fff03cec5cce452ea9fc298500fcd39")
+            (nth-value
+             1
+             (dag:merge-base dag "1be2f4c53fff03cec5cce452ea9fc298500fcd39" "f6cb9011f7f123de6539a26c7d8f0dd65d19cc33" )))))))))
+
+(defun num-to-hex (num)
+  (str:downcase
+   (format nil "~2,'0x" num)))
+
+(test shortcut-leads-to-dag-sources
+  (with-fixture state ()
+    (setf dag (make-instance 'dag))
+    (loop for i from 250 downto 50
+          do
+             (add-edge (num-to-hex i) (num-to-hex (1+ i))))
+    (add-edge (num-to-hex 49) (list (num-to-hex 140) (num-to-hex 50)))
+    (loop for i from 48 downto 0
+          do
+          (add-edge (num-to-hex i) (num-to-hex (1+ i))))
+
+    (assert-that
+     (mapcar #'dag:sha
+      (reachable-nodes dag (num-to-hex 0)
+                       :depth 100))
+     (has-length 150)
+     (has-item
+      (num-to-hex 140)))
+
+    (assert-that
+     (merge-bases-for-depth dag
+                            (num-to-hex 50)
+                            (num-to-hex 0)
+                            :depth 100)
+     (contains-in-any-order
+      (num-to-hex 50) (num-to-hex 140)))
+    (is
+     (equal
+      '("32")
+      (nth-value
+       1
+       (dag:merge-base dag (num-to-hex 50) (num-to-hex 0)))))))

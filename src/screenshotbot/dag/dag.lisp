@@ -520,7 +520,11 @@ that might've already merged."
                                                :exclude-commit-2 exclude-commit-2)))
                  (or
                   ;; Micro optimization: First look only at the last 100 nodes.
-                  (try-depth 100)
+                  (let ((result (try-depth 100)))
+                    ;; If there are two nodes here, it could be
+                    ;; because we need to go deeper to establish the source nodes
+                    (when (eql 1 (length result))
+                      result))
                   (try-depth 1000)
                   ;; This likely means that all paths from commit-1 go
                   ;; through commit-2.
