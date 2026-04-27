@@ -520,6 +520,7 @@ that might've already merged."
                                                :exclude-commit-2 exclude-commit-2)))
                  (or
                   ;; Micro optimization: First look only at the last 100 nodes.
+                  ;; Sadly this solution is incorrect: T2296
                   (let ((result (try-depth 100)))
                     ;; If there are two nodes here, it could be
                     ;; because we need to go deeper to establish the source nodes
