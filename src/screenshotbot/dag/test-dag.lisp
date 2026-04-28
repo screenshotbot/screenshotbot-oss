@@ -682,3 +682,13 @@ for you."
       (nth-value
        1
        (dag:merge-base dag (num-to-hex 50) (num-to-hex 0)))))))
+
+(test merge-base-from-xx-to-xx-will-be-xx-even-if-we-exclude-xx
+  (with-fixture state ()
+    (add-edge "cc" (list "aa" "bb"))
+    (is
+     (equal
+      '("cc")
+      (nth-value
+       1
+       (dag:merge-base dag (list "cc" "cc") "cc" :exclude-commit-2 t))))))

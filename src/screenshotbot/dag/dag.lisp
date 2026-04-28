@@ -497,7 +497,10 @@ parents. If COMMIT-1 is empty, then we always return NIL.
 
 If EXCLUDE-COMMIT-2 is true, then we'll exclude any node that's only
 an ancestor of COMMIT-1 via COMMIT-2. This is useful for pull-requests
-that might've already merged."
+that might've already merged.
+
+If COMMIT-1 is the same as COMMIT-2, we always return the commit,
+irrespective of EXCLUDE-COMMIT-2."
 
   (flet ((check-commit (commits)
            (loop for commit in (listify commits)
@@ -506,41 +509,41 @@ that might've already merged."
                       (warn "The commit ~a is not in the dag. Potentially an issue with the commit-graph flow." commit)))))
     (check-commit commit-1)
     (check-commit commit-2))
-  (let ((commit-1 (listify commit-1)))
-   (cond
-     ((equal commit-1 (list commit-2))
-      ;; Technically this is incorrect when EXCLUDE-COMMIT-2 is provided,
-      ;; but abstract-pr-promoter depends on this behavior.
-      commit-2)
-     (t
-      (let* ((merge-bases
-               (flet ((try-depth (depth)
-                        (merge-bases-for-depth dag commit-1 commit-2
-                                               :depth depth
-                                               :exclude-commit-2 exclude-commit-2)))
-                 (or
-                  ;; Micro optimization: First look only at the last 100 nodes.
-                  ;; Sadly this solution is incorrect: T2296
-                  (let ((result (try-depth 100)))
-                    ;; If there are two nodes here, it could be
-                    ;; because we need to go deeper to establish the source nodes
-                    (when (eql 1 (length result))
-                      result))
-                  (try-depth 1000)
-                  ;; This likely means that all paths from commit-1 go
-                  ;; through commit-2.
-                  (loop for commit-1 in commit-1
-                   if (ancestorp dag commit-2 commit-1)
-                       return (list commit-2))))))
-        (let ((merge-bases (sort (copy-list merge-bases)
-                                 #'>
-                                 :key (lambda (sha)
-                                        (commit-timestamp (get-commit dag sha))))))
-          (when (> (length merge-bases) 1)
-            (with-extras (("result-merge-bases" merge-bases))
-             (warn "fun warning! we hit multiple merge-bases in production!")))
-          (values (car merge-bases)
-                  merge-bases)))))))
+  (let ((commit-1 (remove-duplicates (listify commit-1) :test #'equal)))
+    (cond
+      ((equal commit-1 (list commit-2))
+       ;; Technically this is incorrect when EXCLUDE-COMMIT-2 is provided,
+       ;; but abstract-pr-promoter depends on this behavior.
+       (values commit-2 (list commit-2)))
+      (t
+       (let* ((merge-bases
+                (flet ((try-depth (depth)
+                         (merge-bases-for-depth dag commit-1 commit-2
+                                                :depth depth
+                                                :exclude-commit-2 exclude-commit-2)))
+                  (or
+                   ;; Micro optimization: First look only at the last 100 nodes.
+                   ;; Sadly this solution is incorrect: T2296
+                   (let ((result (try-depth 100)))
+                     ;; If there are two nodes here, it could be
+                     ;; because we need to go deeper to establish the source nodes
+                     (when (eql 1 (length result))
+                       result))
+                   (try-depth 1000)
+                   ;; This likely means that all paths from commit-1 go
+                   ;; through commit-2.
+                   (loop for commit-1 in commit-1
+                         if (ancestorp dag commit-2 commit-1)
+                           return (list commit-2))))))
+         (let ((merge-bases (sort (copy-list merge-bases)
+                                  #'>
+                                  :key (lambda (sha)
+                                         (commit-timestamp (get-commit dag sha))))))
+           (when (> (length merge-bases) 1)
+             (with-extras (("result-merge-bases" merge-bases))
+               (warn "fun warning! we hit multiple merge-bases in production!")))
+           (values (car merge-bases)
+                   merge-bases)))))))
 
 (defmethod best-path ((dag dag) (sha-1 string) (sha-2 string) &key (max-depth 100))
   "Find the best path from SHA-1 to SHA-2, where SHA-2 is the ancestor.
