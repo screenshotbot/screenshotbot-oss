@@ -49,7 +49,7 @@
                      (screenshot-name screenshot)
                      new-mask))
                   (hex:safe-redirect redirect))))
-     <app-template>
+     <app-template title= "Screenshotbot: Edit Masks" >
        <form action=save method= "POST" id= "mask-editor-form" >
          <div class= "page-title-box main-content" >
            <h4 class= "page-title" >Edit Masks</h4>

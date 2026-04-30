@@ -164,7 +164,7 @@
     </div>))
 
 (defun promotion-log-page (run)
-  <app-template>
+  <app-template title= "Screenshotbot: Promotion Logs" >
   <section>
   <pre>
   --BEGIN-LOGS--
@@ -309,7 +309,7 @@
             <li>Screenshots that are above 16k dimensions:
 
             <a href= (nibble ()
-                               <app-template>
+                               <app-template title= "Screenshotbot: Large Screenshots" >
                                  List of screenshots with large dimensions ,(length (screenshots-above-16k-dim run))
                                  <ul>
                                    ,@(loop for x in (screenshots-above-16k-dim run)
@@ -512,7 +512,7 @@
                    (t
                     #'identity)))
          (filtered-screenshots (apply-map-filter screenshots filter)))
-    <app-template body-class= "dashboard" >
+    <app-template body-class= "dashboard" title= (format nil "Screenshotbot: Run from ~a" (channel-name channel)) >
       <div class= "page-title-box">
         <h4 class= "page-title" >Run from
           <:time class= "timeago" datetime= (created-at run)>

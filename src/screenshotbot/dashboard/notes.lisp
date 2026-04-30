@@ -58,7 +58,7 @@
         ((impersonatedp impersonation)
          (let ((admin-user (admin-user impersonation)))
            (assert admin-user)
-           <app-template>
+           <app-template title= "Screenshotbot: Add Note" >
              (internal only) Who should we create this as?
              <ul>
                <li>

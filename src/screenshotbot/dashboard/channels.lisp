@@ -270,7 +270,7 @@
 
 
 (defun single-channel-view (channel)
-  <app-template >
+  <app-template title= (format nil "Screenshotbot: ~a" (channel-name channel)) >
     <div class= "main-content channel-view">
       <div class= "card-page-container mt-3 mx-auto" style= "max-width: 60em" >
         <div class= "card">
@@ -398,7 +398,7 @@
          <span>No runs available for this channel</span>
        </simple-card-page>)
       (t
-       <app-template>
+       <app-template title= "Screenshotbot: Channel Masks" >
          <h4 class= "mt-3" >All masks for ,(channel-name channel)</h4>
          <table class= "table table-striped" >
          ,@ (loop for (name . masks) in mask-map

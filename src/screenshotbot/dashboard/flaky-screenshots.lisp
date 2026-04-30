@@ -50,7 +50,7 @@
   "A view of potential flaky screenshots in the channel."
   (auth:can-view! channel)
   (let ((map (report-count-map (runs-from-30-days channel))))
-    <app-template>
+    <app-template title= "Screenshotbot: Noisy Screenshots" >
       <div class= "main-content mt-3">
         <h3>Noisy screenshots over the last 7 days</h3>
 
@@ -78,7 +78,7 @@
   "A view of potential flaky screenshots in the channel."
   (auth:can-view! channel)
   (let ((map (screenshot-variant-map (runs-from-30-days channel))))
-    <app-template>
+    <app-template title= "Screenshotbot: Flaky Screenshots" >
       <div class= "main-content mt-3">
         <h3>Screenshots with animations </h3>
 

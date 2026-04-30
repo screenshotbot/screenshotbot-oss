@@ -136,6 +136,7 @@
 (defun start-bisect-from (iterator &key screenshot-name channel
                                      bad-screenshot)
   (app-template
+   :title "Screenshotbot: Start Bisect"
    (render-history-from-iterator
     iterator
     screenshot-name
@@ -222,6 +223,7 @@
    (let ((channel (store-object-with-id (parse-integer channel))))
      (can-view! channel)
      (app-template
+      :title (format nil "Screenshotbot: History - ~a" screenshot-name)
       (render-history
        :screenshot-name screenshot-name
        :channel channel

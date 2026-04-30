@@ -34,7 +34,8 @@
   (with-test-store ()
     (with-test-user (:company company
                      :logged-in-p t)
-     (let* ((channel (make-instance 'channel :company company))
+      (let* ((channel (make-instance 'channel :company company
+                                     :name "foobar"))
             (run (make-recorder-run :channel channel
                                     :screenshots nil)))
        (&body)))))

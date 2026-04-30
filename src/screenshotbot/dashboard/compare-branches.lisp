@@ -197,7 +197,7 @@
                           </td>
                         </tr>)
              </table>))
-      <app-template>
+      <app-template title= "Screenshotbot: Compare Branches" >
         <h4 class= "mt-2 mb-2" >Changed channels</h4>
         ,(list-channels changed-diff-reports)
       </app-template>)))

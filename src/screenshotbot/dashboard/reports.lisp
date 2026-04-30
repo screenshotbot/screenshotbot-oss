@@ -418,13 +418,13 @@
     (with-report-login (report)
       (let ((diff-report (report-diff-report report)))
         (let ((report-link (format nil "/report/~a" oid)))
-          <app-template body-class= "dashboard">
+          <app-template body-class= "dashboard" title= "Screenshotbot: Screenshot Change" >
             ,(render-single-change-permalink diff-report key-id report-link
                                              :run (report-run report))
           </app-template>)))))
 
 (markup:deftag sorted-template (children &key report)
-  <app-template>
+  <app-template title= "Screenshotbot: Sorted Report" >
     <div class= "page-title-box mb-3">
       <div class= "mb-2" ><a href= (report-link report) >Back to report</a></div>
     </div>

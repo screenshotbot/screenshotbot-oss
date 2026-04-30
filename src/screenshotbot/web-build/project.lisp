@@ -435,7 +435,7 @@
              (remote-oid remote-run)))))
 
 (defun remote-run-logs (remote-run)
-  <app-template>
+  <app-template title= "Screenshotbot: Build Logs" >
     <textarea data-websocket-stream= (remote-run-log-endpoint remote-run)
               disabled= "disabled"
               style="height:100vh; width: 100%" />

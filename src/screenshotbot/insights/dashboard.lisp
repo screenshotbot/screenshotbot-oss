@@ -345,7 +345,7 @@ monthly-active."
 
 (defun render-analytics (company &key fuzz days channel-filter)
   (auth:can-view! company)
-  <app-template>
+  <app-template title= "Screenshotbot: Insights" >
 
     <div class= "container">
 

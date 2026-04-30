@@ -372,7 +372,7 @@
   (assert (gk:check :new-dashboard-view (auth:current-company)))
   (let* ((company (current-company))
          (metrics (calculate-dashboard-metrics company)))
-    <app-template>
+    <app-template title= "Screenshotbot: Dashboard" >
       <div class="main-content">
         <div class="container-fluid mt-4 dashboard-overview">
           <div class="d-flex justify-content-between align-items-center mb-4">

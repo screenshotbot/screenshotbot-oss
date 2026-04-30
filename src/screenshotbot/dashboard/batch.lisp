@@ -119,7 +119,7 @@
 (defmethod render-batch (batch)
   (bt:with-lock-held ((batch:lock batch))
     (let ((items (fset:convert 'list (sort-items (fset:convert 'list (batch-items batch))))))
-      <app-template>
+      <app-template title= "Screenshotbot: Batch" >
         ,(taskie-list :empty-message "No runs in this batch yet"
                       :items items
                       :headers (list "Channel")

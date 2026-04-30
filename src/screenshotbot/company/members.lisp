@@ -240,7 +240,7 @@
 
 (defhandler (nil :uri "/team") ()
   (with-login ()
-    <app-template>
+    <app-template title= "Screenshotbot: Team" >
       ,(%members-page)
     </app-template>))
 
