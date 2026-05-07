@@ -223,7 +223,7 @@ uses sane defaults."))
   (apply
    #'call-next-method
    self
-   :data-path (or data-path (format nil "/home/~a/raft-data/" group))
+   :data-path (or data-path (format nil "/home/~a/raft-data/" (uiop:getenv "USER")))
    :ip (ec2-get-local-ipv4)
    :priority
    (cond
