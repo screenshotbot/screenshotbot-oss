@@ -62,15 +62,27 @@
                            :string
                            :description "The value to set"
                            :long-name "value"
-                           :key :value))))
+                           :key :value)
+                          (make-option
+                           :string
+                           :description "A filename to read the contents from. You must only provide one of --value or --file"
+                           :long-name "file"
+                           :key :file))))
 
 (defun set/handler (cmd)
   (let ((key (getopt cmd :key))
-        (value (getopt cmd :value)))
+        (value (getopt cmd :value))
+        (file (getopt cmd :file)))
     (when (str:emptyp key)
       (error "Must provide --key"))
-    (unless value
-      (error "Must provide --value"))
+    (unless (or value file)
+      (error "Must provide --value or --file"))
+
+    (when (and value file)
+      (error "Must provide only one of --value or --file"))
+
+    (when file
+      (setf value (uiop:read-file-string file)))
 
     (eval-on-pid (get-pid)
                  `(setf (config ,key) ,value))))
