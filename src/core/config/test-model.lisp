@@ -9,6 +9,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:core/config/model
+                #:on-config-changed
                 #:value-must-be-string
                 #:config)
   (:import-from #:util/store/store
@@ -17,7 +18,10 @@
 
 (util/fiveam:def-suite)
 
+(defvar *changed*)
+
 (def-fixture state ()
+  (setf *changed* nil)
   (with-test-store ()
     (&body)))
 
@@ -34,3 +38,13 @@
     (signals value-must-be-string
       (setf (config "foo.bar") 15))
     (is (equal nil (config "foo.bar")))))
+
+(defmethod on-config-changed ((key (eql :foo.bar.car.bar))
+                              value)
+  (setf *changed* value))
+
+(test callback-is-called
+  (with-fixture state ()
+    (is (eql nil *changed*))
+    (setf (config "foo.bar.car.bar")  "zoidberg")
+    (is (equal "zoidberg" *changed*))))
