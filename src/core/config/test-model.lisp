@@ -9,11 +9,12 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:core/config/model
-                #:on-config-changed
                 #:value-must-be-string
                 #:config)
   (:import-from #:util/store/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:core/config/api
+                #:on-config-changed))
 (in-package :core/config/test-model)
 
 (util/fiveam:def-suite)

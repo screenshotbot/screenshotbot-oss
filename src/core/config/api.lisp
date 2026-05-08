@@ -8,7 +8,8 @@
   (:use #:cl)
   (:export
    #:config
-   #:validate))
+   #:validate
+   #:on-config-changed))
 (in-package :core/config/api)
 
 (defmethod validate (sym value)
@@ -20,5 +21,13 @@ upcased name of the config interned in :KEYWORD"
 (defgeneric config (key))
 
 (defgeneric (setf config) (value key))
+
+(defgeneric on-config-changed (key value)
+  (:documentation "Called any time a config is changed. The key will be the interned
+value of the string in the keword package. So 'foo.bar' will become
+:FOO.BAR. Use a selector on the key to
+select a specific config. This will also be called during store reload.")
+  (:method (key value)
+    (values)))
 
 

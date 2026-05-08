@@ -17,10 +17,9 @@
   (:import-from #:util/misc
                 #:?.)
   (:import-from #:core/config/api
+                #:on-config-changed
                 #:validate
-                #:config)
-  (:export
-   #:on-config-changed))
+                #:config))
 (in-package :core/config/model)
 
 (defindex +keys+
@@ -45,14 +44,6 @@
 
 (define-condition value-must-be-string (error)
   ())
-
-(defgeneric on-config-changed (key value)
-  (:documentation "Called any time a config is changed. The key will be the interned
-value of the string in the keword package. So 'foo.bar' will become
-:FOO.BAR. Use a selector on the key to
-select a specific config. This will also be called during store reload.")
-  (:method (key value)
-    (values)))
 
 (defmethod initialize-transient-instance :after ((self config-setting))
   (on-config-changed
