@@ -7,6 +7,7 @@
 (defpackage :core/installation/installation
   (:use #:cl)
   (:import-from #:core/config/api
+                #:on-config-changed
                 #:validate
                 #:config)
   (:local-nicknames (#:a #:alexandria))
@@ -73,3 +74,11 @@ per process.")
   (and
    (eval (read-from-string value))
    t))
+
+
+(defmethod on-config-changed ((key (eql :installation.config))
+                              value)
+  (setf *installation*
+        (eval (read-from-string value)))
+  (format t "Installation object changed~%")
+  (log:info "Installation object changed~%"))
