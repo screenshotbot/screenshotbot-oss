@@ -67,3 +67,9 @@ per process.")
       (error "Don't use the trailing / in the URI"))
     (unless (str:emptyp (quri:uri-path uri))
       (error "The URL must be a root URL, not ~a" (quri:uri-path uri)))))
+
+(defmethod validate ((key (eql :installation.config))
+                     value)
+  (and
+   (eval (read value))
+   t))
