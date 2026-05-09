@@ -71,5 +71,5 @@ per process.")
 (defmethod validate ((key (eql :installation.config))
                      value)
   (and
-   (eval (read value))
+   (eval (read-from-string value))
    t))
