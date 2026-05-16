@@ -68,7 +68,6 @@ keep the Host header the same."
                 (parse-integer content-length)))
 
         (setf (hunchentoot:header-out :x-final-code) code)
-        (Setf (hunchentoot:header-out :x-final-headers) (format nil "~a" headers))
         (setf (hunchentoot:Header-out :x-dest-uri) (format nil "~a" dest-uri))
 
         (let* ((stream (hunchentoot:send-headers)))
