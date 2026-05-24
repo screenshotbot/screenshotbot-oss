@@ -74,7 +74,11 @@
 (lw-ji:define-java-constructor make-saml-response "com.onelogin.saml2.authn.SamlResponse")
 
 (lw-ji:define-java-callers "com.onelogin.saml2.authn.SamlResponse"
-  (saml-response-is-valid "isValid"))
+  (saml-response-is-valid "isValid")
+  (saml-response-get-error "getError")
+  (saml-response-get-attributes "getAttributes")
+  (saml-response-get-xml "getSAMLResponseXml")
+  (saml-response-get-name-id "getNameId"))
 
 (defun current-request-uri ()
   (quri:render-uri
@@ -94,8 +98,16 @@
                                     request-uri
                                     saml-response )))
       (let ((is-valid (saml-response-is-valid resp)))
-        (error "SamlResponse failed to validate"))
-      (error "unimpl ~a ~a" saml-response relay-state))))
+        (unless is-valid
+          (error "SamlResponse failed to validate: ~a [~a]"
+                 (saml-response-get-error resp)
+                 is-valid)))
+      (process-validated-callback resp relay-state))))
+
+(defun process-validated-callback (saml-response relay-state)
+  (let* ((attributes (saml-response-get-attributes saml-response))
+         (email (saml-response-get-name-id saml-response)))
+    (error "email is ~a" email)))
 
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.IdPMetadataParser"
   (parse-file-xml "parseFileXML")
@@ -151,9 +163,12 @@
                   *fake-saml-cert*)
     (java-map-put settings-map "onelogin.saml2.sp.privatekey"
                   *fake-saml-key*)
+    (java-map-put settings-map "onelogin.saml2.sp.nameidformat"
+                  "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
     (loop for key in '("onelogin.saml2.security.authnrequest_signed"
                        "onelogin.saml2.security.logoutrequest_signed"
-                       "onelogin.saml2.security.logoutresponse_signed")
+                       "onelogin.saml2.security.logoutresponse_signed"
+                       "onelogin.saml2.security.allow_duplicated_attribute_name")
           do 
              (java-map-put settings-map key
                            "true"))
