@@ -50,8 +50,7 @@
 (defvar *fake-saml-key*
   "MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCduFwasVHe8+j4GCO4Jp7gSjmWn20D/Q2ARvqUDl9upEE8hWSejy1pkqO1eLCk2lZ41ovjHuxhGBVBncGAs97VYwf1m3UEf5kePlyiuAdMuyiQptg69+OFzYjdu4fgSkVTgsTC1FB4E21e7uLKAvOfpElGUMoMeZUJoGizyGiFw+qT5GULUSBBLxcZf9zbIqbmY0xLwUQ5vZYaKz2WtafeO7IK8HFAz/cnOPVPi2kfXwPR+czTLc7OSPNppSSh7vzQhlVmgw0EUDtNFSsRyVwzVrq9jTPBTvzJitBVJn8rRJ8gD90klk57fSzAQkpWQ+nbE9wRQLz6S3NPkmFLUtS/AgMBAAECggEATAmDIf1FzrqBoQYmRlQcOV6fd+3hZVBc73CIwtNRD+rRZqeatFSrnJ+tHEKUys1WbghlRXh1lnPBX7J6BR3yeqa1QiQR3LrVa36+M1aMcmIystY1Hey/fJTz/I45+hhkZtf/Gzy3lMQs8N0zahfVMyxFhUhSuIPvJcZ3Y+Fk/sOMN6fFw8z/ZTBvZekN0CPC5VsWyeBz9Jn+XG+zfTbRqfm5tlNtJsW6U7B09Ctfr88DnDRiYtNNY32ilnjhG6HKLPU8wYOEPiA9zOMTey/jYaMywAAbSTpMCgS61bFiOJfCiGbDGAVl81KrhjtVSUwUSuMqtNVvUJSTy8BN7/zmAQKBgQDbX3GRNAUB1ztb7Ja/apQCdm4hHkma9zIXyYNEPy/eBt4L53wToaba33oI9duIWY2aUhHrrBlnU29XM+Hx/4wURnx686WuI4ZySTapVvteSC/Zm09oFB+f7QiathNS1n1wML5wOnN5kZhh+Uf8xoO0Y1aIETwHmqFdJzBX66+2AQKBgQC4Dbkd3C1Ko7D4dqB2fN06N7ww95Fz2S1pl/w8V2s4uoWoPqUonj3v2vj51fadAbSWoeQ0TlvUUTtVNSezFgAoWhOxJQKrA+6+uE6Xt7C5sivEHxYvQrj79kOYW6xTZ8AB8/RN66jNJ16unTHZVdcBGRdrDSvpLSegXsYQQh4KvwKBgQCdNpZWAFjCS/QvWatjPMcbyLH+LA2F8DfHElRveXUdggBpuZiTHRtN6jAz8bZFziAMA1rycaC3CvVVIkp/uqsx8J3PI4ON+8mjZ9KzozF8DPG12nca2KkdXKr47RmGGU9GMriYB1uwOOZi+FpdzgqfIT3nP6qsrGWOM8KSj8aaAQKBgQCTkd00xc5CpBBGhsaNefveq8Vl9XlXy2+P1F5W+zhq2ZJEnUXK1WWPpKAvoJAEvtNOWysfjRwvlZne7amQ+zjRIbfcNnJ3L8YCgL/zAULfAK36p3ogFn0+9+qmhAodLXhTmIfu2d4T71cI5dyMBzlGFhoiqQLmCGBXQuXHL1vq/QKBgQCzRM3Pacgsvg1SSv38aqMan/f/AZOs7V+/GzCqEQwLwZilqlx17rsQhB06W6S0dcbprrP5ZfwMRLfRcu9+74lINLzO9Q2dOINwOrKRq02s5dfk1Sf+Um+2Fm2PKfAqEhG1AIduu26JRQXDbPtAQ2+7z6XDtb3IKmOWFl/CNfcEFg==")
 
-(defclass saml-auth-provider (auth-provider
-                              roles-auth-provider)
+(defclass saml-auth-provider (auth-provider)
   ((entity-id :initform "https://screenshotbot.io"
               :initarg :entity-id
               :reader entity-id)
@@ -104,10 +103,45 @@
                  is-valid)))
       (process-validated-callback resp relay-state))))
 
+(defparameter *saml-email-attribute-names*
+  '(;; X.500/LDAP profile (OID-based)
+    "urn:oid:0.9.2342.19200300.100.1.3"        ; mail (RFC 4524 inetOrgPerson)
+    "urn:oid:1.2.840.113549.1.9.1"             ; emailAddress (PKCS#9)
+
+    ;; WS-* / claims-based (ADFS, Entra/Azure AD)
+    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
+    "http://schemas.xmlsoap.org/claims/EmailAddress"
+
+    ;; SAML NameID format (check NameID Format attribute, not an Attribute Name)
+    "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
+
+    ;; Plain/unqualified names
+    "email"
+    "emailAddress"
+    "Email"
+    "EmailAddress"
+    "mail"
+    "User.email"
+    "email_address"
+
+    ;; eduPerson (academic federations)
+    "urn:oid:1.3.6.1.4.1.5923.1.1.1.6"))       ; eduPersonPrincipalName (email-shaped, not strictly email)
+
+(lw-ji:define-java-callers "java.util.List"
+  (list-get "get"))
+
+(defun get-email-attribute (attributes)
+  (loop for key in *saml-email-attribute-names*
+        for value = (java-map-get attributes key)
+        if value
+          return (list-get value 0)))
+
 (defun process-validated-callback (saml-response relay-state)
   (let* ((attributes (saml-response-get-attributes saml-response))
-         (email (saml-response-get-name-id saml-response)))
-    (error "email is ~a" email)))
+         (entity-id (get-idp-entity-id (relay-state-settings relay-state)))
+         (name-id (saml-response-get-name-id saml-response))
+         (email (get-email-attribute attributes)))
+    (error "id is ~a,~a,~a" entity-id name-id email)))
 
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.IdPMetadataParser"
   (parse-file-xml "parseFileXML")
@@ -127,7 +161,8 @@
 
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.Saml2Settings"
   (settings-get-signature-algorithm "getSignatureAlgorithm")
-  (get-sp-key "getSPkey"))
+  (get-sp-key "getSPkey")
+  (get-idp-entity-id "getIdpEntityId"))
 
 (lw-ji:define-java-callers "com.onelogin.saml2.util.Util"
   (util-sign "sign")
@@ -163,6 +198,7 @@
                   *fake-saml-cert*)
     (java-map-put settings-map "onelogin.saml2.sp.privatekey"
                   *fake-saml-key*)
+    #+nil
     (java-map-put settings-map "onelogin.saml2.sp.nameidformat"
                   "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
     (loop for key in '("onelogin.saml2.security.authnrequest_signed"
