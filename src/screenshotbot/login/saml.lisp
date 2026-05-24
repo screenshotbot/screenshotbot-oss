@@ -15,11 +15,30 @@
                 #:defhandler)
   (:import-from #:util/request
                 #:http-request)
+  (:import-from #:bknr.indices
+                #:indexed-class
+                #:base-indexed-object)
+  (:import-from #:util/store/store
+                #:defindex)
+  (:import-from #:util/store/fset-index
+                #:fset-unique-index)
   (:export
    #:saml-auth-provider))
 (in-package :screenshotbot/login/saml)
 
 (named-readtables:in-readtable markup:syntax)
+
+(defindex +id-index+
+  'fset-unique-index
+  :slot-name 'id)
+
+(defclass relay-state (base-indexed-object)
+  ((id :initarg :id
+       :index +id-index+
+       :index-reader relay-state-for-id
+       :reader relay-state-id
+       :initform (format nil "~a" (secure-random:number 10000000000000000))))
+  (:metaclass indexed-class))
 
 
 ;; These are hardcoded just for testing purposes, before we productionize this we'll auto-generate it with P176
@@ -50,8 +69,14 @@
     (idp-metadata-url self)
     :want-string t)))
 
+(lw-ji:define-java-constructor make-saml-response "com.onelogin.saml2.authn.SamlResponse")
+
 (defhandler (nil :uri "/sso/saml/callback") ()
-  (error "unimpl"))
+  (let* ((saml-response (hunchentoot:post-parameter "SAMLResponse"))
+         (relay-state-id (hunchentoot:post-parameter "RelayState"))
+         (relay-state (relay-state-for-id relay-state-id)))
+    (let ((resp (make-saml-response saml-response )))
+     (error "unimpl ~a ~a" saml-response relay-state))))
 
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.IdPMetadataParser"
   (parse-file-xml "parseFileXML")
@@ -138,7 +163,7 @@
 
 (defmethod signin-link ((self saml-auth-provider) redirect)
   (let ((xml (metadata-xml self))
-        (relay-state "add-random-data-here"))
+        (relay-state (make-instance 'relay-state)))
     (let* ((url (quri:uri (parse-xml xml)))
            (settings (create-settings-builder-for-xml self xml))
            (arg (authn-request-get-encoded-authn-request
@@ -146,13 +171,13 @@
            (sig-alg (settings-get-signature-algorithm settings))
            (signature (build-request-signature
                        arg
-                       relay-state
+                       (relay-state-id relay-state)
                        sig-alg
                        (get-sp-key settings))))
       (setf
        (quri:uri-query-params url)
        `(("SAMLRequest" . ,arg)
-         ("RelayState" . ,relay-state)
+         ("RelayState" . ,(relay-state-id relay-state))
          ("SigAlg" . ,sig-alg)
          ("Signature" . ,signature)))
       (quri:render-uri url))))
