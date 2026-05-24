@@ -302,7 +302,7 @@
                  (:file "github-oauth-ui")
                  (:file "google-oauth")
                  (:file "populate")
-                 (:file "saml")
+                 (:file "saml" :if-feature (:and :lispworks :linux))
                  (:file "microsoft-entra")
                  (:file "aws-cognito")
                  (:file "require-invite-sso-mixin")
@@ -420,6 +420,7 @@
                (:module "login"
                 :components ((:file "test-github-oauth")
                              (:file "test-forgot-password")
+                             (:file "test-saml" :if-feature (:and :lispworks :linux))
                              (:file "test-google-oauth")
                              (:file "test-populate")
                              (:file "test-verify-email")
