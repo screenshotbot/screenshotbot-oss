@@ -302,6 +302,7 @@
                  (:file "github-oauth-ui")
                  (:file "google-oauth")
                  (:file "populate")
+                 (:file "saml")
                  (:file "microsoft-entra")
                  (:file "aws-cognito")
                  (:file "require-invite-sso-mixin")
