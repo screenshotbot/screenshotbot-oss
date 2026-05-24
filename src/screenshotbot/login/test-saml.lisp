@@ -8,6 +8,10 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/login/saml
+                #:saml-auth-provider
+                #:authn-request-get-encoded-authn-request
+                #:make-authn-request
+                #:create-settings-builder-for-xml
                 #:parse-xml))
 (in-package :screenshotbot/login/test-saml)
 
@@ -22,3 +26,12 @@
    (equal
     "http://localhost:8080/realms/master/protocol/saml"
     (parse-xml *xml*))))
+
+(test creating-settings-builder
+  (let ((self (make-instance 'saml-auth-provider)))
+    (finishes
+      (create-settings-builder-for-xml self *xml*))
+    (finishes
+      (authn-request-get-encoded-authn-request
+       (make-authn-request (create-settings-builder-for-xml self *xml*))))))
+
