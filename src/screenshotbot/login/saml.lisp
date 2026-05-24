@@ -22,6 +22,9 @@
                 #:defindex)
   (:import-from #:util/store/fset-index
                 #:fset-unique-index)
+  (:import-from #:bknr.datastore
+                #:store-object
+                #:persistent-class)
   (:export
    #:saml-auth-provider))
 (in-package :screenshotbot/login/saml)
@@ -50,7 +53,8 @@
 (defvar *fake-saml-key*
   "MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCduFwasVHe8+j4GCO4Jp7gSjmWn20D/Q2ARvqUDl9upEE8hWSejy1pkqO1eLCk2lZ41ovjHuxhGBVBncGAs97VYwf1m3UEf5kePlyiuAdMuyiQptg69+OFzYjdu4fgSkVTgsTC1FB4E21e7uLKAvOfpElGUMoMeZUJoGizyGiFw+qT5GULUSBBLxcZf9zbIqbmY0xLwUQ5vZYaKz2WtafeO7IK8HFAz/cnOPVPi2kfXwPR+czTLc7OSPNppSSh7vzQhlVmgw0EUDtNFSsRyVwzVrq9jTPBTvzJitBVJn8rRJ8gD90klk57fSzAQkpWQ+nbE9wRQLz6S3NPkmFLUtS/AgMBAAECggEATAmDIf1FzrqBoQYmRlQcOV6fd+3hZVBc73CIwtNRD+rRZqeatFSrnJ+tHEKUys1WbghlRXh1lnPBX7J6BR3yeqa1QiQR3LrVa36+M1aMcmIystY1Hey/fJTz/I45+hhkZtf/Gzy3lMQs8N0zahfVMyxFhUhSuIPvJcZ3Y+Fk/sOMN6fFw8z/ZTBvZekN0CPC5VsWyeBz9Jn+XG+zfTbRqfm5tlNtJsW6U7B09Ctfr88DnDRiYtNNY32ilnjhG6HKLPU8wYOEPiA9zOMTey/jYaMywAAbSTpMCgS61bFiOJfCiGbDGAVl81KrhjtVSUwUSuMqtNVvUJSTy8BN7/zmAQKBgQDbX3GRNAUB1ztb7Ja/apQCdm4hHkma9zIXyYNEPy/eBt4L53wToaba33oI9duIWY2aUhHrrBlnU29XM+Hx/4wURnx686WuI4ZySTapVvteSC/Zm09oFB+f7QiathNS1n1wML5wOnN5kZhh+Uf8xoO0Y1aIETwHmqFdJzBX66+2AQKBgQC4Dbkd3C1Ko7D4dqB2fN06N7ww95Fz2S1pl/w8V2s4uoWoPqUonj3v2vj51fadAbSWoeQ0TlvUUTtVNSezFgAoWhOxJQKrA+6+uE6Xt7C5sivEHxYvQrj79kOYW6xTZ8AB8/RN66jNJ16unTHZVdcBGRdrDSvpLSegXsYQQh4KvwKBgQCdNpZWAFjCS/QvWatjPMcbyLH+LA2F8DfHElRveXUdggBpuZiTHRtN6jAz8bZFziAMA1rycaC3CvVVIkp/uqsx8J3PI4ON+8mjZ9KzozF8DPG12nca2KkdXKr47RmGGU9GMriYB1uwOOZi+FpdzgqfIT3nP6qsrGWOM8KSj8aaAQKBgQCTkd00xc5CpBBGhsaNefveq8Vl9XlXy2+P1F5W+zhq2ZJEnUXK1WWPpKAvoJAEvtNOWysfjRwvlZne7amQ+zjRIbfcNnJ3L8YCgL/zAULfAK36p3ogFn0+9+qmhAodLXhTmIfu2d4T71cI5dyMBzlGFhoiqQLmCGBXQuXHL1vq/QKBgQCzRM3Pacgsvg1SSv38aqMan/f/AZOs7V+/GzCqEQwLwZilqlx17rsQhB06W6S0dcbprrP5ZfwMRLfRcu9+74lINLzO9Q2dOINwOrKRq02s5dfk1Sf+Um+2Fm2PKfAqEhG1AIduu26JRQXDbPtAQ2+7z6XDtb3IKmOWFl/CNfcEFg==")
 
-(defclass saml-auth-provider (auth-provider)
+(defclass saml-auth-provider (auth-provider
+                              store-object)
   ((entity-id :initform "https://screenshotbot.io"
               :initarg :entity-id
               :reader entity-id)
@@ -61,7 +65,8 @@
                  :reader %metadata-xml)
    (name :initarg :name
          :initform "generic-saml"
-         :reader saml-name)))
+         :reader saml-name))
+  (:metaclass persistent-class))
 
 (defmethod metadata-xml ((self saml-auth-provider))
   (or
@@ -263,3 +268,8 @@
       <span class= "ms-1">Sign in with ,(saml-name self) </span>
     </a>
   </div>)
+
+(defhandler (nil :uri "/saml/:id/login") (id redirect)
+  (let ((saml (bknr.datastore:store-object-with-id (parse-integer id))))
+    (check-type saml saml-auth-provider)
+    (hex:safe-redirect (signin-link saml (or redirect "/runs")))))
