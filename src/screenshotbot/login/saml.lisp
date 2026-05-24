@@ -37,7 +37,9 @@
        :index +id-index+
        :index-reader relay-state-for-id
        :reader relay-state-id
-       :initform (format nil "~a" (secure-random:number 10000000000000000))))
+       :initform (format nil "~a" (secure-random:number 10000000000000000)))
+   (settings :initarg :settings
+             :reader relay-state-settings))
   (:metaclass indexed-class))
 
 
@@ -71,12 +73,29 @@
 
 (lw-ji:define-java-constructor make-saml-response "com.onelogin.saml2.authn.SamlResponse")
 
+(lw-ji:define-java-callers "com.onelogin.saml2.authn.SamlResponse"
+  (saml-response-is-valid "isValid"))
+
+(defun current-request-uri ()
+  (quri:render-uri
+   (quri:make-uri
+    :scheme (or
+             (hunchentoot:header-in* "x-forwarded-proto")
+             (hunchentoot:server-protocol*))
+    :host (first (str:split ":" (hunchentoot:host)))
+    :path (hunchentoot:request-uri*))))
+
 (defhandler (nil :uri "/sso/saml/callback") ()
   (let* ((saml-response (hunchentoot:post-parameter "SAMLResponse"))
          (relay-state-id (hunchentoot:post-parameter "RelayState"))
-         (relay-state (relay-state-for-id relay-state-id)))
-    (let ((resp (make-saml-response saml-response )))
-     (error "unimpl ~a ~a" saml-response relay-state))))
+         (relay-state (relay-state-for-id relay-state-id))
+         (request-uri (current-request-uri)))
+    (let ((resp (make-saml-response (relay-state-settings relay-state)
+                                    request-uri
+                                    saml-response )))
+      (let ((is-valid (saml-response-is-valid resp)))
+        (error "SamlResponse failed to validate"))
+      (error "unimpl ~a ~a" saml-response relay-state))))
 
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.IdPMetadataParser"
   (parse-file-xml "parseFileXML")
@@ -162,10 +181,11 @@
 
 
 (defmethod signin-link ((self saml-auth-provider) redirect)
-  (let ((xml (metadata-xml self))
-        (relay-state (make-instance 'relay-state)))
+  (let ((xml (metadata-xml self)))
     (let* ((url (quri:uri (parse-xml xml)))
            (settings (create-settings-builder-for-xml self xml))
+           (relay-state (make-instance 'relay-state
+                                       :settings settings))
            (arg (authn-request-get-encoded-authn-request
                  (make-authn-request settings)))
            (sig-alg (settings-get-signature-algorithm settings))
