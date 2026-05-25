@@ -63,6 +63,9 @@
    (metadata-xml :initform nil
                  :initarg :metadata-xml
                  :reader %metadata-xml)
+   (%company :initform nil
+             :initarg :company
+             :reader saml-company)
    (name :initarg :name
          :initform "generic-saml"
          :reader saml-name))
