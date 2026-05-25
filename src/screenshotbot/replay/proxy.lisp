@@ -81,7 +81,9 @@
   (or
    (equal "localhost" (uiop:hostname))
    (cl-ppcre:scan
-    "^prod.[.]intern[.]screenshotbot[.]io$" (uiop:hostname))))
+    "^prod.[.]intern[.]screenshotbot[.]io$" (uiop:hostname))
+      (cl-ppcre:scan
+    "^production.[.]intern[.]screenshotbot[.]io$" (uiop:hostname))))
 
 (defvar *replay-proxy* nil)
 
