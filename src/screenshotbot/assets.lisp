@@ -99,6 +99,7 @@ rm -f $INSTALLER
    `(progn
       (defhandler (nil :uri ,(format nil "/~a.sh" name)) ()
         (setf (hunchentoot:content-type*) "application/x-sh")
+        (setf (hunchentoot:header-out "Cache-Control") "max-age=259200")
         (generate-.sh ,name))
 
       (defhandler (nil :uri ,(format nil "/~a.exe" name)) ()
