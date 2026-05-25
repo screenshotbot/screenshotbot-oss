@@ -9,6 +9,7 @@
         #:fiveam-matchers
         #:fiveam)
   (:import-from #:screenshotbot/assets
+                #:generate-.sh
                 #:define-platform-asset)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
@@ -21,9 +22,6 @@
 
 (util/fiveam:def-suite)
 
-(test the-generate-fn-exists
-  (is (functionp #'screenshotbot/assets::generate-recorder-platform-assets)))
-
 (define-platform-asset "dummy")
 
 (test generate-.sh-uses-domain
@@ -31,12 +29,7 @@
                                      'installation
                                      :domain "https://example.com"))
    (with-test-store ()
-     (generate-dummy-platform-assets)
-     (assert-that (mapcar #'pathname-name
-                          (fad:list-directory (path:catdir (object-store) "artifacts/")))
-                  (has-item
-                   "dummy"))
-     (let ((contents (uiop:read-file-string (path:catfile (object-store) "artifacts/dummy.sh"))))
+     (let ((contents (generate-.sh "dummy")))
        (assert-that contents
                     (contains-string "https://example.com/artifact/${VERSION}dummy-linux"))))))
 
@@ -46,8 +39,7 @@
                                      :cdn "https://cdn.example.com"
                                      :domain "https://example.com"))
    (with-test-store ()
-     (generate-dummy-platform-assets)
-     (let ((contents (uiop:read-file-string (path:catfile (object-store) "artifacts/dummy.sh"))))
+     (let ((contents (generate-.sh "dummy")))
        (assert-that contents
                     (contains-string "https://cdn.example.com/artifact/${VERSION}dummy-linux")
                     (is-not (contains-string "https://example.com/artifact/")))))))

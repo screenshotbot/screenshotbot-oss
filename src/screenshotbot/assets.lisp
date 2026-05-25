@@ -15,8 +15,7 @@
                 #:ensure-asset)
   (:import-from #:screenshotbot/artifacts
                 #:artifact-file-name
-                #:artifact-link
-                #:def-artifact-hook)
+                #:artifact-link)
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:installation-cdn
@@ -98,31 +97,9 @@ rm -f $INSTALLER
 (defmacro define-platform-asset (name)
   (let ((generate-fn (intern (format nil "GENERATE-~a-PLATFORM-ASSETS" (str:upcase name)))))
    `(progn
-      (flet ((generate ()
-               (uiop:with-staging-pathname (output
-                                            (artifact-file-name ,(format nil "~a.sh" name)))
-                 (with-open-file (output output :direction :output
-                                                :if-exists :append)
-                   (write-string (generate-.sh ,name)
-                                 output)))))
-
-        (defun ,generate-fn ()
-          (generate))
-
-        ,@ (loop for suffix in '("darwin" "linux")
-                 for full-name = (format nil "~a-~a"
-                                         name suffix)
-                 collect
-                 `(def-artifact-hook (',(intern full-name) ,full-name)
-                    (generate)))
-        (add-datastore-hook
-         ',generate-fn
-         :immediate t))
-
       (defhandler (nil :uri ,(format nil "/~a.sh" name)) ()
         (setf (hunchentoot:content-type*) "application/x-sh")
-        (hunchentoot:handle-static-file
-         (artifact-file-name (format nil "~a.sh" ,name))))
+        (generate-.sh ,name))
 
       (defhandler (nil :uri ,(format nil "/~a.exe" name)) ()
         (hunchentoot:redirect

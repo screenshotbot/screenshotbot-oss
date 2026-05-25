@@ -96,6 +96,7 @@
                    url)))))))
 
 (def-easy-macro def-artifact-hook (key artifact-name &fn fn)
+  "TODO: unused. Delete"
   (setf
    (alexandria:assoc-value *artifact-hooks* key :test #'equal)
    (make-instance 'artifact-hook
