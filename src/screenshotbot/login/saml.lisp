@@ -111,45 +111,16 @@
                  is-valid)))
       (process-validated-callback resp relay-state))))
 
-(defparameter *saml-email-attribute-names*
-  '(;; X.500/LDAP profile (OID-based)
-    "urn:oid:0.9.2342.19200300.100.1.3"        ; mail (RFC 4524 inetOrgPerson)
-    "urn:oid:1.2.840.113549.1.9.1"             ; emailAddress (PKCS#9)
-
-    ;; WS-* / claims-based (ADFS, Entra/Azure AD)
-    "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
-    "http://schemas.xmlsoap.org/claims/EmailAddress"
-
-    ;; SAML NameID format (check NameID Format attribute, not an Attribute Name)
-    "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
-
-    ;; Plain/unqualified names
-    "email"
-    "emailAddress"
-    "Email"
-    "EmailAddress"
-    "mail"
-    "User.email"
-    "email_address"
-
-    ;; eduPerson (academic federations)
-    "urn:oid:1.3.6.1.4.1.5923.1.1.1.6"))       ; eduPersonPrincipalName (email-shaped, not strictly email)
-
 (lw-ji:define-java-callers "java.util.List"
   (list-get "get"))
 
-(defun get-email-attribute (attributes)
-  (loop for key in *saml-email-attribute-names*
-        for value = (java-map-get attributes key)
-        if value
-          return (list-get value 0)))
 
 (defun process-validated-callback (saml-response relay-state)
   (let* ((attributes (saml-response-get-attributes saml-response))
          (entity-id (get-idp-entity-id (relay-state-settings relay-state)))
-         (name-id (saml-response-get-name-id saml-response))
-         (email (get-email-attribute attributes)))
-    (error "id is ~a,~a,~a" entity-id name-id email)))
+         (email (saml-response-get-name-id saml-response)))
+    (declare (ignore attributes))
+    (error "id is ~a,~a" entity-id email)))
 
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.IdPMetadataParser"
   (parse-file-xml "parseFileXML")
@@ -206,7 +177,6 @@
                   *fake-saml-cert*)
     (java-map-put settings-map "onelogin.saml2.sp.privatekey"
                   *fake-saml-key*)
-    #+nil
     (java-map-put settings-map "onelogin.saml2.sp.nameidformat"
                   "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
     (loop for key in '("onelogin.saml2.security.authnrequest_signed"
