@@ -117,8 +117,11 @@
                     (user2 (make-user :companies (list company)))
                     (report (make-instance 'report
                                            :channel channel)))
-               (is (equal (list user1 user2)
-                          (users-for-company company)))
+               (assert-that
+                (roles:users-for-company company)
+                (contains-in-any-order
+                 user1 user2))
+
                (disable-emails user1 company)
                (send-task (make-instance 'email-task-integration
                                           :company company)

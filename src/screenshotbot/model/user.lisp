@@ -270,21 +270,7 @@
                                                 one-owned-company-per-user))
   (values))
 
-(defmethod destroy-object :before ((user user))
-  "TODO: 5/13/24: delete")
-
 (defmethod users-for-company ((company company))
-  ;; This is currently only used by company/members.lisp. We can
-  ;; replace it with roles:users-for-company once we migrate all the
-  ;; roles. (T1156)
-  (loop for user in (all-users)
-        if (roles:has-role-p company user t)
-          collect user))
-
-(defmethod user-companies ((user user))
-  (error "unimplemented"))
-
-(defmethod (setf user-companies) (companies (user user))
   (error "unimplemented"))
 
 (with-class-validation
