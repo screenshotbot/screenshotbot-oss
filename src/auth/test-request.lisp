@@ -26,7 +26,6 @@
                 #:normal-viewer-context))
 (in-package :auth/test-request)
 
-
 (util/fiveam:def-suite)
 
 (def-fixture state ()

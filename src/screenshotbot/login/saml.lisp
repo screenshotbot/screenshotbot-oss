@@ -35,9 +35,62 @@
 
 (named-readtables:in-readtable markup:syntax)
 
+(defvar *lock* (bt:make-lock))
+
 (defindex +id-index+
   'fset-unique-index
   :slot-name 'id)
+
+(defclass saml-cert (store-object)
+  ((private-key :initarg :private-key
+                :reader saml-private-key)
+   (cert :initarg :public-cert
+         :reader saml-public-cert))
+  (:metaclass persistent-class)
+  (:documentation "The singleton private-key/cert used for SAML"))
+
+(defun make-cert-pair ()
+  (tmpdir:with-tmpdir (dir)
+    (uiop:run-program
+     (list
+      "openssl"
+      "req"
+      "-newkey"
+      "rsa:2048"
+      "-nodes" "-keyout" (namestring (path:catfile dir "sp.key"))
+      "-x509" "-days" "3650" 
+      "-out" (namestring (path:catfile dir "sp.crt"))
+      "-subj" "/CN=screenshotbot"))
+    (uiop:run-program
+     (list
+      "openssl"
+      "pkcs8"
+      "-topk8"
+      "-inform"
+      "pem"
+      "-nocrypt"
+      "-in" (namestring (path:catfile dir "sp.key"))
+      "-outform" "pem"
+      "-out" (namestring (path:catfile dir "sp.pem"))))
+    (values
+     (uiop:read-file-string
+      (path:catfile dir "sp.crt"))
+     (uiop:read-file-string
+      (path:catfile dir "sp.key")))))
+
+(defun make-new-saml-cert ()
+  (multiple-value-bind (cert key)
+      (make-cert-pair)
+    (make-instance 'saml-cert
+                   :public-cert cert
+                   :private-key key)))
+
+(defun find-or-create-saml-cert ()
+  (bt:with-lock-held (*lock*)
+    (or
+     (first
+      (bknr.datastore:store-objects-with-class 'saml-cert))
+     (make-new-saml-cert))))
 
 (defclass relay-state (base-indexed-object)
   ((id :initarg :id
@@ -51,13 +104,6 @@
              :reader relay-state-settings))
   (:metaclass indexed-class))
 
-
-;; These are hardcoded just for testing purposes, before we productionize this we'll auto-generate it with P176
-(defvar *fake-saml-cert*
-  "MIIDJzCCAg+gAwIBAgIUboUduNIKHQWmKnEcA4+qxm2j37QwDQYJKoZIhvcNAQELBQAwIzEhMB8GA1UEAwwYc3RhZ2luZy5zY3JlZW5zaG90Ym90LmlvMB4XDTI2MDUyNDE1Mjg0M1oXDTM2MDUyMTE1Mjg0M1owIzEhMB8GA1UEAwwYc3RhZ2luZy5zY3JlZW5zaG90Ym90LmlvMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnbhcGrFR3vPo+BgjuCae4Eo5lp9tA/0NgEb6lA5fbqRBPIVkno8taZKjtXiwpNpWeNaL4x7sYRgVQZ3BgLPe1WMH9Zt1BH+ZHj5corgHTLsokKbYOvfjhc2I3buH4EpFU4LEwtRQeBNtXu7iygLzn6RJRlDKDHmVCaBos8hohcPqk+RlC1EgQS8XGX/c2yKm5mNMS8FEOb2WGis9lrWn3juyCvBxQM/3Jzj1T4tpH18D0fnM0y3OzkjzaaUkoe780IZVZoMNBFA7TRUrEclcM1a6vY0zwU78yYrQVSZ/K0SfIA/dJJZOe30swEJKVkPp2xPcEUC8+ktzT5JhS1LUvwIDAQABo1MwUTAdBgNVHQ4EFgQUvbijq5U5EHTMsXFcHCYhUCVXHzYwHwYDVR0jBBgwFoAUvbijq5U5EHTMsXFcHCYhUCVXHzYwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAfnQ22i8OXqPb6ptB9g6wKrVxQlC1otPlDd5we7Mu+hL8wlMwXcJGKiI8Mtf3g0puRq1Orl3FFma1e6yigdN2H0kiNpYY5eo9UeqA1Q/+sJTTPFE0COxYZOlddAGalBUWyZN5w9Oz91s6tCGaRvB7hFwHTRLtGRbjJUygjgM/j6LuB+FVX0IGizY5ellTRzxpqqi/fNAjLE7EsmxhzAsxPs8UWoTeLQYwD6kRqV/d+G5bahP250VyHgfChSWBYRBTObI/lX8L+JBX3Rvg3ERWREJSUafbdCe1R+fi1sLu/P60EZyCw9JufX59umdEeTEvOEa/ybCDYAanV+9Gw4DpRg==")
-
-(defvar *fake-saml-key*
-  "MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQCduFwasVHe8+j4GCO4Jp7gSjmWn20D/Q2ARvqUDl9upEE8hWSejy1pkqO1eLCk2lZ41ovjHuxhGBVBncGAs97VYwf1m3UEf5kePlyiuAdMuyiQptg69+OFzYjdu4fgSkVTgsTC1FB4E21e7uLKAvOfpElGUMoMeZUJoGizyGiFw+qT5GULUSBBLxcZf9zbIqbmY0xLwUQ5vZYaKz2WtafeO7IK8HFAz/cnOPVPi2kfXwPR+czTLc7OSPNppSSh7vzQhlVmgw0EUDtNFSsRyVwzVrq9jTPBTvzJitBVJn8rRJ8gD90klk57fSzAQkpWQ+nbE9wRQLz6S3NPkmFLUtS/AgMBAAECggEATAmDIf1FzrqBoQYmRlQcOV6fd+3hZVBc73CIwtNRD+rRZqeatFSrnJ+tHEKUys1WbghlRXh1lnPBX7J6BR3yeqa1QiQR3LrVa36+M1aMcmIystY1Hey/fJTz/I45+hhkZtf/Gzy3lMQs8N0zahfVMyxFhUhSuIPvJcZ3Y+Fk/sOMN6fFw8z/ZTBvZekN0CPC5VsWyeBz9Jn+XG+zfTbRqfm5tlNtJsW6U7B09Ctfr88DnDRiYtNNY32ilnjhG6HKLPU8wYOEPiA9zOMTey/jYaMywAAbSTpMCgS61bFiOJfCiGbDGAVl81KrhjtVSUwUSuMqtNVvUJSTy8BN7/zmAQKBgQDbX3GRNAUB1ztb7Ja/apQCdm4hHkma9zIXyYNEPy/eBt4L53wToaba33oI9duIWY2aUhHrrBlnU29XM+Hx/4wURnx686WuI4ZySTapVvteSC/Zm09oFB+f7QiathNS1n1wML5wOnN5kZhh+Uf8xoO0Y1aIETwHmqFdJzBX66+2AQKBgQC4Dbkd3C1Ko7D4dqB2fN06N7ww95Fz2S1pl/w8V2s4uoWoPqUonj3v2vj51fadAbSWoeQ0TlvUUTtVNSezFgAoWhOxJQKrA+6+uE6Xt7C5sivEHxYvQrj79kOYW6xTZ8AB8/RN66jNJ16unTHZVdcBGRdrDSvpLSegXsYQQh4KvwKBgQCdNpZWAFjCS/QvWatjPMcbyLH+LA2F8DfHElRveXUdggBpuZiTHRtN6jAz8bZFziAMA1rycaC3CvVVIkp/uqsx8J3PI4ON+8mjZ9KzozF8DPG12nca2KkdXKr47RmGGU9GMriYB1uwOOZi+FpdzgqfIT3nP6qsrGWOM8KSj8aaAQKBgQCTkd00xc5CpBBGhsaNefveq8Vl9XlXy2+P1F5W+zhq2ZJEnUXK1WWPpKAvoJAEvtNOWysfjRwvlZne7amQ+zjRIbfcNnJ3L8YCgL/zAULfAK36p3ogFn0+9+qmhAodLXhTmIfu2d4T71cI5dyMBzlGFhoiqQLmCGBXQuXHL1vq/QKBgQCzRM3Pacgsvg1SSv38aqMan/f/AZOs7V+/GzCqEQwLwZilqlx17rsQhB06W6S0dcbprrP5ZfwMRLfRcu9+74lINLzO9Q2dOINwOrKRq02s5dfk1Sf+Um+2Fm2PKfAqEhG1AIduu26JRQXDbPtAQ2+7z6XDtb3IKmOWFl/CNfcEFg==")
 
 (defclass saml-auth-provider (auth-provider
                               store-object)
@@ -138,7 +184,6 @@
       (setf (auth:session-value :sso-company) (saml-company saml))
       (hex:safe-redirect "/runs"))))
 
-(defvar *lock* (bt:make-lock))
 
 (defclass saml-user (single-company-user)
   ()
@@ -208,9 +253,11 @@
                   ;; todo
                   "https://staging.screenshotbot.io/sso/saml/callback")
     (java-map-put settings-map "onelogin.saml2.sp.x509cert"
-                  *fake-saml-cert*)
+                  (saml-public-cert
+                   (find-or-create-saml-cert)))
     (java-map-put settings-map "onelogin.saml2.sp.privatekey"
-                  *fake-saml-key*)
+                  (saml-private-key
+                   (find-or-create-saml-cert)))
     (java-map-put settings-map "onelogin.saml2.sp.nameidformat"
                   "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
     (loop for key in '("onelogin.saml2.security.authnrequest_signed"

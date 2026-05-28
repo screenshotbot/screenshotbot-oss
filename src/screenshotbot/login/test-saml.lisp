@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/login/saml
+                #:find-or-create-saml-cert
+                #:make-cert-pair
                 #:find-user-for-sso
                 #:saml-auth-provider
                 #:authn-request-get-encoded-authn-request
@@ -17,7 +19,12 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/company
-                #:company))
+                #:company)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that
+                #:has-typep)
+  (:import-from #:fiveam-matchers/misc
+                #:is-not-null))
 (in-package :screenshotbot/login/test-saml)
 
 
@@ -52,3 +59,15 @@
   (with-fixture state ()
     (is (not (null
               (find-user-for-sso company "foo@gmail.com"))))))
+
+(test make-cert-pair
+  (with-fixture state ()
+    (assert-that
+     (make-cert-pair)
+     (has-typep 'string))
+    (assert-that
+     (find-or-create-saml-cert)
+     (is-not-null))
+    (is (eql
+         (find-or-create-saml-cert)
+         (find-or-create-saml-cert)))))
