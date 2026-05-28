@@ -34,4 +34,5 @@
                :util/fiveam)
   :components ((:file "test-auth")
                (:file "test-view")
-               (:file "test-avatar")))
+               (:file "test-avatar")
+               (:file "test-request")))
