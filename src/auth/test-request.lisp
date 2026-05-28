@@ -17,7 +17,13 @@
                 #:abstract-installation
                 #:*installation*)
   (:import-from #:core/installation/auth
-                #:company-for-request))
+                #:company-for-request)
+  (:import-from #:fiveam-matchers/core
+                #:has-typep
+                #:assert-that)
+  (:import-from #:auth/viewer-context
+                #:sso-viewer-context
+                #:normal-viewer-context))
 (in-package :auth/test-request)
 
 
@@ -52,4 +58,28 @@
         (setf (auth:session-value :user) :foobar)
         (auth:authenticate-request request)
         (is (equal :foobar
-                   (auth:request-user request)))))))
+                   (auth:request-user request)))
+        (assert-that
+         (auth:viewer-context request)
+         (has-typep 'normal-viewer-context))))))
+
+(defmethod auth:can-viewer-view ((vc sso-viewer-context) (obj (eql 'my-comp)))
+  t)
+
+(test creates-an-sso-viewer-context-when-needed
+  (with-fixture state ()
+    (let ((*installation* (make-instance 'my-installation)))
+      (let ((request (make-instance 'auth:authenticated-request
+                                    :uri "/foo"
+                                    :headers-in nil)))
+        (setf (auth:session-value :user) 'foobar)
+        (setf (auth:session-value :sso-company) 'my-comp)
+        (auth:authenticate-request request)
+        (is (eql  'foobar
+                  (auth:request-user request)))
+        (roles:ensure-has-role 'my-comp 'foobar 'roles:standard-member)
+        (assert-that
+         (auth:viewer-context request)
+         (has-typep 'sso-viewer-context))
+        (is (eql 'my-comp
+                 (auth:request-account request)))))))

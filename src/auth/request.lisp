@@ -11,6 +11,8 @@
                 #:*installation*)
   (:import-from #:core/installation/auth
                 #:company-for-request)
+  (:import-from #:auth/viewer-context
+                #:sso-viewer-context)
   (:local-nicknames (#:viewer-context #:auth/viewer-context)))
 (in-package :auth/request)
 
@@ -43,20 +45,30 @@
 (defmethod auth:authenticate-request ((request authenticated-request))
   (unless (auth:request-user request) ;; Might happen in tests
     (alexandria:when-let ((user (auth:session-value :user)))
-      (let ((vc (make-default-viewer-context
-                 request user)))
-        (setf (auth:request-user request) user)
-        (setf (auth:viewer-context request)
-              vc)
-        (unless (auth:request-account request)
-          (alexandria:when-let ((company (company-for-request *installation* request)))
-            (cond
-              ((auth:can-viewer-view vc company)
-               (setf (auth:request-account request) company))
-              (t
-               (warn "Could not set company for user: ~a, ~a"
-                     company
-                     user)))))))))
+      (let ((sso-company (auth:session-value :sso-company)))
+        (let ((vc
+                (cond
+                  (sso-company
+                   (make-instance 'sso-viewer-context
+                                  :company sso-company
+                                  :user user))
+                  (t
+                   (make-default-viewer-context
+                    request user)))))
+          (setf (auth:request-user request) user)
+          (setf (auth:viewer-context request)
+                vc)
+          (unless (auth:request-account request)
+            (alexandria:when-let ((company (or
+                                            (company-for-request *installation* request)
+                                            sso-company)))
+              (cond
+                ((auth:can-viewer-view vc company)
+                 (setf (auth:request-account request) company))
+                (t
+                 (warn "Could not set company for user: ~a, ~a"
+                       company
+                       user))))))))))
 
 
 (defun current-user ()

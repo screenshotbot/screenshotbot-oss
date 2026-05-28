@@ -22,6 +22,8 @@
   (:import-from #:screenshotbot/model/recorder-run
                 #:run-id-to-run-map)
   (:import-from #:auth/viewer-context
+                #:sso-viewer-context
+                #:viewer-context-company
                 #:viewer-context-user)
   (:import-from #:alexandria
                 #:when-let))
@@ -48,8 +50,8 @@
                           (roles:companies-for-user user))))
           (or
            (most-recent-company companies)
-           (user-personal-company user)
            (car companies))))))
+
 
 (defun most-recent-company (companies)
   "Returns the most recently updated company in the list. If none are

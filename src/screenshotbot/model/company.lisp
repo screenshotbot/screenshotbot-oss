@@ -49,6 +49,8 @@
   (:import-from #:auth/login/roles-auth-provider
                 #:get-company-for-auth-provider)
   (:import-from #:auth/viewer-context
+                #:viewer-context-company
+                #:sso-viewer-context
                 #:normal-viewer-context
                 #:viewer-context-user
                 #:logged-in-viewer-context)
@@ -361,6 +363,13 @@ parent organization.")))
                      (viewer-context-user vc)
                      'roles:read-only)
    (company-domain-matches-installation-p company)))
+
+(defmethod auth:can-viewer-view ((vc sso-viewer-context)
+                                 (company company))
+  (and
+   (call-next-method)
+   (eql
+    (viewer-context-company vc) company)))
 
 (defun company-domain-matches-installation-p (company)
   (let ((redirect-url (redirect-url company)))

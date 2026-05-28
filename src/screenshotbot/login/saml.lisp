@@ -133,6 +133,7 @@
       ;; only this company.
       (setf (auth:current-user :expires-in (expiration-seconds saml))
             user)
+      (setf (auth:session-value :sso-company) (saml-company saml))
       (hex:safe-redirect "/runs"))))
 
 (defmethod find-user-for-sso ((company company) email)

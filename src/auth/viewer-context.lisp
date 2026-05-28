@@ -13,7 +13,9 @@
    #:normal-viewer-context
    #:anonymous-viewer-context
    #:email-viewer-context
-   #:viewer-context-api-key))
+   #:viewer-context-api-key
+   #:sso-viewer-context
+   #:viewer-context-company))
 (in-package :auth/viewer-context)
 
 (defclass abstract-viewer-context ()
@@ -33,6 +35,10 @@ super-admin priviledges by default."))
 
 (defclass normal-viewer-context (logged-in-viewer-context)
   ())
+
+(defclass sso-viewer-context (logged-in-viewer-context)
+  ((company :initarg :company
+            :reader viewer-context-company)))
 
 (defclass viewer-context (normal-viewer-context)
   ())
