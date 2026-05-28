@@ -29,6 +29,9 @@
                 #:company)
   (:import-from #:screenshotbot/model/user
                 #:single-company-user)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:installation-domain)
   (:export
    #:saml-auth-provider))
 (in-package :screenshotbot/login/saml)
@@ -107,10 +110,7 @@
 
 (defclass saml-auth-provider (auth-provider
                               store-object)
-  ((entity-id :initform "https://screenshotbot.io"
-              :initarg :entity-id
-              :reader entity-id)
-   (idp-metadata-url :initarg :idp-metadata-url
+  ((idp-metadata-url :initarg :idp-metadata-url
                      :reader idp-metadata-url)
    (metadata-xml :initform nil
                  :initarg :metadata-xml
@@ -220,6 +220,7 @@
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.Saml2Settings"
   (settings-get-signature-algorithm "getSignatureAlgorithm")
   (get-sp-key "getSPkey")
+  (get-sp-metadata "getSPMetadata")
   (get-idp-entity-id "getIdpEntityId"))
 
 (lw-ji:define-java-callers "com.onelogin.saml2.util.Util"
@@ -246,9 +247,22 @@
    (get-idp-settings xml)
    "onelogin.saml2.idp.single_sign_on_service.url"))
 
-(defun create-settings-builder-for-xml (self xml)
-  (let ((settings-map (make-hash-map (get-idp-settings xml))))
-    (java-map-put settings-map "onelogin.saml2.sp.entityid" (entity-id self))
+(defun entity-id ()
+  (let ((uri (quri:uri
+              (installation-domain
+               *installation*))))
+    (setf (quri:uri-path uri)
+          "/saml/metadata")
+    (quri:render-uri uri)))
+
+
+(defun create-settings-builder-for-xml (xml)
+  (let ((settings-map (cond
+                        (xml
+                         (make-hash-map (get-idp-settings xml)))
+                        (t
+                         (make-hash-map)))))
+    (java-map-put settings-map "onelogin.saml2.sp.entityid" (entity-id))
     (java-map-put settings-map "onelogin.saml2.sp.assertion_consumer_service.url"
                   ;; todo
                   "https://staging.screenshotbot.io/sso/saml/callback")
@@ -262,6 +276,7 @@
                   "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
     (loop for key in '("onelogin.saml2.security.authnrequest_signed"
                        "onelogin.saml2.security.logoutrequest_signed"
+                       "onelogin.saml2.security.sign_metadata"
                        "onelogin.saml2.security.logoutresponse_signed"
                        "onelogin.saml2.security.allow_duplicated_attribute_name")
           do 
@@ -293,7 +308,7 @@
 (defmethod signin-link ((self saml-auth-provider) redirect)
   (let ((xml (metadata-xml self)))
     (let* ((url (quri:uri (parse-xml xml)))
-           (settings (create-settings-builder-for-xml self xml))
+           (settings (create-settings-builder-for-xml xml))
            (relay-state (make-instance 'relay-state
                                        :saml-auth-provider self
                                        :settings settings))
@@ -328,3 +343,8 @@
   (let ((saml (bknr.datastore:store-object-with-id (parse-integer id))))
     (check-type saml saml-auth-provider)
     (hex:safe-redirect (signin-link saml (or redirect "/runs")))))
+
+(defhandler (nil :uri "/saml/metadata") ()
+  (setf (hunchentoot:content-type*) "application/xml")
+  (let ((settings (create-settings-builder-for-xml nil)))
+    (get-sp-metadata settings)))

@@ -24,7 +24,9 @@
                 #:assert-that
                 #:has-typep)
   (:import-from #:fiveam-matchers/misc
-                #:is-not-null))
+                #:is-not-null)
+  (:import-from #:screenshotbot/testing
+                #:with-installation))
 (in-package :screenshotbot/login/test-saml)
 
 
@@ -35,8 +37,9 @@
 
 (def-fixture state ()
   (with-test-store ()
-    (let ((company (make-instance 'company)))
-      (&body))))
+    (with-installation ()
+     (let ((company (make-instance 'company)))
+       (&body)))))
 
 (test simple-parsing
   (with-fixture state ()
@@ -49,10 +52,10 @@
   (with-fixture state ()
    (let ((self (make-instance 'saml-auth-provider)))
      (finishes
-       (create-settings-builder-for-xml self *xml*))
+       (create-settings-builder-for-xml *xml*))
      (finishes
        (authn-request-get-encoded-authn-request
-        (make-authn-request (create-settings-builder-for-xml self *xml*)))))))
+        (make-authn-request (create-settings-builder-for-xml *xml*)))))))
 
 
 (test ensures-creates-new-saml-user
