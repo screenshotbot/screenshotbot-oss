@@ -25,6 +25,8 @@
   (:import-from #:bknr.datastore
                 #:store-object
                 #:persistent-class)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:export
    #:saml-auth-provider))
 (in-package :screenshotbot/login/saml)
@@ -41,6 +43,8 @@
        :index-reader relay-state-for-id
        :reader relay-state-id
        :initform (format nil "~a" (secure-random:number 10000000000000000)))
+   (saml-auth-provider :initarg :saml-auth-provider
+                       :reader saml-auth-provider)
    (settings :initarg :settings
              :reader relay-state-settings))
   (:metaclass indexed-class))
@@ -120,7 +124,16 @@
          (entity-id (get-idp-entity-id (relay-state-settings relay-state)))
          (email (saml-response-get-name-id saml-response)))
     (declare (ignore attributes))
-    (error "id is ~a,~a" entity-id email)))
+    (let ((user (find-user-for-sso (saml-company (saml-auth-provider relay-state)) email )))
+      (error "got user ~a" user))))
+
+(defmethod find-user-for-sso ((company company) email)
+  (loop for user in (roles:users-for-company company)
+        if (string-equal (auth:user-email user) email)
+          return user
+        finally
+           ;; TODO: create the new sso-user
+           (error "no existing user for ~a" email)))
 
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.IdPMetadataParser"
   (parse-file-xml "parseFileXML")
@@ -214,6 +227,7 @@
     (let* ((url (quri:uri (parse-xml xml)))
            (settings (create-settings-builder-for-xml self xml))
            (relay-state (make-instance 'relay-state
+                                       :saml-auth-provider self
                                        :settings settings))
            (arg (authn-request-get-encoded-authn-request
                  (make-authn-request settings)))

@@ -17,6 +17,7 @@
                 #:password-hash
                 #:user-email)
   (:import-from #:bknr.datastore
+                #:store-object
                 #:class-instances
                 #:persistent-class
                 #:store-objects-with-class
@@ -128,8 +129,11 @@
 (defun arnold ()
   (user-with-email "arnold@tdrhq.com"))
 
+(defclass abstract-user ()
+  ())
+
 (with-class-validation
-  (defclass user (util:object-with-oid)
+  (defclass user (util:object-with-oid abstract-user)
     ((full-name :type (or null string)
                 :initarg :full-name
                 :initform nil
@@ -190,6 +194,15 @@
     default company is provided it should default to the personal
     company."))
     (:metaclass persistent-class)))
+
+(defclass single-company-user (store-object abstract-user)
+  ((email :initarg :email
+          :reader user-email)
+   (company :initarg :company
+            :reader user-only-company))
+  (:metaclass persistent-class)
+  (:documentation "A user who is tied to a single company. Typically for the purpose of
+SSO. The user is still connected via roles:"))
 
 (define-condition user-email-exists (error)
   ((email :initarg :email)))
