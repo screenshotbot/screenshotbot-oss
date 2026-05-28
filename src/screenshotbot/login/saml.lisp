@@ -72,7 +72,10 @@
              :reader saml-company)
    (name :initarg :name
          :initform "generic-saml"
-         :reader saml-name))
+         :reader saml-name)
+   (expiration-seconds :initarg :expiration-seconds
+                       :reader expiration-seconds
+                       :initform (* 20 3600)))
   (:metaclass persistent-class))
 
 (defmethod metadata-xml ((self saml-auth-provider))
@@ -122,10 +125,15 @@
 (defun process-validated-callback (saml-response relay-state)
   (let* ((attributes (saml-response-get-attributes saml-response))
          (entity-id (get-idp-entity-id (relay-state-settings relay-state)))
-         (email (saml-response-get-name-id saml-response)))
-    (declare (ignore attributes))
-    (let ((user (find-user-for-sso (saml-company (saml-auth-provider relay-state)) email )))
-      (error "got user ~a" user))))
+         (email (saml-response-get-name-id saml-response))
+         (saml (saml-auth-provider relay-state)))
+    (declare (ignore attributes entity-id))
+    (let ((user (find-user-for-sso (saml-company saml) email )))
+      ;; TODO: this is not enough. We need to restrict the login to
+      ;; only this company.
+      (setf (auth:current-user :expires-in (expiration-seconds saml))
+            user)
+      (hex:safe-redirect "/runs"))))
 
 (defmethod find-user-for-sso ((company company) email)
   (loop for user in (roles:users-for-company company)
