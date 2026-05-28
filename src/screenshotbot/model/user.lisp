@@ -195,7 +195,7 @@
     company."))
     (:metaclass persistent-class)))
 
-(defclass single-company-user (store-object abstract-user)
+(defclass single-company-user (object-with-oid abstract-user)
   ((email :initarg :email
           :reader user-email)
    (company :initarg :company
@@ -414,3 +414,21 @@ migration."
 
 (defmethod auth:can-viewer-view (obj (user user))
   (error "You got the order wrong, user must come before obj in can-viewer-view!"))
+
+(defmethod unaccepted-invites ((self single-company-user))
+  nil)
+
+(defmethod user-full-name ((self single-company-user))
+  (user-email self))
+
+(defmethod adminp ((self single-company-user))
+  nil)
+
+(defmethod user-notices ((self single-company-user))
+  nil)
+
+(defmethod auth:oauth-users ((self single-company-user))
+  nil)
+
+(defmethod auth:password-hash ((self single-company-user))
+  nil)

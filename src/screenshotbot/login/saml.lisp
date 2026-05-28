@@ -27,6 +27,8 @@
                 #:persistent-class)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:screenshotbot/model/user
+                #:single-company-user)
   (:export
    #:saml-auth-provider))
 (in-package :screenshotbot/login/saml)
@@ -136,13 +138,23 @@
       (setf (auth:session-value :sso-company) (saml-company saml))
       (hex:safe-redirect "/runs"))))
 
+(defvar *lock* (bt:make-lock))
+
+(defclass saml-user (single-company-user)
+  ()
+  (:metaclass persistent-class))
+
 (defmethod find-user-for-sso ((company company) email)
-  (loop for user in (roles:users-for-company company)
-        if (string-equal (auth:user-email user) email)
-          return user
-        finally
-           ;; TODO: create the new sso-user
-           (error "no existing user for ~a" email)))
+  (bt:with-lock-held (*lock*)
+    (loop for user in (roles:users-for-company company)
+          if (string-equal (auth:user-email user) email)
+            return user
+          finally
+          (let ((user (make-instance 'saml-user
+                                     :company company
+                                     :email email)))
+            (roles:ensure-has-role company user 'roles:standard-member)
+            (return user)))))
 
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.IdPMetadataParser"
   (parse-file-xml "parseFileXML")

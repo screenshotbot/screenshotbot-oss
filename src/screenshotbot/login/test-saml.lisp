@@ -8,13 +8,16 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/login/saml
+                #:find-user-for-sso
                 #:saml-auth-provider
                 #:authn-request-get-encoded-authn-request
                 #:make-authn-request
                 #:create-settings-builder-for-xml
                 #:parse-xml)
   (:import-from #:util/store/store
-                #:with-test-store))
+                #:with-test-store)
+  (:import-from #:screenshotbot/model/company
+                #:company))
 (in-package :screenshotbot/login/test-saml)
 
 
@@ -25,7 +28,8 @@
 
 (def-fixture state ()
   (with-test-store ()
-    (&body)))
+    (let ((company (make-instance 'company)))
+      (&body))))
 
 (test simple-parsing
   (with-fixture state ()
@@ -43,3 +47,8 @@
        (authn-request-get-encoded-authn-request
         (make-authn-request (create-settings-builder-for-xml self *xml*)))))))
 
+
+(test ensures-creates-new-saml-user
+  (with-fixture state ()
+    (is (not (null
+              (find-user-for-sso company "foo@gmail.com"))))))
