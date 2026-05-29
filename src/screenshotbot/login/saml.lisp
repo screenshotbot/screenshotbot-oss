@@ -32,6 +32,9 @@
   (:import-from #:core/installation/installation
                 #:*installation*
                 #:installation-domain)
+  (:import-from #:util/store/object-id
+                #:find-by-oid
+                #:object-with-oid)
   (:export
    #:saml-auth-provider))
 (in-package :screenshotbot/login/saml)
@@ -109,7 +112,7 @@
 
 
 (defclass saml-auth-provider (auth-provider
-                              store-object)
+                              object-with-oid)
   ((idp-metadata-url :initarg :idp-metadata-url
                      :reader idp-metadata-url)
    (metadata-xml :initform nil
@@ -339,8 +342,8 @@
     </a>
   </div>)
 
-(defhandler (nil :uri "/saml/:id/login") (id redirect)
-  (let ((saml (bknr.datastore:store-object-with-id (parse-integer id))))
+(defhandler (nil :uri "/saml/:oid/login") (oid redirect)
+  (let ((saml (find-by-oid oid)))
     (check-type saml saml-auth-provider)
     (hex:safe-redirect (signin-link saml (or redirect "/runs")))))
 
