@@ -91,7 +91,7 @@
   (maybe-redirect-for-company (report-company report))
   (with-login (:needs-login (not (can-public-view report))
                :allow-url-redirect t
-                       :company (report-company report))
+               :company (report-company report))
     (auth:can-view! report)
     (fn)))
 
