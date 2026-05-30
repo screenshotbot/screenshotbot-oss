@@ -14,6 +14,8 @@
                 #:taskie-page-title
                 #:taskie-list)
   (:import-from #:screenshotbot/login/saml
+                #:saml-auth-provider
+                #:fetch-metadata-xml
                 #:saml-entity-id
                 #:saml-auth-providers-for-company)
   (:import-from #:screenshotbot/login/common
@@ -24,7 +26,9 @@
                 #:simple-card-page)
   (:import-from #:util/form-errors
                 #:with-error-builder
-                #:with-form-errors))
+                #:with-form-errors)
+  (:import-from #:util/misc
+                #:not-null!))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -99,15 +103,37 @@
       </div>
     </simple-card-page>))
 
-(defun submit-sso-form (&key name idp-metadata)
+(defun submit-sso-form (&rest args &key name idp-metadata)
   (with-error-builder (:errors errors
                        :check check
                        :form-builder (sso-form)
                        :form-args (:name name :idp-metadata idp-metadata)
-                       :success (error "Unimpl"))
+                       :success (apply #'%create-saml args))
     (check :name
            (str:non-blank-string-p name)
-           "Name must not be empty")))
+           "Name must not be empty")
+    (check :idp-metadata
+           (str:non-blank-string-p idp-metadata)
+           "IdP Metadata URL must be provided. Please contact us if you need to provide an XML directly.")
+    (check
+     :idp-metadata
+     (ignore-errors (quri:uri idp-metadata))
+     "Invalid URI")
+    (check
+     :idp-metadata
+     (ignore-errors (fetch-metadata-xml idp-metadata))
+     "Could not fetch metadata URL, if this is behind an internal network please contact support@screenshotbot.io to help set it up")))
+
+(defun go-back ()
+  (hex:safe-redirect "/sso"))
+
+(auto-restart:with-auto-restart ()
+ (defun %create-saml (&key name idp-metadata)
+   (make-instance 'saml-auth-provider
+                  :company (not-null! (auth:current-company))
+                  :idp-metadata-url idp-metadata
+                  :name name)
+   (go-back)))
 
 (defun %new-sso ()
   (sso-form))
