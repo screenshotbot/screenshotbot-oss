@@ -14,6 +14,7 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:util/request
+                #:*engine*
                 #:http-request)
   (:import-from #:bknr.indices
                 #:indexed-class
@@ -140,13 +141,20 @@
   (get-idp-entity-id
    (create-settings-builder-for-xml (metadata-xml self))))
 
-
 (defmethod metadata-xml ((self saml-auth-provider))
   (or
    (%metadata-xml self)
-   (http-request
-    (idp-metadata-url self)
-    :want-string t)))
+   (fetch-metadata-xml (idp-metadata-url self))))
+
+(defmethod saml-external-request-engine (installation)
+  (warn "Using default request engine to request SAML metadata")
+  *engine*)
+
+(defun fetch-metadata-xml (url)
+  (http-request
+   url
+   :want-string t
+   :engine (saml-external-request-engine *installation*)))
 
 (lw-ji:define-java-constructor make-saml-response "com.onelogin.saml2.authn.SamlResponse")
 

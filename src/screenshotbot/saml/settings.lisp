@@ -21,7 +21,10 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:core/ui/simple-card-page
-                #:simple-card-page))
+                #:simple-card-page)
+  (:import-from #:util/form-errors
+                #:with-error-builder
+                #:with-form-errors))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -58,40 +61,57 @@
     </app-template>))
 
 (defun sso-form ()
-  <simple-card-page>
-    <div class= "card-header">
-    <h4 class= "card-title">
-      New SAML connection
-    </h4>
-    </div>
-
-    <div class= "mb-2" >
-      <label for= "name" class= "form-label">Friendly Name</label>
-      <div class= "text-muted">
-        This will only be used to distinguish between different authentication methods
+  (let ((action (nibble (name idp-metadata)
+                  (submit-sso-form :name name :idp-metadata idp-metadata))))
+    <simple-card-page form-action=action >
+      <div class= "card-header">
+        <h4 class= "card-title">
+          New SAML connection
+        </h4>
       </div>
-      <input type= "text" id= "name" name= "name" class= "form-control"  />
-    </div>
-    
-    <div class= "mb-2" >
-      <label for= "sp-metadata" class= "form-label">Service Provider EntityID / Metadata URL</label>
-      <div class= "text-muted">
-        Copy this into your Identity Provider
-      </div>      
-      <input type= "text" id= "sp-metadata" disabled= "disabled" class= "form-control"  value= (hex:make-full-url hunchentoot:*request* "/saml/metadata") />
-    </div>
 
-    <div class= "mb-2" >
-      <label for= "idp-metadata" class= "form-label">Identity Provider Metadata URL</label>
-      <input type= "text" name= "idp-metadata" id= "idp-metadata" class= "form-control"   placeholder= "https://idp.example.com/saml/metadata" />
-    </div>
-    
-    <div class= "card-footer">
-      <input type= "submit" class= "btn btn-primary" value= "Create" />
-    </div>
-  </simple-card-page>)
+      <div class= "mb-2" >
+        <label for= "name" class= "form-label">Friendly Name</label>
+        <div class= "text-muted">
+          This will only be used to distinguish between different authentication methods
+        </div>
+        <input type= "text" id= "name" name= "name" class= "form-control"  />
+      </div>
+      
+      <div class= "mb-2" >
+        <label for= "sp-metadata" class= "form-label">Service Provider EntityID / Metadata URL</label>
+        <div class= "text-muted">
+          Copy this into your Identity Provider
+        </div>      
+        <input type= "text" id= "sp-metadata" disabled= "disabled" class= "form-control"  value= (hex:make-full-url hunchentoot:*request* "/saml/metadata") />
+      </div>
+
+      <div class= "mb-2" >
+        <label for= "idp-metadata" class= "form-label">Identity Provider Metadata URL</label>
+        <input type= "text" name= "idp-metadata" id= "idp-metadata" class= "form-control"   placeholder= "https://idp.example.com/saml/metadata" />
+      </div>
+      
+      <div class= "card-footer">
+        <p class= "text-muted">
+          You will have an opportunity to test the connection after you create it
+        </p>
+        <input type= "submit" class= "btn btn-primary" value= "Create" />
+      </div>
+    </simple-card-page>))
+
+(defun submit-sso-form (&key name idp-metadata)
+  (with-error-builder (:errors errors
+                       :check check
+                       :form-builder (sso-form)
+                       :form-args (:name name :idp-metadata idp-metadata)
+                       :success (error "Unimpl"))
+    (check :name
+           (str:non-blank-string-p name)
+           "Name must not be empty")))
 
 (defun %new-sso ()
   (sso-form))
+
+
 
 
