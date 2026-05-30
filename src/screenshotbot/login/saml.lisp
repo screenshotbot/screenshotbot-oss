@@ -21,6 +21,7 @@
   (:import-from #:util/store/store
                 #:defindex)
   (:import-from #:util/store/fset-index
+                #:fset-set-index
                 #:fset-unique-index)
   (:import-from #:bknr.datastore
                 #:store-object
@@ -46,6 +47,10 @@
 (defindex +id-index+
   'fset-unique-index
   :slot-name 'id)
+
+(defindex +company-index+
+  'fset-set-index
+  :slot-name '%company)
 
 (defclass saml-cert (store-object)
   ((private-key :initarg :private-key
@@ -120,6 +125,8 @@
                  :reader %metadata-xml)
    (%company :initform nil
              :initarg :company
+             :index +company-index+
+             :index-reader saml-auth-providers-for-company
              :reader saml-company)
    (name :initarg :name
          :initform "generic-saml"
@@ -128,6 +135,11 @@
                        :reader expiration-seconds
                        :initform (* 20 3600)))
   (:metaclass persistent-class))
+
+(defmethod saml-entity-id ((self saml-auth-provider))
+  (get-idp-entity-id
+   (create-settings-builder-for-xml (metadata-xml self))))
+
 
 (defmethod metadata-xml ((self saml-auth-provider))
   (or

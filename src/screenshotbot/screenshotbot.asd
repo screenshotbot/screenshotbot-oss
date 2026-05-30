@@ -339,6 +339,10 @@
                  (:file "general")
                  (:file "security")
                  (:file "shares")))
+   (:module "saml"
+    :serial t
+    :if-feature (:and :lispworks :linux)
+    :components ((:file "settings")))
    (:module "admin"
     :serial t
     :components ((:file "core")
