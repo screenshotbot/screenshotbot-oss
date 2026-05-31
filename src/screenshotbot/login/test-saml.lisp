@@ -52,10 +52,10 @@
   (with-fixture state ()
    (let ((self (make-instance 'saml-auth-provider)))
      (finishes
-       (create-settings-builder-for-xml *xml*))
+       (create-settings-builder-for-xml company *xml*))
      (finishes
        (authn-request-get-encoded-authn-request
-        (make-authn-request (create-settings-builder-for-xml *xml*)))))))
+        (make-authn-request (create-settings-builder-for-xml company *xml*)))))))
 
 
 (test ensures-creates-new-saml-user
@@ -69,8 +69,8 @@
      (make-cert-pair)
      (has-typep 'string))
     (assert-that
-     (find-or-create-saml-cert)
+     (find-or-create-saml-cert company)
      (is-not-null))
     (is (eql
-         (find-or-create-saml-cert)
-         (find-or-create-saml-cert)))))
+         (find-or-create-saml-cert company)
+         (find-or-create-saml-cert company)))))

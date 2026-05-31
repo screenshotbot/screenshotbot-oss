@@ -53,11 +53,19 @@
   'fset-set-index
   :slot-name '%company)
 
+(defindex +cert-company-index+
+  'fset-unique-index
+  :slot-name '%company)
+
 (defclass saml-cert (store-object)
   ((private-key :initarg :private-key
                 :reader saml-private-key)
    (cert :initarg :public-cert
-         :reader saml-public-cert))
+         :reader saml-public-cert)
+   (%company :initarg :company
+             :reader saml-cert-company
+             :index +cert-company-index+
+             :index-reader saml-cert-for-company))
   (:metaclass persistent-class)
   (:documentation "The singleton private-key/cert used for SAML"))
 
@@ -90,19 +98,19 @@
      (uiop:read-file-string
       (path:catfile dir "sp.key")))))
 
-(defun make-new-saml-cert ()
+(defun make-new-saml-cert (company)
   (multiple-value-bind (cert key)
       (make-cert-pair)
     (make-instance 'saml-cert
+                   :company company
                    :public-cert cert
                    :private-key key)))
 
-(defun find-or-create-saml-cert ()
+(defun find-or-create-saml-cert (company)
   (bt:with-lock-held (*lock*)
     (or
-     (first
-      (bknr.datastore:store-objects-with-class 'saml-cert))
-     (make-new-saml-cert))))
+     (saml-cert-for-company company)
+     (make-new-saml-cert company))))
 
 (defclass relay-state (base-indexed-object)
   ((id :initarg :id
@@ -139,7 +147,9 @@
 
 (defmethod saml-entity-id ((self saml-auth-provider))
   (get-idp-entity-id
-   (create-settings-builder-for-xml (metadata-xml self))))
+   (create-settings-builder-for-xml
+    (saml-company self)
+    (metadata-xml self))))
 
 (defmethod metadata-xml ((self saml-auth-provider))
   (or
@@ -279,7 +289,7 @@
     (quri:render-uri uri)))
 
 
-(defun create-settings-builder-for-xml (xml)
+(defun create-settings-builder-for-xml (company xml)
   (let ((settings-map (cond
                         (xml
                          (make-hash-map (get-idp-settings xml)))
@@ -291,10 +301,10 @@
                   "https://staging.screenshotbot.io/sso/saml/callback")
     (java-map-put settings-map "onelogin.saml2.sp.x509cert"
                   (saml-public-cert
-                   (find-or-create-saml-cert)))
+                   (find-or-create-saml-cert company)))
     (java-map-put settings-map "onelogin.saml2.sp.privatekey"
                   (saml-private-key
-                   (find-or-create-saml-cert)))
+                   (find-or-create-saml-cert company)))
     (java-map-put settings-map "onelogin.saml2.sp.nameidformat"
                   "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress")
     (loop for key in '("onelogin.saml2.security.authnrequest_signed"
@@ -331,7 +341,7 @@
 (defmethod signin-link ((self saml-auth-provider) redirect)
   (let ((xml (metadata-xml self)))
     (let* ((url (quri:uri (parse-xml xml)))
-           (settings (create-settings-builder-for-xml xml))
+           (settings (create-settings-builder-for-xml (saml-company self) xml))
            (relay-state (make-instance 'relay-state
                                        :saml-auth-provider self
                                        :settings settings))
@@ -367,7 +377,11 @@
     (check-type saml saml-auth-provider)
     (hex:safe-redirect (signin-link saml (or redirect "/runs")))))
 
-(defhandler (nil :uri "/saml/metadata") ()
+(defhandler (nil :uri "/saml/entity/:oid/metadata") (oid)
   (setf (hunchentoot:content-type*) "application/xml")
-  (let ((settings (create-settings-builder-for-xml nil)))
-    (get-sp-metadata settings)))
+  (let ((company (util:find-by-oid oid)))
+    (check-type company company)
+    (let ((settings (create-settings-builder-for-xml
+                     (auth:current-company)
+                     nil)))
+      (get-sp-metadata settings))))

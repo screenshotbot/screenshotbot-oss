@@ -28,7 +28,9 @@
                 #:with-error-builder
                 #:with-form-errors)
   (:import-from #:util/misc
-                #:not-null!))
+                #:not-null!)
+  (:import-from #:util/store/object-id
+                #:oid))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -87,7 +89,7 @@
         <div class= "text-muted">
           Copy this into your Identity Provider
         </div>      
-        <input type= "text" id= "sp-metadata" disabled= "disabled" class= "form-control"  value= (hex:make-full-url hunchentoot:*request* "/saml/metadata") />
+        <input type= "text" id= "sp-metadata" disabled= "disabled" class= "form-control"  value= (hex:make-full-url hunchentoot:*request* "/saml/entity/:oid/metadata" :oid (oid (auth:current-company))) />
       </div>
 
       <div class= "mb-2" >
