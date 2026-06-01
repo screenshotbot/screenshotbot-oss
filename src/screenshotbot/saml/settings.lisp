@@ -66,7 +66,7 @@
       </table>
     </app-template>))
 
-(defun sso-form ()
+(defun sso-form (&key xml-instead)
   (let ((action (nibble (name idp-metadata)
                   (submit-sso-form :name name :idp-metadata idp-metadata))))
     <simple-card-page form-action=action >

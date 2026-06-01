@@ -146,10 +146,13 @@
   (:metaclass persistent-class))
 
 (defmethod saml-entity-id ((self saml-auth-provider))
-  (get-idp-entity-id
-   (create-settings-builder-for-xml
-    (saml-company self)
-    (metadata-xml self))))
+  (handler-case
+      (get-idp-entity-id
+       (create-settings-builder-for-xml
+        (saml-company self)
+        (metadata-xml self)))
+    (invalid-metadata-url ()
+      "Error loading metadata")))
 
 (defmethod metadata-xml ((self saml-auth-provider))
   (or
@@ -269,11 +272,18 @@
   (authn-request-get-encoded-authn-request "getEncodedAuthnRequest"))
 
 
+(define-condition invalid-metadata-url (error)
+  ())
+
 (defun get-idp-settings (xml)
   (uiop:with-temporary-file (:pathname p :stream s :direction :output :type "xml")
     (write-string xml s)
     (finish-output s)
-    (parse-remote-xml (make-java-url (format nil "file://~a" (namestring p))))))
+    (handler-case
+        (parse-remote-xml (make-java-url (format nil "file://~a" (namestring p))))
+      (lw-ji:java-method-exception (e)
+        (log:error "Got java error: ~a" e)
+        (error 'invalid-metadata-url)))))
 
 (defun parse-xml (xml)
   (java-map-get
