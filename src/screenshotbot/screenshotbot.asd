@@ -343,6 +343,9 @@
     :serial t
     :if-feature (:and :lispworks :linux)
     :components ((:file "settings")))
+   (:module "scim"
+    :serial t
+    :components ((:file "model")))
    (:module "admin"
     :serial t
     :components ((:file "core")
