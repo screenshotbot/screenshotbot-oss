@@ -10,6 +10,10 @@
   (:import-from #:screenshotbot/api/model
                 #:decode-json)
   (:import-from #:screenshotbot/scim/dto
+                #:name-family-name
+                #:name-given
+                #:external-user-name
+                #:name-formatted
                 #:external-user-user-name
                 #:external-user))
 (in-package :screenshotbot/scim/test-dto)
@@ -25,5 +29,14 @@
     (let ((obj (decode-json
                 (uiop:read-file-string (asdf:system-relative-pathname :screenshotbot "scim/sample-schema.json"))
                 'external-user)))
-      (is (equal "bjensen" (external-user-user-name obj))))))
+      (is (equal "bjensen" (external-user-user-name obj)))
+      (is (equal "Ms. Barbara J Jensen III"
+                 (name-formatted
+                  (external-user-name obj))))
+      (is (equal "Barbara"
+                 (name-given
+                  (external-user-name obj))))
+      (is (equal "Jensen"
+                 (name-family-name
+                  (external-user-name obj)))))))
 

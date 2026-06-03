@@ -10,6 +10,18 @@
                 #:ext-json-serializable-class))
 (in-package :screenshotbot/scim/dto)
 
+(defclass external-name ()
+  ((formatted :json-type :string
+              :json-key "formatted"
+              :reader name-formatted)
+   (given :json-type :string
+          :json-key "givenName"
+          :reader name-given)
+   (family-name :json-type :string
+                :json-key "familyName"
+                :reader name-family-name))
+  (:metaclass ext-json-serializable-class))
+
 (defclass external-user ()
   ((schemas :initform '(("urn:ietf:params:scim:schemas:core:2.0:User"
                          "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"))
@@ -17,7 +29,10 @@
             :json-key "schemas")
    (user-name :json-type :string
               :json-key "userName"
-              :reader external-user-user-name))
+              :reader external-user-user-name)
+   (name :json-type external-name
+         :json-key "name"
+         :reader external-user-name))
   (:metaclass ext-json-serializable-class))
 
 
