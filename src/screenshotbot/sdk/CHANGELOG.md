@@ -1,6 +1,12 @@
 # Changelog
 
-## 2.18.10 - 2026-04-27
+## 2.18.12 - 2026-06-03
+
+### Changed
+
+- Fixed parsing work-branch for GitHub actions when on the merge-queue (T2323)
+
+## 2.18.11 - 2026-04-27
 
 ### Added
 
