@@ -10,12 +10,19 @@
   (:import-from #:screenshotbot/api/model
                 #:decode-json)
   (:import-from #:screenshotbot/scim/dto
+                #:external-email-value
+                #:external-user-emails
                 #:name-family-name
                 #:name-given
                 #:external-user-name
                 #:name-formatted
                 #:external-user-user-name
-                #:external-user))
+                #:external-user)
+  (:import-from #:fiveam-matchers/core
+                #:is-equal-to
+                #:assert-that)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :screenshotbot/scim/test-dto)
 
 
@@ -38,5 +45,9 @@
                   (external-user-name obj))))
       (is (equal "Jensen"
                  (name-family-name
-                  (external-user-name obj)))))))
+                  (external-user-name obj))))
+      (assert-that (external-user-emails obj)
+                   (has-length 1))
+      (assert-that (external-email-value (first (external-user-emails obj)))
+                   (is-equal-to "barbara.jensen@example.com")))))
 

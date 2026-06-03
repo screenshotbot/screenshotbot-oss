@@ -22,9 +22,19 @@
                 :reader name-family-name))
   (:metaclass ext-json-serializable-class))
 
+(defclass external-email ()
+  ((value :initarg :value
+          :reader external-email-value
+          :json-type :string
+          :json-key "value")
+   (type :initarg :type
+         :reader external-email-typ
+         :json-type :string
+         :json-key "type"))
+  (:metaclass ext-json-serializable-class))
+
 (defclass external-user ()
-  ((schemas :initform '(("urn:ietf:params:scim:schemas:core:2.0:User"
-                         "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"))
+  ((schemas :initform '(("urn:ietf:params:scim:schemas:core:2.0:User"))
             :json-type (:list :string)
             :json-key "schemas")
    (user-name :json-type :string
@@ -32,7 +42,10 @@
               :reader external-user-user-name)
    (name :json-type external-name
          :json-key "name"
-         :reader external-user-name))
+         :reader external-user-name)
+   (emails :json-type (:list external-email)
+           :json-key "emails"
+           :reader external-user-emails))
   (:metaclass ext-json-serializable-class))
 
 
