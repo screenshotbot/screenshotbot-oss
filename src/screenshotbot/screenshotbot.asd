@@ -345,7 +345,9 @@
     :components ((:file "settings")))
    (:module "scim"
     :serial t
-    :components ((:file "model")))
+    :components ((:file "model")
+                 (:file "dto")
+                 (:file "users")))
    (:module "admin"
     :serial t
     :components ((:file "core")
@@ -435,6 +437,8 @@
                              (:file "test-login")
                              (:file "test-signup")
                              (:file "test-common")))
+               (:module "scim"
+                :components ((:file "test-dto")))
                (:file "test-invite")
                (:file "test-uname")
                (:module "model"

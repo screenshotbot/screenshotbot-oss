@@ -32,7 +32,12 @@
   ((%company :initarg :company)
    (%emails :initarg :emails
            :initform nil
-           :reader scim-user-emails)
+            :reader scim-user-emails)
+   (user-name :initarg :user-name
+              :initform nil
+              :reader scim-user-user-name
+              :documentation "This is a unique, transparent, 'ID' on the IdP side. It might be a
+username, it might be an email.")
    (%activep :initarg :activep
             :initform t
             :reader scim-user-active-p))

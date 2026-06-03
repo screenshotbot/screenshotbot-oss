@@ -1,0 +1,22 @@
+{
+  "schemas": [
+    "urn:ietf:params:scim:schemas:core:2.0:User",
+    "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User"
+  ],
+  "name": {
+    "formatted": "Ms. Barbara J Jensen III",
+    "familyName": "Jensen",
+    "givenName": "Barbara"
+  },
+  "active": true,
+  "emails": [
+    {
+      "value": "barbara.jensen@example.com"
+    }
+  ],
+  "userName": "bjensen",
+  "password": "changeit",
+  "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
+    "employeeNumber": "701984"
+  }
+}

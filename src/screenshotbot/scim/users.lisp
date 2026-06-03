@@ -35,6 +35,9 @@
 (defhandler (nil :uri "/scim/:oid/Users") (oid)
   (let ((company (util:find-by-oid oid)))
     (check-token! company)
-    (error "unimpl")))
+    (%post company (hunchentoot:raw-post-data))))
 
+
+(defun %post (company json)
+  )
 
