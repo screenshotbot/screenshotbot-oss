@@ -154,6 +154,28 @@
                                               ("GITHUB_REF" . "refs/pull/22/merge")))))
       (is (equal "https://github.com/tdrhq/fast-example/pull/22" (pull-request-url reader))))))
 
+(test github-reads-merge-head-ref-by-default
+  (cl-mock:with-mocks ()
+    (let ((reader (make-instance 'github-actions-env-reader
+                                 :overrides `(("GITHUB_EVENT_NAME" . "pull_request") ;; not actually read
+                                              ("GITHUB_HEAD_REF" . "foobar")
+                                              ("GITHUB_REF_NAME" . "neverused")
+                                              ("GITHUB_REPOSITORY" . "tdrhq/fast-example")
+                                              ("GITHUB_REF" . "refs/pull/22/merge")))))
+      (is (equal "foobar" (work-branch reader))))))
+
+(test github-reads-merge-queue-branch-name
+  (cl-mock:with-mocks ()
+    (let ((reader (make-instance 'github-actions-env-reader
+                                 :overrides `(("GITHUB_EVENT_NAME" . "merge_group") ;; not actually read
+                                              ("GITHUB_HEAD_REF" . "")
+                                              ("GITHUB_REPOSITORY" . "tdrhq/fast-example")
+                                              ;; TODO (T2324): delete this todo once we confirm that the output format
+                                              ;; of GITHUB_REF_NAME in prod
+                                              ("GITHUB_REF_NAME" . "gh-readonly-queue/main/pr-123-abc")
+                                              ("GITHUB_REF" . "refs/pull/22/merge")))))
+      (is (equal "gh-readonly-queue/main/pr-123-abc" (work-branch reader))))))
+
 (test remove-.git
   (is (equal "foo" (remove-.git "foo")))
   (is (equal "foo" (remove-.git "foo.git")))
@@ -282,3 +304,4 @@
     (is (equal "https://app.harness.io/builds/12345" (build-url reader)))
     (is (equal "https://github.com/org/repo" (repo-url reader)))
     (is (equal "https://github.com/org/repo/pulls/42" (pull-request-url reader)))))
+

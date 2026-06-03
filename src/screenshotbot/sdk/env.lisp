@@ -13,6 +13,8 @@
   (:import-from #:screenshotbot/sdk/git
                 #:git-message
                 #:git-repo)
+  (:import-from #:util/misc
+                #:s-or)
   (:shadow #:getenv)
   (:export
    #:make-env-reader
@@ -406,7 +408,10 @@ information is available, so we can't have complex logic rely on it."))
           (github-repo self)))
 
 (defmethod work-branch ((self github-actions-env-reader))
-  (getenv self "GITHUB_HEAD_REF"))
+  (s-or
+   (getenv self "GITHUB_HEAD_REF")
+   ;; On GitHub actions, if we're on a merge-queue run HEAD_REF won't be populated
+   (getenv self "GITHUB_REF_NAME")))
 
 (defclass teamcity-env-reader (base-env-reader)
   ()
