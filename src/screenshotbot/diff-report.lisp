@@ -168,6 +168,14 @@
               (fset:lookup compare-to (screenshot-hash (actual-item group-item))))
             (group-items group)))))
 
+(defun sort-group-items (group-items)
+  ;; Most likely this is already sorted in reverse order, but for now
+  ;; we'll just always sort it.
+  (sort
+   group-items
+   #'string<
+   :key #'group-item-subtitle))
+
 
 (defun make-groups (type items &key key subtitle (diff-report (error "must provide :diff-report")))
   (let ((res (make-hash-table :test #'equal)))
@@ -180,10 +188,11 @@
                                   :title key
                                   :diff-report diff-report
                                   :items
-                                  (loop for item in (gethash key res)
-                                        collect (make-instance 'group-item
-                                                               :subtitle (funcall subtitle item)
-                                                               :actual-item item))))
+                                  (sort-group-items
+                                   (loop for item in (gethash key res)
+                                         collect (make-instance 'group-item
+                                                                :subtitle (funcall subtitle item)
+                                                                :actual-item item)))))
      #'string<
      :key #'group-title)))
 (defun get-only-screenshot-name (screenshot run)

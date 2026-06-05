@@ -9,6 +9,7 @@
   (:import-from #:core/installation/installation
                 #:*installation*)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:assert-that
                 #:equal-to)
   (:import-from #:fiveam-matchers/has-length
@@ -20,6 +21,8 @@
                 #:test
                 #:with-fixture)
   (:import-from #:screenshotbot/diff-report
+                #:group-item-subtitle
+                #:group-items
                 #:diff-report-previous-run
                 #:diff-report-run
                 #:*cache*
@@ -50,6 +53,8 @@
                 #:channel)
   (:import-from #:util/store/store
                 #:with-test-store)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
   (:local-nicknames (#:diff-report
                      #:screenshotbot/diff-report)))
 (in-package :screenshotbot/test-diff-report)
@@ -173,6 +178,32 @@
                                      (make-screenshot :image img2 :name "foo--two"))))
            (diff-report (make-diff-report run1 run2)))
       (is (eql 1 (length (changes-groups diff-report)))))))
+
+(test items-in-a-group-are-sorted
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "foo--one")
+                                     (make-screenshot :image img :name "foo--two"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img2 :name "foo--one")
+                                     (make-screenshot :image img2 :name "foo--two"))))
+           (diff-report (make-diff-report run1 run2)))
+      (is (eql 1 (length (changes-groups diff-report))))
+      (assert-that (mapcar #'group-item-subtitle (group-items (first (changes-groups diff-report))))
+                   (contains "one" "two")))))
+
+(test items-in-a-group-are-sorted--reverse-order
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "foo--two")
+                                     (make-screenshot :image img :name "foo--one"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img2 :name "foo--two")
+                                     (make-screenshot :image img2 :name "foo--one"))))
+           (diff-report (make-diff-report run1 run2)))
+      (is (eql 1 (length (changes-groups diff-report))))
+      (assert-that (mapcar #'group-item-subtitle (group-items (first (changes-groups diff-report))))
+                   (contains "one" "two")))))
 
 (test grouping-not-grouped-with-different-separator
   (with-fixture state ()
