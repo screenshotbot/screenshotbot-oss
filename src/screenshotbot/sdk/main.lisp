@@ -71,6 +71,10 @@
   (:import-from #:screenshotbot/sdk/server-log-appender
                 #:flush-server-appender
                 #:make-server-log-appender)
+  (:import-from #:alexandria
+                #:assoc-value)
+  (:import-from #:util/misc
+                #:?.)
   (:export
    #:main))
 
@@ -123,7 +127,33 @@ SCREENSHOTBOT_API_HOSTNAME environment variable.")
 
 (defvar *api-key-info* "You can also use $SCREENSHOTBOT_API_KEY and $SCREENSHOTBOT_API_SECRET environment variable in CI.")
 
-(defun make-api-context (&key (env (make-env-reader)))
+(defun decode-hostname (config)
+  (with-open-file (stream config :direction :input)
+    (assoc-value
+     (json:decode-json stream)
+     :hostname)))
+
+(defun find-config-file (dir)
+  (declare (optimize (debug 3) (speed 0))) ;; no TCO
+  (let ((config (path:catfile dir ".screenshotbot")))
+    (cond
+      ((and
+        (path:-e config)
+        (not (path:-d config)))
+       config)
+      (t
+       (let ((parent (cl-fad:pathname-parent-directory dir)))
+         (cond
+           ((equal parent dir)
+            nil)
+           (t
+            (find-config-file  parent))))))))
+
+(defun read-config-hostname (dir)
+  (?. decode-hostname (find-config-file dir)))
+
+(defun make-api-context (&key (env (make-env-reader))
+                           (directory (uiop:getcwd)))
   (let ((key (or (emptify *api-key*)
                  (e:api-key env)))
         (secret (or (emptify *api-secret*)
@@ -136,7 +166,8 @@ SCREENSHOTBOT_API_HOSTNAME environment variable.")
                    :key key
                    :secret secret
                    :hostname (or (emptify *hostname*)
-                                 (emptify (e:api-hostname env))))))
+                                 (emptify (e:api-hostname env))
+                                 (emptify (read-config-hostname directory))))))
 
 (defun try-clingon (argv)
   (clingon:run (root/command) (cdr argv)))

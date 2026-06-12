@@ -10,6 +10,8 @@
   (:import-from #:cl-mock
                 #:with-mocks)
   (:import-from #:screenshotbot/sdk/main
+                #:find-config-file
+                #:decode-hostname
                 #:warn-when-obsolete-flags
                 #:*hostname*
                 #:make-api-context
@@ -26,6 +28,10 @@
                 #:contains-string)
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
+  (:import-from #:tmpdir
+                #:with-tmpdir)
+  (:import-from #:json
+                #:json-syntax-error)
   (:local-nicknames (#:a #:alexandria)
                     (#:flags #:screenshotbot/sdk/flags)
                     (#:sdk #:screenshotbot/sdk/sdk)
@@ -83,7 +89,9 @@
           (*api-secret* "bleh"))
       (let ((ctx (make-api-context
                   :env (make-instance 'env-reader
-                                      :overrides `((:screenshotbot_api_hostname . nil))))))
+                                      :overrides `((:screenshotbot_api_hostname . nil)))
+                  ;; don't read my local .screenshotbot config
+                  :directory #P"/")))
         (is (equal "https://api.screenshotbot.io"
                    (api-context:hostname ctx)))))))
 
@@ -164,3 +172,37 @@
           (*api-secret* "bar"))
       (finishes
         (make-api-context)))))
+
+(test decode-hostname
+  (with-fixture state ()
+    (with-tmpdir (dir)
+      (with-open-file (stream (path:catfile dir ".screenshotbot") :direction :output)
+        (format stream "{ \"hostname\":\"https://example.com\" }") )
+      (is
+       (equal
+        "https://example.com"
+        (decode-hostname (path:catfile dir ".screenshotbot")))))))
+
+(test decode-hostname-with-invalid-json
+  (with-fixture state ()
+    (with-tmpdir (dir)
+      (with-open-file (stream (path:catfile dir ".screenshotbot") :direction :output)
+        (format stream "{ \"hostname\":\"https://example.com\", }") )
+      (signals json-syntax-error
+       (decode-hostname (path:catfile dir ".screenshotbot"))))))
+
+(test doesnt-decode-a-directory-called-.screenshotbot
+  (with-fixture state ()
+    (with-tmpdir (dir)
+      (ensure-directories-exist (path:catdir dir ".screenshotbot/"))
+      (is (eql nil (find-config-file dir))))))
+
+(test finds-the-.screenshotbot-file
+  (with-fixture state ()
+    (with-tmpdir (dir)
+      (let ((test-dir (ensure-directories-exist (path:catdir dir "foo/bar/car/"))))
+        (is (equal  nil (find-config-file test-dir)))
+        (with-open-file (stream (path:catfile dir ".screenshotbot") :direction :output)
+          (format stream "{ \"hostname\":\"https://example.com\" }") )
+        (is (equal (path:catfile dir ".screenshotbot")
+                   (find-config-file test-dir)))))))
