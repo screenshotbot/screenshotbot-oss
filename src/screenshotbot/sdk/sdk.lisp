@@ -287,6 +287,7 @@ run-context that was created here."
 (defun run-context-to-dto (run-context screenshots &key periodic-job-p cleanp)
   (make-instance 'dto:run
                  :channel (run-context:channel run-context)
+                 :directory (run-context:run-directory run-context)
                  :screenshots screenshots
                  :metadata (run-context:run-context-metadata run-context)
                  :main-branch (run-context:main-branch run-context)

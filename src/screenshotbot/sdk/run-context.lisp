@@ -52,7 +52,8 @@
    #:main-branch-hash-internal
    #:valid-pull-request-url-p
    #:warn-invalid-pull-request
-   #:warn-invalid-pull-request-url)
+   #:warn-invalid-pull-request-url
+   #:run-directory)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:e #:screenshotbot/sdk/env)
                     (#:dto #:screenshotbot/api/model)                    
@@ -88,6 +89,11 @@
                  :reader main-branch
                  :json-type (or null :string)
                  :json-key "mainBranch")
+    (directory :initarg :directory
+               :initform nil
+               :reader run-directory
+               :json-type (or null :string)
+               :json-key "directory")
     (main-branch-hash :initarg :main-branch-hash
                       :initform nil
                       :reader main-branch-hash
@@ -442,6 +448,7 @@ pull-request looks incorrect."
    :phabricator-diff-id flags:*phabricator-diff-id*
    :channel flags:*channel*
    :merge-base flags:*merge-base-commit-hash*
+   :directory flags:*directory*
    :override-commit-hash flags:*override-commit-hash*
    :release-branch-regex flags:*release-branch-regex*
    :author flags:*author*
@@ -468,6 +475,7 @@ pull-request looks incorrect."
         (flags:*build-url* (build-url self))
         (flags:*gitlab-merge-request-iid* (gitlab-merge-request-iid self))
         (flags:*phabricator-diff-id* (phabricator-diff-id self))
+        (flags:*directory* (run-directory self))
         (flags:*channel* (channel self))
         (flags:*override-commit-hash* (override-commit-hash self))
         (flags:*compare-threshold* (compare-threshold self))
