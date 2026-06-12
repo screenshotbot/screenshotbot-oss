@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/api-context
+                #:decode-hostname
+                #:find-config-file
                 #:extract-hostname-from-secret
                 #:fetch-remote-information
                 #:base-api-context
@@ -17,7 +19,11 @@
                 #:secret
                 #:api-context)
   (:import-from #:core/api/model/api-key
-                #:make-encoded-secret))
+                #:make-encoded-secret)
+  (:import-from #:tmpdir
+                #:with-tmpdir)
+  (:import-from #:json
+                #:json-syntax-error))
 (in-package :screenshotbot/sdk/test-api-context)
 
 (util/fiveam:def-suite)
@@ -142,3 +148,37 @@
       ;; When key is provided, we don't extract, so secret stays as-is
       (is (equal full-secret (secret ctx))))))
 
+
+(test decode-hostname
+  (with-fixture state ()
+    (with-tmpdir (dir)
+      (with-open-file (stream (path:catfile dir ".screenshotbot") :direction :output)
+        (format stream "{ \"hostname\":\"https://example.com\" }") )
+      (is
+       (equal
+        "https://example.com"
+        (decode-hostname (path:catfile dir ".screenshotbot")))))))
+
+(test decode-hostname-with-invalid-json
+  (with-fixture state ()
+    (with-tmpdir (dir)
+      (with-open-file (stream (path:catfile dir ".screenshotbot") :direction :output)
+        (format stream "{ \"hostname\":\"https://example.com\", }") )
+      (signals json-syntax-error
+       (decode-hostname (path:catfile dir ".screenshotbot"))))))
+
+(test doesnt-decode-a-directory-called-.screenshotbot
+  (with-fixture state ()
+    (with-tmpdir (dir)
+      (ensure-directories-exist (path:catdir dir ".screenshotbot/"))
+      (is (eql nil (find-config-file dir))))))
+
+(test finds-the-.screenshotbot-file
+  (with-fixture state ()
+    (with-tmpdir (dir)
+      (let ((test-dir (ensure-directories-exist (path:catdir dir "foo/bar/car/"))))
+        (is (equal  nil (find-config-file test-dir)))
+        (with-open-file (stream (path:catfile dir ".screenshotbot") :direction :output)
+          (format stream "{ \"hostname\":\"https://example.com\" }") )
+        (is (equal (path:catfile dir ".screenshotbot")
+                   (find-config-file test-dir)))))))

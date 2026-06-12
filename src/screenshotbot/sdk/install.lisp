@@ -12,6 +12,7 @@
                 #:installation-url
                 #:encode-json)
   (:import-from #:screenshotbot/sdk/api-context
+                #:read-config-hostname
                 #:json-api-context
                 #:api-context
                 #:fetch-version)
@@ -105,6 +106,8 @@ Then paste the Token on that page below." (quri:merge-uris "/api-keys/cli" hostn
               :key :no-stdin))
    :handler (lambda (cmd)
               (with-sentry ()
-                (install-credentials (getopt cmd :hostname)
+                (install-credentials (or
+                                      (read-config-hostname)
+                                      (getopt cmd :hostname))
                                      :no-stdin (getopt cmd :no-stdin)
                                      :token (getopt cmd :token))))))

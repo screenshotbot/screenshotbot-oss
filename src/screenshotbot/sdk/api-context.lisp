@@ -22,6 +22,8 @@
   (:import-from #:screenshotbot/sdk/hostname
                 #:format-api-url
                 #:api-hostname)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:export
    #:api-context
    #:key
@@ -197,3 +199,29 @@ Returns NIL if the secret doesn't contain hostname information."
            :reader secret))
   (:metaclass ext-json-serializable-class)
   (:documentation "An API context that can be serialized"))
+
+(defun decode-hostname (config)
+  (with-open-file (stream config :direction :input)
+    (assoc-value
+     (json:decode-json stream)
+     :hostname)))
+
+(defun find-config-file (dir)
+  (declare (optimize (debug 3) (speed 0))) ;; no TCO
+  (let ((config (path:catfile dir ".screenshotbot")))
+    (cond
+      ((and
+        (path:-e config)
+        (not (path:-d config)))
+       config)
+      (t
+       (let ((parent (cl-fad:pathname-parent-directory dir)))
+         (cond
+           ((equal parent dir)
+            nil)
+           (t
+            (find-config-file  parent))))))))
+
+(defun read-config-hostname (&optional (dir (uiop:getcwd)))
+  (?. decode-hostname (find-config-file dir)))
+
