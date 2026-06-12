@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.18.13 - 2026-**-**
+
+### Changed
+
+- Read API hostname from .screenshotbot config file in the repo
+- Propagate the --directory argument to the server
+
 ## 2.18.12 - 2026-06-03
 
 ### Changed
