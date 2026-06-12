@@ -223,9 +223,11 @@
                 (immediate-promise nil))
                ((production-run-for channel :commit base-commit)
                 (immediate-promise it))
-               ((or
-                 (commit-finalized-p (channel-company channel) base-commit)
-                 (run-failed-on-commit-p channel base-commit))
+               ((commit-finalized-p (channel-company channel) base-commit)
+                (format-log logger :info "Commit was finalized, calling failover")
+                (failover))
+               ((run-failed-on-commit-p channel base-commit)
+                (format-log logger :info "Commit was marked as failed, calling failover")
                 (failover))
                ((>= retries 0)
                 (format-log logger :info "Waiting ~as before checking again for ~a"
@@ -234,6 +236,7 @@
                 (scheduled-future ((sleep-time retriever))
                   (lparallel:chain (produce base-commit (1- retries)))))
                (t
+                (format-log logger :info "We're out of retries, calling failover")
                 (failover)))))
     (produce base-commit 10)))
 
