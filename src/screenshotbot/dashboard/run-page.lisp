@@ -275,6 +275,7 @@
 
           <ul>
             <li>Run ID: ,(ignore-errors (recorder-run-id run)) </li>
+            <li>Creation time: ,(local-time:format-rfc1123-timestring  nil (created-at run)) </li>
             <li>Organization: ,(?. company-name (recorder-run-company run))</li>
             <li>Channel: <a href= (format nil "/channels/~a" (store-object-id channel)) >,(channel-name channel)</a> </li>            
             <li>Repo url: ,(github-repo run)</li>
