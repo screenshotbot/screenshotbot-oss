@@ -1,6 +1,8 @@
 
 Version
 
+* Version unchanged
+  - Added "directory" field to the run object
 * 21: /api/commit-graph/check-wants now accepts POST (for large SHA lists). See T2237.
 * 20: Added comparePixelTolerance to runs
 * Version unchanged

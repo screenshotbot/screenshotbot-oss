@@ -92,7 +92,8 @@
              #:build-info
              #:build-info-build-url
              #:build-info-repo-url
-             #:compare-pixel-tolerance))
+             #:compare-pixel-tolerance
+             #:run-directory))
 
 (in-package :screenshotbot/api/model)
 
@@ -354,6 +355,14 @@ information on runs.")
             :json-type :string
             :reader run-channel
             :documentation "The channel name used with this run")
+   (directory :initarg :directory
+              :json-key "directory"
+              :initform nil
+              :json-type (or null :string)
+              :reader run-directory
+              :documentation "The relative directory that was passed in. This might overlap with the
+channel name. This is only used when checking out previously uploaded
+screenshots. This can be left out safely if needed.")
    (screenshots :initarg :screenshots
                 :json-key "screenshots"
                 :json-type (:list screenshot)
