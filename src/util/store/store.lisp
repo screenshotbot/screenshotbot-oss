@@ -195,13 +195,26 @@ to the directory that was just snapshotted.")
   (:documentation "A store that's just configured with hostnames and group names, and
 uses sane defaults."))
 
+(defun parse-src (line)
+  (let ((parts (str:split " " line)))
+    (loop for c on parts
+          if (equal "src" (first c))
+            return (second c))))
+
+(defun get-local-ipv4 ()
+  (parse-src
+   (uiop:run-program
+    "ip -o route get 1.1.1.1"
+    :output 'string
+    :error-output *standard-output*)))
+
 (defun ec2-get-local-ipv4 ()
   (cond
     ((equal 0(nth-value 2 (uiop:run-program "which ec2metadata" :ignore-error-status t)))
-     ;; We're actually running in EC2
-     (str:trim
-      (uiop:run-program "ec2metadata --local-ipv4"
-                        :output 'string)))
+     (get-local-ipv4))
+    ((equal "gcp-machine" (ignore-errors
+                           (str:trim (uiop:read-file-string "/etc/screenshotbot-cloud-provider"))))
+     (get-local-ipv4))
     (t
      ;; At the time of writing, this probably means we're running in Vagrant.
      (log:warn "ec2metadata not available, using `ip addr` instead")
