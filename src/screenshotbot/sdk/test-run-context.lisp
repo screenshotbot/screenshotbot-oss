@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/run-context
+                #:run-directory
+                #:try-make-relative-to-git-root
                 #:git-repo
                 #:fix-commit-hash
                 #:run-context-dto
@@ -40,6 +42,8 @@
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex
                 #:contains-string)
+  (:import-from #:cl-fad
+                #:pathname-absolute-p)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
                     (#:git #:screenshotbot/sdk/git)
                     (#:dto #:screenshotbot/api/model)
@@ -394,3 +398,79 @@ making sure that the doc is giving a good example."
                                           :build-url ""
                                           :git-repo repo)))
           (is-false (run-context:repo-clean-p run-context)))))))
+
+(test try-make-relative-to-git-root
+  (with-fixture state ()
+    (is
+     (equal
+      #P"foo/__Snapshots__/"
+      (try-make-relative-to-git-root #P"foo/__Snapshots__/")))
+    (test-git:with-git-repo (repo)
+      (is
+       (equal
+        #P"foo/__Snapshots__/"
+        (try-make-relative-to-git-root
+         (path:catdir (git:repo-dir repo) #P"foo/__Snapshots__/"))))
+      (is
+       (equal
+        #P"__Snapshots__/"
+        (try-make-relative-to-git-root
+         (path:catdir (git:repo-dir repo) #P"__Snapshots__/")))))))
+
+(defun check-absolute! (pathname)
+  (assert (pathname-absolute-p pathname))
+  pathname)
+
+(test try-make-relative-to-git-root--works-for-files-even-though-we-dont-need-it
+  "Just to make the code a bit robust against bugs, and missing trailing slashes"
+  (with-fixture state ()
+    (test-git:with-git-repo (repo)
+      (is
+       (equal
+        #P"foo/__Snapshots__"
+        (try-make-relative-to-git-root
+         (check-absolute!
+          (path:catfile (git:repo-dir repo) #P"foo/__Snapshots__")))))
+      (is
+       (equal
+        #P"a/b/c/d/__Snapshots__"
+        (try-make-relative-to-git-root
+         (check-absolute!
+          (path:catfile (git:repo-dir repo) #P"a/b/c/d/__Snapshots__"))))))))
+
+(test try-make-relative-to-git-root--but-no-git-root
+  "Just to make the code a bit robust against bugs, and missing trailing slashes"
+  (with-fixture state ()
+    (is
+     (equal
+      nil
+      (try-make-relative-to-git-root
+       #P"/tmp/foo/__Snapshots__/")))))
+
+(test try-make-relative-to-git-root--edge-cases
+  (with-fixture state ()
+    (is (equal nil (try-make-relative-to-git-root #P"/")))
+    (test-git:with-git-repo (repo)
+      (is
+       (equal ""
+              (namestring
+               (try-make-relative-to-git-root
+                (check-absolute! (path:catdir (git:repo-dir repo) "./")))))))))
+
+(test run-directory-happy-path
+  (with-fixture state ()
+    (test-git:with-git-repo (repo)
+      (let ((run-context (make-instance
+                          'run-context
+                          :directory
+                          (check-absolute!
+                           (path:catdir (git:repo-dir repo) "foo/bar/__Snapshots__/")))))
+        (is (equal "foo/bar/__Snapshots__/"
+                   (run-directory run-context))))
+      (let ((run-context (make-instance
+                          'run-context
+                          :directory
+                          (check-absolute!
+                           (path:catfile (git:repo-dir repo) "foo/bar/__Snapshots__")))))
+        (is (equal "foo/bar/__Snapshots__"
+                   (run-directory run-context)))))))

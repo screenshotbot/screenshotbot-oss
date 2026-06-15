@@ -484,3 +484,49 @@ pull-request looks incorrect."
         (flags:*shard* (format-shard-spec (shard-spec self))))
     (fn)))
 
+(defmethod run-directory :around ((self run-context))
+  (let ((dir (call-next-method)))
+    (when dir
+      (namestring (try-make-relative-to-git-root (pathname dir))))))
+
+(defun find-breakpoint (absolute relative)
+  "We keep walking up absolute until absolute/.git exists, in which case we return relative"
+  (declare (optimize (debug 3) (speed 0))) ;; no TCO for inifinite loop detection
+  (cond
+    ((path:-d (path:catdir absolute ".git/"))
+     relative)
+    (t
+     (let ((next (car (last (pathname-directory absolute))))
+           (new-absolute (cl-fad:pathname-parent-directory absolute)))
+       (cond
+         ((and (stringp next)
+               (not (equal new-absolute absolute)))
+          (find-breakpoint
+           new-absolute
+           (make-pathname
+            :directory `(:relative ,next ,@(cdr (pathname-directory relative)))
+            :name (pathname-name relative)
+            :type (pathname-type relative)
+            :defaults relative)))
+         (t
+          (log:warn "Could not determine relative pathname to git root")
+          nil))))))
+
+
+(defun try-make-relative-to-git-root (pathname)
+  ;; We want to make this relative to the git root
+  (let ((pathname (cl-fad:canonical-pathname pathname)))
+   (cond
+     ((cl-fad:pathname-absolute-p pathname)
+      (find-breakpoint
+       (make-pathname
+        :name nil
+        :type nil
+        :defaults pathname)
+       (make-pathname
+        :directory `(:relative)
+        :name (pathname-name pathname)
+        :type (pathname-type pathname)
+        :defaults pathname)))
+     (t
+      pathname))))
