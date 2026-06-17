@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.18.14 - 2026-06-17
+
+### Changes
+
+- Send the relative directory, not absolute directory (T2329)
+
 ## 2.18.13 - 2026-06-12
 
 ### Changed
