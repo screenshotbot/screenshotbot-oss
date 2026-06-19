@@ -44,6 +44,8 @@
                 #:contains-string)
   (:import-from #:cl-fad
                 #:pathname-absolute-p)
+  (:import-from #:tmpdir
+                #:with-tmpdir)
   (:local-nicknames (#:run-context #:screenshotbot/sdk/run-context)
                     (#:git #:screenshotbot/sdk/git)
                     (#:dto #:screenshotbot/api/model)
@@ -474,3 +476,15 @@ making sure that the doc is giving a good example."
                            (path:catfile (git:repo-dir repo) "foo/bar/__Snapshots__")))))
         (is (equal "foo/bar/__Snapshots__"
                    (run-directory run-context)))))))
+
+(test run-directory-when-no-relative-path
+  (with-fixture state ()
+    (with-tmpdir (dir)
+     (let ((run-context (make-instance
+                         'run-context
+                         :directory
+                         (check-absolute!
+                          (ensure-directories-exist
+                           (path:catdir dir "foo/bar/__Snapshots__/"))))))
+       (is (equal nil
+                  (run-directory run-context)))))))

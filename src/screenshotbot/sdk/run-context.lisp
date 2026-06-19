@@ -487,7 +487,7 @@ pull-request looks incorrect."
 (defmethod run-directory :around ((self run-context))
   (let ((dir (call-next-method)))
     (when dir
-      (namestring (try-make-relative-to-git-root (pathname dir))))))
+      (?. namestring (try-make-relative-to-git-root (pathname dir))))))
 
 (defun find-breakpoint (absolute relative)
   "We keep walking up absolute until absolute/.git exists, in which case we return relative"
