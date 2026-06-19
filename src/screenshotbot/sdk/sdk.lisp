@@ -559,20 +559,6 @@ is used up, we update md5-to-response to remove that upload URL."
            appending (recursive-directories d))
    (list directory)))
 
-(defun get-relative-path (dir parent)
-  (let ((dir-parts (pathname-directory dir))
-        (parent-parts (pathname-directory parent)))
-    (log:debug "got parts: ~s ~s" parent-parts dir-parts)
-    (assert (equal parent-parts
-                   (subseq dir-parts 0 (length parent-parts))))
-    (let ((res (make-pathname
-                :directory
-                `(:relative ,@(subseq dir-parts (length parent-parts)))
-                :defaults #P"./")))
-      (log:debug "Relative path parts: ~S" (pathname-directory res))
-      (log:debug "Relative path is: ~S" res)
-      res)))
-
 (defun git-repo ()
   (let ((root (ignore-errors (git-root))))
     (cond

@@ -59,7 +59,6 @@
                 #:put-run-with-run-context
                 #:empty-run-error
                 #:find-existing-images
-                #:get-relative-path
                 #:keyword-except-md5
                 #:make-bundle
                 #:make-directory-run
@@ -138,13 +137,6 @@
          (let ((*metadata* (namestring metadata)))
            (is (typep (car (image-bundles (make-bundle)))
                       'directory-image-bundle))))))))
-
-(test get-relative-path
-  (is (equal #P "foo/"
-             (get-relative-path #P "/bar/car/foo/" "/bar/car/")))
-  (is (equal #P "foo/dar/"
-             (get-relative-path #P "/bar/car/foo/dar/" "/bar/car/"))))
-
 
 (hunchentoot:define-easy-handler (get-md5-sum :uri "/put" :acceptor-names '(test-acceptor)) ()
   (log:info "Running fake PUT")
