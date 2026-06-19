@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.18.15 - 2026-06-19
+
+### Changes
+
+- Fix crash in from previous release, affected some specific users (T2330)
+
+
 ## 2.18.14 - 2026-06-17
 
 ### Changes
