@@ -21,7 +21,7 @@ jobs:
       - run:
           name: build-cli
           command: |
-            sbcl --script scripts/build-cli.lisp
+            sbcl --dynamic-space-size 8192 --script scripts/build-cli.lisp
       - run:
           name: Upload assets for Screenshots
           command: |
@@ -38,7 +38,7 @@ jobs:
           name: Launch Screenshotbot
           command: |
             mkdir -p ~/.config/screenshotbot/object-store/current/
-            sbcl --script launch.lisp --verify-store
+            sbcl --dynamic-space-size 8192 --script launch.lisp --verify-store
 
   build_cli:
     docker:
@@ -50,7 +50,7 @@ jobs:
       - run:
           name: Build CLI
           command: |
-            sbcl --script scripts/build-cli.lisp
+            sbcl --dynamic-space-size 8192 --script scripts/build-cli.lisp
 
 
 workflows:
