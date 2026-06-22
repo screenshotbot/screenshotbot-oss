@@ -36,7 +36,7 @@
                :util/logger
                #+ (and bknr.cluster (not :screenshotbot-oss))
                :cluster
-               :core.config/api
+               :core.config
                :util.store/raft-state
                :lparallel
                :zip
