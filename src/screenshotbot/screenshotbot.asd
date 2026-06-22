@@ -691,5 +691,6 @@
 (defsystem :screenshotbot/all
   :serial t
   :depends-on (:screenshotbot
+               :screenshotbot.insights
                :screenshotbot/replay
                :screenshotbot.migrations))
