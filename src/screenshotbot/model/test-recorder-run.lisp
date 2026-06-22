@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-directory
                 #:recorder-run-company
                 #:tx-populate-run-id
                 #:recorder-run-id
@@ -564,3 +565,12 @@
                          `((2 . ,run2)))
            (externalized-slot-value company '%r::run-id-map))))))
 
+
+(test recorder-run-directory
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :company company
+                  :screenshots nil)))
+      (is (eql nil (recorder-run-directory run1)))
+      (setf (recorder-run-directory run1) "/foo/bar/")
+      (is (equal "/foo/bar/" (recorder-run-directory run1))))))

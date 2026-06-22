@@ -42,6 +42,7 @@
   (:import-from #:screenshotbot/model/screenshot-map
                 #:make-screenshot-map)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-directory
                 #:run-id-to-run-map
                 #:shard-key
                 #:shard-screenshots
@@ -482,11 +483,9 @@ computed differently if we're using sharding."
                         :screenshots screenshots
                         :metadata
                         (acons
-                         "directory" (dto:run-directory run)
-                         (acons
-                          "client-version" (when (boundp 'hunchentoot:*request*)
-                                             (hunchentoot:header-in* :x-client-version))
-                          (parse-metadata (dto:run-metadata run))))
+                         "client-version" (when (boundp 'hunchentoot:*request*)
+                                            (hunchentoot:header-in* :x-client-version))
+                         (parse-metadata (dto:run-metadata run)))
                         :commit-hash (dto:run-commit run)
                         :author (dto:run-author run)
                         :create-github-issue-p (dto:should-create-github-issue-p run)
@@ -521,6 +520,7 @@ computed differently if we're using sharding."
      company
      :screenshot
      (length screenshots))
+    (setf (recorder-run-directory recorder-run) (dto:run-directory run))
     (with-transaction ()
       (setf (channel-branch channel) (dto:main-branch run)))
     (with-transaction ()

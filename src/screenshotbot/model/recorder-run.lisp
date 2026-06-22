@@ -951,3 +951,10 @@ only run on a REPL."
 (defun runs-for-company (company)
   (warn "runs-for-company being called, this is slow and should not be used in production")
   (fset:range (run-id-to-run-map company)))
+
+(defun recorder-run-directory (company)
+  "The directory on the client where this is stored"
+  (externalized-slot-value company 'relative-directory))
+
+(defun (setf recorder-run-directory) (value company)
+  (setf (externalized-slot-value company 'relative-directory) value))
