@@ -11,5 +11,5 @@ FROM magick_base AS builder
 
 WORKDIR /app
 
-ENTRYPOINT ["sbcl", "--script", "launch.lisp"]
+ENTRYPOINT ["sbcl", "--dynamic-space-size", "8192", "--script", "launch.lisp"]
 CMD ["--object-store", "/data/", "--start-slynk", "--slynk-port", "4005", "--slynk-loopback-interface", "0.0.0.0"]
