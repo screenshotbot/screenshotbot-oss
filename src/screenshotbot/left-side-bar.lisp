@@ -79,6 +79,9 @@
   nil)
 
 (defmethod documentation-url (installation)
+  #+screenshotbot-oss
+  "https://screenshotbot.io/documentation"
+  #-screenshotbot-oss
   "/documentation")
 
 (defmethod render-menu-items (installation &key user company script-name)
