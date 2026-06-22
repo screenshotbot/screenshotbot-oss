@@ -25,12 +25,19 @@
 
 (named-readtables:in-readtable markup:syntax)
 
+(defun make-admin-on-company ()
+  (roles:ensure-has-role (auth:current-company)
+                         (auth:current-user)
+                         'roles:owner))
+
 (defun finish-self-promotion (secret-file)
   (cond
     ((path:-e secret-file)
      (delete-file secret-file)
      (with-transaction ()
        (setf (adminp (current-user)) t))
+     (make-admin-on-company)
+
      <app-template>
        You're now a site admin!
      </app-template>)
