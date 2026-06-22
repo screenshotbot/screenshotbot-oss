@@ -40,6 +40,12 @@ have a script that will help you set it up in your cloud.
 
 See [this wiki page](https://github.com/screenshotbot/screenshotbot-oss/wiki/Quick-installation-in-the-cloud) for details.
 
+## Cloud Marketplace
+
+We provide support and the ability to deploy instantly through [AWS
+Marketplace](https://aws.amazon.com/marketplace/pp/prodview-w3zl3gheazmbk) and [Google Cloud Marketplace](https://console.cloud.google.com/marketplace/product/screenshotbot-public/screenshotbot-enterprise). We think this would be the
+easiest route for you if you need self-hosted, and it helps fund our work.
+
 ## Configuration
 
 Screenshotbot has integrations with various external tools,
