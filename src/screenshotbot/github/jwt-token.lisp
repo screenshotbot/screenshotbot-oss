@@ -10,9 +10,12 @@
                 #:*root*)
   (:import-from #:util/request
                 #:http-request)
+  (:import-from #:alexandria
+                #:assoc-value)
   (:export
    #:github-request
-   #:github-create-jwt-token))
+   #:github-create-jwt-token)
+  (:local-nicknames (#:plugin #:screenshotbot/github/plugin)))
 (in-package :screenshotbot/github/jwt-token)
 
 
@@ -88,3 +91,15 @@
                :message s
                :url url))
       (json:decode-json-from-string s))))
+
+(defmethod plugin:fetch-app-name ((self plugin:github-plugin))
+  "Fetch the app name from the server instead of what's stored locally"
+  (let ((jwt-token (github-create-jwt-token
+                    :app-id (plugin:app-id self)
+                    :private-key (plugin:private-key self))))
+    (assoc-value
+     (github-request "/app"
+                     :jwt-token jwt-token)
+     :slug)))
+
+

@@ -14,6 +14,8 @@
   (:import-from #:screenshotbot/installation
                 #:find-plugin
                 #:installation)
+  (:import-from #:util/misc
+                #:or-setf)
   (:export
    #:github-plugin
    ;; todo: separate these to
@@ -23,12 +25,17 @@
    #:app-name
    #:webhook-secret
    #:webhook-relays
-   #:verification-oauth-provider))
+   #:verification-oauth-provider
+   #:fetch-app-name))
 (in-package :screenshotbot/github/plugin)
 
 (defclass github-plugin (plugin)
   ((app-name :initarg :app-name
-             :accessor app-name)
+             :initform nil
+             :accessor %app-name
+             :documentation "The application name, this is only used to construct an installation
+URL to redirect to. For historical reasons, we keep this here, but you
+don't need to provide it. We can automatically fetch this.")
    (app-id :initarg :app-id
            :accessor app-id)
    (private-key :initarg :private-key
@@ -68,3 +75,11 @@ over the instance and it's only used by people you know.")
 
 (defun github-plugin (&key (installation (installation)))
   (find-plugin installation 'github-plugin))
+
+(defgeneric fetch-app-name (github-plugin)
+  (:documentation "Implemented in jwt-token"))
+
+(defmethod app-name ((self github-plugin))
+  (or-setf
+   (%app-name self)
+   (fetch-app-name self)))
