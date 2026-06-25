@@ -820,14 +820,12 @@ the slots are read from the snapshot and ignored."
       (encode-current-object-id stream)
       (funcall map-store-objects
                (lambda (object)
-                 (when (subtypep (type-of object) 'store-object)
-                   (encode-create-object class-layouts object stream)))))
+                 (encode-create-object class-layouts object stream))))
 
     (let ((objects))
       (funcall map-store-objects
                (lambda (object)
-                 (when (subtypep (type-of object) 'store-object)
-                   (push object objects))))
+                 (push object objects)))
 
       ;; Will return a lambda!
       (encode-object-slots subsystem class-layouts (nreverse objects) snapshot-pathname))))
