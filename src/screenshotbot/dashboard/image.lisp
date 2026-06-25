@@ -38,6 +38,7 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:magick-exception
                 #:screenshotbot-resize
                 #:magick-crop-image
                 #:save-wand-to-file
@@ -379,6 +380,8 @@ right region within that.
                                                                      (no-image-uploaded-yet ()
                                                                        "webp")
                                                                      (invalid-image ()
+                                                                       "bin")
+                                                                     (magick-exception ()
                                                                        "bin"))))
                         :ts ts
                         :signature signature)))
