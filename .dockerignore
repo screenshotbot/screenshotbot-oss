@@ -23,8 +23,6 @@ analytics-log-file.log
 *.lx64fsl
 .git
 buck-out
-quicklisp
-src
 local-projects
 tools
 log
