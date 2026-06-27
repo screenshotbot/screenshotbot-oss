@@ -16,6 +16,7 @@
   (:import-from #:screenshotbot/user-api
                 #:current-company)
   (:import-from #:screenshotbot/api/core
+                #:api-error
                 #:defapi)
   (:import-from #:screenshotbot/model/batch
                 #:finalize-batch
@@ -35,6 +36,8 @@
                                 :use-yason t) ()
   (assert (current-company))
   (let ((input (%parse-body)))
+    (unless (dto:finalized-commit-hash input)
+      (api-error "`commit` field not present"))
     (let ((finalized-commit (find-or-create-finalized-commit
                              (current-company)
                              (dto:finalized-commit-hash input))))

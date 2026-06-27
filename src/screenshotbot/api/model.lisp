@@ -244,6 +244,7 @@ is computed on the CLI via a regex.")
        :initform nil
        :json-key "id")
    (commit :initarg :commit
+           :initform nil
            :json-key "commit"
            :json-type (or null :string)
            :reader finalized-commit-hash))
