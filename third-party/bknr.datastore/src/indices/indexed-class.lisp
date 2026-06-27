@@ -305,7 +305,17 @@ also index subclasses of the class to which the slot belongs, default is T")
 ;;; koennen wir leider nicht uebernehmen.
 
 (defmethod compute-slots ((class indexed-class))
-  (call-next-method))
+  (let* ((normal-slots (call-next-method))
+         ;; old, unused slot!
+         (destroyed-p-slot #.`(make-instance
+                               'index-effective-slot-definition
+                               :name 'destroyed-p
+                               :initform nil
+                               :class class
+                               #+cmu
+                               ,@'(:readers nil :writers nil)
+                               :initfunction #'(lambda () nil))))
+    (cons destroyed-p-slot normal-slots)))
 
 (defvar *indexed-class-override* nil)
 
