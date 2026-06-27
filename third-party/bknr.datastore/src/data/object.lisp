@@ -827,10 +827,7 @@ the slots are read from the snapshot and ignored."
       (with-transaction (:prepare-for-snapshot)
         (funcall map-store-objects #'prepare-for-snapshot))
       (encode-current-object-id stream)
-      (encode-class-layouts class-layouts stream :map-store-objects map-store-objects)
-      (funcall map-store-objects
-               (lambda (object)
-                 (encode-create-object class-layouts object stream))))
+      (encode-class-layouts class-layouts stream :map-store-objects map-store-objects))
 
     (let ((objects))
       (funcall map-store-objects
@@ -838,7 +835,19 @@ the slots are read from the snapshot and ignored."
                  (push object objects)))
 
       ;; Will return a lambda!
-      (encode-object-slots subsystem class-layouts (nreverse objects) snapshot-pathname))))
+      (let ((objects (nreverse objects)))
+        (let ((finish-encoding
+                (encode-object-slots subsystem class-layouts objects snapshot-pathname)))
+          (lambda ()
+            (with-open-file (stream snapshot-pathname
+                                    :direction :output
+                                    :element-type '(unsigned-byte 8)
+                                    :if-exists :append)
+              (mapc
+               (lambda (object)
+                (encode-create-object class-layouts object stream))
+               objects))
+            (funcall finish-encoding)))))))
 
 (defvar *crash-output-stream* t)
 
