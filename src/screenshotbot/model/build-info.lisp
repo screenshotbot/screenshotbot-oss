@@ -38,7 +38,8 @@
                :accessor build-info-repo-url))
     (:metaclass persistent-class)
     (:class-indices (company-build-url-index
-                     :index +build-url-index-v2+))
+                     :index +build-url-index-v2+
+                     :slots (company build-url)))
     (:documentation "On some CI systems (Xcode cloud!) we might need to store some
 information across steps, because it might not be available in a
 future step. This is just a way of storing that information.")))

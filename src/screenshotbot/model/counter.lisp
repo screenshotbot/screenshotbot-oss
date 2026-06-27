@@ -35,7 +35,8 @@
    (next-value :initarg :next-value
                :initform 1))
   (:class-indices (counter-index
-                   :index +counter-index+))
+                   :index +counter-index+
+                   :slots (%company %name)))
   (:metaclass persistent-class))
 
 (deftransaction tx-next-counter (company name)

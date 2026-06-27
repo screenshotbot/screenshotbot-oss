@@ -46,7 +46,8 @@
                   :documentation "All the IP addresses this has been accessed from. This is a transient
 slot and is not stored to disk, so we don't need to hash the IP
 addresses."))
-    (:class-indices (3d-coords :index +lookup-index+))
+    (:class-indices (3d-coords :index +lookup-index+
+                               :slots (%date %user %company)))
     (:metaclass persistent-class)))
 
 
