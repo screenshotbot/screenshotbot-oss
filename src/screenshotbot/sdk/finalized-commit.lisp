@@ -35,6 +35,8 @@
          (commit (or
                   commit
                   (current-commit repo))))
+    (when (str:emptyp commit)
+      (error "This command must be run inside a Git repository (alternatively run `finalize --commit commit-hash`)"))
     (sdk:request api-context
                  "/api/finalized-commit"
                  :method :post
