@@ -3,6 +3,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:bknr.datastore
+                #:maybe-encode-class-layout
                 #:*crash-output-stream*
                 #:persistent-effective-slot-definition
                 #:%id-cache
@@ -451,13 +452,14 @@
         (error 'fake-error)))))
 
 
-(defdstest encode-create-object-updates-the-class-layouts ()
+(defdstest maybe-encode-class-layout-updates-the-class-layouts ()
   (let ((class-layouts (make-hash-table)))
     (let ((stream (flex:make-in-memory-output-stream)))
-      (encode-create-object class-layouts
-                            ;; the class-name doesn't matter here
-                            (make-instance 'object-with-init)
-                            stream)
+      (let ((object (make-instance 'object-with-init)))
+        (maybe-encode-class-layout
+         class-layouts
+         object
+         stream))
       (assert-that
        (alexandria:hash-table-keys class-layouts)
        (contains (find-class 'object-with-init)))

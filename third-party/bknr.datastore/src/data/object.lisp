@@ -478,7 +478,7 @@ bound, encode 'bknr.datastore::unbound."
                     'unbound)
                 stream)))))
 
-(defun encode-create-object (class-layouts object stream)
+(defun maybe-encode-class-layout (class-layouts object stream)
   (let* ((class (class-of object))
          (layout (gethash class class-layouts)))
     (unless layout
@@ -493,7 +493,11 @@ bound, encode 'bknr.datastore::unbound."
                                             (store-object-persistent-slots object)))
                                    #'string< :key #'symbol-name)))
       (encode-layout layout class stream)
-      (setf (gethash class class-layouts) layout))
+      (setf (gethash class class-layouts) layout))))
+
+(defun encode-create-object (class-layouts object stream)
+  (let* ((class (class-of object))
+         (layout (gethash class class-layouts)))
     (%write-tag #\O stream)
     (%encode-integer (class-layout-id layout) stream)
     (%encode-integer (store-object-id object) stream)))
@@ -803,6 +807,11 @@ the slots are read from the snapshot and ignored."
                     (when slot
                       (relaxed-object-reference-slot-p slot)))))))
 
+(defun encode-class-layouts (class-layouts stream &key map-store-objects)
+  (funcall map-store-objects
+           (lambda (object)
+             (maybe-encode-class-layout class-layouts object stream))))
+
 (defun snapshot-subsystem-helper (subsystem snapshot-pathname
                                   &key (map-store-objects #'map-store-objects))
   (let ((class-layouts
@@ -818,6 +827,7 @@ the slots are read from the snapshot and ignored."
       (with-transaction (:prepare-for-snapshot)
         (funcall map-store-objects #'prepare-for-snapshot))
       (encode-current-object-id stream)
+      (encode-class-layouts class-layouts stream :map-store-objects map-store-objects)
       (funcall map-store-objects
                (lambda (object)
                  (encode-create-object class-layouts object stream))))
