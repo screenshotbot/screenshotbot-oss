@@ -242,6 +242,16 @@
                    :screenshots (list
                                  (make-screenshot :image img1 :name "foo")))))))
 
+(test run-to-dto-adds-directory
+  (with-fixture state ()
+    (let* ((run (make-recorder-run
+                 :company company
+                 :channel (find-or-create-channel company "foo")
+                 :screenshots nil
+                 :directory "/foo/bar/"))
+           (dto (run-to-dto run)))
+      (is (equal "/foo/bar/" (dto:run-directory dto))))))
+
 (test run-to-dto-has-uri
   (with-fixture state ()
     (assert-that

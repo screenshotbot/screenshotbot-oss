@@ -214,7 +214,8 @@
                  :merge-base (recorder-run-merge-base run)
                  :channel (?. channel-name (recorder-run-channel run))
                  :tags (recorder-run-tags run)
-                 :pull-request (pull-request-url run)))
+                 :pull-request (pull-request-url run)
+                 :directory (recorder-run-directory run)))
 
 (defapi (api-run-put :uri "/api/run" :method :put :use-yason t) ()
   (let ((body (hunchentoot:raw-post-data :force-text t)))
