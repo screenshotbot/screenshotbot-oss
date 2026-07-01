@@ -575,6 +575,14 @@
       (setf (recorder-run-directory run1) "/foo/bar/")
       (is (equal "/foo/bar/" (recorder-run-directory run1))))))
 
+(test recorder-run-directory-set-with-directory-keyword
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :company company
+                  :screenshots nil
+                  :directory "/foo/bar/")))
+      (is (equal "/foo/bar/" (recorder-run-directory run1))))))
+
 
 (test make-recorder-run-should-not-take-stupid-args
   (with-fixture state ()

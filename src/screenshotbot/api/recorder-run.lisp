@@ -512,6 +512,7 @@ computed differently if we're using sharding."
                         :github-repo (dto:run-repo run)
                         :tags (dto:run-tags run)
                         :compare-threshold (dto:compare-threshold run)
+                        :directory (dto:run-directory run)
                         :compare-tolerance
                         (max
                          (dto:compare-pixel-tolerance run)
@@ -520,7 +521,6 @@ computed differently if we're using sharding."
      company
      :screenshot
      (length screenshots))
-    (setf (recorder-run-directory recorder-run) (dto:run-directory run))
     (with-transaction ()
       (setf (channel-branch channel) (dto:main-branch run)))
     (with-transaction ()
