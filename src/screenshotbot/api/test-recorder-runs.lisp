@@ -18,6 +18,7 @@
   (:import-from #:screenshotbot/server
                 #:logged-in-p)
   (:import-from #:screenshotbot/api/recorder-run
+                #:%put-run-helper
                 #:%find-runs
                 #:%find-base-run
                 #:production-run-without-ci-permission
@@ -868,3 +869,11 @@ storing release-branch-p, we'll update this test."
         (assert-that
          (dto:run-id (elt (%find-runs :commit "deadbeef") 0))
          (is-equal-to (oid run1)))))))
+
+(test put-run-helper-happy-path
+  (with-fixture state ()
+    (let ((dto (make-instance 'dto:run)))
+      (%put-run-helper dto
+                       :company company
+                       :channel (find-or-create-channel company "foobar")
+                       :screenshots nil))))

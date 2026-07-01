@@ -511,6 +511,7 @@ computed differently if we're using sharding."
                         :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
                         :github-repo (dto:run-repo run)
                         :tags (dto:run-tags run)
+                        :directory nil
                         :compare-threshold (dto:compare-threshold run)
                         :compare-tolerance
                         (max
