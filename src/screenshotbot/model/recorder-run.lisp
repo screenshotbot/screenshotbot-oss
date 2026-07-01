@@ -489,7 +489,7 @@ associated report is rendered.")
                       :merge-base nil)
    (:documentation "Annotates that this commit should have identical screenshots to the other commit")))
 
-(defmethod initialize-instance :after ((self recorder-run) &key &allow-other-keys)
+(defmethod initialize-instance :after ((self recorder-run) &key)
   (%update-commit-map self)
   (%update-run-id-map self))
 

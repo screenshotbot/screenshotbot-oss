@@ -574,3 +574,12 @@
       (is (eql nil (recorder-run-directory run1)))
       (setf (recorder-run-directory run1) "/foo/bar/")
       (is (equal "/foo/bar/" (recorder-run-directory run1))))))
+
+
+(test make-recorder-run-should-not-take-stupid-args
+  (with-fixture state ()
+    (signals #+lispworks conditions:unknown-keyword-error #-lispworks error
+     (make-recorder-run
+      :company company
+      :screenshots nil
+      :stupid-non-existant-arg nil))))
