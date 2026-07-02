@@ -9,6 +9,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:screenshotbot/api/finalized-commit
+                #:%list-finalized-commit
                 #:trigger-callbacks
                 #:%post-finalized-commit
                 #:%parse-body)
@@ -27,6 +28,8 @@
                 #:finalize-batch)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/test-finalized-commit)
 
@@ -87,3 +90,15 @@
                             'finalized-commit))))
 
         (is-true (commit-finalized-p company "abcd0000"))))))
+
+(test find-finalized-commit-api
+  (with-fixture state ()
+    (with-test-user (:logged-in-p t :company company)
+      (make-instance 'finalized-commit
+                     :company company
+                     :commit "abcd")
+      
+      (let ((result
+              (%list-finalized-commit
+               :commit "abcd")))
+       (assert-that result (has-length 1))))))

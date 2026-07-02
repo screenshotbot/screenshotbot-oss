@@ -37,9 +37,13 @@
 
 (defun find-finalized-commit (company commit)
   "Find an existing finalized-commit for the given company and commit SHA."
-  (fset:do-set (fc (%finalized-commits-for-commit commit))
-    (when (eql company (finalized-commit-company fc))
-      (return fc))))
+  (first (find-finalized-commits company commit)))
+
+(defun find-finalized-commits (company commit)
+  (serapeum:collecting
+   (fset:do-set (fc (%finalized-commits-for-commit commit))
+     (when (eql company (finalized-commit-company fc))
+       (collect fc)))))
 
 (defun commit-finalized-p (company commit)
   (not (null (find-finalized-commit company commit))))

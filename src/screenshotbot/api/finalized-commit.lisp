@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/api/model
                 #:decode-json)
   (:import-from #:screenshotbot/model/finalized-commit
+                #:find-finalized-commits
                 #:finalized-commit-company
                 #:finalized-commit-hash
                 #:finalized-commit
@@ -43,6 +44,14 @@
                              (dto:finalized-commit-hash input))))
       (trigger-callbacks finalized-commit)
       (to-dto finalized-commit))))
+
+(defapi (%list-finalized-commit :uri "/api/finalized-commit" :method :get
+         :wrap-success nil
+                                :use-yason t)
+        (commit)
+  (auth:can-view! (current-company))
+  (mapcar #'to-dto
+   (find-finalized-commits (current-company) commit)))
 
 (defun trigger-callbacks (finalized-commit)
   (loop for batch in (find-batches-for-commit
