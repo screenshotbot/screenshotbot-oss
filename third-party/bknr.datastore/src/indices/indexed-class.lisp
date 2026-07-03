@@ -506,12 +506,4 @@ also index subclasses of the class to which the slot belongs, default is T")
   (and
    #+sbcl ;; Tests break without this on SBCL, very weird, might be related to allocate-instance.
    (slot-boundp object 'object-destroyed-p-v2)
-   (handler-case
-       (object-destroyed-p-v2 object)
-     (unbound-slot ()
-       ;; This typically doesn't happen on Lispworks, only on SBCL.
-       ;; But the cost of working with the condition is quite high
-       ;; (with allocation), so we want to set it to NIL as soon as
-       ;; possible.
-       (setf (object-destroyed-p-v2 object) nil)
-       nil))))
+   (object-destroyed-p-v2 object)))
