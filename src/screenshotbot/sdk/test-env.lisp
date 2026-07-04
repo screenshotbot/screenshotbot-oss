@@ -170,8 +170,6 @@
                                  :overrides `(("GITHUB_EVENT_NAME" . "merge_group") ;; not actually read
                                               ("GITHUB_HEAD_REF" . "")
                                               ("GITHUB_REPOSITORY" . "tdrhq/fast-example")
-                                              ;; TODO (T2324): delete this todo once we confirm that the output format
-                                              ;; of GITHUB_REF_NAME in prod
                                               ("GITHUB_REF_NAME" . "gh-readonly-queue/main/pr-123-abc")
                                               ("GITHUB_REF" . "refs/pull/22/merge")))))
       (is (equal "gh-readonly-queue/main/pr-123-abc" (work-branch reader))))))
