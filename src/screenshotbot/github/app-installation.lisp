@@ -34,18 +34,11 @@
 (in-package :screenshotbot/github/app-installation)
 
 (defclass app-installation (store-object)
-  ((installation-id
-    :initarg :installation-id
-    :reader installation-id
-    :index-type unique-index
-    :index-reader app-installation-by-id)
-   (repos
-    :initform nil
-    :accessor app-installation-repos)
-   (updated-ts
-    :initform nil
-    :accessor updated-ts))
-  (:metaclass persistent-class))
+  ((installation-id)
+   (repos)
+   (updated-ts))
+  (:metaclass persistent-class)
+  (:documentation "OBSOLETE: left here for migration purposes only."))
 
 (defvar *lock* (bt:make-lock))
 

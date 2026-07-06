@@ -6,9 +6,7 @@
   (:import-from #:screenshotbot/github/app-installation
                 #:%app-installation-id
                 #:*app-installation-cache*
-                #:app-installation-repos
                 #:repos
-                #:app-installation-by-id
                 #:github-get-access-token-for-installation)
   (:import-from #:screenshotbot/github/plugin
                 #:github-plugin)
