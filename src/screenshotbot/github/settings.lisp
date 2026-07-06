@@ -69,6 +69,8 @@
                 #:confirmation-page)
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
+  (:import-from #:screenshotbot/github/github-app
+                #:github-app)
   (:export
    #:verified-repo-p))
 (in-package :screenshotbot/github/settings)
@@ -181,8 +183,7 @@ independetly)")
                              :installation-token
                              (github-get-access-token-for-installation
                               installation-id
-                              :app-id (app-id (github-plugin))
-                              :private-key (private-key (github-plugin)))
+                              :github-app (github-app (github-plugin) (company self)))
                              :company (company self))
       (cond
         (can-edit-p

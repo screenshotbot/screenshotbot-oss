@@ -59,9 +59,6 @@
 
 (defun github-update-pull-request (&rest all-args &key
                                                     github-app
-                                                    app-id ;; instead of :github-app
-                                                    private-key ;; instead of :github-app
-
                                                     full-name
                                                     check-name
                                                     status
@@ -71,11 +68,6 @@
                                                     conclusion
                                                     head-sha)
   (assert (member status (list nil :queued :in-progress :completed)))
-
-  ;; 
-  (when github-app
-    (assert (not app-id))
-    (assert (not private-key)))
 
   (log:debug "Updating pull request on ~s" full-name)
   (with-event (:github.create-check-run)
@@ -90,6 +82,4 @@
      :installation-token
      (github-get-access-token-for-installation
       installation-id
-      :github-app github-app
-      :app-id app-id
-      :private-key private-key))))
+      :github-app github-app))))
