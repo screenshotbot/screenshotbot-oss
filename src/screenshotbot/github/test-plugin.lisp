@@ -7,7 +7,11 @@
                 #:fetch-app-name
                 #:app-name
                 #:github-plugin
-                #:make-github-repo))
+                #:make-github-repo)
+  (:import-from #:screenshotbot/github/github-app
+                #:github-app-private-key
+                #:github-app-id
+                #:github-app))
 (in-package :screenshotbot/github/test-plugin)
 
 
@@ -37,3 +41,15 @@
     (is (equal "zoidberg"
                (app-name plugin)))
     (is (equal "zoidberg" (%app-name plugin)))))
+
+(test github-app-object-is-cached
+  (let ((plugin (make-instance 'github-plugin
+                               :app-id "foo"
+                               :private-key "PEM")))
+    (let ((app (github-app plugin :company-1)))
+      (is-true app)
+      (is (eql app (github-app plugin :company-1)))
+      (is (equal "foo"
+                 (github-app-id app)))
+      (is (equal "PEM"
+                 (github-app-private-key app))))))

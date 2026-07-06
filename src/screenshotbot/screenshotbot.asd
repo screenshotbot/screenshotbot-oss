@@ -220,7 +220,8 @@
    (:file "batch-promoter")
    (:module "github"
     :serial t
-    :components ((:file "plugin")
+    :components ((:file "github-app")
+                 (:file "plugin")
                  (:file "github-installation")
                  (:file "audit-log")
                  (:file "marketplace")

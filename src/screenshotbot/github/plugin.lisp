@@ -16,6 +16,9 @@
                 #:installation)
   (:import-from #:util/misc
                 #:or-setf)
+  (:import-from #:screenshotbot/github/github-app
+                #:github-app
+                #:transient-github-app)
   (:export
    #:github-plugin
    ;; todo: separate these to
@@ -38,6 +41,8 @@ URL to redirect to. For historical reasons, we keep this here, but you
 don't need to provide it. We can automatically fetch this.")
    (app-id :initarg :app-id
            :accessor app-id)
+   (cached-app :initform nil
+               :accessor cached-app)
    (private-key :initarg :private-key
                 :accessor private-key)
    (%verified-orgs :initarg :verified-orgs
@@ -83,3 +88,12 @@ over the instance and it's only used by people you know.")
   (or-setf
    (%app-name self)
    (fetch-app-name self)))
+
+(defmethod github-app ((self github-plugin) company)
+  (declare (ignore company)) ;; might be easier to configure this by
+                             ;; company for UI based configuration.
+  (util:or-setf
+   (cached-app self)
+   (make-instance 'transient-github-app
+                  :app-id (app-id self)
+                  :private-key (private-key self))))
