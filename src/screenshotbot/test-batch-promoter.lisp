@@ -44,7 +44,9 @@
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
                 #:has-item
-                #:contains))
+                #:contains)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :screenshotbot/test-batch-promoter)
 
 (util/fiveam:def-suite)
@@ -200,6 +202,19 @@
     (let ((summary (build-check-summary batch)))
       (assert-that (mapcar #'str:trim (str:lines summary))
                    (is-not (has-item "" ))))))
+
+(test summary-is-less-than-65535-chars
+  (with-fixture state ()
+    (dotimes (i 500)
+      (make-instance 'batch-item
+                     :batch batch
+                     :run run
+                     :channel channel
+                     :title "Foobar"
+                     :status :rejected))
+    (let ((summary (build-check-summary batch)))
+      (is
+       (< (length summary) 65535)))))
 
 (test if-everything-is-nothing-to-review-then-say-nothing-to-review
   (with-fixture state ()

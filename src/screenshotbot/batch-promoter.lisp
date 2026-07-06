@@ -176,7 +176,9 @@
   (markup:write-html
    (let ((items (sort-items (fset:convert 'list (batch-items batch)))))
      <table>
-     ,@ (loop for item in items collect
+     ,@ (loop for item in items 
+              for count below 50
+              collect
               <tr>
                 <td>
                   ,(emoticon-for-status (batch-item-status item))
