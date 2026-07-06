@@ -57,12 +57,15 @@
 
 (defun github-get-access-token-for-installation (installation-id
                                                  &key
-                                                   app-id
-                                                   private-key)
+                                                   github-app
+                                                   app-id ;; instead of :github-app
+                                                   private-key ;; instead of :github-app
+                                                   )
   (with-throttler (*github-throttler*)
    (a:assoc-value (github-request
                    (format nil "/app/installations/~a/access_tokens" installation-id)
                    :jwt-token (github-create-jwt-token
+                               :github-app github-app
                                :app-id app-id
                                :private-key private-key)
                    :method :post)

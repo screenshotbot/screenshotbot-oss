@@ -71,6 +71,8 @@
                 #:format-log)
   (:import-from #:screenshotbot/batch-promoter
                 #:emoticon-for-status)
+  (:import-from #:screenshotbot/github/github-app
+                #:github-app)
   (:export
    #:pull-request-promoter
    #:pr-acceptable
@@ -198,8 +200,8 @@ generate a GitHub markdown summary."
   (let* ((repo-url (recorder-run-repo-url run))
          (full-name (repo-full-name repo-url))
          (github-plugin (github-plugin)))
-    (list :app-id (app-id github-plugin)
-          :private-key (private-key github-plugin)
+    (list :github-app (github-app github-plugin
+                                  (recorder-run-company run))
           :full-name full-name
           :check-name (format nil "Screenshotbot Changes: ~a "
                               (check-key check))
