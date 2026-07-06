@@ -13,7 +13,15 @@
 
 (defclass abstract-github-app ()
   ((app-name :initform nil
-             :accessor %app-name)))
+             :accessor %app-name)
+   (installation-ids
+    :initform (fset:empty-map)
+    :accessor github-app-installation-ids
+    :documentation "A cache: map from repo-id to installation-id")
+   (last-cache-ts
+    :initform 0
+    :accessor last-cache-ts
+    :documentation "The last time the installation-id was cleared")))
 
 (defclass transient-github-app (abstract-github-app)
   ((app-id :initform nil
@@ -39,4 +47,11 @@
   (util:or-setf
    (%app-name self)
    (fetch-github-app-name self)))
+
+(defmethod github-app-installation-ids :before ((self abstract-github-app))
+  (let ((current-time (get-universal-time)))
+    (when (< (last-cache-ts self) (- current-time (* 5 60)))
+      (setf (slot-value self 'installation-ids) (fset:empty-map))
+      (setf (last-cache-ts self) current-time))))
+
 

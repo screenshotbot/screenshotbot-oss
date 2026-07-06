@@ -495,6 +495,7 @@
                 :components ((:file "test-jwt-token")
                              (:file "test-app-installation")
                              (:file "test-repo-push-webhook")
+                             (:file "test-github-app")
                              (:file "test-read-repos")
                              (:file "test-plugin")
                              (:file "test-access-checks")
