@@ -9,7 +9,9 @@
           #:fiveam
           #:alexandria)
   (:import-from #:screenshotbot/github/jwt-token
-                #:github-create-jwt-token))
+                #:github-create-jwt-token)
+  (:import-from #:screenshotbot/github/github-app
+                #:transient-github-app))
 
 (util/fiveam:def-suite)
 
@@ -51,3 +53,10 @@ JFpoRQ/PLL5bbSS5bo+qdpMFG0H0jBhSHmPem2HWjto/HpqteH4NxOI=
   (is (stringp (github-create-jwt-token
                 :app-id "323434"
                 :private-key *dummy-pem*))))
+
+(test create-jwt-token-from-app
+  (is (stringp
+       (github-create-jwt-token
+        :github-app (make-instance 'transient-github-app
+                                   :app-id "32343"
+                                   :private-key *dummy-pem*)))))

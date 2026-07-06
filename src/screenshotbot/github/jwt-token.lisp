@@ -12,6 +12,12 @@
                 #:http-request)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:screenshotbot/github/github-app
+                #:transient-github-app
+                #:abstract-github-app
+                #:fetch-github-app-name
+                #:github-app-id
+                #:github-app-private-key)
   (:export
    #:github-request
    #:github-create-jwt-token)
@@ -23,26 +29,38 @@
   "Convert universal time to New Jersey time"
   (when time (- time (encode-universal-time 0 0 0 1 1 1970 0))))
 
-(defun github-create-jwt-token (&key app-id
-                                  private-key
+(defun github-create-jwt-token (&key
+                                  github-app
+                                  app-id ;; instead of app
+                                  private-key ;; instead of app
                                   pem-file)
   (when pem-file
     (setf private-key (uiop:read-file-string pem-file)))
-  ;; todo: this seems unnecessary. The PEM library currently only
-  ;; exposes files. On a multi-tenant server, this might also leak the
-  ;; private key.
-  (uiop:with-temporary-file (:stream s :pathname pem-file
-                             :direction :output :type "pem")
-    (write-string private-key s)
-    (finish-output s)
-    (let* ((key (pem:read-from-file pem-file))
-           (ts (to-unix-time (get-universal-time))))
-      (assert key)
-      (jose:encode :rs256
-                   key
-                   `(("iss" . ,(format nil "~a" app-id))
-                     ("iat" . ,ts)
-                     ("exp" . ,(+ 300 ts)))))))
+
+  (cond
+    (github-app
+       ;; Must only provide the app object or the private
+     (assert (not private-key))
+     (assert (not app-id))
+     (github-create-jwt-token
+      :app-id (github-app-id github-app)
+      :private-key (github-app-private-key github-app)))
+    (t
+     ;; todo: this seems unnecessary. The PEM library currently only
+     ;; exposes files. On a multi-tenant server, this might also leak the
+     ;; private key.
+     (uiop:with-temporary-file (:stream s :pathname pem-file
+                                :direction :output :type "pem")
+       (write-string private-key s)
+       (finish-output s)
+       (let* ((key (pem:read-from-file pem-file))
+              (ts (to-unix-time (get-universal-time))))
+         (assert key)
+         (jose:encode :rs256
+                      key
+                      `(("iss" . ,(format nil "~a" app-id))
+                        ("iat" . ,ts)
+                        ("exp" . ,(+ 300 ts)))))))))
 
 (define-condition github-api-error (error)
   ((code :initarg :code
@@ -94,12 +112,15 @@
 
 (defmethod plugin:fetch-app-name ((self plugin:github-plugin))
   "Fetch the app name from the server instead of what's stored locally"
+  (fetch-github-app-name
+   (make-instance 'transient-github-app
+                  :app-id (plugin:app-id self)
+                  :private-key (plugin:private-key self))))
+
+(defmethod fetch-github-app-name ((self abstract-github-app))
   (let ((jwt-token (github-create-jwt-token
-                    :app-id (plugin:app-id self)
-                    :private-key (plugin:private-key self))))
+                    :github-app self)))
     (assoc-value
      (github-request "/app"
                      :jwt-token jwt-token)
      :slug)))
-
-

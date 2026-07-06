@@ -12,9 +12,10 @@
 (in-package :screenshotbot/github/github-app)
 
 (defclass abstract-github-app ()
-  ())
+  ((app-name :initform nil
+             :accessor %app-name)))
 
-(defclass transient-github-app ()
+(defclass transient-github-app (abstract-github-app)
   ((app-id :initform nil
            :initarg :app-id
            :accessor github-app-id)
@@ -32,4 +33,10 @@
                 :accessor github-app-private-key))
   (:metaclass persistent-class))
 
+(defgeneric fetch-github-app-name (github-app))
+
+(defmethod github-app-name ((self github-app))
+  (util:or-setf
+   (%app-name self)
+   (fetch-github-app-name self)))
 
