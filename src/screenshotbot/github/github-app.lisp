@@ -8,7 +8,13 @@
   (:use #:cl)
   (:import-from #:bknr.datastore
                 #:persistent-class
-                #:store-object))
+                #:store-object)
+  (:import-from #:util/store/store
+                #:defindex)
+  (:import-from #:util/store/fset-index
+                #:fset-unique-index)
+  (:export
+   #:persisted-github-app-for-company))
 (in-package :screenshotbot/github/github-app)
 
 (defclass abstract-github-app ()
@@ -31,6 +37,10 @@
                 :initarg :private-key
                 :accessor github-app-private-key)))
 
+(defindex +company-index+
+  'fset-unique-index
+  :slot-name 'company)
+
 (defclass github-app (store-object
                       abstract-github-app)
   ((app-id :initform nil
@@ -38,7 +48,12 @@
            :accessor github-app-id)
    (private-key :initform nil
                 :initarg :private-key
-                :accessor github-app-private-key))
+                :accessor github-app-private-key)
+   (company :initform nil
+            :index +company-index+
+            :initarg :company
+            :accessor github-app-company
+            :index-reader persisted-github-app-for-company))
   (:metaclass persistent-class))
 
 (defgeneric fetch-github-app-name (github-app))

@@ -17,6 +17,7 @@
   (:import-from #:util/misc
                 #:or-setf)
   (:import-from #:screenshotbot/github/github-app
+                #:persisted-github-app-for-company
                 #:github-app
                 #:transient-github-app)
   (:export
@@ -100,4 +101,4 @@ over the instance and it's only used by people you know.")
                      :app-id (app-id self)
                      :private-key (private-key self))))
     (t
-     nil)))
+     (persisted-github-app-for-company company))))

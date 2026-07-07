@@ -11,7 +11,9 @@
   (:import-from #:screenshotbot/github/github-app
                 #:github-app-private-key
                 #:github-app-id
-                #:github-app))
+                #:github-app)
+  (:import-from #:util/store/store
+                #:with-test-store))
 (in-package :screenshotbot/github/test-plugin)
 
 
@@ -57,3 +59,12 @@
 (test github-app-should-return-nil-if-not-configured
   (let ((plugin (make-instance 'github-plugin)))
     (is (eql nil (github-app plugin :company-1)))))
+
+(test github-app-returns-persisted-if-available
+  (with-test-store ()
+   (let ((plugin (make-instance 'github-plugin)))
+     (let ((app (make-instance 'github-app
+                               :app-id "1234"
+                               :private-key "sdfdf"
+                               :company :company-1)))
+       (is (eql app (github-app plugin :company-1)))))))
