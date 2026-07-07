@@ -13,9 +13,13 @@
   (:import-from #:util/form-errors
                 #:with-error-builder)
   (:import-from #:screenshotbot/github/github-app
+                #:transient-github-app
+                #:update-github-app
                 #:github-app)
   (:import-from #:screenshotbot/github/jwt-token
                 #:github-create-jwt-token)
+  (:import-from #:util/misc
+                #:not-null!)
   (:export
    #:github-app-settings-form))
 (in-package :screenshotbot/github/github-app-settings)
@@ -50,7 +54,7 @@
                        :errors errors
                        :form-builder (github-app-settings-form github-app)
                        :form-args (:app-id app-id)
-                       :success (error "Unimpl"))
+                       :success (%update :app-id app-id :private-key private-key))
     (check :app-id
            (ignore-errors
             (parse-integer app-id))
@@ -63,7 +67,14 @@
       (check :private-key
              (ignore-errors
               (github-create-jwt-token
-               :github-app (make-instance 'github-app
+               :github-app (make-instance 'transient-github-app
                                           :app-id app-id
                                           :private-key (uiop:read-file-string private-key-file))))
              "Could not read the private key, is that a correct PEM file provided by GitHub?"))))
+
+(defun %update (&key app-id private-key)
+  (update-github-app
+   :app-id app-id
+   :private-key (uiop:read-file-string (first private-key))
+   :company (not-null! (auth:current-company)))
+  (hex:safe-redirect "/settings/github"))

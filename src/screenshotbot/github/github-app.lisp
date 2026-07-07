@@ -68,3 +68,16 @@
     (when (< (last-cache-ts self) (- current-time (* 5 60)))
       (setf (slot-value self 'installation-ids) (fset:empty-map))
       (setf (last-cache-ts self) current-time))))
+
+(defvar *lock* (bt:make-lock))
+
+(defun update-github-app (&key app-id private-key company)
+  (assert company)
+  (bt:with-lock-held (*lock*)
+    (let ((old-app (persisted-github-app-for-company company)))
+      (when old-app
+        (bknr.datastore:delete-object old-app))
+      (make-instance 'github-app
+                     :app-id app-id
+                     :private-key private-key
+                     :company company))))

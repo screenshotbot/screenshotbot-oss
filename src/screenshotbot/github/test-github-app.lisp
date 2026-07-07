@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/github/github-app
+                #:github-app-id
+                #:update-github-app
                 #:github-app
                 #:last-cache-ts
                 #:github-app-installation-ids
@@ -65,3 +67,24 @@
         (setf (last-cache-ts app) (- (get-universal-time) 600))
         (is (eql 0 (fset:size (github-app-installation-ids app))))))))
 
+(defun only! (list)
+  (assert (= 1 (length list)))
+  (first list))
+
+(test update-github-app
+  (with-fixture state ()
+    (update-github-app
+     :app-id "1232"
+     :private-key "fdfd"
+     :company :company-1)
+    (is (equal "1232" (github-app-id (only! (bknr.datastore:class-instances 'github-app)))))
+    (update-github-app
+     :app-id "3434"
+     :private-key "fdfddfd"
+     :company :company-1)
+    (is (equal "3434" (github-app-id (only! (bknr.datastore:class-instances 'github-app)))))
+    (update-github-app
+     :app-id "3434"
+     :private-key "fdfddfd"
+     :company :company-2)
+    (is (eql 2 (length (bknr.datastore:class-instances 'github-app))))))
