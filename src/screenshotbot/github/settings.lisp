@@ -422,9 +422,11 @@ might have verified-p=t. :/ We should consolidate this later."
   (github-app-installation-callback state installation_id setup_action))
 
 (defun github-app-configuration-card (github-app)
-  <div class= "card">
-    <div class= "card-body" >
-      <p>Create GitHub app in your GitHub account and configure the app-id and private-key here</p>
-      <a href= (nibble () (github-app-settings-form github-app)) class= "btn btn-primary">Configure</a>
-    </div>
-  </div>)
+  (when (or (not github-app)
+            (typep github-app 'github-app))
+    <div class= "card">
+      <div class= "card-body" >
+        <p>Create GitHub app in your GitHub account and configure the app-id and private-key here</p>
+        <a href= (nibble () (github-app-settings-form github-app)) class= "btn btn-primary">Configure</a>
+      </div>
+    </div>))
