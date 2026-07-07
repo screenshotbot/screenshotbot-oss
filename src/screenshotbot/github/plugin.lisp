@@ -91,9 +91,13 @@ over the instance and it's only used by people you know.")
 
 (defmethod github-app ((self github-plugin) company)
   (declare (ignore company)) ;; might be easier to configure this by
-                             ;; company for UI based configuration.
-  (util:or-setf
-   (cached-app self)
-   (make-instance 'transient-github-app
-                  :app-id (app-id self)
-                  :private-key (private-key self))))
+  ;; company for UI based configuration.
+  (cond
+    ((slot-boundp self 'app-id)
+     (util:or-setf
+      (cached-app self)
+      (make-instance 'transient-github-app
+                     :app-id (app-id self)
+                     :private-key (private-key self))))
+    (t
+     nil)))

@@ -53,3 +53,7 @@
                  (github-app-id app)))
       (is (equal "PEM"
                  (github-app-private-key app))))))
+
+(test github-app-should-return-nil-if-not-configured
+  (let ((plugin (make-instance 'github-plugin)))
+    (is (eql nil (github-app plugin :company-1)))))
