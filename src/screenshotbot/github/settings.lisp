@@ -70,6 +70,7 @@
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
   (:import-from #:screenshotbot/github/github-app
+                #:github-app-id
                 #:github-app-name
                 #:github-app)
   (:import-from #:screenshotbot/github/github-app-settings
@@ -433,6 +434,8 @@ might have verified-p=t. :/ We should consolidate this later."
     <div class= "card">
       <div class= "card-body" >
         <p>Create GitHub app in your GitHub account and configure the app-id and private-key here</p>
+        ,(when github-app
+           <p>Currently configured with GitHub App <a href= (format nil "https://github.com/settings/apps/~a" (github-app-name github-app)) >,(github-app-name github-app)</a> (,(github-app-id github-app)) </p>)
         <a href= (nibble () (github-app-settings-form github-app)) class= "btn btn-primary">Configure</a>
       </div>
     </div>))

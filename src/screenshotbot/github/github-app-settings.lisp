@@ -13,6 +13,7 @@
   (:import-from #:util/form-errors
                 #:with-error-builder)
   (:import-from #:screenshotbot/github/github-app
+                #:github-app-id
                 #:github-app-name
                 #:transient-github-app
                 #:update-github-app
@@ -20,6 +21,7 @@
   (:import-from #:screenshotbot/github/jwt-token
                 #:github-create-jwt-token)
   (:import-from #:util/misc
+                #:?.
                 #:not-null!)
   (:export
    #:github-app-settings-form))
@@ -36,7 +38,8 @@
       </div>
       <div class= "mb-3">
         <label for= "app-id" class= "form-label" >GitHub App ID</label>
-        <input type= "text" name= "app-id" id= "app-id" class= "form-control" placeholder= "111111" />
+        <input type= "text" name= "app-id" id= "app-id" class= "form-control" placeholder= "111111"
+               value= (?. github-app-id github-app ) />
       </div>
 
       <div class= "mb-3">
