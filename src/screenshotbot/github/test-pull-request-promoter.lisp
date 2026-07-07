@@ -92,7 +92,9 @@
   (:import-from #:fiveam-matchers/described-as
                 #:described-as)
   (:import-from #:screenshotbot/dashboard/compare
-                #:warmup-comparison-images))
+                #:warmup-comparison-images)
+  (:import-from #:screenshotbot/github/github-app
+                #:abstract-github-app))
 (in-package :screenshotbot/github/test-pull-request-promoter)
 
 (util/fiveam:def-suite)
@@ -135,7 +137,8 @@
                            (lambda (repo company)
                              t))
         (cl-mock:if-called 'app-installed-p
-                           (lambda (repo)
+                           (lambda (github-app repo)
+                             (check-type github-app abstract-github-app)
                              t))
         (cl-mock:answer (github-plugin)
           (make-instance 'github-plugin
@@ -164,7 +167,7 @@
 
 (test run-without-pr-does-not-create-report
   (with-fixture state ()
-    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+    (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
       22)
     (let* ((*base-run* nil)
            (run (make-recorder-run
@@ -205,7 +208,7 @@
 (test plugin-installed?-should-return-false-if-app-not-installed
   (with-fixture state ()
     (cl-mock:if-called 'app-installed-p
-                        (lambda (repo)
+                        (lambda (github-app repo)
                           nil)
                         :at-start t)
     (is-false (plugin-installed?
@@ -363,7 +366,7 @@
 
 (test report-has-acceptable
   (with-fixture state ()
-    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+    (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
       22)
 
     (let ((*base-run* (make-recorder-run
@@ -388,7 +391,7 @@
                          (lambda (&rest args)
                            (push args calls))
                          :at-start t)
-      (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+      (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
         22)
       (setf (send-task-args promoter) '(:dummy))
       (let ((run (make-recorder-run
@@ -413,7 +416,7 @@
                            (lambda (&rest args)
                              (push args calls))
                            :at-start t)
-        (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+        (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
           22)
         (let* ((run (make-recorder-run
                      :channel (make-instance 'dummy-channel)
@@ -441,7 +444,7 @@
                         :channel (make-instance 'dummy-channel :company company)
                         :commit-hash "car")))
         (let ((calls))
-          (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+          (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
             22)
 
           (cl-mock:if-called 'github-update-pull-request
@@ -492,7 +495,7 @@
 
 (test make-github-for-every-version-of-state
   (with-fixture state ()
-    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+    (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
       22)
 
     (dolist (state (list :accepted :rejected :success :failure :action-required))
@@ -530,7 +533,7 @@
 ;; T2236: unchanged-run without batch crashes when calling make-github-args
 (test push-remote-check-for-unchanged-run-without-batch
   (with-fixture state ()
-    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
+    (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
       22)
     (let* ((channel (make-instance 'dummy-channel
                                    :company company
