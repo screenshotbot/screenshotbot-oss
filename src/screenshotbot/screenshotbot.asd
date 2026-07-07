@@ -233,6 +233,7 @@
                  (:file "app-installation")
                  (:file "pr-checks" :depends-on ("access-checks"))
                  (:file "read-repos")
+                 (:file "github-app-settings")
                  (:file "settings")
                  (:file "pull-request-promoter")
                  (:file "task-integration")

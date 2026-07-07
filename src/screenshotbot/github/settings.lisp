@@ -72,6 +72,8 @@
   (:import-from #:screenshotbot/github/github-app
                 #:github-app-name
                 #:github-app)
+  (:import-from #:screenshotbot/github/github-app-settings
+                #:github-app-settings-form)
   (:export
    #:verified-repo-p))
 (in-package :screenshotbot/github/settings)
@@ -246,9 +248,11 @@ might have verified-p=t. :/ We should consolidate this later."
 (defun settings-github-page ()
   (let* ((installation-id (installation-id (github-config (current-company))))
          access-token
+         (github-app (github-app (github-plugin) (current-company)))
          (app-configuration-url
-           (format nil "https://github.com/apps/~a/installations/new"
-                    (github-app-name (github-app (github-plugin) (current-company)))))
+           (when github-app
+             (format nil "https://github.com/apps/~a/installations/new"
+                     (github-app-name github-app))))
          (verify-repo (nibble (repo)
                         (hex:safe-redirect
                          (uiop:call-function
@@ -261,142 +265,144 @@ might have verified-p=t. :/ We should consolidate this later."
                                                    (setf access-token token))
                           :scope "user:email read:org repo")))))
     <settings-template>
-      <div class= "card mt-3" style= "max-width: 80em;" >
-        <div class= "card-header">
-          <h3>Setup GitHub Checks</h3>
-        </div>
+      ,(github-app-configuration-card github-app)
+      ,(when github-app
+         <div class= "card mt-3" style= "max-width: 80em;" >
+           <div class= "card-header">
+             <h3>Setup GitHub Checks</h3>
+           </div>
 
-        <div class= "card-body" >
-          <p>In order to enable GitHub Checks you first need to verify that you have access to the repository, and then install the Screenshotbot app on the repository or organization.</p>
+           <div class= "card-body" >
+             <p>In order to enable GitHub Checks you first need to verify that you have access to the repository, and then install the Screenshotbot app on the repository or organization.</p>
 
-          <form class= "mb-3 mt-3" action=verify-repo method= "POST" >
-            <label for= "repo" class= "form-label" >Verify your GitHub repository</label>
-            <div class= "input-group" style= "max-width: 50em" >
-              <input id= "repo" name= "repo"
-                     type= "text" class= "form-control" placeholder= "https://github.com/org/repo" />
-              <input type= "submit" class= "btn btn-primary" value= "Verify Repository" />
-            </div>
-          </form>
+             <form class= "mb-3 mt-3" action=verify-repo method= "POST" >
+               <label for= "repo" class= "form-label" >Verify your GitHub repository</label>
+               <div class= "input-group" style= "max-width: 50em" >
+                 <input id= "repo" name= "repo"
+                        type= "text" class= "form-control" placeholder= "https://github.com/org/repo" />
+                 <input type= "submit" class= "btn btn-primary" value= "Verify Repository" />
+               </div>
+             </form>
 
-        ,(let ((verified-repos (%verified-repos-for-company (current-company)))
-               (github-app (github-app (github-plugin) (current-company))))
-           (cond
-             (verified-repos
-              <div style="margin-top: 3em" >
+             ,(let ((verified-repos (%verified-repos-for-company (current-company)))
+                    (github-app (github-app (github-plugin) (current-company))))
+                (cond
+                  (verified-repos
+                   <div style="margin-top: 3em" >
 
-                <h4>Verified repositories</h4>
-                <table class= "table table-borderless table-hover" >
-                  <thead>
-                    <tr>
-                      <th>Repository</th>
-                      <th>Status</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
+                     <h4>Verified repositories</h4>
+                     <table class= "table table-borderless table-hover" >
+                       <thead>
+                         <tr>
+                           <th>Repository</th>
+                           <th>Status</th>
+                           <th>Actions</th>
+                         </tr>
+                       </thead>
+                       <tbody>
 
-                  ,@ (loop for repo in verified-repos
-                           for app-installed-p = (app-installed-p github-app (repo-id repo))
-                           collect
-                           (util:copying (repo)
-                             (let ((remove-verification (nibble ()
-                                                          (remove-verification repo))))
-                               <tr class= "vertical-align-middle" >
-                                 <td>
-                                   ,(repo-id repo)
-                                 </td>
-                                 ,(cond
-                                    ((and
-                                      app-installed-p
-                                      (verified-p repo))
-                                     <markup:merge-tag>
-                                       <td>
-                                         <span>
-                                           <span class= "text-success">
-                                             <mdi name= "done" /> Verified, and App is installed
-                                           </span>
-                                         </span>
-                                       </td>
-                                       <td>
-                                         <a href= app-configuration-url >
-                                           Configure on GitHub
-                                         </a>
-                                         ,(progn "|")
-                                         <a href= remove-verification >Remove</a>
-                                       </td>
-                                     </markup:merge-tag>)
-                                    ((and
-                                      app-installed-p
-                                      (not (verified-p repo))
-                                      (not (verification-failure-message repo)))
-                                     <markup:merge-tag>
-                                       <td>
-                                         <span>Awaiting verification <refresh repo=repo /></span>
-                                       </td>
-                                       <td>
-                                         <a href= remove-verification >Remove</a>
-                                       </td>
-                                     </markup:merge-tag>)
-                                    ((and
-                                      app-installed-p
-                                      (not (verified-p repo)))
-                                     <markup:merge-tag>
-                                       <td>
-                                         <span>
-                                           <span class= "text-danger">
-                                             <mdi name= "error" />Could not verify
-                                             (GitHub said: ,(verification-failure-message repo))
-                                             <refresh repo=repo />
-                                           </span>
-                                         </span>
-                                       </td>
-                                       <td>
-                                         <a href= app-configuration-url >
-                                           Configure on GitHub
-                                         </a>
-                                         ,(progn "|")
-                                         <a href= remove-verification >Remove</a>
-                                       </td>
-                                     </markup:merge-tag>)
-                                    (t ;; (not app-installed-p)
-                                     <markup:merge-tag>
-                                       <td>
-                                         <span class= "text-danger">
-                                           <mdi name= "error" />
-                                           App not installed
-                                           <refresh repo=repo />
+                         ,@ (loop for repo in verified-repos
+                                  for app-installed-p = (when github-app (app-installed-p github-app (repo-id repo)))
+                                  collect
+                                  (util:copying (repo)
+                                    (let ((remove-verification (nibble ()
+                                                                 (remove-verification repo))))
+                                      <tr class= "vertical-align-middle" >
+                                        <td>
+                                          ,(repo-id repo)
+                                        </td>
+                                        ,(cond
+                                           ((and
+                                             app-installed-p
+                                             (verified-p repo))
+                                            <markup:merge-tag>
+                                              <td>
+                                                <span>
+                                                  <span class= "text-success">
+                                                    <mdi name= "done" /> Verified, and App is installed
+                                                  </span>
+                                                </span>
+                                              </td>
+                                              <td>
+                                                <a href= app-configuration-url >
+                                                  Configure on GitHub
+                                                </a>
+                                                ,(progn "|")
+                                                <a href= remove-verification >Remove</a>
+                                              </td>
+                                            </markup:merge-tag>)
+                                           ((and
+                                             app-installed-p
+                                             (not (verified-p repo))
+                                             (not (verification-failure-message repo)))
+                                            <markup:merge-tag>
+                                              <td>
+                                                <span>Awaiting verification <refresh repo=repo /></span>
+                                              </td>
+                                              <td>
+                                                <a href= remove-verification >Remove</a>
+                                              </td>
+                                            </markup:merge-tag>)
+                                           ((and
+                                             app-installed-p
+                                             (not (verified-p repo)))
+                                            <markup:merge-tag>
+                                              <td>
+                                                <span>
+                                                  <span class= "text-danger">
+                                                    <mdi name= "error" />Could not verify
+                                                    (GitHub said: ,(verification-failure-message repo))
+                                                    <refresh repo=repo />
+                                                  </span>
+                                                </span>
+                                              </td>
+                                              <td>
+                                                <a href= app-configuration-url >
+                                                  Configure on GitHub
+                                                </a>
+                                                ,(progn "|")
+                                                <a href= remove-verification >Remove</a>
+                                              </td>
+                                            </markup:merge-tag>)
+                                           (t ;; (not app-installed-p)
+                                            <markup:merge-tag>
+                                              <td>
+                                                <span class= "text-danger">
+                                                  <mdi name= "error" />
+                                                  App not installed
+                                                  <refresh repo=repo />
 
-                                         </span>
-                                       </td>
-                                       <td>
-                                         <a href= app-configuration-url >Install App</a>
-                                         ,(progn "|")
-                                         <a href= remove-verification >Remove</a>
-                                       </td>
-                                     </markup:merge-tag>))
-                               </tr>)))
+                                                </span>
+                                              </td>
+                                              <td>
+                                                <a href= app-configuration-url >Install App</a>
+                                                ,(progn "|")
+                                                <a href= remove-verification >Remove</a>
+                                              </td>
+                                            </markup:merge-tag>))
+                                      </tr>)))
 
-                             </tbody>
-                           </table>
-              </div>)))
+                       </tbody>
+                     </table>
+                   </div>)))
 
 
 
-          <div class= "alert alert-info" >
-            The GitHub app does <b>not</b> get permissions to access to your repositories, it only needs write access to the Checks API. We will request access to read repository metadata only during the verification step.
-          </div>
-        </div>
+             <div class= "alert alert-info" >
+               The GitHub app does <b>not</b> get permissions to access to your repositories, it only needs write access to the Checks API. We will request access to read repository metadata only during the verification step.
+             </div>
+           </div>
 
-        <div class= "card-footer">
+           <div class= "card-footer">
 
-          <a href= app-configuration-url
-             class= (if installation-id "btn btn-outline-secondary" "btn btn-outline-primary") >
-            ,(if installation-id
-                 "Configure"
-                 "Install App on GitHub")
-          </a>
-        </div>
-      </div>
+             <a href= app-configuration-url
+                class= (if installation-id "btn btn-outline-secondary" "btn btn-outline-primary") >
+               ,(if installation-id
+                    "Configure"
+                    "Install App on GitHub")
+             </a>
+           </div>
+         </div>)
 
       ,(render-audit-logs
         :type 'github-audit-log
@@ -414,3 +420,11 @@ might have verified-p=t. :/ We should consolidate this later."
 
 (defhandler (nil :uri "/github-app-install-callback") (state installation_id setup_action)
   (github-app-installation-callback state installation_id setup_action))
+
+(defun github-app-configuration-card (github-app)
+  <div class= "card">
+    <div class= "card-body" >
+      <p>Create GitHub app in your GitHub account and configure the app-id and private-key here</p>
+      <a href= (nibble () (github-app-settings-form github-app)) class= "btn btn-primary">Configure</a>
+    </div>
+  </div>)
