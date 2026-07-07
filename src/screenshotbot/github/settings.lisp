@@ -74,6 +74,8 @@
                 #:github-app)
   (:import-from #:screenshotbot/github/github-app-settings
                 #:github-app-settings-form)
+  (:import-from #:screenshotbot/github/jwt-token
+                #:github-api-error)
   (:export
    #:verified-repo-p))
 (in-package :screenshotbot/github/settings)
@@ -251,8 +253,12 @@ might have verified-p=t. :/ We should consolidate this later."
          (github-app (github-app (github-plugin) (current-company)))
          (app-configuration-url
            (when github-app
-             (format nil "https://github.com/apps/~a/installations/new"
-                     (github-app-name github-app))))
+             (handler-case
+                 (format nil "https://github.com/apps/~a/installations/new"
+                         (github-app-name github-app))
+               (github-api-error ()
+                 ;; In case the APP id is broken
+                 "#"))))
          (verify-repo (nibble (repo)
                         (hex:safe-redirect
                          (uiop:call-function
