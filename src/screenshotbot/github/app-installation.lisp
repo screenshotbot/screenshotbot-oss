@@ -26,6 +26,8 @@
                 #:def-cron)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
+  (:import-from #:screenshotbot/github/github-app
+                #:github-app)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:github-get-access-token-for-installation
@@ -95,7 +97,7 @@
   (clrhash *app-installation-cache*))
 
 
-(defun app-installation-id (repo-id &key force)
+(defmethod app-installation-id ((github-app github-app) repo-id &key force)
   "Get the GitHub app installation id for the given
 repo-id (e.g. 'tdrhq/fast-example'). If FORCE is T, then we will not
 use a cached value."
