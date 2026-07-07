@@ -8,6 +8,8 @@
   (:use #:cl)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
+  (:import-from #:nibble
+                #:nibble)
   (:export
    #:github-app-settings-form))
 (in-package :screenshotbot/github/github-app-settings)
@@ -21,12 +23,12 @@
     </div>
     <div class= "mb-3">
       <label for= "app-id" class= "form-label" >GitHub App ID</label>
-      <input type= "text" name= "app-id" id= "app-id" class= "form-control" placeholder= "1234" />
+      <input type= "text" name= "app-id" id= "app-id" class= "form-control" placeholder= "111111" />
     </div>
 
     <div class= "mb-3">
-      <label for= "private-key" class= "form-label" >Private Key (copy from pem file) </label>
-      <textarea class= "form-control" name= "private-key" id= "private-key" />
+      <label for= "private-key" class= "form-label" >Private Key</label>
+      <input type= "file" class= "form-control" name= "private-key" id= "private-key" />
     </div>
     <div class= "card-footer">
       <input type= "submit" value= "Update" class= "btn btn-primary" />
