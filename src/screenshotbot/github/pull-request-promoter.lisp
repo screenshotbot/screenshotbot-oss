@@ -199,10 +199,9 @@ generate a GitHub markdown summary."
 (defun make-github-args (run check)
   (let* ((repo-url (recorder-run-repo-url run))
          (full-name (repo-full-name repo-url))
-         (github-plugin (github-plugin))
-         (github-app (github-app github-plugin
-                                 (recorder-run-company run))))
-    (list :github-app github-app
+         (github-plugin (github-plugin)))
+    (list :github-app (github-app github-plugin
+                                  (recorder-run-company run))
           :full-name full-name
           :check-name (format nil "Screenshotbot Changes: ~a "
                               (check-key check))
@@ -212,7 +211,7 @@ generate a GitHub markdown summary."
           :status (if (eql (check-status check) :pending)
                       :in-progress
                       :completed)
-          :installation-id (app-installation-id github-app (repo-string-identifier repo-url))
+          :installation-id (app-installation-id (repo-string-identifier repo-url))
           :conclusion (unless (eql (check-status check) :pending)
                         (ecase (check-status check)
                           (:accepted "success")

@@ -164,7 +164,7 @@
 
 (test run-without-pr-does-not-create-report
   (with-fixture state ()
-    (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
+    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
       22)
     (let* ((*base-run* nil)
            (run (make-recorder-run
@@ -363,7 +363,7 @@
 
 (test report-has-acceptable
   (with-fixture state ()
-    (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
+    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
       22)
 
     (let ((*base-run* (make-recorder-run
@@ -388,7 +388,7 @@
                          (lambda (&rest args)
                            (push args calls))
                          :at-start t)
-      (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
+      (cl-mock:answer (app-installation-id "tdrhq/fast-example")
         22)
       (setf (send-task-args promoter) '(:dummy))
       (let ((run (make-recorder-run
@@ -413,7 +413,7 @@
                            (lambda (&rest args)
                              (push args calls))
                            :at-start t)
-        (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
+        (cl-mock:answer (app-installation-id "tdrhq/fast-example")
           22)
         (let* ((run (make-recorder-run
                      :channel (make-instance 'dummy-channel)
@@ -441,7 +441,7 @@
                         :channel (make-instance 'dummy-channel :company company)
                         :commit-hash "car")))
         (let ((calls))
-          (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
+          (cl-mock:answer (app-installation-id "tdrhq/fast-example")
             22)
 
           (cl-mock:if-called 'github-update-pull-request
@@ -492,7 +492,7 @@
 
 (test make-github-for-every-version-of-state
   (with-fixture state ()
-    (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
+    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
       22)
 
     (dolist (state (list :accepted :rejected :success :failure :action-required))
@@ -530,7 +530,7 @@
 ;; T2236: unchanged-run without batch crashes when calling make-github-args
 (test push-remote-check-for-unchanged-run-without-batch
   (with-fixture state ()
-    (cl-mock:answer (app-installation-id github-app "tdrhq/fast-example")
+    (cl-mock:answer (app-installation-id "tdrhq/fast-example")
       22)
     (let* ((channel (make-instance 'dummy-channel
                                    :company company
