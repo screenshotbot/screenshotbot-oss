@@ -53,5 +53,3 @@
     (when (< (last-cache-ts self) (- current-time (* 5 60)))
       (setf (slot-value self 'installation-ids) (fset:empty-map))
       (setf (last-cache-ts self) current-time))))
-
-
