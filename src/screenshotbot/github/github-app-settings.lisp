@@ -13,6 +13,7 @@
   (:import-from #:util/form-errors
                 #:with-error-builder)
   (:import-from #:screenshotbot/github/github-app
+                #:github-app-name
                 #:transient-github-app
                 #:update-github-app
                 #:github-app)
@@ -63,14 +64,21 @@
            (= 3 (length private-key))
            "Private key must be provided")
     (assert (listp private-key))
-    (let ((private-key-file (first private-key)))
-      (check :private-key
-             (ignore-errors
-              (github-create-jwt-token
-               :github-app (make-instance 'transient-github-app
-                                          :app-id app-id
-                                          :private-key (uiop:read-file-string private-key-file))))
-             "Could not read the private key, is that a correct PEM file provided by GitHub?"))))
+    (when private-key
+     (let* ((private-key-file (first private-key))
+            (github-app (make-instance 'transient-github-app
+                                       :app-id app-id
+                                       :private-key (uiop:read-file-string private-key-file))))
+       (check :private-key
+              (ignore-errors
+               (github-create-jwt-token
+                :github-app github-app))
+              "Could not read the private key, is that a correct PEM file provided by GitHub?")
+       (check :app-id
+              (ignore-errors
+               ;; Hits the network
+               (github-app-name github-app))
+              "Could not validate the request, please check the App ID and private key and try again")))))
 
 (defun %update (&key app-id private-key)
   (update-github-app
