@@ -43,7 +43,7 @@
 
 (defgeneric fetch-github-app-name (github-app))
 
-(defmethod github-app-name ((self github-app))
+(defmethod github-app-name ((self abstract-github-app))
   (util:or-setf
    (%app-name self)
    (fetch-github-app-name self)))

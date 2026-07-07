@@ -70,6 +70,7 @@
   (:import-from #:util/threading
                 #:ignore-and-log-errors)
   (:import-from #:screenshotbot/github/github-app
+                #:github-app-name
                 #:github-app)
   (:export
    #:verified-repo-p))
@@ -247,7 +248,7 @@ might have verified-p=t. :/ We should consolidate this later."
          access-token
          (app-configuration-url
            (format nil "https://github.com/apps/~a/installations/new"
-                    (app-name (github-plugin))))
+                    (github-app-name (github-app (github-plugin) (current-company)))))
          (verify-repo (nibble (repo)
                         (hex:safe-redirect
                          (uiop:call-function
