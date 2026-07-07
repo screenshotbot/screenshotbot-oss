@@ -27,6 +27,7 @@
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
   (:import-from #:screenshotbot/github/github-app
+                #:github-app-installation-ids
                 #:abstract-github-app
                 #:github-app)
   (:local-nicknames (#:a #:alexandria))
@@ -70,40 +71,39 @@
 (defmethod app-installed-p ((github-app abstract-github-app) repo-id)
   (not (null (app-installation-id github-app repo-id))))
 
-(defvar *app-installation-cache* (make-hash-table :test #'equal))
-
-(defun %app-installation-id (repo-id &key force)
+(defun %app-installation-id (github-app repo-id &key force)
   (a:assoc-value
-   (flet ((%compute ()
-            (block inner
-              (handler-bind ((github-api-error (lambda (e)
-                                                 (when (eql 404 (github-api-error-code e))
-                                                   (return-from inner `((:id . nil)))))))
-                (github-request
-                 (format nil "/repos/~a/installation" repo-id)
-                 :jwt-token (github-create-jwt-token
-                             :app-id (app-id (github-plugin))
-                             :private-key (private-key (github-plugin))))))))
+   (labels ((%compute ()
+              (block inner
+                (handler-bind ((github-api-error (lambda (e)
+                                                   (when (eql 404 (github-api-error-code e))
+                                                     (return-from inner `((:id . nil)))))))
+                  (github-request
+                   (format nil "/repos/~a/installation" repo-id)
+                   :jwt-token (github-create-jwt-token
+                               :github-app github-app)))))
+            (compute-and-update ()
+              (let ((value (%compute)))
+                (fset:includef
+                 (github-app-installation-ids github-app)
+                 repo-id
+                 value)
+                value)))
      (cond
        (force
-        (setf (gethash repo-id *app-installation-cache*)
-              (%compute)))
+        (compute-and-update))
        (t
-        (util:or-setf
-         (gethash repo-id *app-installation-cache*)
-         (%compute)))))
+        (or
+         (fset:@ (github-app-installation-ids github-app) repo-id)
+         (compute-and-update)))))
    :id))
-
-(def-cron clr-cache (:step-min 5)
-  (clrhash *app-installation-cache*))
 
 
 (defmethod app-installation-id ((github-app abstract-github-app) repo-id &key force)
   "Get the GitHub app installation id for the given
 repo-id (e.g. 'tdrhq/fast-example'). If FORCE is T, then we will not
 use a cached value."
-  (%app-installation-id repo-id :force force))
-
+  (%app-installation-id github-app repo-id :force force))
 
 (def-store-migration ("Delete app-installation objects -- T1963" :version 35)
   (mapc #'bknr.datastore:delete-object

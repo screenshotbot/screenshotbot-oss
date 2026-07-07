@@ -5,7 +5,6 @@
                 #:with-test-store)
   (:import-from #:screenshotbot/github/app-installation
                 #:%app-installation-id
-                #:*app-installation-cache*
                 #:repos
                 #:github-get-access-token-for-installation)
   (:import-from #:screenshotbot/github/plugin
@@ -19,6 +18,8 @@
   (:import-from #:cl-mock
                 #:answer
                 #:if-called)
+  (:import-from #:screenshotbot/github/github-app
+                #:github-app)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/github/test-app-installation)
 
@@ -35,7 +36,9 @@ private-key.README.md for how this was generated.")
 
 (def-fixture state ()
   (with-test-store ()
-    (let ((*app-installation-cache* (make-hash-table :test #'equal)))
+    (let ((github-app (make-instance 'github-app
+                                     :app-id 4242
+                                     :private-key *private-key*)))
       (cl-mock:with-mocks ()
         (cl-mock:if-called 'github-plugin
                            (lambda ()
@@ -58,7 +61,7 @@ private-key.README.md for how this was generated.")
                    ;; some other info
                    (:installtion . nil))))
     (is (eql 222
-             (%app-installation-id  "tdrhq/fast-example")))))
+             (%app-installation-id github-app "tdrhq/fast-example")))))
 
 (test app-installation-id-nil
   (with-fixture state ()
@@ -67,7 +70,7 @@ private-key.README.md for how this was generated.")
                  (error 'github-api-error
                         :code 404
                         :message "foo")))
-    (is (eql nil (%app-installation-id "tdrhq/fast-example")))))
+    (is (eql nil (%app-installation-id github-app "tdrhq/fast-example")))))
 
 (test app-installation-id-other-crashes
   (with-fixture state ()
@@ -77,4 +80,4 @@ private-key.README.md for how this was generated.")
                         :code 500
                         :message "foo")))
     (signals github-api-error
-      (%app-installation-id "tdrhq/fast-example"))))
+      (%app-installation-id github-app "tdrhq/fast-example"))))
