@@ -21,7 +21,8 @@
                                  script-name
                                  stripe
                                  form-action
-                                 form-id)
+                                 form-id
+                                 enctype)
   (let* ((children (remove-if 'stringp children))
          (footer (if (mquery:has-class-p (last children) "card-footer")
                      (car (last children))
@@ -50,7 +51,7 @@
                      (format nil "max-width: ~a" max-width)) >
           ,(cond
              (form-action
-              <form action=form-action id=form-id method= "POST" >
+              <form action=form-action id=form-id method= "POST" enctype=enctype >
                 ,(progn inner)
               </form>)
              (t
