@@ -221,16 +221,19 @@ might have verified-p=t. :/ We should consolidate this later."
        #'string<))))
 
 (defun verified-repo-p (repo company)
-  (let ((repo-id (repo-string-identifier repo)))
-    (destructuring-bind (org &rest project-args) (str:split "/" repo-id)
-      (declare (ignore project-args))
-      (or
-       (loop for repo in (%verified-repos-for-company company)
-             if (and (equal repo-id (repo-id repo))
-                     (verified-p repo))
-               return t)
-       (eql t (verified-orgs (github-plugin)))
-       (str:s-member (verified-orgs (github-plugin)) org)))))
+  (let ((repo-id (repo-string-identifier repo))
+        (github-app (github-app (github-plugin) company)))
+    (or
+     (user-provided-github-app? github-app)
+     (destructuring-bind (org &rest project-args) (str:split "/" repo-id)
+       (declare (ignore project-args))
+       (or
+        (loop for repo in (%verified-repos-for-company company)
+              if (and (equal repo-id (repo-id repo))
+                      (verified-p repo))
+                return t)
+        (eql t (verified-orgs (github-plugin)))
+        (str:s-member (verified-orgs (github-plugin)) org))))))
 
 (defun remove-verification (verified-repo)
   (let ((redirect "/settings/github"))
@@ -247,6 +250,9 @@ might have verified-p=t. :/ We should consolidate this later."
 
       <p>Are you sure you want to remove this verification?</p>
     </div>)))
+
+(defun user-provided-github-app? (github-app)
+  (typep github-app 'github-app))
 
 (defun settings-github-page ()
   (let* ((installation-id (installation-id (github-config (current-company))))
@@ -273,7 +279,7 @@ might have verified-p=t. :/ We should consolidate this later."
                           :scope "user:email read:org repo")))))
     <settings-template>
       ,(github-app-configuration-card github-app)
-      ,(when github-app
+      ,(when (and github-app (not (user-provided-github-app? github-app)))
          <div class= "card mt-3" style= "max-width: 80em;" >
            <div class= "card-header">
              <h3>Setup GitHub Checks</h3>
