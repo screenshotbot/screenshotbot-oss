@@ -220,7 +220,13 @@ uses sane defaults."))
      (log:warn "ec2metadata not available, using `ip addr` instead")
      (multiple-value-bind (result parts)
          (cl-ppcre:scan-to-strings "inet ([0-9.]*)/24"
-                                   (uiop:run-program "ip -4 addr show scope global"
+                                   ;; eth0 on Vagrant is the IP
+                                   ;; address for talking to the
+                                   ;; internet. eth1 is the IP address
+                                   ;; for talking on the local
+                                   ;; network. Only applies to Vagrant
+                                   ;; though.
+                                   (uiop:run-program "ip -4 addr show scope global dev eth1"
                                                      :output 'string))
        (unless result
          (error "Could not figure out IP address"))
