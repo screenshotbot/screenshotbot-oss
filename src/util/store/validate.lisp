@@ -17,6 +17,7 @@
   (:import-from #:util/misc/lists
                 #:head)
   (:import-from #:bknr.indices
+                #:index-direct-slot-definition
                 #:base-indexed-object
                 #:object-destroyed-p-v2
                 #:index-direct-slot-definition-index
@@ -169,20 +170,21 @@
                (direct-slot (find-direct-slot class slot-name))
                (slot (find-effective-slot class slot-name))
                (indices (bknr.indices::index-effective-slot-definition-indices slot)))
-          (unless (and
-                   ;; If there's only one index, and that index use a
-                   ;; def-index, then we don't need to validate it.
-                   (= (length indices) 1)
-                   (index-direct-slot-definition-index direct-slot))
-           (dolist (index indices)
-             (let ((all-elts (class-instances class-name)))
-               (handler-bind ((error (lambda (e)
-                                       (declare (ignore e))
-                                       (format t "Errors while processing index for ~a ~a ~a~%" class slot indices))))
-                 (restart-case
-                     (validate-index-values index all-elts slot-name)
-                   (continue-testing-other-indices ()
-                     (values))))))))
+          (when (typep direct-slot 'index-direct-slot-definition)                       
+            (unless (and
+                     ;; If there's only one index, and that index use a
+                     ;; def-index, then we don't need to validate it.
+                     (= (length indices) 1)
+                     (index-direct-slot-definition-index direct-slot))
+              (dolist (index indices)
+                (let ((all-elts (class-instances class-name)))
+                  (handler-bind ((error (lambda (e)
+                                          (declare (ignore e))
+                                          (format t "Errors while processing index for ~a ~a ~a~%" class slot indices))))
+                    (restart-case
+                        (validate-index-values index all-elts slot-name)
+                      (continue-testing-other-indices ()
+                        (values)))))))))
       (retry--validate-class-index ()
         (validate-class-index class-name slot-name)))))
 
@@ -255,6 +257,7 @@
                             if (and
                                 (not (eql '%id-cache slot-name))                                
                                 (not (eql 'object-destroyed-p-v2 slot-name))
+                                (typep direct-slot 'index-direct-slot-definition)
                                 (or
                                  (bknr.indices::index-direct-slot-definition-index direct-slot)
                                  (bknr.indices::index-direct-slot-definition-index-type direct-slot)))
