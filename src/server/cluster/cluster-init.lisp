@@ -109,15 +109,20 @@
   (log:info "Waiting 30s to make sure the screenshotbot service has started")
   (sleep 30)
   (let* ((config (raft-state leader-id))
+         (leader-name (peer-instance-name leader-id))
+         (my-name (str:trim (uiop:read-file-string "/etc/screenshotbot-node-name")))
          (peers (assoc-value config :peers))
          (old-peers (peer-map peers))
          (new-peers (fset:with
                      old-peers
-                     (str:trim (uiop:read-file-string "/etc/screenshotbot-node-name"))
+                     my-name
                      (format nil "~a:7070:0" my-ip))))
     (log:info "Running braft_cli add_peer")
     (%shell (format nil
                     "braft_cli change_peers --group=screenshotbot --conf=~a --new_peers=~a "
                     (map-to-peers old-peers)
-                    (map-to-peers new-peers)))))
+                    (map-to-peers new-peers)))
+    (when (string-equal my-name leader-name)
+      (log:info "Leadership most likely just switched, sleeping 2m so that ALB can catch up")
+      (sleep 120))))
 
