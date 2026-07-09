@@ -71,6 +71,7 @@
        (log:info "Updated ~a" raft-config)))))
 
 (defun %shell (cmd)
+  (log:info "Running: ~a" cmd)
   (uiop:run-program
    cmd
    :output t
@@ -129,13 +130,16 @@
                      old-peers
                      my-name
                      (format nil "~a:7070:0" my-ip))))
+    (log:info "Old peers: ~a" old-peers)
+    (log:info "Plan for new peers: ~a" new-peers)
+
     (when (string= my-name leader-name)
       ;; the old leader is going to be removed from the cluster, so let's switch the leader first.. to anybody...
       (transfer-to-another-leader old-peers leader-name)
       (log:info "Waiting 1m for ALB to catch up")
       (sleep 60))    
 
-    (log:info "Running braft_cli add_peer")
+    (log:info "Running braft_cli change_peer")
     (%shell (format nil
                     "braft_cli change_peers --group=screenshotbot --conf=~a --new_peers=~a "
                     (map-to-peers old-peers)
