@@ -36,27 +36,32 @@
 (defun cluster-init/handler (cmd)
   (log:config :debug)
   (let ((store (str:ensure-suffix "/" (clingon:getopt cmd :store))))
-    (init-raft-config store
-                      (remove-if #'str:emptyp
-                                (str:split "," (or (clingon:getopt cmd :other-peers)
-                                                   ""))))))
+    (init-raft-config store)))
 
 (defun id-to-ip (conf)
   (first (str:rsplit ":" conf :limit 4)))
 
-(defun init-raft-config (store other-peers)
-  (let ((raft-config (path:catfile store "raft-config.lisp"))
+(defun raft-config-path (store)
+  (path:catfile store "raft-config.lisp"))
+
+(defun init-raft-config (store)
+  (let ((raft-config (raft-config-path store))
         (my-ip (ec2-get-local-ipv4)))
     (cond
       ((path:-e raft-config)
        ;; We're already dealing with an existing cluster
        (log:info "Growing existing cluster")
-       (grow-cluster my-ip
+       (grow-cluster store
+                     my-ip
                      (str:trim (uiop:read-file-string (path:catfile store "leader.txt")))))
       (t
        (make-dirs)
-       (uiop:with-staging-pathname (raft-config raft-config)
-         (with-open-file (stream raft-config :direction :output :if-exists :append)
+       (write-raft-config store (list my-ip))))))
+
+(defun write-raft-config (store ips)
+  (let ((raft-config (raft-config-path store)))
+    (uiop:with-staging-pathname (raft-config raft-config)
+      (with-open-file (stream raft-config :direction :output :if-exists :append)
         (let ((*package* (find-package :cl-user)))
           (format stream "~s"
                   `(make-default-store
@@ -65,10 +70,8 @@
                     :data-path ,(namestring "~arnold/raft-data/")
                     :port 7070
                     :ips (list
-                          ,my-ip
-                          ,@(loop for peer in other-peers
-                                  collect (format nil "~a" peer))))))))
-       (log:info "Updated ~a" raft-config)))))
+                          ,@ips))))))
+    (log:info "Updated ~a" raft-config)))
 
 (defun %shell (cmd)
   (log:info "Running: ~a" cmd)
@@ -105,6 +108,12 @@
   (str:join ","
             (fset:convert 'list (fset:range map))))
 
+(defun map-to-ips (map)
+  (serapeum:collecting
+    (fset:do-map (key value map)
+      (declare (ignore key))
+      (collect (id-to-ip value)))))
+
 (defun best-peer (peers leader-name)
   (let ((other-peers (fset:less peers leader-name)))
     (nth-value 1 (fset:least other-peers))))
@@ -117,7 +126,7 @@
              (map-to-peers peers)
              best-peer))))
 
-(defun grow-cluster (my-ip leader-id)
+(defun grow-cluster (store my-ip leader-id)
   ;; First, get the current cluster config:
   (log:info "Waiting 30s to make sure the screenshotbot service has started")
   (sleep 30)
@@ -143,5 +152,9 @@
     (%shell (format nil
                     "braft_cli change_peers --group=screenshotbot --conf=~a --new_peers=~a "
                     (map-to-peers old-peers)
-                    (map-to-peers new-peers)))))
+                    (map-to-peers new-peers)))
+
+    (write-raft-config
+     store
+     (map-to-ips new-peers))))
 

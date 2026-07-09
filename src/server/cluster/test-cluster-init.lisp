@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:server/cluster/cluster-init
+                #:map-to-ips
                 #:best-peer
                 #:map-to-peers))
 (in-package :server/cluster/test-cluster-init)
@@ -37,4 +38,17 @@
                (best-peer peers "Instance2")))
     (is (equal "1.1.1.1:7070:0:0"
                (best-peer peers "Instance3")))))
+
+(test map-to-ips
+  (let ((peers (fset:with
+                (fset:with
+                 (fset:with
+                  (fset:empty-map)
+                  "Instance1" "1.1.1.1:7070:0:0")
+                 "Instance2" "1.1.1.2:7070:0:0")
+                "Instance3" "1.1.1.3:7070:0:0")))
+    (is
+     (equal
+      (list "1.1.1.1" "1.1.1.2" "1.1.1.3")
+      (map-to-ips peers)))))
 
