@@ -52,7 +52,7 @@
        ;; We're already dealing with an existing cluster
        (log:info "Growing existing cluster")
        (grow-cluster my-ip
-                     (id-to-ip (str:trim (uiop:read-file-string (path:catfile store "leader.txt"))))))
+                     (str:trim (uiop:read-file-string (path:catfile store "leader.txt")))))
       (t
        (make-dirs)
        (uiop:with-staging-pathname (raft-config raft-config)
@@ -82,16 +82,42 @@
   (%shell "sudo -u arnold mkdir -p /mnt/efs/fs1/screenshotbot/object-store")
   (%shell "sudo -u arnold mkdir -p /mnt/efs/fs1/screenshotbot/logs"))
 
-(defun grow-cluster (my-ip leader)
+(defun raft-state (peer)
+  (json:decode-json-from-string
+   (http-request (format nil "http://~a:4001/raft-state?full=true"
+                         (id-to-ip peer)))))
+
+(defun peer-instance-name (peer)
+  (assoc-value
+   (raft-state peer)
+   :name))
+
+(defun peer-map (peers)
+  "Builds a map from name to peer"
+  (let ((map (fset:empty-map)))
+    (dolist (peer peers)
+      (fset:includef map (peer-instance-name peer)
+                     peer))
+    map))
+
+(defun map-to-peers (map)
+  (str:join ","
+            (fset:convert 'list (fset:range map))))
+
+(defun grow-cluster (my-ip leader-id)
   ;; First, get the current cluster config:
   (log:info "Waiting 30s to make sure the screenshotbot service has started")
   (sleep 30)
-  (let* ((config (json:decode-json-from-string
-                  (http-request (format nil "http://~a:4001/raft-state?full=true" leader))))
-         (peers (assoc-value config :peers)))
+  (let* ((config (raft-state leader-id))
+         (peers (assoc-value config :peers))
+         (old-peers (peer-map peers))
+         (new-peers (fset:with
+                     old-peers
+                     (str:trim (uiop:read-file-string "/etc/screenshotbot-node-name"))
+                     (format nil "~a:7070:0" my-ip))))
     (log:info "Running braft_cli add_peer")
     (%shell (format nil
-                    "braft_cli add_peer --group=screenshotbot --conf=~a --peer=~a "
-                    (str:join "," peers)
-                    (format nil "~a:7070:0" my-ip)))))
+                    "braft_cli change_peers --group=screenshotbot --conf=~a --new_peers=~a "
+                    (map-to-peers old-peers)
+                    (map-to-peers new-peers)))))
 

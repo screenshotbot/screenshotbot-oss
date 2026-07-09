@@ -97,9 +97,12 @@
                :cl-mock
                :util/fiveam
                :fiveam-matchers
+               :server/cluster
                :server/slynk)
   :serial t
   :components ((:file "test-server")
                (:file "test-config")
                (:file "test-util" :if-feature :lispworks)
-               (:file "test-slynk-preparer")))
+               (:file "test-slynk-preparer")
+               (:module "cluster"
+                :components ((:file "test-cluster-init")))))
