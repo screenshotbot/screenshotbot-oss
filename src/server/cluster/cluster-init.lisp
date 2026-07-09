@@ -104,6 +104,18 @@
   (str:join ","
             (fset:convert 'list (fset:range map))))
 
+(defun best-peer (peers leader-name)
+  (let ((other-peers (fset:less peers leader-name)))
+    (nth-value 1 (fset:least other-peers))))
+
+(defun transfer-to-another-leader (peers leader-name)
+  (let ((best-peer (best-peer peers leader-name)))
+    (%shell
+     (format nil
+             "braft_cli transfer_leader --group=screenshotbot --conf=~a --peer=~a"
+             (map-to-peers peers)
+             best-peer))))
+
 (defun grow-cluster (my-ip leader-id)
   ;; First, get the current cluster config:
   (log:info "Waiting 30s to make sure the screenshotbot service has started")
@@ -117,12 +129,15 @@
                      old-peers
                      my-name
                      (format nil "~a:7070:0" my-ip))))
+    (when (string= my-name leader-name)
+      ;; the old leader is going to be removed from the cluster, so let's switch the leader first.. to anybody...
+      (transfer-to-another-leader old-peers leader-name)
+      (log:info "Waiting 1m for ALB to catch up")
+      (sleep 60))    
+
     (log:info "Running braft_cli add_peer")
     (%shell (format nil
                     "braft_cli change_peers --group=screenshotbot --conf=~a --new_peers=~a "
                     (map-to-peers old-peers)
-                    (map-to-peers new-peers)))
-    (when (string-equal my-name leader-name)
-      (log:info "Leadership most likely just switched, sleeping 2m so that ALB can catch up")
-      (sleep 120))))
+                    (map-to-peers new-peers)))))
 
