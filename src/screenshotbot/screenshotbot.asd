@@ -314,6 +314,7 @@
     :components ((:file "new")
                  (:file "members")
                  (:file "request")
+                 (:file "activity-log")
                  (:file "rename")))
    (:module "microsoft-teams"
     :serial t
