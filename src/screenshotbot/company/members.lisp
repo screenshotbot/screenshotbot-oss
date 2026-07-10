@@ -16,6 +16,7 @@
                 #:user-full-name
                 #:current-company)
   (:import-from #:screenshotbot/model/company
+                #:company
                 #:company-admin-p
                 #:company-owner)
   (:import-from #:screenshotbot/model/user
@@ -25,6 +26,7 @@
   (:import-from #:screenshotbot/model/invite
                 #:invite-email)
   (:import-from #:bknr.datastore
+                #:persistent-class
                 #:with-transaction)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page
@@ -47,6 +49,9 @@
                 #:mdi)
   (:import-from #:screenshotbot/login/common
                 #:with-login)
+  (:import-from #:screenshotbot/audit-log
+                #:with-audit-log
+                #:user-activity-log)
   (:local-nicknames (#:a #:alexandria)
                     (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/company/members)
@@ -246,3 +251,29 @@
 
 (defhandler (nil :uri "/settings/members") ()
   (hex:safe-redirect "/team"))
+
+(defclass role-changed-audit-log (user-activity-log)
+  ((%user :initarg :user
+          :initform nil)
+   (%company :initarg :company
+             :initform nil)
+   (%new-role :initarg :new-role
+              :initform nil)
+   (%old-role :initarg :old-role
+              :initform nil))
+  (:metaclass persistent-class))
+
+
+;; is this an appropriate place to put this? It seems a bit hacky, and
+;; perhaps in the future we should use a custom call here.
+(defmethod (setf roles:user-role) :around ((value symbol) (company company) user)
+  (let ((old-role (roles:user-role company user)))
+    (with-audit-log (audit-log
+                     (make-instance 'role-changed-audit-log
+                                    :user user
+                                    :company company
+                                    :old-role (type-of value)
+                                    :new-role value))
+      (declare (ignore audit-log))
+      (call-next-method))))
+
