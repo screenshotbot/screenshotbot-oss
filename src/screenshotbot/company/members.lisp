@@ -52,6 +52,10 @@
   (:import-from #:screenshotbot/audit-log
                 #:with-audit-log
                 #:user-activity-log)
+  (:import-from #:screenshotbot/dashboard/audit-log
+                #:render-audit-log)
+  (:import-from #:util/misc
+                #:not-null!)
   (:local-nicknames (#:a #:alexandria)
                     (#:roles #:auth/model/roles)))
 (in-package :screenshotbot/company/members)
@@ -72,7 +76,7 @@
   (assert (not (roles:has-role-p company user 'roles:admin)))
   (confirmation-page
    :yes (nibble ()
-          (setf (roles:user-role company user) nil)
+          (%set-user-role company user nil)
           (hex:safe-redirect back))
    :no back
    <p>Remove ,(user-full-name user) from this Organization?</p>))
@@ -102,8 +106,8 @@
                     if (string-equal r role)
                       return r)))
     (assert role)
-    (setf (roles:user-role company user)
-          role)
+    (%set-user-role company user
+                    role)
     (hex:safe-redirect "/team")))
 
 (defun %edit-role (&key user company)
@@ -263,17 +267,20 @@
               :initform nil))
   (:metaclass persistent-class))
 
+(defmethod %set-user-role (company user role)
+  (let ((old-role (type-of (roles:user-role company user))))
+    (when (not (eql old-role role))
+      (make-instance 'role-changed-audit-log
+                     :actor (not-null! (auth:current-user))
+                     :user user
+                     :company company
+                     :old-role old-role
+                     :new-role role)
+      (setf (roles:user-role company user) role))))
 
-;; is this an appropriate place to put this? It seems a bit hacky, and
-;; perhaps in the future we should use a custom call here.
+
+;; TODO: delete this 
 (defmethod (setf roles:user-role) :around ((value symbol) (company company) user)
-  (let ((old-role (roles:user-role company user)))
-    (with-audit-log (audit-log
-                     (make-instance 'role-changed-audit-log
-                                    :user user
-                                    :company company
-                                    :old-role (type-of value)
-                                    :new-role value))
-      (declare (ignore audit-log))
-      (call-next-method))))
+  (call-next-method))
+
 

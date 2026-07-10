@@ -40,6 +40,7 @@
       (t
        <settings-template>
          ,(render-audit-logs
+           :title "Activity Logs"
            :type 'activity-log
            :company (auth:current-company))
        </settings-template>))))
