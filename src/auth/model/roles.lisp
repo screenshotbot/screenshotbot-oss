@@ -95,6 +95,10 @@
     (t
      (str:sentence-case (format nil "~a" (type-of role))))))
 
+(defmethod role-friendly-name ((role symbol))
+  (when role
+   (role-friendly-name (make-instance role))))
+
 (defindex +user-role-index+
   'fset-unique-index
   :slots '(%user %company))

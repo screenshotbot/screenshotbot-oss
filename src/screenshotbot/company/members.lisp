@@ -40,6 +40,8 @@
                 #:mdi)
   (:import-from #:auth/model/invite
                 #:all-unused-invites)
+  (:import-from #:auth
+                #:user-email)
   (:import-from #:screenshotbot/invite
                 #:user-can-invite-p
                 #:invite-enabled-p)
@@ -56,8 +58,7 @@
                 #:render-audit-log)
   (:import-from #:util/misc
                 #:not-null!)
-  (:local-nicknames (#:a #:alexandria)
-                    (#:roles #:auth/model/roles)))
+  (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/company/members)
 
 (named-readtables:in-readtable markup:syntax)
@@ -258,13 +259,17 @@
 
 (defclass role-changed-audit-log (user-activity-log)
   ((%user :initarg :user
-          :initform nil)
+          :initform nil
+          :reader user)
    (%company :initarg :company
-             :initform nil)
+             :initform nil
+             :reader company)
    (%new-role :initarg :new-role
-              :initform nil)
+              :initform nil
+              :reader new-role)
    (%old-role :initarg :old-role
-              :initform nil))
+              :initform nil
+              :reader old-role))
   (:metaclass persistent-class))
 
 (defmethod %set-user-role (company user role)
@@ -284,3 +289,9 @@
   (call-next-method))
 
 
+(defmethod render-audit-log ((self role-changed-audit-log))
+  <span>
+    Role changed for ,(user-email (user self)):
+    <span> from ,(roles:role-friendly-name (old-role self)) </span>
+    <span> to ,(roles:role-friendly-name (new-role self)) </span>
+  </span>)
