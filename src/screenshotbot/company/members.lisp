@@ -288,10 +288,19 @@
 (defmethod (setf roles:user-role) :around ((value symbol) (company company) user)
   (call-next-method))
 
+(markup:deftag role (&key role)
+  <span>
+    ,(cond
+       ((eql role 'symbol)
+        ;; just avoid a migration for now
+        "Unknown role")
+       (t
+        (roles:role-friendly-name role)))
+  </span>)
 
 (defmethod render-audit-log ((self role-changed-audit-log))
   <span>
     Role changed for ,(user-email (user self)):
-    <span> from ,(roles:role-friendly-name (old-role self)) </span>
-    <span> to ,(roles:role-friendly-name (new-role self)) </span>
+    <span> from <role role=(old-role self) /></span>
+    <span> to <role role=(new-role self) /></span>
   </span>)
