@@ -5,7 +5,8 @@
   (:export #:head
 	   #:tail
        #:make-batches
-       #:with-batches))
+       #:with-batches
+       #:only!))
 (in-package #:util/misc/lists)
 
 ;; See also 'last' and 'butlast'
@@ -73,3 +74,7 @@ remaining elements (unfiltered)"
     (values
      (reverse res)
      (reverse indexes))))
+
+(defun only! (list)
+  (assert (= 1 (length list)))
+  (first list))

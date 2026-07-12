@@ -417,6 +417,7 @@
                 :components ((:file "test-common")))
                (:module "company"
                 :components ((:file "test-request")
+                             (:file "test-members")
                              (:file "test-rename")))
                (:module "webhook"
                 :components ((:file "test-model")

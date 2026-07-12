@@ -42,6 +42,8 @@
                 #:screenshotbot-template)
   (:import-from #:util/store/object-id
                 #:oid)
+  (:import-from #:util/misc/lists
+                #:only!)
   (:export
    #:snap-image-blob
    #:snap-all-images
@@ -149,3 +151,6 @@
     (:screenshotbot.pro.css/extended-dashboard . "assets/css/extended-dashboard.css")
     #-screenshotbot-oss
     (:screenshotbot.pro.css . "assets/css/new-landing.css")))
+
+(defun only-instance! (class)
+  (only! (bknr.datastore:class-instances class)))
