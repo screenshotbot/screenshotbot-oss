@@ -105,4 +105,4 @@
                (:file "test-util" :if-feature :lispworks)
                (:file "test-slynk-preparer")
                (:module "cluster"
-                :components ((:file "test-cluster-init")))))
+                :components ((:file "test-cluster-init" :if-feature (:and :listpworks :linux))))))
