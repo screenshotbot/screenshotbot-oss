@@ -12,13 +12,18 @@
                 #:defsettings
                 #:settings-template)
   (:import-from #:screenshotbot/dashboard/audit-log
+                #:render-audit-log
                 #:render-audit-logs)
   (:import-from #:screenshotbot/audit-log
                 #:activity-log)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page)
   (:import-from #:screenshotbot/login/common
-                #:with-login))
+                #:with-login)
+  (:import-from #:util/timeago
+                #:timeago)
+  (:import-from #:screenshotbot/user-api
+                #:created-at))
 (in-package :screenshotbot/company/activity-log)
 
 (named-readtables:in-readtable markup:syntax)
@@ -52,3 +57,9 @@
   :handler (lambda ()
              (activity-log-page)))
 
+(defmethod render-audit-log :around ((self activity-log))
+  <span>
+    ,(call-next-method)
+    <span> at <timeago timestamp= (created-at self) />
+    </span>
+  </span>)
