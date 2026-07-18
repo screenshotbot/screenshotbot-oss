@@ -25,6 +25,7 @@
   (:import-from #:alexandria
                 #:when-let)
   (:import-from #:core/config/api
+                #:validate
                 #:config)
   (:export
    #:installation
@@ -141,10 +142,16 @@ every user will have only one company that they are an owner of."))
              (client-secret (config "sso.oidc.client-secret"))
              (issuer (config "sso.oidc.issuer"))
              (scope (or (config "sso.oidc.scope")
-                        "openid email profile")))
+                        "openid email profile"))
+             (expiration (or (config "sso.oidc.expiration-seconds")
+                             (format nil "~a" (* 20 3600)))))
     (make-instance 'screenshotbot/login/oidc:oidc-provider
                    :client-id client-id
                    :client-secret client-secret
                    :issuer issuer
                    :scope scope
+                   :expiration-seconds (parse-integer expiration)
                    :identifier 'default-oidc-provider)))
+
+(defmethod validate ((config (eql :sso.oidc.expiration-seconds)) value)
+  (parse-integer value))
