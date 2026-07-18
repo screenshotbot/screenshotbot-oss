@@ -71,7 +71,6 @@ Returns the result of the evaluation."
                      :output-stream *standard-output*
                      :timeout 30
                      :connection conn)
-                  (format t "Got result: ~a, ~a~%" result status)
                   (when status
                     (error "EVAL-ON-PID failed with ~a" status))
                   (values result status))
