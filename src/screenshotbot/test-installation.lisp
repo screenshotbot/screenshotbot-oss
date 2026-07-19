@@ -14,7 +14,9 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:core/config/api
-                #:config))
+                #:config)
+  (:import-from #:screenshotbot/login/oidc
+                #:expiration-seconds))
 
 (util/fiveam:def-suite)
 
@@ -29,7 +31,7 @@
       (find-plugin (make-instance 'installation)
                    'my-plugin))))
 
-(test default-oidc-provider-happy-path-with-config
+(def-fixture sso-state ()
   (with-test-store ()
    (let ((installation (make-instance 'installation)))
      (is (eql nil (default-oidc-provider installation)))
@@ -38,4 +40,17 @@
      (setf (config "sso.oidc.client-secret") "car")
      (setf (config "sso.oidc.issuer")
            "https://example.com/")
-     (is (not (null (default-oidc-provider installation)))))))
+     (&body))))
+
+
+(test default-oidc-provider-happy-path-with-config
+  (with-fixture sso-state ()
+    (is (not (null (default-oidc-provider installation))))))
+
+(test default-oidc-provider-when-expiration-is-provided
+  (with-fixture sso-state ()
+    (is (eql (* 20 3600)
+             (expiration-seconds (default-oidc-provider installation))))
+    (setf (config "sso.oidc.expiration-seconds") "3600")
+    (is (eql 3600
+             (expiration-seconds (default-oidc-provider installation))))))
