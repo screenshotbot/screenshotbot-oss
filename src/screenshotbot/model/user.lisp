@@ -371,19 +371,6 @@ SSO. The user is still connected via roles:"))
    (call-next-method)
    (%confirmed-p user)))
 
-(defmethod user-role ((company company) (user user))
-  "To support transitioning to the new role based access control, we
-override user-role."
-  (call-next-method))
-
-;; TODO: remove these two
-(defmethod (setf roles:user-role) :after (value (company company) (user user)))
-(defmethod (setf roles:user-role) :after ((value null) (company company) (user user)))
-
-(defmethod roles:companies-for-user :around ((user user))
-  (call-next-method))
-
-
 (def-store-migration ("Migrate user-companies to roles" :version 16)
   "Note we don't clean up the 'companies slot. That can be a future
 migration."
