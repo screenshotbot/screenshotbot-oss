@@ -52,12 +52,15 @@
   (:import-from #:screenshotbot/login/common
                 #:with-login)
   (:import-from #:screenshotbot/audit-log
+                #:activity-log
                 #:with-audit-log
                 #:user-activity-log)
   (:import-from #:screenshotbot/dashboard/audit-log
                 #:render-audit-log)
   (:import-from #:util/misc
                 #:not-null!)
+  (:import-from #:auth/model/roles
+                #:on-user-added)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/company/members)
 
@@ -303,4 +306,19 @@
     Role changed for ,(user-email (user self)):
     <span> from <role role=(old-role self) /></span>
     <span> to <role role=(new-role self) /></span>
+  </span>)
+
+(defclass user-added-audit-log (activity-log)
+   ((user :initarg :user
+          :reader user))
+   (:metaclass persistent-class))
+
+(defmethod on-user-added :after ((company company) user role)
+  (make-instance 'user-added-audit-log
+                 :user user
+                 :company company))
+
+(defmethod render-audit-log ((self user-added-audit-log))
+  <span>
+    User ,(user-email (user self)) added
   </span>)
