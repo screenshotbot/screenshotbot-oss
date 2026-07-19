@@ -144,10 +144,14 @@
            (role
             (setf (role-type role) value))
            (value
-            (make-instance 'user-roles
-                           :user user
-                           :company company
-                           :role value))))))))
+            (let ((role (make-instance 'user-roles
+                                       :user user
+                                       :company company
+                                       :role value)))
+              (on-user-added company user role)
+              role))))))))
+
+(defmethod on-user-added (company user role))
 
 (defmethod user-role (company user)
   (when-let ((role (index-get +user-role-index+
