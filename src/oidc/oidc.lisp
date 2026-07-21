@@ -57,6 +57,12 @@
            :documentation "The issuer URL, such as
            https://accounts.google.com. We'll use OpenID discovery to
            discover the rest.")
+   (rp-base-url
+    :initarg :rp-base-url
+    :initform nil
+    :accessor rp-base-url
+    :documentation "The base URL used for a redirect. If not provided we will use the
+domain in the request, which might not always be accurate.")
    (client-id :initarg :client-id
               :accessor client-id)
    (client-secret :initarg :client-secret
@@ -267,5 +273,11 @@ object on prod, other screenshotbot.io will reject it.")))
      callback
      :via (oidc-via oauth)
      :client_id (client-id oauth)
+     :redirect-uri
+     (when (rp-base-url oauth)
+       (quri:render-uri
+        (quri:merge-uris
+         "/account/oauth-callback"
+         (quri:uri (rp-base-url oauth)))))
      :response_type "code"
      :scope (scope oauth))))

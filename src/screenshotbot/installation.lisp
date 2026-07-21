@@ -149,6 +149,7 @@ every user will have only one company that they are an owner of."))
                    :client-id client-id
                    :client-secret client-secret
                    :issuer issuer
+                   :rp-base-url (config "sso.oidc.rp-base-url")
                    :scope scope
                    :expiration-seconds (parse-integer expiration)
                    :identifier 'default-oidc-provider)))
