@@ -12,6 +12,7 @@
   (:import-from #:util/store/store
                 #:defindex)
   (:import-from #:util/store/fset-index
+                #:fset-unique-index
                 #:fset-set-index))
 (in-package :screenshotbot/scim/model)
 
@@ -19,13 +20,19 @@
   'fset-set-index
   :slot-name '%company)
 
+(defindex +token-index+
+  'fset-unique-index
+  :slot-name '%token)
+
 (defclass scim-config (store-object)
   ((%company :initarg :company
              :index +config-company-index+
              :index-reader scim-configs-for-company
              :reader scim-config-company)
    (%token :initarg :token
-          :reader scim-config-token))
+           :index +token-index+
+           :index-reader scim-config-for-token
+           :reader scim-config-token))
   (:metaclass persistent-class))
 
 (defclass scim-user (store-object)

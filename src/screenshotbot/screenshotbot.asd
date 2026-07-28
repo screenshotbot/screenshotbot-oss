@@ -443,7 +443,8 @@
                              (:file "test-signup")
                              (:file "test-common")))
                (:module "scim"
-                :components ((:file "test-dto")))
+                :components ((:file "test-dto")
+                             (:file "test-users")))
                (:file "test-invite")
                (:file "test-uname")
                (:module "model"

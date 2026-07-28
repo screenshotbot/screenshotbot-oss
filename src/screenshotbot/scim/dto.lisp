@@ -34,18 +34,41 @@
   (:metaclass ext-json-serializable-class))
 
 (defclass external-user ()
-  ((schemas :initform '(("urn:ietf:params:scim:schemas:core:2.0:User"))
+  ((schemas :initform '("urn:ietf:params:scim:schemas:core:2.0:User")
             :json-type (:list :string)
             :json-key "schemas")
    (user-name :json-type :string
               :json-key "userName"
+              :initarg :user-name
               :reader external-user-user-name)
    (name :json-type external-name
+         :initarg :name
          :json-key "name"
          :reader external-user-name)
+   (id :json-type :string
+       :initarg :id
+       :json-key "id")
    (emails :json-type (:list external-email)
+           :initarg :emails
            :json-key "emails"
            :reader external-user-emails))
   (:metaclass ext-json-serializable-class))
 
 
+(defclass list-response ()
+  ((schemas :initform '("urn:ietf:params:scim:api:messages:2.0:ListResponse")
+            :json-type (:list :string)
+            :json-key "schemas")
+   (total-results :json-type :number
+                  :json-key "totalResults"
+                  :initarg :total-results)
+   (start-index :json-type :number
+                :initarg :start-index
+                :json-key "startIndex")
+   (items-per-page :json-type :number
+                   :initarg :items-per-page
+                   :json-key "itemsPerPage")
+   (resources :json-type (:list external-user)
+              :initarg :resources
+              :json-key "Resources"))
+  (:metaclass ext-json-serializable-class))
