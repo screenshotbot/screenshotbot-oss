@@ -3,6 +3,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:bknr.datastore
+                #:*object-changed-hook*
                 #:maybe-encode-class-layout
                 #:*crash-output-stream*
                 #:persistent-effective-slot-definition
@@ -66,6 +67,7 @@
                                  (declare (ignore e))
                                  (setf error t))))
            (&body))
+      (setf *object-changed-hook* nil)
       (close-store)
       (if error
           (format t ";; store directory ~A not deleted~%" directory)
@@ -616,3 +618,45 @@
      (delete-object one)
      (signals error
        (snapshot)))))
+
+(defdstest object-changed-callback ()
+  (let ((changed (make-hash-table)))
+    (let ((one (make-instance 'object-with-init #| just a random class picked here |#)))
+      (let ((*object-changed-hook* (lambda (obj)
+                                     (incf (gethash obj changed 0)))))
+        (setf (slot-value one 'arg) :hello)
+        (is (eql 1
+                 (gethash one changed)))))))
+
+(deftransaction tx-set-arg-slot (object value)
+  (setf (slot-value object 'arg) value))
+
+(defdstest object-changed-callback-called-in-transaction ()
+  (let ((changed (make-hash-table)))
+    (let ((one (make-instance 'object-with-init #| just a random class picked here |#)))
+      (let ((*object-changed-hook* (lambda (obj)
+                                     (incf (gethash obj changed 0)))))
+        (tx-set-arg-slot one :hello)
+        (is (eql 1
+                 (gethash one changed)))))))
+
+(defdstest object-changed-callback-for-delete ()
+  (let ((changed (make-hash-table)))
+    (let ((one (make-instance 'object-with-init #| just a random class picked here |#)))
+      (let ((*object-changed-hook* (lambda (obj)
+                                     (incf (gethash obj changed 0)))))
+        (delete-object one)
+        (is (eql 1
+                 (gethash one changed)))))))
+
+(deftransaction tx-delete-obj-for-test (object)
+  (bknr.datastore:delete-object object))
+
+(defdstest object-changed-callback-for-delete-in-transaction ()
+  (let ((changed (make-hash-table)))
+    (let ((one (make-instance 'object-with-init #| just a random class picked here |#)))
+      (let ((*object-changed-hook* (lambda (obj)
+                                     (incf (gethash obj changed 0)))))
+        (tx-delete-obj-for-test one)
+        (is (eql 1
+                 (gethash one changed)))))))

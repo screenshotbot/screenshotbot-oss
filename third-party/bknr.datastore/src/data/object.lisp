@@ -16,6 +16,20 @@ kernel is trying to write to bknr.datastore")
 
 (defvar *datastore-lparallel-kernel-lock* (bt:make-lock))
 
+(defvar *object-changed-hook* nil
+  "Used to track when an object is modified, for the purpose of
+background snapshots. Be aware that this is not triggered for
+transitive changes.
+
+This callback is called during the transaction, so be careful with
+using any locks that can lead to race conditions. It is called before
+any modification is made. It is also called when the object is
+deleted.")
+
+(defun on-object-changed (object)
+  (when *object-changed-hook*
+    (funcall *object-changed-hook* object)))
+
 (defun datastore-lparallel-kernel ()
   (bt:with-lock-held (*datastore-lparallel-kernel-lock*)
     (or
@@ -150,6 +164,14 @@ reads will return nil.")))
         (member slot-name '(last-change id))
         ;; If we're restoring then we don't need to create a new transaction
         (in-restore-p))
+
+       ;; On Lispworks, object-destroyed-p-v2 will be optimized and
+       ;; not go through slot-value-using-class. On SBCL, this is not
+       ;; the case, so deleting an object will call on-object-changed
+       ;; twice if we don't do this check.
+       (when #-lispworks (not (eql 'object-destroyed-p-v2 slot-name))
+             #+lispworks t
+        (on-object-changed object))
        (call-next-method))
       (t
        ;; If we're not in a transaction, or this is not a transient
@@ -1013,11 +1035,15 @@ the slots are read from the snapshot and ignored."
                        class-layouts))))))))
 
 (defun tx-delete-object (id)
-  (destroy-object (store-object-with-id id)))
+  (let ((object (store-object-with-id id)))
+    (on-object-changed object)
+    (destroy-object object)))
 
 (defun delete-object (object)
   (if (in-transaction-p)
-      (destroy-object object)
+      (progn
+        (on-object-changed object)
+        (destroy-object object))
       (execute (make-instance 'transaction :function-symbol 'tx-delete-object
                                            :timestamp (get-universal-time)
                                            :args (list (store-object-id object))))))
