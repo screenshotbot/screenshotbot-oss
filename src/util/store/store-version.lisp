@@ -35,7 +35,7 @@
   "The version of the snapshot that was read in. This is the one we
 migrate.")
 
-(defvar *min-store-version* 1
+(defvar *min-store-version* 23
   "The minimum supported version of the store, for loading purposes.")
 
 (defclass version-subsystem ()
