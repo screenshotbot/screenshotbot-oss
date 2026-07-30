@@ -878,20 +878,17 @@ us build additional coordination logic in the future."))
                  (push object objects)))
       (setf (all-objects snapshot-coordinator) (nreverse objects)))
 
-    
-    (let ((finish-encoding
-            ;; Will return a lambda!
-            (encode-object-slots snapshot-coordinator)))
-      (lambda ()
-        (with-open-file (stream snapshot-pathname
-                                :direction :output
-                                :element-type '(unsigned-byte 8)
-                                :if-exists :append)
-          (mapc
-           (lambda (object)
-             (encode-create-object (class-layouts snapshot-coordinator) object stream))
-           (all-objects snapshot-coordinator)))
-        (funcall finish-encoding)))))
+    (encode-object-slots snapshot-coordinator)
+    (lambda ()
+      (with-open-file (stream snapshot-pathname
+                              :direction :output
+                              :element-type '(unsigned-byte 8)
+                              :if-exists :append)
+        (mapc
+         (lambda (object)
+           (encode-create-object (class-layouts snapshot-coordinator) object stream))
+         (all-objects snapshot-coordinator)))
+      (write-encode-set-slots-in-background snapshot-coordinator))))
 
 (defvar *crash-output-stream* t)
 
@@ -937,8 +934,7 @@ us build additional coordination logic in the future."))
 (defun encode-object-slots (snapshot-coordinator)
   (let ((subsystem (subsystem snapshot-coordinator))
         (class-layouts (class-layouts snapshot-coordinator))
-        (objects (all-objects snapshot-coordinator))
-        (snapshot-pathname (snapshot-pathname snapshot-coordinator)))
+        (objects (all-objects snapshot-coordinator)))
     (labels ((make-batches (objects batch-size)
                (if (<= (length objects) batch-size)
                    (list objects)
@@ -982,11 +978,7 @@ us build additional coordination logic in the future."))
 
                  (unless (= count (length threads))
                    (close-batch-streams snapshot-coordinator)
-                   (error "Some threads failed to complete"))
-
-                 ;; Finally combine all the streams together
-                 (lambda ()
-                   (write-encode-set-slots-in-background snapshot-coordinator)))))))))
+                   (error "Some threads failed to complete")))))))))
 
 (defmethod write-encode-set-slots-in-background ((snapshot-coordinator snapshot-coordinator))
   "This combines all the previous encoded data, and other snapshotted
