@@ -136,4 +136,5 @@
            #:*json-ignore-slots*)
   (:export
    #:make-object-snapshot
-   #:encode-slots-for-object))
+   #:encode-slots-for-object
+   #:make-object-snapshot-v2))

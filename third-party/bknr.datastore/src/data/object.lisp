@@ -923,9 +923,18 @@ us build additional coordination logic in the future."))
 (defmethod make-object-snapshot (object)
   nil)
 
+(defmethod make-object-snapshot-v2 (object now)
+  "In the future, we should consider renaming this to
+make-object-snapshot once we delete make-object-snapshot."
+  (declare (ignore now))
+  (make-object-snapshot object))
+
 (defun split-objects-into-snapshots (objects)
   (let ((lparallel:*kernel* (datastore-lparallel-kernel)))
-    (let ((snapshots (lparallel:pmapcar #'make-object-snapshot objects)))
+    (let* ((now (get-universal-time))
+           (snapshots (lparallel:pmapcar (lambda (object)
+                                           (make-object-snapshot-v2 object now))
+                                         objects)))
       (assert (eql (length snapshots)
                    (length objects)))
       (loop for obj in objects
