@@ -535,18 +535,23 @@ bound, encode 'bknr.datastore::unbound."
     (%encode-integer (store-object-id object) stream)
     (%encode-set-slots class-layout object stream)))
 
-(defgeneric encode-slots-for-object (class-layout snapshot stream)
+(defgeneric encode-slots-for-object (class-layout snapshot stream &key changedp)
   (:documentation "Only used for encoding slots from Snapshot"))
 
-(defun encode-set-slots-for-snapshot (class-layouts object-snapshot-pair stream)
-  (let* ((object (object-snapshot-pair-object object-snapshot-pair))
+(defun encode-set-slots-for-snapshot (snapshot-coordinator object-snapshot-pair stream)
+  (let* ((class-layouts (class-layouts snapshot-coordinator))
+         (object (object-snapshot-pair-object object-snapshot-pair))
          (class-layout (gethash (class-of object)
                                 class-layouts)))
     (%write-tag #\S stream)
     (%encode-integer (class-layout-id class-layout) stream)
     (%encode-integer (store-object-id object) stream)
-    (encode-slots-for-object class-layout (object-snapshot-pair-snapshot object-snapshot-pair)
-                             stream)))
+    (encode-slots-for-object class-layout
+                             (object-snapshot-pair-snapshot object-snapshot-pair)
+                             stream
+                             :changedp (gethash object (touched-objects snapshot-coordinator)))))
+
+
 
 (defun find-class-with-interactive-renaming (class-name)
   (loop until (or (null class-name)
@@ -1025,7 +1030,7 @@ output stream"
          (format t "Encoding background snapshots~%")
          ;; Encode the background snapshots
          (loop for object-snapshot-pair in (object-snapshots snapshot-coordinator)
-               do (encode-set-slots-for-snapshot (class-layouts snapshot-coordinator)
+               do (encode-set-slots-for-snapshot snapshot-coordinator
                                                  object-snapshot-pair
                                                  stream))
 

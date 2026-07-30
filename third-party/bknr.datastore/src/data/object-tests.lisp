@@ -512,8 +512,13 @@
 (defmethod make-object-snapshot ((self async-object-with-slot))
   (make-instance 'async-object-snapshot :original self))
 
+(define-condition changedp-inspector ()
+  ((changedp :initarg :changedp
+             :reader changedp)))
+
 (defmethod encode-slots-for-object (class-layout (self async-object-snapshot)
-                                    stream)
+                                    stream &key changedp)
+  (signal 'changedp-inspector :changedp changedp)
   (assert (equal '(bknr.datastore::last-change slot1 slot2)
                  (class-layout-slots class-layout)))
   (encode 20 stream)
@@ -529,6 +534,39 @@
   (let ((result (first (bknr.datastore:class-instances 'async-object-with-slot))))
     (is (equal "bar" (slot-value result 'slot1)))
     (is (equal 45 (slot-value result 'slot2)))))
+
+(defdstest asynchronously-save-object-has-changedp-false-if-not-changed ()
+  (make-instance 'async-object-with-slot
+                 :slot1 "foo"
+                 :slot2 22)
+  (let ((sig nil))
+    (handler-bind ((changedp-inspector (lambda (s)
+                                         (setf sig s))))
+      (snapshot))
+    (is-false (changedp sig))))
+
+(defdstest asynchronously-save-object-has-changedp-true-if-not-changed ()
+  (let ((one (make-instance 'async-object-with-slot
+                            :slot1 "foo"
+                            :slot2 22)))
+    (uiop:with-temporary-file (:pathname output)
+      (let ((snapshot-coordinator (make-instance 'snapshot-coordinator
+                                                 :all-objects (list one)
+                                                 :subsystem (make-instance 'store-object-subsystem)
+                                                 :snapshot-pathname output)))
+        (finishes
+          (encode-class-layouts snapshot-coordinator))
+        (finishes
+          (encode-object-slots snapshot-coordinator))
+        ;; now in the "background" the object gets changed
+        (setf (slot-value one 'slot1) "bar")
+        (finishes
+          ;; how do we assert anything here? We'll find out later
+          (let ((sig nil))
+            (handler-bind ((changedp-inspector (lambda (s)
+                                                 (setf sig s))))
+              (write-encode-set-slots-in-background snapshot-coordinator))
+            (is-true (changedp sig))))))))
 
 
 (defdstest cant-finalize-class-without-store-object ()
