@@ -796,6 +796,7 @@ the slots are read from the snapshot and ignored."
  layout, which currently is (list* id ...slots). See the corresponding
  test.")
    (all-objects :initform nil
+                :initarg :all-objects ;; useful for testing
                 :accessor all-objects)
    (snapshot-pathname :initarg :snapshot-pathname
                       :reader snapshot-pathname)
@@ -852,10 +853,15 @@ us build additional coordination logic in the future."))
                     (when slot
                       (relaxed-object-reference-slot-p slot)))))))
 
-(defun encode-class-layouts (snapshot-coordinator stream &key map-store-objects)
-  (funcall map-store-objects
-           (lambda (object)
-             (maybe-encode-class-layout (class-layouts snapshot-coordinator) object stream))))
+(defun encode-class-layouts (snapshot-coordinator)
+  (with-open-file (stream (snapshot-pathname snapshot-coordinator)
+                          :direction :output
+                          :element-type '(unsigned-byte 8)
+                          :if-exists :append)
+    (mapc
+     (lambda (object)
+       (maybe-encode-class-layout (class-layouts snapshot-coordinator) object stream))
+     (all-objects snapshot-coordinator))))
 
 (defun snapshot-subsystem-helper (subsystem snapshot-pathname
                                   &key (map-store-objects #'map-store-objects))
@@ -869,8 +875,7 @@ us build additional coordination logic in the future."))
                             :if-exists :supersede)
       (with-transaction (:prepare-for-snapshot)
         (funcall map-store-objects #'prepare-for-snapshot))
-      (encode-current-object-id stream)
-      (encode-class-layouts snapshot-coordinator stream :map-store-objects map-store-objects))
+      (encode-current-object-id stream))
 
     (let ((objects))
       (funcall map-store-objects
@@ -878,6 +883,7 @@ us build additional coordination logic in the future."))
                  (push object objects)))
       (setf (all-objects snapshot-coordinator) (nreverse objects)))
 
+    (encode-class-layouts snapshot-coordinator)
     (encode-object-slots snapshot-coordinator)
     (lambda ()
       (with-open-file (stream snapshot-pathname

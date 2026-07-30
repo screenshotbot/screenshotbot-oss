@@ -3,6 +3,10 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:bknr.datastore
+                #:write-encode-set-slots-in-background
+                #:encode-object-slots
+                #:encode-class-layouts
+                #:snapshot-coordinator
                 #:*object-changed-hook*
                 #:maybe-encode-class-layout
                 #:*crash-output-stream*
@@ -660,3 +664,19 @@
         (tx-delete-obj-for-test one)
         (is (eql 1
                  (gethash one changed)))))))
+
+(defdstest test-snapshot-coordinator-directly ()
+  "snapshot-coordinator is super-async, so testing it directly is very convenient"
+  (let ((one (make-instance 'object-with-init)))
+    (uiop:with-temporary-file (:pathname output)
+      (let ((snapshot-coordinator (make-instance 'snapshot-coordinator
+                                                 :all-objects (list one)
+                                                 :subsystem (make-instance 'store-object-subsystem)
+                                                 :snapshot-pathname output)))
+        (finishes
+          (encode-class-layouts snapshot-coordinator))
+        (finishes
+          (encode-object-slots snapshot-coordinator))
+        (finishes
+          ;; how do we assert anything here? We'll find out later
+          (write-encode-set-slots-in-background snapshot-coordinator))))))
