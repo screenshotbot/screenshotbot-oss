@@ -986,23 +986,30 @@ us build additional coordination logic in the future."))
 
                  ;; Finally combine all the streams together
                  (lambda ()
-                   (unwind-protect
-                        (with-open-file (stream snapshot-pathname
-                                                :direction :output
-                                                :element-type '(unsigned-byte 8)
-                                                :if-exists :append)
-                          (loop for s in (batch-streams snapshot-coordinator) do
-                            (file-position s 0)
-                            (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
+                   (write-encode-set-slots-in-background snapshot-coordinator)))))))))
 
-                          (format t "Encoding background snapshots~%")
-                          ;; Encode the background snapshots
-                          (loop for object-snapshot-pair in (object-snapshots snapshot-coordinator)
-                                do (encode-set-slots-for-snapshot class-layouts object-snapshot-pair
-                                                                  stream))
+(defmethod write-encode-set-slots-in-background ((snapshot-coordinator snapshot-coordinator))
+  "This combines all the previous encoded data, and other snapshotted
+data, to finally append all the encode-set-slot information to the
+output stream"
+  (unwind-protect
+       (with-open-file (stream (snapshot-pathname snapshot-coordinator)
+                               :direction :output
+                               :element-type '(unsigned-byte 8)
+                               :if-exists :append)
+         (loop for s in (batch-streams snapshot-coordinator) do
+           (file-position s 0)
+           (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
 
-                          (finish-output stream))
-                     (close-batch-streams snapshot-coordinator))))))))))
+         (format t "Encoding background snapshots~%")
+         ;; Encode the background snapshots
+         (loop for object-snapshot-pair in (object-snapshots snapshot-coordinator)
+               do (encode-set-slots-for-snapshot (class-layouts snapshot-coordinator)
+                                                 object-snapshot-pair
+                                                 stream))
+
+         (finish-output stream))
+    (close-batch-streams snapshot-coordinator)))
 
 (defmethod close-subsystem ((store store) (subsystem store-object-subsystem))
   (dolist (class-name (all-store-classes))
