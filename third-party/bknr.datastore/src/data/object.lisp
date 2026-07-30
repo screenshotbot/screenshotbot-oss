@@ -800,7 +800,11 @@ the slots are read from the snapshot and ignored."
    (snapshot-pathname :initarg :snapshot-pathname
                       :reader snapshot-pathname)
    (subsystem :initarg :subsystem
-              :reader subsystem))
+              :reader subsystem)
+   (batch-streams :initform nil
+                  :accessor batch-streams
+                  :documentation "A list of open streams, for each batch that is being written. At the
+final step, it's merged back."))
   (:documentation "The snapshot process is a long complicated process that goes into the
 background. This class keeps track of the current state, which helps
 us build additional coordination logic in the future."))
@@ -922,6 +926,11 @@ us build additional coordination logic in the future."))
             finally
                (return (values objs snaps))))))
 
+(defmethod close-batch-streams ((self snapshot-coordinator))
+  "Close the temporary streams opened for parallel batches of encoding slots"
+  (mapc #'close (batch-streams self))
+  (setf (batch-streams self) nil))
+
 (defun encode-object-slots (snapshot-coordinator)
   (let ((subsystem (subsystem snapshot-coordinator))
         (class-layouts (class-layouts snapshot-coordinator))
@@ -940,56 +949,55 @@ us build additional coordination logic in the future."))
           (split-objects-into-snapshots objects)
         (let* ((batch-size (ceiling (length objects) (snapshot-threads subsystem)))
                (batches (make-batches objects batch-size))
-               (streams (loop for nil in batches
+               (lock (bt:make-lock))
+               (count 0))
+
+          (setf (batch-streams snapshot-coordinator)
+                (loop for nil in batches
                               collect (uiop:with-temporary-file (:pathname p)
                                         (open p :direction :io
                                                 :if-exists :supersede
                                                 :element-type '(unsigned-byte 8)))))
-               (lock (bt:make-lock))
-               (count 0))
 
-          (flet ((close-streams ()
-                   "Close all the temporary streams that we've opened"
-                   (mapc #'close streams)))
-            (unwind-protect
-                 (let ((threads
-                         (loop for batch in batches
-                               for s in streams
-                               collect
-                               (let ((s s)
-                                     (batch batch))
-                                 (safe-make-thread
-                                  (lambda ()
-                                    (let ((*in-restore-p* t))
-                                      (loop for object in batch
-                                            do (encode-set-slots class-layouts object s))
-                                      (bt:with-lock-held (lock)
-                                        (incf count)))))))))
-                   (mapc #'bt:join-thread threads)
+          (unwind-protect
+               (let ((threads
+                       (loop for batch in batches
+                             for s in (batch-streams snapshot-coordinator)
+                             collect
+                             (let ((s s)
+                                   (batch batch))
+                               (safe-make-thread
+                                (lambda ()
+                                  (let ((*in-restore-p* t))
+                                    (loop for object in batch
+                                          do (encode-set-slots class-layouts object s))
+                                    (bt:with-lock-held (lock)
+                                      (incf count)))))))))
+                 (mapc #'bt:join-thread threads)
 
-                   (unless (= count (length threads))
-                     (close-streams)
-                     (error "Some threads failed to complete"))
+                 (unless (= count (length threads))
+                   (close-batch-streams snapshot-coordinator)
+                   (error "Some threads failed to complete"))
 
-                   ;; Finally combine all the streams together
-                   (lambda ()
-                     (unwind-protect
-                          (with-open-file (stream snapshot-pathname
-                                                  :direction :output
-                                                  :element-type '(unsigned-byte 8)
-                                                  :if-exists :append)
-                            (loop for s in streams do
-                              (file-position s 0)
-                              (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
+                 ;; Finally combine all the streams together
+                 (lambda ()
+                   (unwind-protect
+                        (with-open-file (stream snapshot-pathname
+                                                :direction :output
+                                                :element-type '(unsigned-byte 8)
+                                                :if-exists :append)
+                          (loop for s in (batch-streams snapshot-coordinator) do
+                            (file-position s 0)
+                            (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
 
-                            (format t "Encoding background snapshots~%")
-                            ;; Encode the background snapshots
-                            (loop for object-snapshot-pair in snapshots
-                                  do (encode-set-slots-for-snapshot class-layouts object-snapshot-pair
-                                                                    stream))
+                          (format t "Encoding background snapshots~%")
+                          ;; Encode the background snapshots
+                          (loop for object-snapshot-pair in snapshots
+                                do (encode-set-slots-for-snapshot class-layouts object-snapshot-pair
+                                                                  stream))
 
-                            (finish-output stream))
-                       (close-streams)))))))))))
+                          (finish-output stream))
+                     (close-batch-streams snapshot-coordinator))))))))))
 
 (defmethod close-subsystem ((store store) (subsystem store-object-subsystem))
   (dolist (class-name (all-store-classes))
