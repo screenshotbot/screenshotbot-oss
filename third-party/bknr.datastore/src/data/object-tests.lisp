@@ -3,6 +3,7 @@
         #:fiveam
         #:fiveam-matchers)
   (:import-from #:bknr.datastore
+                #:touched-objects
                 #:write-encode-set-slots-in-background
                 #:encode-object-slots
                 #:encode-class-layouts
@@ -680,3 +681,23 @@
         (finishes
           ;; how do we assert anything here? We'll find out later
           (write-encode-set-slots-in-background snapshot-coordinator))))))
+
+(defdstest test-touched-objects ()
+  (let ((one (make-instance 'object-with-init))
+        (two (make-instance 'object-with-init)))
+    (uiop:with-temporary-file (:pathname output)
+      (let ((snapshot-coordinator (make-instance 'snapshot-coordinator
+                                                 :all-objects (list one)
+                                                 :subsystem (make-instance 'store-object-subsystem)
+                                                 :snapshot-pathname output)))
+        (finishes
+          (encode-class-layouts snapshot-coordinator))
+        (finishes
+          (encode-object-slots snapshot-coordinator))
+        (setf (slot-value one 'arg) :hello)
+        (is-true (gethash one (touched-objects snapshot-coordinator)))
+        (is-false (gethash two (touched-objects snapshot-coordinator)))
+        (finishes
+          ;; how do we assert anything here? We'll find out later
+          (write-encode-set-slots-in-background snapshot-coordinator))
+        (is-false *object-changed-hook*)))))

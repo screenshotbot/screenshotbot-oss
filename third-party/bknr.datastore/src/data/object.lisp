@@ -808,7 +808,15 @@ the slots are read from the snapshot and ignored."
                                   final step, it's merged back.")
    (object-snapshots :accessor object-snapshots
                      :documentation "This is the object-snapshots that will be written during the
-                                     background encoding step."))
+                                     background encoding step.")
+   (touched-objects :initform (make-hash-table
+                               #+sbcl #+sbcl
+                               :synchronized t)
+                    :reader touched-objects
+                    :documentation "Between the encode-object-slots and
+write-encode-set-slots-in-background, this keeps track of which
+objects were modified. This let's us abort the snapshot if we think
+we're going to be in an inconsistent state."))
   (:documentation "The snapshot process is a long complicated process that goes into the
 background. This class keeps track of the current state, which helps
 us build additional coordination logic in the future."))
@@ -983,7 +991,14 @@ us build additional coordination logic in the future."))
 
             (unless (= count (length threads))
               (close-batch-streams snapshot-coordinator)
-              (error "Some threads failed to complete"))))))))
+              (error "Some threads failed to complete")))))
+
+      ;; before we continue, track any object edits until we finally
+      ;; write the objects down.
+      (setf
+       *object-changed-hook*
+       (lambda (object)
+         (setf (gethash object (touched-objects snapshot-coordinator)) t))))))
 
 (defmethod write-encode-set-slots-in-background ((snapshot-coordinator snapshot-coordinator))
   "This combines all the previous encoded data, and other snapshotted
@@ -1006,6 +1021,7 @@ output stream"
                                                  stream))
 
          (finish-output stream))
+    (setf *object-changed-hook* nil)
     (close-batch-streams snapshot-coordinator)))
 
 (defmethod close-subsystem ((store store) (subsystem store-object-subsystem))
