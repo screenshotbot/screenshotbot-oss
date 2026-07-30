@@ -804,7 +804,10 @@ the slots are read from the snapshot and ignored."
    (batch-streams :initform nil
                   :accessor batch-streams
                   :documentation "A list of open streams, for each batch that is being written. At the
-final step, it's merged back."))
+                                  final step, it's merged back.")
+   (object-snapshots :accessor object-snapshots
+                     :documentation "This is the object-snapshots that will be written during the
+                                     background encoding step."))
   (:documentation "The snapshot process is a long complicated process that goes into the
 background. This class keeps track of the current state, which helps
 us build additional coordination logic in the future."))
@@ -947,6 +950,8 @@ us build additional coordination logic in the future."))
       (multiple-value-bind
             (objects snapshots)
           (split-objects-into-snapshots objects)
+        (setf (object-snapshots snapshot-coordinator)
+              snapshots)
         (let* ((batch-size (ceiling (length objects) (snapshot-threads subsystem)))
                (batches (make-batches objects batch-size))
                (lock (bt:make-lock))
@@ -992,7 +997,7 @@ us build additional coordination logic in the future."))
 
                           (format t "Encoding background snapshots~%")
                           ;; Encode the background snapshots
-                          (loop for object-snapshot-pair in snapshots
+                          (loop for object-snapshot-pair in (object-snapshots snapshot-coordinator)
                                 do (encode-set-slots-for-snapshot class-layouts object-snapshot-pair
                                                                   stream))
 
