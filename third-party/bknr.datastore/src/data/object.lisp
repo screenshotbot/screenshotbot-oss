@@ -248,7 +248,8 @@ reads will return nil.")))
        :index-reader store-object-with-id :index-values all-store-objects
        :index-mapvalues map-store-objects)
    (last-change :initform (get-universal-time)
-                :initarg :last-change))
+                :initarg :last-change
+                :reader store-object-last-change-v2))
   (:metaclass persistent-class)
   (:class-indices (all-class :index *class-skip-index*
                              :index-subclasses t
