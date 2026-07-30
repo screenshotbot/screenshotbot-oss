@@ -929,17 +929,17 @@ us build additional coordination logic in the future."))
 (defmethod make-object-snapshot (object)
   nil)
 
-(defmethod make-object-snapshot-v2 (object now)
+(defmethod make-object-snapshot-v2 (object last-object-id)
   "In the future, we should consider renaming this to
 make-object-snapshot once we delete make-object-snapshot."
-  (declare (ignore now))
+  (declare (ignore last-object-id))
   (make-object-snapshot object))
 
-(defun split-objects-into-snapshots (objects)
+(defun split-objects-into-snapshots (snapshot-coordinator objects)
   (let ((lparallel:*kernel* (datastore-lparallel-kernel)))
-    (let* ((now (get-universal-time))
+    (let* ((next-object-id (next-object-id (subsystem snapshot-coordinator)))
            (snapshots (lparallel:pmapcar (lambda (object)
-                                           (make-object-snapshot-v2 object now))
+                                           (make-object-snapshot-v2 object next-object-id))
                                          objects)))
       (assert (eql (length snapshots)
                    (length objects)))
@@ -974,7 +974,7 @@ make-object-snapshot once we delete make-object-snapshot."
                      batch-size)))))
       (multiple-value-bind
             (objects snapshots)
-          (split-objects-into-snapshots objects)
+          (split-objects-into-snapshots snapshot-coordinator objects)
         (setf (object-snapshots snapshot-coordinator)
               snapshots)
         (let* ((batch-size (ceiling (length objects) (snapshot-threads subsystem)))

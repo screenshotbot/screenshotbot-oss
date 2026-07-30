@@ -11,7 +11,6 @@
         #:screenshotbot/model/view)
   (:nicknames #:%r)
   (:import-from #:bknr.datastore
-                #:store-object-last-change-v2
                 #:deftransaction
                 #:class-instances
                 #:persistent-class
@@ -419,9 +418,9 @@ associated report is rendered.")
   (constant-string-string (%override-commit-hash self)))
 
 (defmethod bknr.datastore:make-object-snapshot-v2 ((self recorder-run)
-                                                   now)
-  (let ((cutoff (- now 36000)))
-    (when (< (store-object-last-change-v2 self) cutoff)
+                                                   next-object-id)
+  (let ((cutoff (- next-object-id 100000)))
+    (when (< (store-object-id self) cutoff)
       (make-instance 'unlikely-to-change-snapshot
                      :object self))))
 

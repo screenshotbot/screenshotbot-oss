@@ -40,7 +40,7 @@
    (slot2 :initarg :slot2))
   (:metaclass persistent-class))
 
-(defmethod bknr.datastore:make-object-snapshot-v2 ((self some-object) now)
+(defmethod bknr.datastore:make-object-snapshot-v2 ((self some-object) last-object-id)
   (make-instance 'unlikely-to-change-snapshot
                  :object self))
 
