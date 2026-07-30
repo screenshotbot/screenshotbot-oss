@@ -11,6 +11,7 @@
         #:screenshotbot/model/view)
   (:nicknames #:%r)
   (:import-from #:bknr.datastore
+                #:store-object-last-change-v2
                 #:deftransaction
                 #:class-instances
                 #:persistent-class
@@ -90,6 +91,8 @@
                 #:@)
   (:import-from #:easy-macros
                 #:def-easy-macro)
+  (:import-from #:util/store/unlikely-to-change-snapshot
+                #:unlikely-to-change-snapshot)
   ;; classes
   (:export #:promotion-log
            #:recorder-run
@@ -415,11 +418,12 @@ associated report is rendered.")
 (defmethod override-commit-hash ((self recorder-run))
   (constant-string-string (%override-commit-hash self)))
 
-(defmethod bknr.datastore:make-object-snapshot ((self recorder-run))
-  (make-instance 'simple-object-snapshot
-                 :object self
-                 :except-slots '(promotion-complete-p
-                                 %warnings)))
+(defmethod bknr.datastore:make-object-snapshot-v2 ((self recorder-run)
+                                                   now)
+  (let ((cutoff (- now 36000)))
+    (when (< (store-object-last-change-v2 self) cutoff)
+      (make-instance 'unlikely-to-change-snapshot
+                     :object self))))
 
 (defmethod recorder-run-author :around ((run recorder-run))
   (handler-case
