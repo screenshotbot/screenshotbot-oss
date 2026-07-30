@@ -137,4 +137,5 @@
   (:export
    #:make-object-snapshot
    #:encode-slots-for-object
-   #:make-object-snapshot-v2))
+   #:make-object-snapshot-v2
+   #:store-object-last-change-v2))
