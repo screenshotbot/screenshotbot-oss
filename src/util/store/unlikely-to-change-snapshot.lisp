@@ -24,7 +24,6 @@ object was created, then the background snapshot process crashes"))
 (defmethod bknr.datastore:encode-slots-for-object (class-layout (self unlikely-to-change-snapshot)
                                                    stream
                                                    &key changedp)
-  (log:info "Got changedp: ~a" changedp)
   (cond
     (changedp
      (error 'object-changed-during-snapshot))
