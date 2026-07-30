@@ -960,25 +960,24 @@ us build additional coordination logic in the future."))
                                                 :if-exists :supersede
                                                 :element-type '(unsigned-byte 8)))))
 
-          (unwind-protect
-               (let ((threads
-                       (loop for batch in batches
-                             for s in (batch-streams snapshot-coordinator)
-                             collect
-                             (let ((s s)
-                                   (batch batch))
-                               (safe-make-thread
-                                (lambda ()
-                                  (let ((*in-restore-p* t))
-                                    (loop for object in batch
-                                          do (encode-set-slots class-layouts object s))
-                                    (bt:with-lock-held (lock)
-                                      (incf count)))))))))
-                 (mapc #'bt:join-thread threads)
+          (let ((threads
+                  (loop for batch in batches
+                        for s in (batch-streams snapshot-coordinator)
+                        collect
+                        (let ((s s)
+                              (batch batch))
+                          (safe-make-thread
+                           (lambda ()
+                             (let ((*in-restore-p* t))
+                               (loop for object in batch
+                                     do (encode-set-slots class-layouts object s))
+                               (bt:with-lock-held (lock)
+                                 (incf count)))))))))
+            (mapc #'bt:join-thread threads)
 
-                 (unless (= count (length threads))
-                   (close-batch-streams snapshot-coordinator)
-                   (error "Some threads failed to complete")))))))))
+            (unless (= count (length threads))
+              (close-batch-streams snapshot-coordinator)
+              (error "Some threads failed to complete"))))))))
 
 (defmethod write-encode-set-slots-in-background ((snapshot-coordinator snapshot-coordinator))
   "This combines all the previous encoded data, and other snapshotted
