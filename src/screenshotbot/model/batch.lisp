@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/model/batch
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:store-object-id
                 #:class-instances
                 #:persistent-class
                 #:store-object)
@@ -45,6 +46,8 @@
                 #:simple-object-snapshot)
   (:import-from #:util/store/store-version
                 #:*snapshot-store-version*)
+  (:import-from #:util/store/unlikely-to-change-snapshot
+                #:unlikely-to-change-snapshot)
   (:export
    #:find-or-create-batch
    #:batch-items
@@ -163,14 +166,11 @@ code."
   (fset:convert 'fset:set
                 (%batch-items batch)))
 
-(defmethod bknr.datastore:make-object-snapshot ((self batch-item))
-  (when (>= *snapshot-store-version* 23)
-    (make-instance 'simple-object-snapshot
-                   :object self
-                   :except-slots '(%status
-                                   %title
-                                   %run
-                                   %report))))
+(defmethod bknr.datastore:make-object-snapshot-v2 ((self batch-item) next-object-id)
+  (let ((cutoff (- next-object-id 100000)))
+    (when (< (store-object-id self) cutoff)
+      (make-instance 'unlikely-to-change-snapshot
+                     :object self))))
 
 (defvar *lock* (bt:make-lock))
 
