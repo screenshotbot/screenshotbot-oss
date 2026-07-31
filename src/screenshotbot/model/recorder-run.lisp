@@ -550,10 +550,11 @@ from the map without too much code duplication"
         (return-from unchanged-run-for-commit ur))))
   nil)
 
-(defmethod bknr.datastore:make-object-snapshot ((self unchanged-run))
-  (make-instance 'simple-object-snapshot
-                 :object self
-                 :except-slots '(promotion-complete-p)))
+(defmethod bknr.datastore:make-object-snapshot-v2 ((self unchanged-run) next-object-id)
+  (let ((cutoff (- next-object-id 100000)))
+    (when (< (store-object-id self) cutoff)
+      (make-instance 'unlikely-to-change-snapshot
+                     :object self))))
 
 (defun make-recorder-run (&rest args &key screenshots channel
                                        pull-request
