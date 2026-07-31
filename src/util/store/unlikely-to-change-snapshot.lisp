@@ -20,7 +20,13 @@ during a background snapshot. If the object did change since the
 object was created, then the background snapshot process crashes"))
 
 (define-condition object-changed-during-snapshot (error)
-  ())
+  ((object :initarg :object
+           :initform nil
+           :reader %object)))
+
+(defmethod print-object ((self object-changed-during-snapshot) stream)
+  (format stream "Object changed during snapshot: ~a"
+          (%object self)))
 
 (defvar *unlikely-to-change* (make-instance 'unlikely-to-change-snapshot))
 
@@ -30,7 +36,7 @@ object was created, then the background snapshot process crashes"))
                                                      object)
   (cond
     (changedp
-     (error 'object-changed-during-snapshot))
+     (error 'object-changed-during-snapshot :object object))
     (t
      (loop for slot in (class-layout-slots class-layout)
            do (encode
