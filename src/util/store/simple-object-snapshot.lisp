@@ -14,9 +14,7 @@
 (in-package :util/store/simple-object-snapshot)
 
 (defclass simple-object-snapshot ()
-  ((object :initarg :object
-           :reader %object)
-   (except-slots :initarg :except-slots
+  ((except-slots :initarg :except-slots
                  :initform nil
                  :reader except-slots
                  :documentation "The except slots must be bound. If it's unbound it will crash.")
@@ -29,23 +27,21 @@ simple copy is not good enough."
   (slot-value obj slot-name))
 
 (defmethod initialize-instance :after ((self simple-object-snapshot) &key except-slots object)
-  (declare (ignore object))
   (setf (%slot-values self)
         (loop for slot in except-slots
-              collect (cons slot (snapshot-slot-value (%object self) slot)))))
+              collect (cons slot (snapshot-slot-value object slot)))))
 
 ;; Some of the tests for this are in test-image :/
 (defmethod bknr.datastore:encode-slots-for-object (class-layout (self simple-object-snapshot) stream &key changedp
                                                                                                        object)
-  (declare (ignore changedp object))
-  (let ((object (%object self)))
-    (loop for slot in (class-layout-slots class-layout)
-          do (encode
-              (cond
-                ((member slot (except-slots self))
-                 (alexandria:assoc-value (%slot-values self) slot))
-                ((slot-boundp object slot)
-                 (slot-value object slot))
-                (t
-                 'bknr.datastore::unbound))
-              stream))))
+  (declare (ignore changedp))
+  (loop for slot in (class-layout-slots class-layout)
+        do (encode
+            (cond
+              ((member slot (except-slots self))
+               (alexandria:assoc-value (%slot-values self) slot))
+              ((slot-boundp object slot)
+               (slot-value object slot))
+              (t
+               'bknr.datastore::unbound))
+            stream)))
