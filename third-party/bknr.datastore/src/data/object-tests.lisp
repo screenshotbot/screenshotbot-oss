@@ -517,7 +517,7 @@
              :reader changedp)))
 
 (defmethod encode-slots-for-object (class-layout (self async-object-snapshot)
-                                    stream &key changedp)
+                                    stream &key changedp object)
   (signal 'changedp-inspector :changedp changedp)
   (assert (equal '(bknr.datastore::last-change slot1 slot2)
                  (class-layout-slots class-layout)))

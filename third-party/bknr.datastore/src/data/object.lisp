@@ -536,7 +536,7 @@ bound, encode 'bknr.datastore::unbound."
     (%encode-integer (store-object-id object) stream)
     (%encode-set-slots class-layout object stream)))
 
-(defgeneric encode-slots-for-object (class-layout snapshot stream &key changedp)
+(defgeneric encode-slots-for-object (class-layout snapshot stream &key changedp object)
   (:documentation "Only used for encoding slots from Snapshot"))
 
 (defun encode-set-slots-for-snapshot (snapshot-coordinator object-snapshot-pair stream)
@@ -550,6 +550,7 @@ bound, encode 'bknr.datastore::unbound."
     (encode-slots-for-object class-layout
                              (object-snapshot-pair-snapshot object-snapshot-pair)
                              stream
+                             :object object
                              :changedp (gethash object (touched-objects snapshot-coordinator)))))
 
 

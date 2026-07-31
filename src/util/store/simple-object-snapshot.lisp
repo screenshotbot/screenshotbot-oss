@@ -35,8 +35,9 @@ simple copy is not good enough."
               collect (cons slot (snapshot-slot-value (%object self) slot)))))
 
 ;; Some of the tests for this are in test-image :/
-(defmethod bknr.datastore:encode-slots-for-object (class-layout (self simple-object-snapshot) stream &key changedp)
-  (declare (ignore changedp))
+(defmethod bknr.datastore:encode-slots-for-object (class-layout (self simple-object-snapshot) stream &key changedp
+                                                                                                       object)
+  (declare (ignore changedp object))
   (let ((object (%object self)))
     (loop for slot in (class-layout-slots class-layout)
           do (encode
