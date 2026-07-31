@@ -91,6 +91,7 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:util/store/unlikely-to-change-snapshot
+                #:unlikely-to-change-mixin
                 #:*unlikely-to-change*)
   ;; classes
   (:export #:promotion-log
@@ -227,7 +228,8 @@ we can write methods that are generic to both."))
 
 (with-class-validation
   (defclass recorder-run (object-with-oid abstract-run
-                          bknr-or-archived-run-mixin)
+                          bknr-or-archived-run-mixin
+                          unlikely-to-change-mixin)
     ((%run-id :initarg :run-id
               :reader recorder-run-id)
      (channel
@@ -419,9 +421,8 @@ associated report is rendered.")
 
 (defmethod bknr.datastore:make-object-snapshot-v2 ((self recorder-run)
                                                    next-object-id)
-  (let ((cutoff (- next-object-id 100000)))
-    (when (< (store-object-id self) cutoff)
-      *unlikely-to-change*)))
+  "TODO: delete"
+  (call-next-method))
 
 (defmethod recorder-run-author :around ((run recorder-run))
   (handler-case
@@ -457,39 +458,40 @@ associated report is rendered.")
    (override-commit-hash run)))
 
 (with-class-validation
- (defclass unchanged-run (abstract-run)
-   ((commit :initarg :commit
-            :reader unchanged-run-commit
-            :index +unchanged-run-index+
-            :index-reader %unchanged-runs-for-commit
-            :reader recorder-run-commit)
-    (other-commit :initarg :other-commit
-                  :reader unchanged-run-other-commit
-                  :documentation "The commit that this is going to be a copy of")
-    (channel :initarg :channel
-             :initform nil
-             :reader unchanged-run-channel
-             :reader recorder-run-channel)
-    (%merge-base :initarg :merge-base
-                 :reader recorder-run-merge-base)
-    (%override-commit-hash :initarg :override-commit-hash
-                           :reader override-commit-hash)
-    (%work-branch :initarg :work-branch
-                  :reader recorder-run-work-branch)
-    (%batch :initarg :batch
-            :accessor recorder-run-batch
-            :documentation "The batch object associated with this run")
-    (%%created-at :initarg :created-at
-                 :accessor %created-at)
-    (promotion-complete-p
-     :initform nil
-     :accessor promotion-complete-p))
-   (:metaclass persistent-class)
-   (:default-initargs :batch nil
-                      :override-commit-hash nil
-                      :created-at (get-universal-time)
-                      :merge-base nil)
-   (:documentation "Annotates that this commit should have identical screenshots to the other commit")))
+  (defclass unchanged-run (abstract-run
+                           unlikely-to-change-mixin)
+    ((commit :initarg :commit
+             :reader unchanged-run-commit
+             :index +unchanged-run-index+
+             :index-reader %unchanged-runs-for-commit
+             :reader recorder-run-commit)
+     (other-commit :initarg :other-commit
+                   :reader unchanged-run-other-commit
+                   :documentation "The commit that this is going to be a copy of")
+     (channel :initarg :channel
+              :initform nil
+              :reader unchanged-run-channel
+              :reader recorder-run-channel)
+     (%merge-base :initarg :merge-base
+                  :reader recorder-run-merge-base)
+     (%override-commit-hash :initarg :override-commit-hash
+                            :reader override-commit-hash)
+     (%work-branch :initarg :work-branch
+                   :reader recorder-run-work-branch)
+     (%batch :initarg :batch
+             :accessor recorder-run-batch
+             :documentation "The batch object associated with this run")
+     (%%created-at :initarg :created-at
+                   :accessor %created-at)
+     (promotion-complete-p
+      :initform nil
+      :accessor promotion-complete-p))
+    (:metaclass persistent-class)
+    (:default-initargs :batch nil
+                       :override-commit-hash nil
+                       :created-at (get-universal-time)
+                       :merge-base nil)
+    (:documentation "Annotates that this commit should have identical screenshots to the other commit")))
 
 (defmethod initialize-instance :after ((self recorder-run) &key)
   (%update-commit-map self)
@@ -550,9 +552,7 @@ from the map without too much code duplication"
   nil)
 
 (defmethod bknr.datastore:make-object-snapshot-v2 ((self unchanged-run) next-object-id)
-  (let ((cutoff (- next-object-id 100000)))
-    (when (< (store-object-id self) cutoff)
-      *unlikely-to-change*)))
+  (call-next-method))
 
 (defun make-recorder-run (&rest args &key screenshots channel
                                        pull-request

@@ -7,6 +7,7 @@
 (defpackage :util/store/unlikely-to-change-snapshot
   (:use #:cl)
   (:import-from #:bknr.datastore
+                #:store-object-id
                 #:encode
                 #:class-layout-slots)
   (:export
@@ -48,3 +49,12 @@ object was created, then the background snapshot process crashes"))
                stream)))))
 
 
+
+(defclass unlikely-to-change-mixin ()
+  ())
+
+(defmethod bknr.datastore:make-object-snapshot-v2 ((self unlikely-to-change-mixin)
+                                                   next-object-id)
+  (let ((cutoff (- next-object-id 500000)))
+    (when (< (store-object-id self) cutoff)
+      *unlikely-to-change*)))

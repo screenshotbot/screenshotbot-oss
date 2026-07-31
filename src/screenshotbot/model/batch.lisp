@@ -47,6 +47,7 @@
   (:import-from #:util/store/store-version
                 #:*snapshot-store-version*)
   (:import-from #:util/store/unlikely-to-change-snapshot
+                #:unlikely-to-change-mixin
                 #:*unlikely-to-change*)
   (:export
    #:find-or-create-batch
@@ -125,7 +126,8 @@
   :slot-name 'batch)
 
 (with-class-validation
-  (defclass batch-item (store-object)
+  (defclass batch-item (store-object
+                        unlikely-to-change-mixin)
     ((batch :initarg :batch
             :reader batch
             :index +batch-item-index+
@@ -167,9 +169,7 @@ code."
                 (%batch-items batch)))
 
 (defmethod bknr.datastore:make-object-snapshot-v2 ((self batch-item) next-object-id)
-  (let ((cutoff (- next-object-id 100000)))
-    (when (< (store-object-id self) cutoff)
-      *unlikely-to-change*)))
+  (call-next-method))
 
 (defvar *lock* (bt:make-lock))
 
