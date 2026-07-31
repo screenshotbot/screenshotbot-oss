@@ -1028,7 +1028,7 @@ output stream"
            (file-position s 0)
            (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
 
-         (format t "Encoding background snapshots~%")
+         (format t "Encoding background snapshots (~a)~%" (length (object-snapshots snapshot-coordinator)))
          ;; Encode the background snapshots
          (loop for object-snapshot-pair in (object-snapshots snapshot-coordinator)
                do (encode-set-slots-for-snapshot snapshot-coordinator
