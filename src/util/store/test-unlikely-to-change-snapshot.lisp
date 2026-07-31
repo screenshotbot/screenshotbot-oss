@@ -41,8 +41,7 @@
   (:metaclass persistent-class))
 
 (defmethod bknr.datastore:make-object-snapshot-v2 ((self some-object) last-object-id)
-  (make-instance 'unlikely-to-change-snapshot
-                 :object self))
+  (make-instance 'unlikely-to-change-snapshot))
 
 (def-fixture state (&key dir)
   (with-test-store (:dir dir)

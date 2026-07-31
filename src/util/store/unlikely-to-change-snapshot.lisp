@@ -12,8 +12,7 @@
 (in-package :util/store/unlikely-to-change-snapshot)
 
 (defclass unlikely-to-change-snapshot ()
-  ((object :initarg :object
-           :reader %object))
+  ()
   (:documentation "An object snapshot, indicating that the object is unlikely to change
 during a background snapshot. If the object did change since the
 object was created, then the background snapshot process crashes"))
@@ -25,19 +24,17 @@ object was created, then the background snapshot process crashes"))
                                                    stream
                                                    &key changedp
                                                      object)
-  (declare (ignore object))
   (cond
     (changedp
      (error 'object-changed-during-snapshot))
     (t
-     (let ((object (%object self)))
-       (loop for slot in (class-layout-slots class-layout)
-             do (encode
-                 (cond
-                   ((slot-boundp object slot)
-                    (slot-value object slot))
-                   (t
-                    'bknr.datastore::unbound))
-                 stream))))))
+     (loop for slot in (class-layout-slots class-layout)
+           do (encode
+               (cond
+                 ((slot-boundp object slot)
+                  (slot-value object slot))
+                 (t
+                  'bknr.datastore::unbound))
+               stream)))))
 
 

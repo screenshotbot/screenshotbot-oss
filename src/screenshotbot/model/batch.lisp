@@ -169,8 +169,7 @@ code."
 (defmethod bknr.datastore:make-object-snapshot-v2 ((self batch-item) next-object-id)
   (let ((cutoff (- next-object-id 100000)))
     (when (< (store-object-id self) cutoff)
-      (make-instance 'unlikely-to-change-snapshot
-                     :object self))))
+      (make-instance 'unlikely-to-change-snapshot))))
 
 (defvar *lock* (bt:make-lock))
 
