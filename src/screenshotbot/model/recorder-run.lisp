@@ -91,7 +91,7 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:util/store/unlikely-to-change-snapshot
-                #:unlikely-to-change-snapshot)
+                #:*unlikely-to-change*)
   ;; classes
   (:export #:promotion-log
            #:recorder-run
@@ -421,7 +421,7 @@ associated report is rendered.")
                                                    next-object-id)
   (let ((cutoff (- next-object-id 100000)))
     (when (< (store-object-id self) cutoff)
-      (make-instance 'unlikely-to-change-snapshot))))
+      *unlikely-to-change*)))
 
 (defmethod recorder-run-author :around ((run recorder-run))
   (handler-case
@@ -552,7 +552,7 @@ from the map without too much code duplication"
 (defmethod bknr.datastore:make-object-snapshot-v2 ((self unchanged-run) next-object-id)
   (let ((cutoff (- next-object-id 100000)))
     (when (< (store-object-id self) cutoff)
-      (make-instance 'unlikely-to-change-snapshot))))
+      *unlikely-to-change*)))
 
 (defun make-recorder-run (&rest args &key screenshots channel
                                        pull-request

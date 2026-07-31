@@ -8,7 +8,9 @@
   (:use #:cl)
   (:import-from #:bknr.datastore
                 #:encode
-                #:class-layout-slots))
+                #:class-layout-slots)
+  (:export
+   #:*unlikely-to-change*))
 (in-package :util/store/unlikely-to-change-snapshot)
 
 (defclass unlikely-to-change-snapshot ()
@@ -19,6 +21,8 @@ object was created, then the background snapshot process crashes"))
 
 (define-condition object-changed-during-snapshot (error)
   ())
+
+(defvar *unlikely-to-change* (make-instance 'unlikely-to-change-snapshot))
 
 (defmethod bknr.datastore:encode-slots-for-object (class-layout (self unlikely-to-change-snapshot)
                                                    stream
