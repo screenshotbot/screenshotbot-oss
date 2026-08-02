@@ -80,6 +80,10 @@
 
 #-screenshotbot-oss
 (def-health-check load-webp-and-save-jxl ()
+  ;; This was broken during our migration to Debian 13. The default
+  ;; ImageMagick that comes bundled does not have JXL, so we're
+  ;; disabling it for good.
+  #+nil
   (handler-bind ((error (lambda (e)
                           (format t "error: ~a~%" e)
                           #+lispworks
