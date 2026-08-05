@@ -60,8 +60,9 @@
 
 (defhandler (nil :uri "/scim/v2/Users" :method :get) ()
   (let ((company (get-company!)))
-    (let ((users (roles:users-for-company company)))
-      (json-mop-to-string
+    (let ((users (fset:convert 'list (scim-users-for-company company))))
+      (set-success 200)
+      (encode-json
        (make-instance
         'list-response
         :total-results (length users)
@@ -72,10 +73,8 @@
               collect
               (make-instance 'external-user
                              :id (format nil "~a" (bknr.datastore:store-object-id user))
-                             :user-name (user-email user)
-                             :emails (list (make-instance 'external-email
-                                                          :type "work"
-                                                          :value (user-email user))))))))))
+                             :user-name (scim-user-user-name user)
+                             :emails nil)))))))
 
 (define-condition api-error ()
   ((code :initarg :code
@@ -96,10 +95,14 @@
       (json-mop-to-string
        (make-instance 'error-response
                       :type (api-error-type e)
-                      :status (format nil "~a" (api-error-code e)))))))
+                      :status (coerce
+                               (format nil "~a" (api-error-code e))
+                               'vector))))))
 
-(defun set-success ()
-  (setf (hunchentoot:return-code*) 201) ;; SCIM requires this
+
+
+(defun set-success (&optional (code 201))
+  (setf (hunchentoot:return-code*) code) ;; SCIM requires this
   (setf (hunchentoot:content-type*) "application/scim+json"))
 
 (defhandler (nil :uri "/scim/v2/Users" :method :post) ()
