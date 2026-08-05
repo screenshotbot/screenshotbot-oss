@@ -38,7 +38,7 @@
 (defclass scim-user (store-object)
   ((%company :initarg :company)
    (%emails :initarg :emails
-           :initform nil
+            :initform nil
             :reader scim-user-emails)
    (user-name :initarg :user-name
               :initform nil

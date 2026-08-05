@@ -6,9 +6,46 @@
 
 (defpackage :screenshotbot/scim/test-users
   (:use #:cl
-        #:fiveam))
+        #:fiveam)
+  (:import-from #:util/store/store
+                #:with-test-store)
+  (:import-from #:screenshotbot/scim/users
+                #:scim-post)
+  (:import-from #:screenshotbot/model/company
+                #:company)
+  (:import-from #:util/misc/lists
+                #:only!)
+  (:import-from #:screenshotbot/scim/model
+                #:scim-user-emails
+                #:scim-user)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains)
+  (:import-from #:screenshotbot/testing
+                #:with-test-user))
 (in-package :screenshotbot/scim/test-users)
 
 
 (util/fiveam:def-suite)
 
+(def-fixture state ()
+  (with-test-store ()
+    (with-test-user (:company company
+                     :logged-in-p t)
+     (&body))))
+
+(test simple-post
+  (with-fixture state ()
+    (scim-post
+     company
+     (uiop:read-file-string
+      ;; Example taken from scim.dev
+      (asdf:system-relative-pathname
+       :screenshotbot
+       "scim/post-example.json")))
+    (let ((user (only! (bknr.datastore:class-instances 'scim-user))))
+      (assert-that
+       (scim-user-emails user)
+       (contains
+        "barbara.jensen@example.com")))))

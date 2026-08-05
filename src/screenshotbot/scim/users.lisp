@@ -9,6 +9,8 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/scim/model
+                #:scim-user-user-name
+                #:scim-user
                 #:scim-config-company
                 #:scim-config-for-token
                 #:scim-config-token
@@ -16,15 +18,25 @@
   (:import-from #:util/misc
                 #:not-null!)
   (:import-from #:screenshotbot/scim/dto
+                #:external-user-user-name
+                #:external-user-name
+                #:external-email-value
+                #:external-user-emails
                 #:list-response
                 #:external-user
                 #:external-email)
   (:import-from #:auth
+                #:can-viewer-view
                 #:user-email)
   (:import-from #:util/store/object-id
                 #:oid)
   (:import-from #:util/json-mop
-                #:json-mop-to-string))
+                #:json-mop-to-string)
+  (:import-from #:screenshotbot/api/model
+                #:encode-json
+                #:decode-json)
+  (:import-from #:hunchentoot
+                #:*request*))
 (in-package :screenshotbot/scim/users)
 
 
@@ -60,5 +72,38 @@
                                                           :type "work"
                                                           :value (user-email user))))))))))
 
+(defun set-success ()
+  (setf (hunchentoot:return-code*) 201) ;; SCIM requires this
+  (setf (hunchentoot:content-type*) "application/scim+json"))
 
+(defhandler (nil :uri "/scim/v2/Users" :method :post) ()
+  (let ((company (get-company!)))
+    (let ((response (scim-post company (hunchentoot:raw-post-data :force-text t))))
+      (set-success)
+      response)))
+
+(defmethod user-to-dto ((user scim-user))
+  (make-instance 'external-user
+                 :id (format nil "~a" (bknr.datastore:store-object-id user))
+                 :user-name (scim-user-user-name user)))
+
+
+(defun scim-post (company json)
+  (let ((dto (decode-json
+              json
+              'external-user)))
+    (let ((obj (make-instance 'scim-user
+                     :company company
+                     :user-name (external-user-user-name dto)
+                     :emails (loop for email in (external-user-emails
+                                                 dto)
+                                   collect
+                                   (external-email-value email)))))
+      (setf (hunchentoot:header-out :location)
+            (hex:make-full-url *request*
+                               "/scim/v2/Users/:id"
+                               :id (bknr.datastore:store-object-id  obj)))
+      (encode-json
+       (user-to-dto
+        obj)))))
 
