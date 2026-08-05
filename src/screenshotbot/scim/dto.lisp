@@ -72,3 +72,20 @@
               :initarg :resources
               :json-key "Resources"))
   (:metaclass ext-json-serializable-class))
+
+
+(defclass error-response ()
+  ((schemas :initform '("urn:ietf:params:scim:schemas:core:2.0:Error")
+            :json-type (:list :string)
+            :json-key "schemas")
+   (scim-type :json-type :string
+              :json-key "scimType"
+              :initarg :type)
+   (detail :json-type :string
+           :json-key "detail"
+           :initform "NA"
+           :initarg :detail)
+   (status :json-type :string
+           :json-key "status"
+           :initarg :status))
+  (:metaclass ext-json-serializable-class))

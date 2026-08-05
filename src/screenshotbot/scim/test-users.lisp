@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
+                #:uniqueness-error
                 #:scim-post)
   (:import-from #:screenshotbot/model/company
                 #:company)
@@ -33,19 +34,27 @@
   (with-test-store ()
     (with-test-user (:company company
                      :logged-in-p t)
-     (&body))))
+     (let ((example-post (uiop:read-file-string
+                          ;; Example taken from scim.dev
+                          (asdf:system-relative-pathname
+                           :screenshotbot
+                           "scim/post-example.json"))))
+       (&body)))))
 
 (test simple-post
   (with-fixture state ()
     (scim-post
      company
-     (uiop:read-file-string
-      ;; Example taken from scim.dev
-      (asdf:system-relative-pathname
-       :screenshotbot
-       "scim/post-example.json")))
+     example-post)
     (let ((user (only! (bknr.datastore:class-instances 'scim-user))))
       (assert-that
        (scim-user-emails user)
        (contains
         "barbara.jensen@example.com")))))
+
+(test uniqueness
+  (with-fixture state ()
+    (finishes
+      (scim-post company example-post))
+    (signals uniqueness-error
+      (scim-post company example-post))))

@@ -35,8 +35,14 @@
            :reader scim-config-token))
   (:metaclass persistent-class))
 
+(defindex +user-company-index+
+  'fset-set-index
+  :slot-name '%company)
+
 (defclass scim-user (store-object)
-  ((%company :initarg :company)
+  ((%company :initarg :company
+             :index +user-company-index+
+             :index-reader scim-users-for-company)
    (%emails :initarg :emails
             :initform nil
             :reader scim-user-emails)

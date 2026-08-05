@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/scim/model
+                #:scim-users-for-company
                 #:scim-user-user-name
                 #:scim-user
                 #:scim-config-company
@@ -18,6 +19,7 @@
   (:import-from #:util/misc
                 #:not-null!)
   (:import-from #:screenshotbot/scim/dto
+                #:error-response
                 #:external-user-user-name
                 #:external-user-name
                 #:external-email-value
@@ -36,9 +38,12 @@
                 #:encode-json
                 #:decode-json)
   (:import-from #:hunchentoot
-                #:*request*))
+                #:*request*)
+  (:import-from #:easy-macros
+                #:def-easy-macro))
 (in-package :screenshotbot/scim/users)
 
+(defvar *lock* (bt:make-lock))
 
 (defun bearer-token ()
   (let ((header (hunchentoot:header-in* :authorization)))
@@ -72,15 +77,37 @@
                                                           :type "work"
                                                           :value (user-email user))))))))))
 
+(define-condition api-error ()
+  ((code :initarg :code
+         :reader api-error-code)
+   (scim-type :initarg :type
+              :reader api-error-type)))
+
+(define-condition uniqueness-error (api-error)
+  ()
+  (:default-initargs :code 409 :type "uniqueness"))
+
+(def-easy-macro with-api-error-handling (&fn fn)
+  (handler-case
+      (fn)
+    (api-error (e)
+      (set-success) ;; we'll override this in the next line!
+      (setf (hunchentoot:return-code*) (api-error-code e))
+      (json-mop-to-string
+       (make-instance 'error-response
+                      :type (api-error-type e)
+                      :status (format nil "~a" (api-error-code e)))))))
+
 (defun set-success ()
   (setf (hunchentoot:return-code*) 201) ;; SCIM requires this
   (setf (hunchentoot:content-type*) "application/scim+json"))
 
 (defhandler (nil :uri "/scim/v2/Users" :method :post) ()
-  (let ((company (get-company!)))
-    (let ((response (scim-post company (hunchentoot:raw-post-data :force-text t))))
-      (set-success)
-      response)))
+  (with-api-error-handling ()
+    (let ((company (get-company!)))
+      (let ((response (scim-post company (hunchentoot:raw-post-data :force-text t))))
+       (set-success)
+       response))))
 
 (defmethod user-to-dto ((user scim-user))
   (make-instance 'external-user
@@ -89,21 +116,27 @@
 
 
 (defun scim-post (company json)
-  (let ((dto (decode-json
-              json
-              'external-user)))
-    (let ((obj (make-instance 'scim-user
-                     :company company
-                     :user-name (external-user-user-name dto)
-                     :emails (loop for email in (external-user-emails
-                                                 dto)
-                                   collect
-                                   (external-email-value email)))))
-      (setf (hunchentoot:header-out :location)
-            (hex:make-full-url *request*
-                               "/scim/v2/Users/:id"
-                               :id (bknr.datastore:store-object-id  obj)))
-      (encode-json
-       (user-to-dto
-        obj)))))
+  (bt:with-lock-held (*lock*)
+    (let* ((dto (decode-json
+                 json
+                 'external-user))
+           (username (external-user-user-name dto)))
+      (fset:do-set (existing-user (scim-users-for-company company))
+        (when (equal (scim-user-user-name existing-user)
+                     username)
+          (error 'uniqueness-error)))
+      (let ((obj (make-instance 'scim-user
+                                :company company
+                                :user-name username
+                                :emails (loop for email in (external-user-emails
+                                                            dto)
+                                              collect
+                                              (external-email-value email)))))
+        (setf (hunchentoot:header-out :location)
+              (hex:make-full-url *request*
+                                 "/scim/v2/Users/:id"
+                                 :id (bknr.datastore:store-object-id  obj)))
+        (encode-json
+         (user-to-dto
+          obj))))))
 
