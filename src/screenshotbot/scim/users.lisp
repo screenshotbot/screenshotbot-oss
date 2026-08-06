@@ -86,19 +86,35 @@
                   ((str:emptyp filter)
                    (lambda (user) (declare (ignore user)) t))
                   (t
-                   (make-filter filter)))))
+                   (make-filter filter))))
+        (start-index (max
+                      (parse-integer
+                       (or
+                        (hunchentoot:parameter "startIndex")
+                        "1"))
+                      1))
+        (count (parse-integer
+                (or
+                 (hunchentoot:parameter "count")
+                 "100"))))
     (let* ((users (fset:convert 'list (scim-users-for-company company)))
            (users (remove-if-not filter users)))
       (set-success 200)
-      (make-instance
-       'list-response
-       :total-results (length users)
-       :start-index 1
-       :items-per-page (length users)
-       :resources
-       (loop for user in users
-             collect
-             (user-to-dto user))))))
+      (let ((resources
+              (loop for user in users
+                    for i from 1
+                    if (and
+                        (<= start-index i)
+                        (< i (+ start-index count)))
+                      collect
+                      (user-to-dto user))))
+        (make-instance
+        'list-response
+        :total-results (length users)
+        :start-index start-index
+        :items-per-page (length resources)
+        :resources
+        resources)))))
 
 (define-condition api-error (error)
   ((code :initarg :code
