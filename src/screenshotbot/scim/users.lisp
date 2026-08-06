@@ -69,16 +69,27 @@
 
 (defun bearer-token ()
   (let ((header (hunchentoot:header-in* :authorization)))
-    (destructuring-bind (type token)
+    (unless header
+      (error 'access-denied
+             :reason "Authorization header missing"))
+    (destructuring-bind (type &optional token)
         (str:split " " (str:trim header) :limit 2)
       (unless (string-equal "bearer" type)
-        (error "Only bearer token supported"))
+        (error 'access-denied :reason "Only bearer supported"))
+      (unless token
+        (error 'access-denied
+               :reason "no token provided"))
       (str:trim token))))
 
 (defun get-company! ()
   (let ((token (bearer-token)))
-   (let ((scim-config (not-null! (scim-config-for-token (not-null! token)))))
-     (not-null! (scim-config-company scim-config)))))
+    (let ((scim-config (scim-config-for-token (not-null! token))))
+      (unless scim-config
+        (error 'access-denied :reason "no such token"))
+      (let ((company (scim-config-company scim-config)))
+        (unless company
+          (error 'access-denied))
+       company))))
 
 (defscimhandler (nil :uri "/scim/v2/Users" :method :get) (filter)
   (let ((company (get-company!))
@@ -120,7 +131,10 @@
   ((code :initarg :code
          :reader api-error-code)
    (scim-type :initarg :type
-              :reader api-error-type)))
+              :reader api-error-type)
+   (reason :initarg :reason
+           :initform "NA"
+           :reader api-error-reason)))
 
 (define-condition does-not-exist (api-error)
   ()
@@ -130,6 +144,10 @@
   ()
   (:default-initargs :code 409 :type "uniqueness"))
 
+(define-condition access-denied (api-error)
+  ()
+  (:default-initargs :code 403 :type nil))
+
 (def-easy-macro with-api-error-handling (&fn fn)
   (handler-case
       (fn)
@@ -138,6 +156,7 @@
       (setf (hunchentoot:return-code*) (api-error-code e))
       (make-instance 'error-response
                      :type (api-error-type e)
+                     :detail (api-error-reason e)
                      :status (coerce
                               (format nil "~a" (api-error-code e))
                               'vector)))))
