@@ -21,7 +21,9 @@
                 #:parse-filter
                 #:make-filter)
   (:import-from #:bknr.datastore
-                #:store-object-id))
+                #:store-object-id)
+  (:import-from #:util/store/object-id
+                #:oid))
 (in-package :screenshotbot/scim/test-filter)
 
 
@@ -296,11 +298,16 @@ be compared with EQUAL."
     (is-true (matchesp "active eq null" empty-user))))
 
 (test filter-on-id
+  ;; The id has to be the one USER-TO-DTO hands out, or a client can't
+  ;; look up a user by the id we just gave it
   (with-fixture state ()
-    (is-true (matchesp (format nil "id eq \"~a\"" (store-object-id user))
-                       user))
+    (is-true (matchesp (format nil "id eq \"~a\"" (oid user)) user))
+    (is-false (matchesp (format nil "id eq \"~a\"" (oid user)) empty-user))
+    (is-true (matchesp (format nil "id eq \"~a\"" (oid empty-user))
+                       empty-user))
+    ;; ... and not the store-object-id, which we no longer expose
     (is-false (matchesp (format nil "id eq \"~a\"" (store-object-id user))
-                        empty-user))))
+                        user))))
 
 (test filter-on-external-id
   (with-fixture state ()

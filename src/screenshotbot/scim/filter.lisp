@@ -16,6 +16,8 @@
                 #:scim-user-emails
                 #:scim-user-user-name
                 #:scim-user)
+  (:import-from #:util/store/object-id
+                #:oid)
   (:export
    #:make-filter
    #:parse-filter
@@ -342,7 +344,8 @@ value. Signals INVALID-FILTER if OBJECT has no such attribute."))
     ((string-equal name "userName")
      (list (scim-user-user-name self)))
     ((string-equal name "id")
-     (list (format nil "~a" (bknr.datastore:store-object-id self))))
+     ;; The oid, since that's the id we hand out in USER-TO-DTO
+     (list (oid self)))
     ((string-equal name "active")
      (list (scim-user-active-p self)))
     ((string-equal name "emails")
