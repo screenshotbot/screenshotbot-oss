@@ -29,6 +29,7 @@
                :core.rpc
                :util.store/sync
                :trivial-garbage
+               :esrap ;; for SCIM filters
                :core.active-users
                :util/posix
                :util/throttler
@@ -351,6 +352,7 @@
     :serial t
     :components ((:file "model")
                  (:file "dto")
+                 (:file "filter")
                  (:file "users")
                  (:file "service-provider-config")))
    (:module "admin"
@@ -445,6 +447,7 @@
                              (:file "test-common")))
                (:module "scim"
                 :components ((:file "test-dto")
+                             (:file "test-filter")
                              (:file "test-users")))
                (:file "test-invite")
                (:file "test-uname")
