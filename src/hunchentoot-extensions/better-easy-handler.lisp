@@ -287,7 +287,7 @@ Apache log analysis tools.)"
   (null hunchentoot::*close-hunchentoot-stream*))
 
 (defun %only-request-of-type (uri type)
-  (assert (member type '(nil :get :post :delete :put)))
+  (assert (member type '(nil :get :post :delete :put :patch)))
   (lambda (request)
     (and (or (not type)
              (eq (hunchentoot:request-method request) type))

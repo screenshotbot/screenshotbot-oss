@@ -44,17 +44,17 @@
 (defclass scim-user (object-with-oid)
   ((%company :initarg :company
              :index +user-company-index+
-             :reader scim-user-company
+             :accessor scim-user-company
              :index-reader scim-users-for-company)
    (%external-id :initarg :external-id
                  :initform nil
                  :accessor scim-user-external-id)
    (%emails :initarg :emails
             :initform nil
-            :reader scim-user-emails)
+            :accessor scim-user-emails)
    (user-name :initarg :user-name
               :initform nil
-              :reader scim-user-user-name
+              :accessor scim-user-user-name
               :documentation "This is a unique, transparent, 'ID' on the IdP side. It might be a
 username, it might be an email.")
    (%activep :initarg :activep

@@ -168,10 +168,7 @@
                                 :user-name username
                                 :external-id (ignore-errors
                                               (external-user-external-id dto))
-                                :emails (loop for email in (external-user-emails
-                                                            dto)
-                                              collect
-                                              (external-email-value email)))))
+                                :emails (dto-emails dto))))
         (setf (hunchentoot:header-out :location)
               (hex:make-full-url *request*
                                  "/scim/v2/Users/:id"
@@ -208,3 +205,41 @@
     (bknr.datastore:delete-object user)
     (set-success 204)
     ""))
+
+(defscimhandler (nil :uri "/scim/v2/Users/:id" :method :put) (id)
+  (scim-put (get-company!) id
+              (hunchentoot:raw-post-data :force-text t)))
+
+(defscimhandler (nil :uri "/scim/v2/Users/:id" :method :patch) (id)
+  (error "PATCH not supported for SCIM"))
+
+(defun scim-put (company id json)
+  (bt:with-lock-held (*lock*)
+    (let* ((dto (decode-json
+                 json
+                 'external-user))
+           (username (external-user-user-name dto))
+           (existing (find-by-oid id)))
+      (validate-user! company existing)
+      (fset:do-set (existing-user (scim-users-for-company company))
+        (when (and
+               (not (eql existing existing-user))
+               (equal (scim-user-user-name existing-user)
+                      username))
+          (error 'uniqueness-error)))
+      (setf (scim-user-user-name existing)
+            username)
+      (setf (scim-user-emails existing)
+            (dto-emails dto))
+      (setf (scim-user-external-id existing)
+            (ignore-errors (external-user-external-id dto)))
+      (set-success 200)
+      (user-to-dto
+       existing))))
+
+(defun dto-emails (dto)
+  "Get a list of all the emails from the DTO"
+  (loop for email in (external-user-emails
+                      dto)
+        collect
+        (external-email-value email)))
