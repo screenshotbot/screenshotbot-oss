@@ -20,6 +20,7 @@
   (:import-from #:util/misc/lists
                 #:only!)
   (:import-from #:screenshotbot/scim/model
+                #:scim-user-activep
                 #:scim-user-emails
                 #:scim-user)
   (:import-from #:fiveam-matchers/core
@@ -36,7 +37,12 @@
   (:import-from #:fiveam-matchers/has-length
                 #:has-length)
   (:import-from #:util/store/object-id
-                #:oid))
+                #:oid)
+  (:import-from #:screenshotbot/api/model
+                #:encode-json)
+  (:import-from #:screenshotbot/scim/dto
+                #:external-user-activep
+                #:external-user))
 (in-package :screenshotbot/scim/test-users)
 
 
@@ -115,3 +121,19 @@
     (signals does-not-exist
       (scim-delete company 3432424234))))
 
+(test active-handling
+  (with-fixture state ()
+    (scim-post company example-post)
+    (is-true (scim-user-activep (only! (class-instances 'scim-user))))))
+
+(test active-handling-false
+  (with-fixture state ()
+    (let ((external-user (make-instance 'external-user
+                                        :external-id "foobar"
+                                        :user-name "barbar"
+                                        :activep nil)))
+      (is-false (external-user-activep external-user))
+      (scim-post company
+                 (encode-json
+                  external-user)))
+    (is-false (scim-user-activep (only! (class-instances 'scim-user))))))

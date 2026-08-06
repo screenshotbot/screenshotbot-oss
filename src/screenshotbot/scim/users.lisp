@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/scim/model
+                #:scim-user-activep
                 #:scim-user-emails
                 #:scim-user-external-id
                 #:scim-user-company
@@ -22,6 +23,7 @@
   (:import-from #:util/misc
                 #:not-null!)
   (:import-from #:screenshotbot/scim/dto
+                #:external-user-activep
                 #:external-user-external-id
                 #:error-response
                 #:external-user-user-name
@@ -142,6 +144,7 @@
                  :id (oid user)
                  :external-id (ignore-errors
                                (scim-user-external-id user))
+                 :activep (scim-user-activep user)
                  :user-name (scim-user-user-name user)
                  :emails
                  (loop for email in (scim-user-emails user)
@@ -166,6 +169,7 @@
       (let ((obj (make-instance 'scim-user
                                 :company company
                                 :user-name username
+                                :activep (external-user-activep dto)
                                 :external-id (ignore-errors
                                               (external-user-external-id dto))
                                 :emails (dto-emails dto))))
@@ -233,6 +237,8 @@
             (dto-emails dto))
       (setf (scim-user-external-id existing)
             (ignore-errors (external-user-external-id dto)))
+      (setf (scim-user-activep existing)
+            (external-user-activep dto))
       (set-success 200)
       (user-to-dto
        existing))))

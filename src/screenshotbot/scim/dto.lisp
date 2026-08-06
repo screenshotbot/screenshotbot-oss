@@ -56,6 +56,11 @@
                 :initarg :external-id
                 :json-key "externalId"
                 :reader external-user-external-id)
+   (activep :json-type :bool
+            :json-key "active"
+            :initform t
+            :initarg :activep
+            :reader external-user-activep)
    (emails :json-type (:list external-email)
            :initform nil
            :initarg :emails

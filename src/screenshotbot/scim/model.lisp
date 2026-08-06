@@ -58,9 +58,10 @@
               :documentation "This is a unique, transparent, 'ID' on the IdP side. It might be a
 username, it might be an email.")
    (%activep :initarg :activep
-            :initform t
-            :reader scim-user-active-p))
-  (:metaclass persistent-class))
+             :accessor scim-user-activep))
+  (:metaclass persistent-class)
+  (:default-initargs :activep t))
+
 
 
 

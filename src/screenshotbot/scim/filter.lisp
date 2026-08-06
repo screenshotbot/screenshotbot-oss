@@ -12,7 +12,7 @@
                 #:defrule)
   (:import-from #:screenshotbot/scim/model
                 #:scim-user-external-id
-                #:scim-user-active-p
+                #:scim-user-activep
                 #:scim-user-emails
                 #:scim-user-user-name
                 #:scim-user)
@@ -347,7 +347,7 @@ value. Signals INVALID-FILTER if OBJECT has no such attribute."))
      ;; The oid, since that's the id we hand out in USER-TO-DTO
      (list (oid self)))
     ((string-equal name "active")
-     (list (scim-user-active-p self)))
+     (list (scim-user-activep self)))
     ((string-equal name "emails")
      (scim-user-emails self))
     ((string-equal name "externalId")
