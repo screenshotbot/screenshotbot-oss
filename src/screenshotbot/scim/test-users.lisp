@@ -10,6 +10,8 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
+                #:scim-get
+                #:does-not-exist
                 #:uniqueness-error
                 #:scim-post)
   (:import-from #:screenshotbot/model/company
@@ -24,7 +26,11 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:screenshotbot/testing
-                #:with-test-user))
+                #:with-test-user)
+  (:import-from #:bknr.datastore
+                #:store-object-id
+                #:persistent-class
+                #:store-object))
 (in-package :screenshotbot/scim/test-users)
 
 
@@ -58,3 +64,30 @@
       (scim-post company example-post))
     (signals uniqueness-error
       (scim-post company example-post))))
+
+(test 404-for-non-existant-id
+  (with-fixture state ()
+    (signals does-not-exist
+      (scim-get company 12323232))))
+
+(defclass fake-object (store-object)
+  ()
+  (:metaclass persistent-class))
+
+(test 404-for-invalid-object
+  (with-fixture state ()
+    (let ((id (bknr.datastore:store-object-id (make-instance 'fake-object))))
+      (signals does-not-exist
+        (scim-get company id)))))
+
+(test 404-for-another-company-user
+  (with-fixture state ()
+    (let ((other-company (make-instance 'company)))
+      (scim-post
+       company
+       example-post)
+      (let ((id (store-object-id (only! (bknr.datastore:class-instances 'scim-user)))))
+        (finishes
+         (scim-get company id))
+        (signals does-not-exist
+          (scim-get other-company id))))))

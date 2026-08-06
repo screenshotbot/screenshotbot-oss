@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/scim/model
+                #:scim-user-company
                 #:scim-users-for-company
                 #:scim-user-user-name
                 #:scim-user
@@ -46,8 +47,8 @@
 (defvar *lock* (bt:make-lock))
 
 (defun wrap-handlers (callback)
-  (with-api-error-handling ()
-    (encode-json
+  (encode-json
+   (with-api-error-handling ()
      (funcall callback))))
 
 (defmacro defscimhandler ((name &key uri method) params &body body)
@@ -162,9 +163,17 @@
   (set-success 200)
   (scim-get (get-company!) (parse-integer id)))
 
+(defun validate-user! (company user)
+  (unless user
+    (error 'does-not-exist))
+  (unless (typep user 'scim-user)
+    (error 'does-not-exist))
+  (unless (eql (scim-user-company user)
+               company)
+    (error 'does-not-exist)))
+
 (defun scim-get (company id)
   (let ((user (bknr.datastore:store-object-with-id id)))
-    (unless user
-      (error 'does-not-exist))
+    (validate-user! company user)
     (user-to-dto
      user)))
