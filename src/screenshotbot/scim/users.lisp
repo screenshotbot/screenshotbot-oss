@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/scim/model
+                #:scim-user-emails
                 #:scim-user-external-id
                 #:scim-user-company
                 #:scim-users-for-company
@@ -141,7 +142,15 @@
                  :id (oid user)
                  :external-id (ignore-errors
                                (scim-user-external-id user))
-                 :user-name (scim-user-user-name user)))
+                 :user-name (scim-user-user-name user)
+                 :emails
+                 (loop for email in (scim-user-emails user)
+                       for count from 0
+                       collect
+                          (make-instance 'external-email
+                                         :type "work"
+                                         :value email
+                                         :primary (eql 0 count)))))
 
 
 (defun scim-post (company json)

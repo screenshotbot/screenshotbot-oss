@@ -30,7 +30,11 @@
    (type :initarg :type
          :reader external-email-typ
          :json-type :string
-         :json-key "type"))
+         :json-key "type")
+   (primary :initarg :primary
+            :reader external-email-primary
+            :json-type :bool
+            :json-key "primary"))
   (:metaclass ext-json-serializable-class))
 
 (defclass external-user ()
