@@ -41,7 +41,9 @@
   (:import-from #:hunchentoot
                 #:*request*)
   (:import-from #:easy-macros
-                #:def-easy-macro))
+                #:def-easy-macro)
+  (:import-from #:screenshotbot/scim/filter
+                #:make-filter))
 (in-package :screenshotbot/scim/users)
 
 (defvar *lock* (bt:make-lock))
@@ -72,9 +74,15 @@
    (let ((scim-config (not-null! (scim-config-for-token (not-null! token)))))
      (not-null! (scim-config-company scim-config)))))
 
-(defscimhandler (nil :uri "/scim/v2/Users" :method :get) ()
-  (let ((company (get-company!)))
-    (let ((users (fset:convert 'list (scim-users-for-company company))))
+(defscimhandler (nil :uri "/scim/v2/Users" :method :get) (filter)
+  (let ((company (get-company!))
+        (filter (cond
+                  ((str:emptyp filter)
+                   (lambda (user) (declare (ignore user)) t))
+                  (t
+                   (make-filter filter)))))
+    (let* ((users (fset:convert 'list (scim-users-for-company company)))
+           (users (remove-if-not filter users)))
       (set-success 200)
       (make-instance
        'list-response
