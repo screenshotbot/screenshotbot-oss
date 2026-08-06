@@ -114,3 +114,4 @@
     (scim-post company example-post)
     (signals does-not-exist
       (scim-delete company 3432424234))))
+

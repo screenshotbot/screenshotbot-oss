@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/scim/model
+                #:scim-user-external-id
                 #:scim-user-company
                 #:scim-users-for-company
                 #:scim-user-user-name
@@ -20,6 +21,7 @@
   (:import-from #:util/misc
                 #:not-null!)
   (:import-from #:screenshotbot/scim/dto
+                #:external-user-external-id
                 #:error-response
                 #:external-user-user-name
                 #:external-user-name
@@ -93,10 +95,7 @@
        :resources
        (loop for user in users
              collect
-             (make-instance 'external-user
-                            :id (oid user)
-                            :user-name (scim-user-user-name user)
-                            :emails nil))))))
+             (user-to-dto user))))))
 
 (define-condition api-error (error)
   ((code :initarg :code
@@ -140,6 +139,8 @@
 (defmethod user-to-dto ((user scim-user))
   (make-instance 'external-user
                  :id (oid user)
+                 :external-id (ignore-errors
+                               (scim-user-external-id user))
                  :user-name (scim-user-user-name user)))
 
 
@@ -156,6 +157,8 @@
       (let ((obj (make-instance 'scim-user
                                 :company company
                                 :user-name username
+                                :external-id (ignore-errors
+                                              (external-user-external-id dto))
                                 :emails (loop for email in (external-user-emails
                                                             dto)
                                               collect

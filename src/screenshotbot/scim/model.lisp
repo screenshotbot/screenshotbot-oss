@@ -46,6 +46,9 @@
              :index +user-company-index+
              :reader scim-user-company
              :index-reader scim-users-for-company)
+   (%external-id :initarg :external-id
+                 :initform nil
+                 :accessor scim-user-external-id)
    (%emails :initarg :emails
             :initform nil
             :reader scim-user-emails)

@@ -48,11 +48,21 @@
    (id :json-type :string
        :initarg :id
        :json-key "id")
+   (external-id :json-type :string
+                :initarg :external-id
+                :json-key "externalId"
+                :reader external-user-external-id)
    (emails :json-type (:list external-email)
+           :initform nil
            :initarg :emails
            :json-key "emails"
            :reader external-user-emails))
   (:metaclass ext-json-serializable-class))
+
+(defmethod initialize-instance :after ((self external-user) &key external-id &allow-other-keys)
+  (declare (optimize (debug 3) (speed 0)))
+  (unless external-id
+    (slot-makunbound self 'external-id)))
 
 
 (defclass list-response ()
