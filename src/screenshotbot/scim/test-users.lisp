@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
+                #:scim-delete
                 #:scim-get
                 #:does-not-exist
                 #:uniqueness-error
@@ -28,9 +29,12 @@
   (:import-from #:screenshotbot/testing
                 #:with-test-user)
   (:import-from #:bknr.datastore
+                #:class-instances
                 #:store-object-id
                 #:persistent-class
-                #:store-object))
+                #:store-object)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length))
 (in-package :screenshotbot/scim/test-users)
 
 
@@ -80,14 +84,31 @@
       (signals does-not-exist
         (scim-get company id)))))
 
+(defun only-id! ()
+  (store-object-id (only! (bknr.datastore:class-instances 'scim-user))))
+
 (test 404-for-another-company-user
   (with-fixture state ()
     (let ((other-company (make-instance 'company)))
       (scim-post
        company
        example-post)
-      (let ((id (store-object-id (only! (bknr.datastore:class-instances 'scim-user)))))
+      (let ((id (only-id!)))
         (finishes
          (scim-get company id))
         (signals does-not-exist
           (scim-get other-company id))))))
+
+(test delete-happy-path
+  (with-fixture state ()
+    (scim-post company example-post)
+    (finishes
+      (scim-delete company (only-id!)))
+    (assert-that (class-instances 'scim-user)
+                 (has-length 0))))
+
+(test delete-404
+  (with-fixture state ()
+    (scim-post company example-post)
+    (signals does-not-exist
+      (scim-delete company 3432424234))))

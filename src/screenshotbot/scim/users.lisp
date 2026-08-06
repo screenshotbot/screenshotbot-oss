@@ -177,3 +177,13 @@
     (validate-user! company user)
     (user-to-dto
      user)))
+
+(defscimhandler (nil :uri "/scim/v2/Users/:id" :method :delete) (id)
+  (scim-delete (get-company!) (parse-integer id)))
+
+(defun scim-delete (company id)
+  (let ((user (bknr.datastore:store-object-with-id id)))
+    (validate-user! company user)
+    (bknr.datastore:delete-object user)
+    (set-success 204)
+    ""))
