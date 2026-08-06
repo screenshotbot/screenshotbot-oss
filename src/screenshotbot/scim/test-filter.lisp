@@ -244,6 +244,7 @@ be compared with EQUAL."
            (user (make-instance 'scim-user
                                 :company company
                                 :user-name "bjensen@example.com"
+                                :external-id "ext-0001"
                                 :emails (list "barbara.jensen@example.com"
                                               "bjensen@example.org")))
            (empty-user (make-instance 'scim-user
@@ -301,6 +302,42 @@ be compared with EQUAL."
     (is-false (matchesp (format nil "id eq \"~a\"" (store-object-id user))
                         empty-user))))
 
+(test filter-on-external-id
+  (with-fixture state ()
+    (is-true (matchesp "externalId eq \"ext-0001\"" user))
+    (is-false (matchesp "externalId eq \"ext-0002\"" user))
+    (is-true (matchesp "externalId ne \"ext-0002\"" user))
+    (is-true (matchesp "externalId sw \"ext-\"" user))
+    (is-true (matchesp "externalId co \"0001\"" user))
+    (is-true (matchesp "externalId pr" user))
+    ;; This is how an IdP looks a user up after it has provisioned them
+    (is-true (matchesp "userName pr and externalId eq \"ext-0001\"" user))))
+
+(test external-id-attribute-name-is-case-insensitive
+  (with-fixture state ()
+    (is-true (matchesp "externalid eq \"ext-0001\"" user))
+    (is-true (matchesp "EXTERNALID eq \"ext-0001\"" user))
+    ;; ... and IdPs sometimes send the fully qualified attribute path
+    (is-true (matchesp "urn:ietf:params:scim:schemas:core:2.0:User:externalId eq \"ext-0001\""
+                       user))))
+
+(test external-id-of-a-user-that-has-none
+  (with-fixture state ()
+    (is-false (matchesp "externalId pr" empty-user))
+    (is-false (matchesp "externalId eq \"ext-0001\"" empty-user))
+    (is-true (matchesp "externalId eq null" empty-user))))
+
+(test external-id-slot-may-be-unbound
+  ;; USER-TO-DTO reads this slot through IGNORE-ERRORS, so it can be
+  ;; unbound on users that were stored before the slot existed. Filtering
+  ;; on them has to be a miss, not an error.
+  (with-fixture state ()
+    (slot-makunbound user 'screenshotbot/scim/model::%external-id)
+    (is-false (matchesp "externalId pr" user))
+    (is-false (matchesp "externalId eq \"ext-0001\"" user))
+    ;; the rest of the user is still filterable
+    (is-true (matchesp "userName eq \"bjensen@example.com\"" user))))
+
 (test multi-valued-attributes
   (with-fixture state ()
     (is-true (matchesp "emails eq \"bjensen@example.org\"" user))
@@ -334,3 +371,4 @@ be compared with EQUAL."
       (matchesp "nickName eq \"foo\"" user))
     (signals invalid-filter
       (matchesp "emails[nickName eq \"foo\"]" user))))
+

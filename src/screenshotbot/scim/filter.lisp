@@ -11,6 +11,7 @@
                 #:?
                 #:defrule)
   (:import-from #:screenshotbot/scim/model
+                #:scim-user-external-id
                 #:scim-user-active-p
                 #:scim-user-emails
                 #:scim-user-user-name
@@ -346,6 +347,10 @@ value. Signals INVALID-FILTER if OBJECT has no such attribute."))
      (list (scim-user-active-p self)))
     ((string-equal name "emails")
      (scim-user-emails self))
+    ((string-equal name "externalId")
+     ;; The slot is unbound on users stored before it existed, which
+     ;; is why USER-TO-DTO reads it through IGNORE-ERRORS too
+     (list (ignore-errors (scim-user-external-id self))))
     (t
      (invalid-filter "Unsupported attribute: ~a" name))))
 
