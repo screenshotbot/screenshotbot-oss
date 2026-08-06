@@ -351,7 +351,8 @@
     :serial t
     :components ((:file "model")
                  (:file "dto")
-                 (:file "users")))
+                 (:file "users")
+                 (:file "service-provider-config")))
    (:module "admin"
     :serial t
     :components ((:file "core")
