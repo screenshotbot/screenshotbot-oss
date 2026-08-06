@@ -34,7 +34,9 @@
                 #:persistent-class
                 #:store-object)
   (:import-from #:fiveam-matchers/has-length
-                #:has-length))
+                #:has-length)
+  (:import-from #:util/store/object-id
+                #:oid))
 (in-package :screenshotbot/scim/test-users)
 
 
@@ -85,7 +87,7 @@
         (scim-get company id)))))
 
 (defun only-id! ()
-  (store-object-id (only! (bknr.datastore:class-instances 'scim-user))))
+  (oid (only! (bknr.datastore:class-instances 'scim-user))))
 
 (test 404-for-another-company-user
   (with-fixture state ()

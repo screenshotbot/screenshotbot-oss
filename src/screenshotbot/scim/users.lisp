@@ -32,6 +32,7 @@
                 #:can-viewer-view
                 #:user-email)
   (:import-from #:util/store/object-id
+                #:find-by-oid
                 #:oid)
   (:import-from #:util/json-mop
                 #:json-mop-to-string)
@@ -93,11 +94,11 @@
        (loop for user in users
              collect
              (make-instance 'external-user
-                            :id (format nil "~a" (bknr.datastore:store-object-id user))
+                            :id (oid user)
                             :user-name (scim-user-user-name user)
                             :emails nil))))))
 
-(define-condition api-error ()
+(define-condition api-error (error)
   ((code :initarg :code
          :reader api-error-code)
    (scim-type :initarg :type
@@ -138,7 +139,7 @@
 
 (defmethod user-to-dto ((user scim-user))
   (make-instance 'external-user
-                 :id (format nil "~a" (bknr.datastore:store-object-id user))
+                 :id (oid user)
                  :user-name (scim-user-user-name user)))
 
 
@@ -162,14 +163,14 @@
         (setf (hunchentoot:header-out :location)
               (hex:make-full-url *request*
                                  "/scim/v2/Users/:id"
-                                 :id (bknr.datastore:store-object-id  obj)))
+                                 :id (oid  obj)))
         (user-to-dto
          obj)))))
 
 
 (defscimhandler (nil :uri "/scim/v2/Users/:id" :method :get) (id)
   (set-success 200)
-  (scim-get (get-company!) (parse-integer id)))
+  (scim-get (get-company!) id))
 
 (defun validate-user! (company user)
   (unless user
@@ -181,16 +182,16 @@
     (error 'does-not-exist)))
 
 (defun scim-get (company id)
-  (let ((user (bknr.datastore:store-object-with-id id)))
+  (let ((user (find-by-oid id)))
     (validate-user! company user)
     (user-to-dto
      user)))
 
 (defscimhandler (nil :uri "/scim/v2/Users/:id" :method :delete) (id)
-  (scim-delete (get-company!) (parse-integer id)))
+  (scim-delete (get-company!) id))
 
 (defun scim-delete (company id)
-  (let ((user (bknr.datastore:store-object-with-id id)))
+  (let ((user (find-by-oid id)))
     (validate-user! company user)
     (bknr.datastore:delete-object user)
     (set-success 204)

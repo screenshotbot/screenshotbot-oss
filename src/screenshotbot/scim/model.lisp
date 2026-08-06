@@ -13,7 +13,9 @@
                 #:defindex)
   (:import-from #:util/store/fset-index
                 #:fset-unique-index
-                #:fset-set-index))
+                #:fset-set-index)
+  (:import-from #:util/store/object-id
+                #:object-with-oid))
 (in-package :screenshotbot/scim/model)
 
 (defindex +config-company-index+
@@ -39,7 +41,7 @@
   'fset-set-index
   :slot-name '%company)
 
-(defclass scim-user (store-object)
+(defclass scim-user (object-with-oid)
   ((%company :initarg :company
              :index +user-company-index+
              :reader scim-user-company
