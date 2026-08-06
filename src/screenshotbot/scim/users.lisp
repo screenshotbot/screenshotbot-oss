@@ -45,6 +45,19 @@
 
 (defvar *lock* (bt:make-lock))
 
+(defun wrap-handlers (callback)
+  (with-api-error-handling ()
+    (encode-json
+     (funcall callback))))
+
+(defmacro defscimhandler ((name &key uri method) params &body body)
+  (assert method)
+  `(progn
+     (defhandler (,name :uri ,uri :method ,method)  ,params
+      (wrap-handlers
+       (lambda ()
+         ,@body)))))
+
 (defun bearer-token ()
   (let ((header (hunchentoot:header-in* :authorization)))
     (destructuring-bind (type token)
@@ -58,29 +71,32 @@
    (let ((scim-config (not-null! (scim-config-for-token (not-null! token)))))
      (not-null! (scim-config-company scim-config)))))
 
-(defhandler (nil :uri "/scim/v2/Users" :method :get) ()
+(defscimhandler (nil :uri "/scim/v2/Users" :method :get) ()
   (let ((company (get-company!)))
     (let ((users (fset:convert 'list (scim-users-for-company company))))
       (set-success 200)
-      (encode-json
-       (make-instance
-        'list-response
-        :total-results (length users)
-        :start-index 1
-        :items-per-page (length users)
-        :resources
-        (loop for user in users
-              collect
-              (make-instance 'external-user
-                             :id (format nil "~a" (bknr.datastore:store-object-id user))
-                             :user-name (scim-user-user-name user)
-                             :emails nil)))))))
+      (make-instance
+       'list-response
+       :total-results (length users)
+       :start-index 1
+       :items-per-page (length users)
+       :resources
+       (loop for user in users
+             collect
+             (make-instance 'external-user
+                            :id (format nil "~a" (bknr.datastore:store-object-id user))
+                            :user-name (scim-user-user-name user)
+                            :emails nil))))))
 
 (define-condition api-error ()
   ((code :initarg :code
          :reader api-error-code)
    (scim-type :initarg :type
               :reader api-error-type)))
+
+(define-condition does-not-exist (api-error)
+  ()
+  (:default-initargs :code 404 :type nil))
 
 (define-condition uniqueness-error (api-error)
   ()
@@ -92,12 +108,11 @@
     (api-error (e)
       (set-success) ;; we'll override this in the next line!
       (setf (hunchentoot:return-code*) (api-error-code e))
-      (json-mop-to-string
-       (make-instance 'error-response
-                      :type (api-error-type e)
-                      :status (coerce
-                               (format nil "~a" (api-error-code e))
-                               'vector))))))
+      (make-instance 'error-response
+                     :type (api-error-type e)
+                     :status (coerce
+                              (format nil "~a" (api-error-code e))
+                              'vector)))))
 
 
 
@@ -105,7 +120,7 @@
   (setf (hunchentoot:return-code*) code) ;; SCIM requires this
   (setf (hunchentoot:content-type*) "application/scim+json"))
 
-(defhandler (nil :uri "/scim/v2/Users" :method :post) ()
+(defscimhandler (nil :uri "/scim/v2/Users" :method :post) ()
   (with-api-error-handling ()
     (let ((company (get-company!)))
       (let ((response (scim-post company (hunchentoot:raw-post-data :force-text t))))
@@ -139,7 +154,17 @@
               (hex:make-full-url *request*
                                  "/scim/v2/Users/:id"
                                  :id (bknr.datastore:store-object-id  obj)))
-        (encode-json
-         (user-to-dto
-          obj))))))
+        (user-to-dto
+         obj)))))
 
+
+(defscimhandler (nil :uri "/scim/v2/Users/:id" :method :get) (id)
+  (set-success 200)
+  (scim-get (get-company!) (parse-integer id)))
+
+(defun scim-get (company id)
+  (let ((user (bknr.datastore:store-object-with-id id)))
+    (unless user
+      (error 'does-not-exist))
+    (user-to-dto
+     user)))

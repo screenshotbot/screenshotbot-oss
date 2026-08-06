@@ -78,7 +78,7 @@
   ((schemas :initform '("urn:ietf:params:scim:schemas:core:2.0:Error")
             :json-type (:list :string)
             :json-key "schemas")
-   (scim-type :json-type :string
+   (scim-type :json-type (or null :string)
               :json-key "scimType"
               :initarg :type)
    (detail :json-type :string
@@ -89,3 +89,8 @@
            :json-key "status"
            :initarg :status))
   (:metaclass ext-json-serializable-class))
+
+(defmethod initialize-instance :after ((self error-response) &key type detail status)
+  (declare (ignore detail status))
+  (unless type
+    (slot-makunbound self 'scim-type)))
