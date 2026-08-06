@@ -412,9 +412,12 @@ sub-attribute we can answer is the canonical \"value\"."
                  thereis (present-p value)))))
     (:compare
      (destructuring-bind (op path value) (rest node)
-       (lambda (object)
-         (loop for actual in (resolve-path object path)
-                 thereis (scim-compare op actual value)))))
+       ;; The attribute is known here, so we settle how it compares once
+       ;; rather than on every value of every user
+       (let ((case-exact-p (case-exact-attribute-p path)))
+         (lambda (object)
+           (loop for actual in (resolve-path object path)
+                   thereis (scim-compare op actual value case-exact-p))))))
     (:value-path
      (destructuring-bind (path sub-filter) (rest node)
        (let ((inner (compile-node sub-filter)))
@@ -427,24 +430,42 @@ sub-attribute we can answer is the canonical \"value\"."
   (and value
        (not (equal value ""))))
 
-(defun scim-compare (op actual expected)
+(defparameter *case-exact-attributes* '("externalId")
+  "Attributes whose values compare case sensitively. SCIM calls this
+caseExact, and it's a property of the attribute in the schema: an
+externalId is an opaque handle from the IdP, so \"AB\" and \"ab\" are
+two different users. Everything else we store compares case
+insensitively, which is the SCIM default.")
+
+(defun case-exact-attribute-p (path)
+  (member (attr-path-name path) *case-exact-attributes*
+          :test #'string-equal))
+
+(defun scim-compare (op actual expected case-exact-p)
   (ecase op
-    (:eq (scim-equal actual expected))
-    (:ne (not (scim-equal actual expected)))
+    (:eq (scim-equal actual expected case-exact-p))
+    (:ne (not (scim-equal actual expected case-exact-p)))
     (:co (and (stringp actual) (stringp expected)
-              (search expected actual :test #'char-equal)
+              (search expected actual :test (char-test case-exact-p))
               t))
     (:sw (and (stringp actual) (stringp expected)
-              (str:starts-with-p expected actual :ignore-case t)))
+              (str:starts-with-p expected actual
+                                 :ignore-case (not case-exact-p))))
     (:ew (and (stringp actual) (stringp expected)
-              (str:ends-with-p expected actual :ignore-case t)))
+              (str:ends-with-p expected actual
+                               :ignore-case (not case-exact-p))))
     ((:gt :lt :ge :le)
-     (scim-order op actual expected))))
+     (scim-order op actual expected case-exact-p))))
 
-(defun scim-equal (actual expected)
+(defun char-test (case-exact-p)
+  (if case-exact-p #'char= #'char-equal))
+
+(defun scim-equal (actual expected case-exact-p)
   (typecase expected
     (string (and (stringp actual)
-                 (string-equal actual expected)))
+                 (if case-exact-p
+                     (string= actual expected)
+                     (string-equal actual expected))))
     (real (and (realp actual)
                (= actual expected)))
     (t
@@ -454,12 +475,15 @@ sub-attribute we can answer is the canonical \"value\"."
        ;; best we can do without a schema.
        ((:false :null) (null actual))))))
 
-(defun scim-order (op actual expected)
+(defun scim-order (op actual expected case-exact-p)
   (multiple-value-bind (lessp equalp)
       (cond
         ((and (stringp actual) (stringp expected))
-         (values (and (string-lessp actual expected) t)
-                 (and (string-equal actual expected) t)))
+         (if case-exact-p
+             (values (and (string< actual expected) t)
+                     (and (string= actual expected) t))
+             (values (and (string-lessp actual expected) t)
+                     (and (string-equal actual expected) t))))
         ((and (realp actual) (realp expected))
          (values (< actual expected)
                  (= actual expected)))

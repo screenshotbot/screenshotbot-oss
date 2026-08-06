@@ -320,6 +320,27 @@ be compared with EQUAL."
     ;; This is how an IdP looks a user up after it has provisioned them
     (is-true (matchesp "userName pr and externalId eq \"ext-0001\"" user))))
 
+(test external-id-values-compare-case-sensitively
+  ;; An externalId is an opaque handle from the IdP, so "EXT-0001" and
+  ;; "ext-0001" are two different users. Everything else we store
+  ;; compares case insensitively, per the SCIM default.
+  (with-fixture state ()
+    (is-true (matchesp "externalId eq \"ext-0001\"" user))
+    (is-false (matchesp "externalId eq \"EXT-0001\"" user))
+    (is-false (matchesp "externalId eq \"Ext-0001\"" user))
+    (is-true (matchesp "externalId ne \"EXT-0001\"" user))
+    (is-true (matchesp "externalId co \"ext\"" user))
+    (is-false (matchesp "externalId co \"EXT\"" user))
+    (is-true (matchesp "externalId sw \"ext-\"" user))
+    (is-false (matchesp "externalId sw \"EXT-\"" user))
+    (is-true (matchesp "externalId ew \"0001\"" user))
+    ;; ... and the schema URI doesn't change that
+    (is-false (matchesp "urn:ietf:params:scim:schemas:core:2.0:User:externalId eq \"EXT-0001\""
+                        user))
+    ;; ... while userName is still matched case insensitively
+    (is-true (matchesp "userName eq \"BJensen@Example.com\"" user))
+    (is-true (matchesp "emails co \"EXAMPLE.COM\"" user))))
+
 (test external-id-attribute-name-is-case-insensitive
   (with-fixture state ()
     (is-true (matchesp "externalid eq \"ext-0001\"" user))
