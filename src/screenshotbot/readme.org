@@ -1,0 +1,23 @@
+
+Design Doc
+==========
+
+We considered the option of keeping the SCIM model separate from the
+User/SSO model. Then we would at runtime always check whether a given
+user is part of the SCIM model.
+
+This comes with issues. In particular, if somebody disables SCIM, then
+many old accounts come back alive. Is this a problem? Those users
+won't be able to authenticate still.
+
+A better solution is just to keep the users in sync using ROLES: when
+the SCIM requests come in.
+
+Tasks:
+
+* Find associated users for SCIM delete requests
+* Don't allow DELETE for owners
+* Clear nibbles for users being deleted
+  - Find nibbles associated with an external-id. Perhaps we can do
+    this by deleting sessions with a specific :external-id field.
+* Do we care about 
