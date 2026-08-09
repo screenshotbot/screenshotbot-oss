@@ -155,15 +155,19 @@
                                                        full-name
                                                         avatar
                                                         token)
+  (declare (ignore token))
   (log:debug "Got user info ~S" user-id)
-  (let ((user (prepare-oidc-user
-               auth
-               :user-id user-id
-               :email email
-               :full-name full-name
-               :avatar avatar)))
+  (multiple-value-bind (user oidc-user)
+      (prepare-oidc-user
+       auth
+       :user-id user-id
+       :email email
+       :full-name full-name
+       :avatar avatar)
     (on-user-sign-in auth user)
-    (setf (current-user :expires-in (expiration-seconds auth)) user)))
+
+    (setf (current-user :expires-in (expiration-seconds auth)) user)
+    (setf (auth:session-value :oidc-user :expires-in (expiration-seconds auth)) oidc-user)))
 
 (defun update-oidc-user (oauth-user &key
                                       (email (error "required"))
@@ -234,11 +238,14 @@ user as used in Screenshotbot)"
 (defmethod prepare-oidc-user ((auth oidc-provider)
                               &rest all
                               &key user-id email full-name avatar)
+  "Returns two values: the USER, and the OIDC-USER objects"
   (declare (ignore email full-name avatar))
   (let ((oidc-user (find-or-create-oidc-user
                     auth :user-id user-id)))
-    (apply 'update-oidc-user
-           oidc-user all)))
+    (values
+     (apply 'update-oidc-user
+            oidc-user all)
+     oidc-user)))
 
 (defmethod oauth-logo-svg ((auth oidc-provider))
   (declare (ignore auth))
