@@ -15,6 +15,8 @@
   (:import-from #:cl-mock
                 #:if-called)
   (:import-from #:it.bese.fiveam
+                #:pass
+                #:fail
                 #:def-fixture
                 #:is
                 #:test
@@ -22,6 +24,7 @@
   (:import-from #:oidc/oidc
                 #:after-authentication)
   (:import-from #:screenshotbot/login/oidc
+                #:find-or-create-oidc-user
                 #:update-oidc-user
                 #:%email
                 #:%user
@@ -151,3 +154,16 @@
         (is (eql other-user user1))
         (is (equal (list oidc-user)
                    (auth:oauth-users other-user)))))))
+
+(test find-or-create-oidc-user
+  (with-fixture state ()
+    (let ((oidc-user1 (find-or-create-oidc-user auth :user-id "this-id")))
+      (is
+       (not
+        (eql
+         oidc-user1
+         (find-or-create-oidc-user auth :user-id "another-id"))))
+      (is
+       (eql
+        oidc-user1
+        (find-or-create-oidc-user auth :user-id "this-id"))))))

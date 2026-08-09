@@ -224,16 +224,20 @@ user as used in Screenshotbot)"
                (oidc-provider-identifier x))
       (return x))))
 
+(defmethod find-or-create-oidc-user ((auth oidc-provider) &key user-id)
+  (or
+   (find-existing-oidc-user auth user-id)
+   (make-instance 'oidc-user
+                  :user-id user-id
+                  :identifier (oidc-provider-identifier auth))))
+
 (defmethod prepare-oidc-user ((auth oidc-provider)
                               &rest all
                               &key user-id email full-name avatar)
   (declare (ignore email full-name avatar))
-    (let ((oidc-user (or
-                      (find-existing-oidc-user auth (oidc-provider-identifier auth))
-                      (make-instance 'oidc-user
-                                     :user-id user-id
-                                     :identifier (oidc-provider-identifier auth)))))
-      (apply 'update-oidc-user
+  (let ((oidc-user (find-or-create-oidc-user
+                    auth :user-id user-id)))
+    (apply 'update-oidc-user
            oidc-user all)))
 
 (defmethod oauth-logo-svg ((auth oidc-provider))
