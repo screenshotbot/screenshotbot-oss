@@ -9,6 +9,7 @@
   :depends-on (:log4cl
                :auth
                :cl-cron
+               :bknr.indices
                :quri
                :hunchentoot-extensions
                :secure-random)

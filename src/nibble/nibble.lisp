@@ -14,7 +14,7 @@
 (defvar *lock* (bt:make-lock))
 (defparameter *last-gc* 0)
 
-(defclass nibble ()
+(defclass nibble (base-indexed-object)
   ((impl :initarg :impl)
    (id :initarg :id
        :reader nibble-id)

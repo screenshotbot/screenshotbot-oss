@@ -7,6 +7,9 @@
 (defpackage :nibble
   (:use :cl
    :alexandria)
+  (:import-from #:bknr.indices
+                #:indexed-class
+                #:base-indexed-object)
   (:export #:nibble
            #:nibble-full-url
            #:nibble-url
