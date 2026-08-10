@@ -38,8 +38,10 @@
   (:import-from #:fiveam-matchers/any-of
                 #:any-of)
   (:import-from #:fiveam-matchers/lists
+                #:contains
                 #:contains-in-any-order)
   (:import-from #:bknr.indices
+                #:object-destroyed-p
                 #:index-clear)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :nibble/test-nibble)
@@ -182,7 +184,8 @@
       (invalidate-nibble nibble)
       (assert-that
        (get-nibble id)
-       (is-null)))))
+       (is-null))
+      (is-true (object-destroyed-p nibble)))))
 
 (test nibble-by-user
   (with-fixture state ()
@@ -204,4 +207,10 @@
          (assert-that
           (fset:convert 'list (nibbles-for-user :fake-user))
           (contains-in-any-order
-           one two)))))))
+           one two))
+
+         ;; test delete!
+         (invalidate-nibble one)
+         (assert-that
+          (fset:convert 'list (nibbles-for-user :fake-user))
+          (contains two)))))))

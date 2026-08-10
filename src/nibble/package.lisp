@@ -8,6 +8,7 @@
   (:use :cl
    :alexandria)
   (:import-from #:bknr.indices
+                #:destroy-object
                 #:indexed-class
                 #:base-indexed-object)
   (:import-from #:util/store/store

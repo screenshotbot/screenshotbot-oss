@@ -83,7 +83,8 @@ nibble or not."
 
 (defmethod invalidate-nibble ((nib nibble))
   (bt:with-lock-held (*lock*)
-    (remhash (nibble-id nib) *nibbles*)))
+    (remhash (nibble-id nib) *nibbles*)
+    (destroy-object nib)))
 
 (defclass nibble-acceptor-mixin ()
   ((nibble-prefix :initarg :nibble-prefix
