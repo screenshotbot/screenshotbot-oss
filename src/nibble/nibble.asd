@@ -10,6 +10,7 @@
                :auth
                :cl-cron
                :bknr.indices
+               :util.store
                :quri
                :hunchentoot-extensions
                :secure-random)

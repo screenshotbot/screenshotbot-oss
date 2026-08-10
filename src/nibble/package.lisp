@@ -10,6 +10,11 @@
   (:import-from #:bknr.indices
                 #:indexed-class
                 #:base-indexed-object)
+  (:import-from #:util/store/store
+                #:defindex)
+  (:import-from #:util/store/fset-index
+                #:fset-set-index
+                #:fset-unique-index)
   (:export #:nibble
            #:nibble-full-url
            #:nibble-url

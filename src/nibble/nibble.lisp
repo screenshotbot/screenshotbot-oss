@@ -14,6 +14,10 @@
 (defvar *lock* (bt:make-lock))
 (defparameter *last-gc* 0)
 
+(defindex +nibble-user-index+
+  'fset-set-index
+  :slot-name 'user)
+
 (defclass nibble (base-indexed-object)
   ((impl :initarg :impl)
    (id :initarg :id
@@ -34,11 +38,19 @@
    (session :initarg :session)
    (user :initarg :user
          :initform nil
-         :accessor nibble-user)
+         :accessor nibble-user
+         :index +nibble-user-index+
+         :index-reader nibbles-for-user)
    (check-session-p :initarg :check-session-p
                     :initform nil)
    (ts :initarg :ts))
   (:metaclass indexed-class))
+
+(defmethod fset:compare ((one nibble) (two nibble))
+  (fset:compare-slots one two
+                      'id))
+
+
 
 (defmethod allow-user-change ((nibble nibble))
   "Allow this nibble to switch users (i.e. this nibble will be used during a login flow.)
@@ -348,3 +360,4 @@ purposes to be maintained across server restarts."
   (format out "#<NIBBLE ~a>" (ignore-errors (slot-value nibble 'impl))))
 
 
+    

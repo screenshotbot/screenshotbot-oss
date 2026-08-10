@@ -8,6 +8,9 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:nibble
+                #:+nibble-user-index+
+                #:nibbles-for-user
+                #:nibble-user
                 #:invalidate-nibble
                 #:nibble-id
                 #:get-nibble
@@ -30,7 +33,14 @@
   (:import-from #:hunchentoot
                 #:acceptor-dispatch-request)
   (:import-from #:fiveam-matchers/misc
+                #:is-not-null
                 #:is-null)
+  (:import-from #:fiveam-matchers/any-of
+                #:any-of)
+  (:import-from #:fiveam-matchers/lists
+                #:contains-in-any-order)
+  (:import-from #:bknr.indices
+                #:index-clear)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :nibble/test-nibble)
 
@@ -45,7 +55,9 @@
 
 (def-fixture state ()
   (let ((hunchentoot:*acceptor* (make-instance 'fake-acceptor)))
-   (&body)))
+    (unwind-protect
+         (&body)
+      (index-clear +nibble-user-index+))))
 
 (test preconditions
   (with-fixture state ()
@@ -171,3 +183,25 @@
       (assert-that
        (get-nibble id)
        (is-null)))))
+
+(test nibble-by-user
+  (with-fixture state ()
+    (util/testing:with-fake-request ()
+      (setf (auth:request-user hunchentoot:*request*)
+            :fake-user)
+      (auth:with-sessions ()
+       (let* ((one (nibble ()
+                     "one"))
+              (two (nibble ()
+                     "two")))
+         (assert-that
+          (fset:compare one two)
+          (any-of
+           (is-equal-to :less)
+           (is-equal-to :greater)))
+         (assert-that (nibble-user one)
+                      (is-equal-to :fake-user))
+         (assert-that
+          (fset:convert 'list (nibbles-for-user :fake-user))
+          (contains-in-any-order
+           one two)))))))
