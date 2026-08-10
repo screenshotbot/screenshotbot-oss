@@ -66,8 +66,11 @@ nibble or not."
        (loop for nib in (all-nibbles)
              if  (< (slot-value nib 'ts)
                     exp-time)
-               do (bt:with-lock-held (*lock*)
-                    (remhash (nibble-id nib) *nibbles*)))))))
+               do (invalidate-nibble nib))))))
+
+(defmethod invalidate-nibble ((nib nibble))
+  (bt:with-lock-held (*lock*)
+    (remhash (nibble-id nib) *nibbles*)))
 
 (defclass nibble-acceptor-mixin ()
   ((nibble-prefix :initarg :nibble-prefix
@@ -339,7 +342,8 @@ purposes to be maintained across server restarts."
 (cl-cron:make-cron-job 'gc :minute 43
                        :hash-key 'gc)
 
+
 (defmethod print-object ((nibble nibble) out)
   (format out "#<NIBBLE ~a>" (ignore-errors (slot-value nibble 'impl))))
 
- 
+

@@ -8,6 +8,9 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:nibble
+                #:invalidate-nibble
+                #:nibble-id
+                #:get-nibble
                 #:different-user-viewing-p
                 #:allow-user-change
                 #:nibble-full-url
@@ -19,12 +22,15 @@
                 #:nibble
                 #:render-nibble)
   (:import-from #:fiveam-matchers/core
+                #:is-equal-to
                 #:assert-that)
   (:import-from #:fiveam-matchers/strings
                 #:starts-with
                 #:contains-string)
   (:import-from #:hunchentoot
                 #:acceptor-dispatch-request)
+  (:import-from #:fiveam-matchers/misc
+                #:is-null)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :nibble/test-nibble)
 
@@ -152,3 +158,16 @@
   (with-fixture state ()
     (is (equal "foobar"
                (allow-user-change "foobar")))))
+
+(test invalidate-nibble-happy-path
+  (with-fixture state ()
+    (let* ((nibble (nibble ()
+                     "hello"))
+           (id (nibble-id nibble)))
+      (assert-that
+       (get-nibble id)
+       (is-equal-to nibble))
+      (invalidate-nibble nibble)
+      (assert-that
+       (get-nibble id)
+       (is-null)))))
