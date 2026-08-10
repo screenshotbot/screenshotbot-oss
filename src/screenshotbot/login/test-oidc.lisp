@@ -24,6 +24,7 @@
   (:import-from #:oidc/oidc
                 #:after-authentication)
   (:import-from #:screenshotbot/login/oidc
+                #:pushfront
                 #:find-or-create-oidc-user
                 #:update-oidc-user
                 #:%email
@@ -45,7 +46,11 @@
                 #:*signup-throttler*)
   (:import-from #:util/throttler
                 #:keyed-throttler
-                #:throttler))
+                #:throttler)
+  (:import-from #:fiveam-matchers/core
+                #:assert-that)
+  (:import-from #:fiveam-matchers/lists
+                #:contains))
 (in-package :screenshotbot/login/test-oidc)
 
 (util/fiveam:def-suite)
@@ -167,3 +172,29 @@
        (eql
         oidc-user1
         (find-or-create-oidc-user auth :user-id "this-id"))))))
+
+(test pushfront
+  (let ((res nil))
+    (pushfront :foo res)
+    (assert-that res
+                 (contains :foo))
+    (pushfront :foo res)
+    (assert-that res
+                 (contains :foo))
+    (pushfront :bar res)
+    (assert-that res
+                 (contains :bar :foo))
+    (pushfront :bar res)
+    (assert-that res
+                 (contains :bar :foo))
+
+    ;; The differentiator from pushnew
+    (pushfront :foo res)
+    (assert-that res
+                 (contains :foo :bar))
+
+    ;; We don't delete multiple elements though
+    (setf res (list :car :foo :bar :foo))
+    (pushfront :foo res)
+    (assert-that res
+                 (contains :foo :car :bar :foo))))

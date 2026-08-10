@@ -169,6 +169,16 @@
     (setf (current-user :expires-in (expiration-seconds auth)) user)
     (setf (auth:session-value :oidc-user :expires-in (expiration-seconds auth)) oidc-user)))
 
+(defmacro pushfront (item place)
+  "Pushes ITEM to the front of PLACE. If the ITEM already exists, then it
+is deleted and pushed to the front."
+  (let ((val (gensym)))
+   `(let ((,val ,item))
+      (setf ,place
+            (list*
+             ,val
+             (remove ,val ,place :count 1))))))
+
 (defun update-oidc-user (oauth-user &key
                                       (email (error "required"))
                                       (user-id (error "required"))
@@ -186,7 +196,7 @@ user as used in Screenshotbot)"
      (auth:find-or-create-user *installation* :email email))
 
     ;; ensure two way mapping.
-    (pushnew oauth-user (auth:oauth-users user))
+    (pushfront oauth-user (auth:oauth-users user))
     (setf (oauth-user-user oauth-user) user)
 
     (maybe-set-user-primary-email
