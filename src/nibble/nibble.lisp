@@ -37,7 +37,8 @@
          :accessor nibble-user)
    (check-session-p :initarg :check-session-p
                     :initform nil)
-   (ts :initarg :ts)))
+   (ts :initarg :ts))
+  (:metaclass indexed-class))
 
 (defmethod allow-user-change ((nibble nibble))
   "Allow this nibble to switch users (i.e. this nibble will be used during a login flow.)
