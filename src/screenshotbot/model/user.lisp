@@ -419,3 +419,4 @@ migration."
 
 (defmethod auth:password-hash ((self single-company-user))
   nil)
+

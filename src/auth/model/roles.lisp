@@ -19,6 +19,8 @@
                 #:index-get)
   (:import-from #:alexandria
                 #:when-let)
+  (:import-from #:nibble
+                #:invalidate-nibbles-for-user)
   (:export
    #:set-role
    #:user-role
@@ -140,8 +142,11 @@
          (cond
            ((and role (not value))
             ;; delete the role
+            (invalidate-nibbles-for-user user)            
             (bknr.datastore:delete-object role))
            (role
+            (unless (eql value (role-type role))
+              (invalidate-nibbles-for-user user))
             (setf (role-type role) value))
            (value
             (let ((role (make-instance 'user-roles

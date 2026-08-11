@@ -2,6 +2,7 @@
   :serial t
   :depends-on (:auth
                :util
+               :nibble ;; to invalidate nibbles
                :util.store)
   :components ((:file "user")
                (:file "roles")

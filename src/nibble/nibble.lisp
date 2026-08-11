@@ -356,9 +356,14 @@ purposes to be maintained across server restarts."
 (cl-cron:make-cron-job 'gc :minute 43
                        :hash-key 'gc)
 
+(defun invalidate-nibbles-for-user (user)
+  (fset:do-set (nibble (nibbles-for-user user))
+    (invalidate-nibble nibble)))
 
 (defmethod print-object ((nibble nibble) out)
   (format out "#<NIBBLE ~a>" (ignore-errors (slot-value nibble 'impl))))
 
+
+    
 
     
