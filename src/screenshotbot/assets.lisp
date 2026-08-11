@@ -93,6 +93,55 @@ sh ./$INSTALLER
 rm -f $INSTALLER
 "))))
 
+(defmethod hardcoded-recorder-version (installation)
+  "recorder-version/2.18.15/")
+
+(defun generate-installer-without-self-executable (name)
+  ;; This is not ready for prime time yet.
+  (let ((domain (or
+                 (installation-cdn (installation))
+                 ;; A hack for staging:
+                 (installation-domain (installation)))))
+    (flet ((make-link (platform)
+             (format nil "~a/artifact/${VERSION}~a-~a-without-installer.tar.gz" domain name platform))
+           (fetch (link)
+             (format nil "$CURL --progress-bar ~a --output $ARCHIVE"
+                     link)))
+     (let* ((darwin-link (make-link "darwin"))
+            (linux-link (make-link "linux"))
+            (arm64-link (format nil "~a-arm64" linux-link))
+            (domain (installation-domain (installation)))
+            (hardcoded-recorder-version (hardcoded-recorder-version (installation))))
+       #?"#!/bin/sh
+set -e
+
+type=`uname`
+
+ARCHIVE=installer.tar.gz
+CURL=\"curl --retry 3 \"
+VERSION=`$CURL --fail ${domain}/recorder-version/current || echo ${hardcoded-recorder-version} `
+OUTPUTDIR=~/.screenshotbot/$VERSION
+
+mkdir -p $OUTPUTDIR
+cd $OUTPUTDIR
+
+if [ $type = \"Linux\" ] ; then
+  if [ \"`uname -m`\" = \"aarch64\" ] ; then
+    ${(fetch arm64-link)}
+  else
+    ${(fetch linux-link)}
+  fi
+elif [ $type = \"Darwin\" ] ; then
+  ${(fetch darwin-link)}
+else
+  echo Unknown uname type: $type, please message support@screenshotbot.io
+fi
+tar xvzf ./$ARCHIVE
+ln -sf $PWD/screenshotbot/recorder ~/screenshotbot/recorder
+rm -f ~/screenshotbot/recorder.lwheap # old file
+rm -f $ARCHIVE
+"))))
+
 
 (defmacro define-platform-asset (name)
   (let ((generate-fn (intern (format nil "GENERATE-~a-PLATFORM-ASSETS" (str:upcase name)))))
@@ -101,6 +150,11 @@ rm -f $INSTALLER
         (setf (hunchentoot:content-type*) "application/x-sh")
         (setf (hunchentoot:header-out "Cache-Control") "max-age=259200")
         (generate-.sh ,name))
+
+      (defhandler (nil :uri ,(format nil "/~a-v2.sh" name)) ()
+        (setf (hunchentoot:content-type*) "application/x-sh")
+        (setf (hunchentoot:header-out "Cache-Control") "max-age=259200")
+        (generate-installer-without-self-executable ,name))
 
       (defhandler (nil :uri ,(format nil "/~a.exe" name)) ()
         (hunchentoot:redirect
