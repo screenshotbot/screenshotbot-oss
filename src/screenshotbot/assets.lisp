@@ -137,7 +137,10 @@ else
   echo Unknown uname type: $type, please message support@screenshotbot.io
 fi
 tar xvzf ./$ARCHIVE
+
+mkdir -p ~/screenshotbot
 ln -sf $PWD/screenshotbot/recorder ~/screenshotbot/recorder
+
 rm -f ~/screenshotbot/recorder.lwheap # old file
 rm -f $ARCHIVE
 "))))
