@@ -120,10 +120,10 @@ type=`uname`
 ARCHIVE=installer.tar.gz
 CURL=\"curl --retry 3 \"
 VERSION=`$CURL --fail ${domain}/recorder-version/current || echo ${hardcoded-recorder-version} `
-OUTPUTDIR=~/.screenshotbot/$VERSION
+OUTPUTDIR=\"$HOME/.screenshotbot/$VERSION\"
 
-mkdir -p $OUTPUTDIR
-cd $OUTPUTDIR
+mkdir -p \"$OUTPUTDIR\"
+cd \"$OUTPUTDIR\"
 
 if [ $type = \"Linux\" ] ; then
   if [ \"`uname -m`\" = \"aarch64\" ] ; then
@@ -138,10 +138,10 @@ else
 fi
 tar xvzf ./$ARCHIVE
 
-mkdir -p ~/screenshotbot
-ln -sf $PWD/screenshotbot/recorder ~/screenshotbot/recorder
+mkdir -p \"$HOME/screenshotbot\"
+ln -sf \"$PWD/screenshotbot/recorder\" \"$HOME/screenshotbot/recorder\"
 
-rm -f ~/screenshotbot/recorder.lwheap # old file
+rm -f \"$HOME/screenshotbot/recorder.lwheap\" # old file
 rm -f $ARCHIVE
 "))))
 
