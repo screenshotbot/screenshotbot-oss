@@ -239,6 +239,9 @@
   (scim-delete (get-company!) id))
 
 (defun scim-delete (company id)
+  ;; Heads up: Okta doesn't delete, it sends a PUT request with
+  ;; active=false.
+  (log:info "DELETEing an SCIM user with id ~a" id)
   (let ((user (find-by-oid id)))
     (validate-user! company user)
     (bknr.datastore:delete-object user)
@@ -246,10 +249,12 @@
     ""))
 
 (defscimhandler (nil :uri "/scim/v2/Users/:id" :method :put) (id)
+  (log:info "PUT new user for SCIM")
   (scim-put (get-company!) id
               (hunchentoot:raw-post-data :force-text t)))
 
 (defscimhandler (nil :uri "/scim/v2/Users/:id" :method :patch) (id)
+  (log:info "PATCH user for SCIM")
   (error "PATCH not supported for SCIM"))
 
 (defun scim-put (company id json)
