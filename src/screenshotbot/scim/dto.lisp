@@ -7,7 +7,9 @@
 (defpackage :screenshotbot/scim/dto
   (:use #:cl)
   (:import-from #:util/json-mop
-                #:ext-json-serializable-class))
+                #:ext-json-serializable-class)
+  (:export
+   #:list-response-resources))
 (in-package :screenshotbot/scim/dto)
 
 (defclass external-name ()
@@ -89,6 +91,7 @@
                    :json-key "itemsPerPage")
    (resources :json-type (:list external-user)
               :initarg :resources
+              :reader list-response-resources
               :json-key "Resources"))
   (:metaclass ext-json-serializable-class))
 

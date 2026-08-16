@@ -92,8 +92,11 @@
        company))))
 
 (defscimhandler (nil :uri "/scim/v2/Users" :method :get) (filter)
-  (let ((company (get-company!))
-        (filter (cond
+  (let ((company (get-company!)))
+    (%list-users company filter)))
+
+(defun %list-users (company filter)
+  (let ((filter (cond
                   ((str:emptyp filter)
                    (lambda (user) (declare (ignore user)) t))
                   (t
@@ -120,12 +123,12 @@
                       collect
                       (user-to-dto user))))
         (make-instance
-        'list-response
-        :total-results (length users)
-        :start-index start-index
-        :items-per-page (length resources)
-        :resources
-        resources)))))
+         'list-response
+         :total-results (length users)
+         :start-index start-index
+         :items-per-page (length resources)
+         :resources
+         resources)))))
 
 (define-condition api-error (error)
   ((code :initarg :code

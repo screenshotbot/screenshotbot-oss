@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
+                #:%list-users
                 #:scim-delete
                 #:scim-get
                 #:does-not-exist
@@ -41,6 +42,9 @@
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
   (:import-from #:screenshotbot/scim/dto
+                #:external-email-value
+                #:external-user-emails
+                #:list-response-resources
                 #:external-user-activep
                 #:external-user))
 (in-package :screenshotbot/scim/test-users)
@@ -69,6 +73,18 @@
        (scim-user-emails user)
        (contains
         "barbara.jensen@example.com")))))
+
+(test simple-list-users
+  (with-fixture state ()
+    (scim-post
+     company
+     example-post)
+    (let ((list-response (%list-users company nil)))
+     (let ((user (only! (list-response-resources list-response))))
+       (assert-that
+        (mapcar #'external-email-value (external-user-emails user))
+        (contains
+         "barbara.jensen@example.com"))))))
 
 (test uniqueness
   (with-fixture state ()
@@ -137,3 +153,4 @@
                  (encode-json
                   external-user)))
     (is-false (scim-user-activep (only! (class-instances 'scim-user))))))
+
