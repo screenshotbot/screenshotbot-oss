@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
+                #:invalid-email
                 #:only-one-email
                 #:user-name-must-be-email
                 #:validate-dto
@@ -194,4 +195,16 @@
                                                              :type "primary"
                                                              :value "barbar2@example.com")))))
       (signals only-one-email
+        (validate-dto external-user)))))
+
+(test object-validation-needs-user-name-as-email
+  (with-fixture state ()
+    (let ((external-user (make-instance 'external-user
+                                        :external-id "foobar"
+                                        :user-name "barbar"
+                                        :emails
+                                        (list (make-instance 'external-email
+                                                             :type "primary"
+                                                             :value "barbar")))))
+      (signals invalid-email
         (validate-dto external-user)))))

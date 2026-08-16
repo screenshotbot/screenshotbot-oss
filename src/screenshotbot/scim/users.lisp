@@ -50,7 +50,9 @@
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:screenshotbot/scim/filter
-                #:make-filter))
+                #:make-filter)
+  (:import-from #:screenshotbot/login/signup
+                #:valid-email-address-p))
 (in-package :screenshotbot/scim/users)
 
 (defvar *lock* (bt:make-lock))
@@ -161,6 +163,10 @@
   ()
   (:default-initargs :code 403 :type nil))
 
+(define-condition invalid-email (api-error)
+  ()
+  (:default-initargs :code 400 :type "invalidValue" :reason "invalid email"))
+
 (def-easy-macro with-api-error-handling (&fn fn)
   (handler-case
       (fn)
@@ -236,7 +242,9 @@
     (unless (equal
              (external-user-user-name dto)
              (external-email-value (car (external-user-emails dto))))
-      (error 'user-name-must-be-email))))
+      (error 'user-name-must-be-email))
+    (unless (valid-email-address-p (external-user-user-name dto))
+      (error 'invalid-email))))
 
 
 (defscimhandler (nil :uri "/scim/v2/Users/:id" :method :get) (id)
