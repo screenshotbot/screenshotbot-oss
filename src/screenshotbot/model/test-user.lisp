@@ -169,3 +169,4 @@
       (assert-that (roles:companies-for-user user)
                    (contains-in-any-order company company-2)))))
 
+

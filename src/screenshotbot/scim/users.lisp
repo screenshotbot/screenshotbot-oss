@@ -141,6 +141,14 @@
            :initform "NA"
            :reader api-error-reason)))
 
+(define-condition user-name-must-be-email (api-error)
+  ()
+  (:default-initargs :code 400 :type "invalidValue" :reason "We expect the username to be the same as the email"))
+
+(define-condition only-one-email (api-error)
+  ()
+  (:default-initargs :code 400 :type "invalidValue" :reason "Exactly one email is allowed per user"))
+
 (define-condition does-not-exist (api-error)
   ()
   (:default-initargs :code 404 :type nil))
@@ -198,27 +206,37 @@
 
 (defun scim-post (company json)
   (bt:with-lock-held (*lock*)
-    (let* ((dto (decode-json
+    (let ((dto (decode-json
                  json
-                 'external-user))
-           (username (external-user-user-name dto)))
-      (dolist (existing-user (scim-users-for-company company))
-        (when (equal (scim-user-user-name existing-user)
-                     username)
-          (error 'uniqueness-error)))
-      (let ((obj (make-instance 'scim-user-v2
-                                :company company
-                                :user-name username
-                                :activep (external-user-activep dto)
-                                :external-id (ignore-errors
-                                              (external-user-external-id dto))
-                                :emails (dto-emails dto))))
-        (setf (hunchentoot:header-out :location)
-              (hex:make-full-url *request*
-                                 "/scim/v2/Users/:id"
-                                 :id (oid  obj)))
-        (user-to-dto
-         obj)))))
+                 'external-user)))
+      (validate-dto dto)
+      (let* ((username (external-user-user-name dto)))
+        (dolist (existing-user (scim-users-for-company company))
+         (when (equal (scim-user-user-name existing-user)
+                      username)
+           (error 'uniqueness-error)))
+       (let ((obj (make-instance 'scim-user-v2
+                                 :company company
+                                 :user-name username
+                                 :activep (external-user-activep dto)
+                                 :external-id (ignore-errors
+                                               (external-user-external-id dto))
+                                 :emails (dto-emails dto))))
+         (setf (hunchentoot:header-out :location)
+               (hex:make-full-url *request*
+                                  "/scim/v2/Users/:id"
+                                  :id (oid  obj)))
+         (user-to-dto
+          obj))))))
+
+(defun validate-dto (dto)
+  (let ((external-emails (dto-emails dto)))
+    (unless (eql 1 (length external-emails))
+      (error 'only-one-email))
+    (unless (equal
+             (external-user-user-name dto)
+             (external-email-value (car (external-user-emails dto))))
+      (error 'user-name-must-be-email))))
 
 
 (defscimhandler (nil :uri "/scim/v2/Users/:id" :method :get) (id)
@@ -260,29 +278,30 @@
 
 (defun scim-put (company id json)
   (bt:with-lock-held (*lock*)
-    (let* ((dto (decode-json
-                 json
-                 'external-user))
-           (username (external-user-user-name dto))
-           (existing (scim-user-by-id company id)))
-      (validate-user! company existing)
-      (dolist (existing-user (scim-users-for-company company))
-        (when (and
-               (not (eql (scim-user-user existing) (scim-user-user existing-user)))
-               (equal (scim-user-user-name existing-user)
-                      username))
-          (error 'uniqueness-error)))
-      (setf (scim-user-user-name existing)
-            username)
-      (setf (scim-user-emails existing)
-            (dto-emails dto))
-      (setf (scim-user-external-id existing)
-            (ignore-errors (external-user-external-id dto)))
-      (setf (scim-user-activep existing)
-            (external-user-activep dto))
-      (set-success 200)
-      (user-to-dto
-       existing))))
+    (let ((dto (decode-json
+                json
+                'external-user)))
+      (validate-dto dto)
+      (let* ((username (external-user-user-name dto))
+             (existing (scim-user-by-id company id)))
+        (validate-user! company existing)
+        (dolist (existing-user (scim-users-for-company company))
+          (when (and
+                 (not (eql (scim-user-user existing) (scim-user-user existing-user)))
+                 (equal (scim-user-user-name existing-user)
+                        username))
+            (error 'uniqueness-error)))
+        (setf (scim-user-user-name existing)
+              username)
+        (setf (scim-user-emails existing)
+              (dto-emails dto))
+        (setf (scim-user-external-id existing)
+              (ignore-errors (external-user-external-id dto)))
+        (setf (scim-user-activep existing)
+              (external-user-activep dto))
+        (set-success 200)
+        (user-to-dto
+         existing)))))
 
 (defun dto-emails (dto)
   "Get a list of all the emails from the DTO"

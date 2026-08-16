@@ -10,6 +10,9 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
+                #:only-one-email
+                #:user-name-must-be-email
+                #:validate-dto
                 #:%list-users
                 #:scim-get
                 #:does-not-exist
@@ -42,6 +45,7 @@
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
   (:import-from #:screenshotbot/scim/dto
+                #:external-email
                 #:external-email-value
                 #:external-user-emails
                 #:list-response-resources
@@ -143,7 +147,10 @@
   (with-fixture state ()
     (let ((external-user (make-instance 'external-user
                                         :external-id "foobar"
-                                        :user-name "barbar"
+                                        :user-name "barbar@example.com"
+                                        :emails (list
+                                                 (make-instance 'external-email
+                                                                :value "barbar@example.com"))
                                         :activep nil)))
       (is-false (external-user-activep external-user))
       (scim-post company
@@ -151,3 +158,40 @@
                   external-user)))
     (is-false (scim-user-activep (only! (scim-users-for-company company))))))
 
+(test object-validation
+  (with-fixture state ()
+    (let ((external-user (make-instance 'external-user
+                                        :external-id "foobar"
+                                        :user-name "barbar@example.com"
+                                        :emails
+                                        (list (make-instance 'external-email
+                                                             :type "primary"
+                                                             :value "barbar@example.com")))))
+      (finishes (validate-dto external-user)))))
+
+(test object-validation-needs-user-name-as-email
+  (with-fixture state ()
+    (let ((external-user (make-instance 'external-user
+                                        :external-id "foobar"
+                                        :user-name "barbar"
+                                        :emails
+                                        (list (make-instance 'external-email
+                                                             :type "primary"
+                                                             :value "barbar@example.com")))))
+      (signals user-name-must-be-email
+        (validate-dto external-user)))))
+
+(test object-validation-only-one-email-per-user
+  (with-fixture state ()
+    (let ((external-user (make-instance 'external-user
+                                        :external-id "foobar"
+                                        :user-name "barbar"
+                                        :emails
+                                        (list (make-instance 'external-email
+                                                             :type "primary"
+                                                             :value "barbar@example.com")
+                                              (make-instance 'external-email
+                                                             :type "primary"
+                                                             :value "barbar2@example.com")))))
+      (signals only-one-email
+        (validate-dto external-user)))))
