@@ -14,7 +14,7 @@
       "value": "barbara.jensen@example.com"
     }
   ],
-  "userName": "bjensen",
+  "userName": "barbara.jensen@example.com",
   "password": "changeit",
   "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User": {
     "employeeNumber": "701984"

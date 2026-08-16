@@ -15,7 +15,7 @@
                 #:scim-user-activep
                 #:scim-user-emails
                 #:scim-user-user-name
-                #:scim-user)
+                #:scim-user-v2)
   (:import-from #:util/store/object-id
                 #:oid)
   (:export
@@ -339,7 +339,7 @@ compared case insensitively) on OBJECT. Single valued attributes return
 a one element list, and multi-valued attributes return one element per
 value. Signals INVALID-FILTER if OBJECT has no such attribute."))
 
-(defmethod attribute-values ((self scim-user) name)
+(defmethod attribute-values ((self scim-user-v2) name)
   (cond
     ((string-equal name "userName")
      (list (scim-user-user-name self)))

@@ -9,13 +9,14 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/scim/model
+                #:scim-user-user
                 #:scim-user-activep
                 #:scim-user-emails
                 #:scim-user-external-id
                 #:scim-user-company
                 #:scim-users-for-company
                 #:scim-user-user-name
-                #:scim-user
+                #:scim-user-v2
                 #:scim-config-company
                 #:scim-config-for-token
                 #:scim-config-token
@@ -134,6 +135,7 @@
   ((code :initarg :code
          :reader api-error-code)
    (scim-type :initarg :type
+              :initform nil
               :reader api-error-type)
    (reason :initarg :reason
            :initform "NA"
@@ -177,7 +179,7 @@
        (set-success)
        response))))
 
-(defmethod user-to-dto ((user scim-user))
+(defmethod user-to-dto ((user scim-user-v2))
   (make-instance 'external-user
                  :id (oid user)
                  :external-id (ignore-errors
@@ -200,11 +202,11 @@
                  json
                  'external-user))
            (username (external-user-user-name dto)))
-      (fset:do-set (existing-user (scim-users-for-company company))
+      (dolist (existing-user (scim-users-for-company company))
         (when (equal (scim-user-user-name existing-user)
                      username)
           (error 'uniqueness-error)))
-      (let ((obj (make-instance 'scim-user
+      (let ((obj (make-instance 'scim-user-v2
                                 :company company
                                 :user-name username
                                 :activep (external-user-activep dto)
@@ -226,30 +228,21 @@
 (defun validate-user! (company user)
   (unless user
     (error 'does-not-exist))
-  (unless (typep user 'scim-user)
+  (unless (typep user 'scim-user-v2)
     (error 'does-not-exist))
   (unless (eql (scim-user-company user)
                company)
     (error 'does-not-exist)))
 
 (defun scim-get (company id)
-  (let ((user (find-by-oid id)))
+  (let ((user (scim-user-by-id company id)))
     (validate-user! company user)
     (user-to-dto
      user)))
 
 (defscimhandler (nil :uri "/scim/v2/Users/:id" :method :delete) (id)
-  (scim-delete (get-company!) id))
+  (error 'api-error :code 501 :reason  "DELETE is not supported, send active=false instead"))
 
-(defun scim-delete (company id)
-  ;; Heads up: Okta doesn't delete, it sends a PUT request with
-  ;; active=false.
-  (log:info "DELETEing an SCIM user with id ~a" id)
-  (let ((user (find-by-oid id)))
-    (validate-user! company user)
-    (bknr.datastore:delete-object user)
-    (set-success 204)
-    ""))
 
 (defscimhandler (nil :uri "/scim/v2/Users/:id" :method :put) (id)
   (log:info "PUT new user for SCIM")
@@ -258,7 +251,12 @@
 
 (defscimhandler (nil :uri "/scim/v2/Users/:id" :method :patch) (id)
   (log:info "PATCH user for SCIM")
-  (error "PATCH not supported for SCIM"))
+  (error 'api-error :code 501 :reason "PATCH not supported for SCIM"))
+
+(defun scim-user-by-id (company id)
+  (loop for scim-user in (scim-users-for-company company)
+        if (equal id (oid scim-user))
+          return scim-user))
 
 (defun scim-put (company id json)
   (bt:with-lock-held (*lock*)
@@ -266,11 +264,11 @@
                  json
                  'external-user))
            (username (external-user-user-name dto))
-           (existing (find-by-oid id)))
+           (existing (scim-user-by-id company id)))
       (validate-user! company existing)
-      (fset:do-set (existing-user (scim-users-for-company company))
+      (dolist (existing-user (scim-users-for-company company))
         (when (and
-               (not (eql existing existing-user))
+               (not (eql (scim-user-user existing) (scim-user-user existing-user)))
                (equal (scim-user-user-name existing-user)
                       username))
           (error 'uniqueness-error)))

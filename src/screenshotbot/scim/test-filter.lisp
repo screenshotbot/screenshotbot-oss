@@ -12,7 +12,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/scim/model
-                #:scim-user)
+                #:scim-user-v2)
   (:import-from #:screenshotbot/scim/filter
                 #:attr-path-sub-attr
                 #:attr-path-name
@@ -20,10 +20,12 @@
                 #:invalid-filter
                 #:parse-filter
                 #:make-filter)
-  (:import-from #:bknr.datastore
-                #:store-object-id)
   (:import-from #:util/store/object-id
-                #:oid))
+                #:oid)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
+  (:import-from #:screenshotbot/model/user
+                #:make-user))
 (in-package :screenshotbot/scim/test-filter)
 
 
@@ -241,19 +243,21 @@ be compared with EQUAL."
 ;;;; * Evaluating filters against a SCIM-USER
 
 (def-fixture state ()
-  (with-test-store ()
-    (let* ((company (make-instance 'company))
-           (user (make-instance 'scim-user
-                                :company company
-                                :user-name "bjensen@example.com"
-                                :external-id "ext-0001"
-                                :emails (list "barbara.jensen@example.com"
-                                              "bjensen@example.org")))
-           (empty-user (make-instance 'scim-user
-                                      :company company
-                                      :user-name "empty"
-                                      :activep nil)))
-      (&body))))
+  (with-installation ()
+   (with-test-store ()
+     (let* ((company (make-instance 'company))
+            (user (make-instance 'scim-user-v2
+                                 :company company
+                                 :user (make-user :companies (list company))
+                                 :user-name "bjensen@example.com"
+                                 :external-id "ext-0001"
+                                 :emails (list "barbara.jensen@example.com"
+                                               "bjensen@example.org")))
+            (empty-user (make-instance 'scim-user-v2
+                                       :company company
+                                       :user-name "empty"
+                                       :activep nil)))
+       (&body)))))
 
 (defun matchesp (expr user)
   (funcall (make-filter expr) user))
@@ -304,10 +308,7 @@ be compared with EQUAL."
     (is-true (matchesp (format nil "id eq \"~a\"" (oid user)) user))
     (is-false (matchesp (format nil "id eq \"~a\"" (oid user)) empty-user))
     (is-true (matchesp (format nil "id eq \"~a\"" (oid empty-user))
-                       empty-user))
-    ;; ... and not the store-object-id, which we no longer expose
-    (is-false (matchesp (format nil "id eq \"~a\"" (store-object-id user))
-                        user))))
+                       empty-user))))
 
 (test filter-on-external-id
   (with-fixture state ()

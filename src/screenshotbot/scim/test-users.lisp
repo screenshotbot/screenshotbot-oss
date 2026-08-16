@@ -11,7 +11,6 @@
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
                 #:%list-users
-                #:scim-delete
                 #:scim-get
                 #:does-not-exist
                 #:uniqueness-error
@@ -21,9 +20,10 @@
   (:import-from #:util/misc/lists
                 #:only!)
   (:import-from #:screenshotbot/scim/model
+                #:scim-users-for-company
                 #:scim-user-activep
                 #:scim-user-emails
-                #:scim-user)
+                #:scim-user-v2)
   (:import-from #:fiveam-matchers/core
                 #:assert-that)
   (:import-from #:fiveam-matchers/lists
@@ -46,7 +46,9 @@
                 #:external-user-emails
                 #:list-response-resources
                 #:external-user-activep
-                #:external-user))
+                #:external-user)
+  (:import-from #:screenshotbot/user-api
+                #:user))
 (in-package :screenshotbot/scim/test-users)
 
 
@@ -55,20 +57,28 @@
 (def-fixture state ()
   (with-test-store ()
     (with-test-user (:company company
+                     :user user
                      :logged-in-p t)
-     (let ((example-post (uiop:read-file-string
-                          ;; Example taken from scim.dev
-                          (asdf:system-relative-pathname
-                           :screenshotbot
-                           "scim/post-example.json"))))
-       (&body)))))
+      (setf (roles:user-role company user) nil) ;; to keep old tests passing
+      (let ((example-post (uiop:read-file-string
+                           ;; Example taken from scim.dev
+                           (asdf:system-relative-pathname
+                            :screenshotbot
+                            "scim/post-example.json"))))
+        (&body)))))
 
 (test simple-post
   (with-fixture state ()
+    (assert-that
+     (class-instances 'user)
+     (has-length 1))    
     (scim-post
      company
      example-post)
-    (let ((user (only! (bknr.datastore:class-instances 'scim-user))))
+    (assert-that
+     (class-instances 'user)
+     (has-length 2))
+    (let ((user (only! (scim-users-for-company company))))
       (assert-that
        (scim-user-emails user)
        (contains
@@ -108,8 +118,8 @@
       (signals does-not-exist
         (scim-get company id)))))
 
-(defun only-id! ()
-  (oid (only! (bknr.datastore:class-instances 'scim-user))))
+(defun only-id! (company)
+  (oid (only! (scim-users-for-company company))))
 
 (test 404-for-another-company-user
   (with-fixture state ()
@@ -117,30 +127,17 @@
       (scim-post
        company
        example-post)
-      (let ((id (only-id!)))
+      (let ((id (only-id! company)))
         (finishes
          (scim-get company id))
         (signals does-not-exist
           (scim-get other-company id))))))
 
-(test delete-happy-path
-  (with-fixture state ()
-    (scim-post company example-post)
-    (finishes
-      (scim-delete company (only-id!)))
-    (assert-that (class-instances 'scim-user)
-                 (has-length 0))))
-
-(test delete-404
-  (with-fixture state ()
-    (scim-post company example-post)
-    (signals does-not-exist
-      (scim-delete company 3432424234))))
 
 (test active-handling
   (with-fixture state ()
     (scim-post company example-post)
-    (is-true (scim-user-activep (only! (class-instances 'scim-user))))))
+    (is-true (scim-user-activep (only! (scim-users-for-company company))))))
 
 (test active-handling-false
   (with-fixture state ()
@@ -152,5 +149,5 @@
       (scim-post company
                  (encode-json
                   external-user)))
-    (is-false (scim-user-activep (only! (class-instances 'scim-user))))))
+    (is-false (scim-user-activep (only! (scim-users-for-company company))))))
 

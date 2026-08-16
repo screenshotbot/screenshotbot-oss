@@ -15,7 +15,14 @@
                 #:fset-unique-index
                 #:fset-set-index)
   (:import-from #:util/store/object-id
-                #:object-with-oid))
+                #:oid
+                #:object-with-oid)
+  (:import-from #:screenshotbot/user-api
+                #:user)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
+  (:import-from #:auth
+                #:user-email))
 (in-package :screenshotbot/scim/model)
 
 (defindex +config-company-index+
@@ -41,11 +48,11 @@
   'fset-set-index
   :slot-name '%company)
 
-(defclass scim-user (object-with-oid)
+(defclass scim-user-v2 ()
   ((%company :initarg :company
-             :index +user-company-index+
-             :accessor scim-user-company
-             :index-reader scim-users-for-company)
+             :accessor scim-user-company)
+   (%user :initarg :user
+          :accessor scim-user-user)
    (%external-id :initarg :external-id
                  :initform nil
                  :accessor scim-user-external-id)
@@ -59,11 +66,45 @@
 username, it might be an email.")
    (%activep :initarg :activep
              :accessor scim-user-activep))
-  (:metaclass persistent-class)
   (:default-initargs :activep t))
 
+(defmethod oid ((self scim-user-v2) &key stringp)
+  (declare (ignore stringp))
+  (oid (scim-user-user self)))
 
 
+(defmethod initialize-instance :after ((self scim-user-v2) &key user company
+                                                          user-name
+                                                          activep)
+  (unless user
+    ;; We're creating a new user
+    (let ((user (make-user
+                 :email user-name)))
+      (roles:ensure-has-role company user 'roles:disabled-user) 
+      (setf (scim-user-user self) user)
+      (setf (scim-user-activep self) activep))))
+
+
+(defmethod scim-users-for-company (company)
+  (let ((users (roles:users-for-company company)))
+    (loop for user in users
+          collect
+          (make-instance 'scim-user-v2
+                         :emails (list
+                                  (user-email user))
+                         :company company
+                         :user-name (user-email user)
+                         :activep (roles:has-role-p company user 'roles:standard-member)
+                         :user user))))
+
+(defmethod (setf scim-user-activep) :after (value scim-user)
+  (let ((company (scim-user-company scim-user))
+        (user (scim-user-user scim-user)))
+   (cond
+     (value
+      (roles:ensure-has-role company user 'roles:standard-member))
+     (t
+      (setf (roles:user-role company user) 'roles:disabled-user)))))
 
 
 

@@ -76,5 +76,9 @@ remaining elements (unfiltered)"
      (reverse indexes))))
 
 (defun only! (list)
-  (assert (= 1 (length list)))
-  (first list))
+  (let ((len (length list)))
+    (when (= 0 len)
+      (error "list was empty, wanted exactly 1"))
+    (unless (= 1 len)
+      (error "expected to see 1 element, got ~a" len))
+    (first list)))
