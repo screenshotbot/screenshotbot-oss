@@ -143,6 +143,18 @@
            :initform "NA"
            :reader api-error-reason)))
 
+(defmethod print-object ((self api-error) output)
+  (format output "API-ERROR: ~a"
+          (api-error-reason self)))
+
+(define-condition invalid-value (api-error)
+  ()
+  (:default-initargs :code 400 :type "invalidValue"))
+
+(defun invalid-value (&rest args)
+  (error 'invalid-value
+         :reason (apply #'format nil args)))
+
 (define-condition user-name-must-be-email (api-error)
   ()
   (:default-initargs :code 400 :type "invalidValue" :reason "We expect the username to be the same as the email"))
