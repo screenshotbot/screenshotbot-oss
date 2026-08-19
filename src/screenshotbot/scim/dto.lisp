@@ -8,6 +8,14 @@
   (:use #:cl)
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
+  (:import-from #:screenshotbot/scim/model
+                #:scim-user-user-name
+                #:scim-user-activep
+                #:scim-user-external-id
+                #:scim-user-emails
+                #:scim-user-v2)
+  (:import-from #:util/store/object-id
+                #:oid)
   (:export
    #:list-response-resources))
 (in-package :screenshotbot/scim/dto)
@@ -116,3 +124,21 @@
   (declare (ignore detail status))
   (unless type
     (slot-makunbound self 'scim-type)))
+
+(defmethod user-to-dto ((user scim-user-v2))
+  (make-instance 'external-user
+                 :id (oid user)
+                 :external-id (ignore-errors
+                               (scim-user-external-id user))
+                 :activep (scim-user-activep user)
+                 :user-name (scim-user-user-name user)
+                 :emails
+                 (loop for email in (scim-user-emails user)
+                       for count from 0
+                       collect
+                          (make-instance 'external-email
+                                         :type "work"
+                                         :value email
+                                         :primary (eql 0 count)))))
+
+

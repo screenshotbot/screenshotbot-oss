@@ -24,6 +24,7 @@
   (:import-from #:util/misc
                 #:not-null!)
   (:import-from #:screenshotbot/scim/dto
+                #:user-to-dto
                 #:external-user-activep
                 #:external-user-external-id
                 #:error-response
@@ -205,23 +206,6 @@
        (set-success)
        response))))
 
-(defmethod user-to-dto ((user scim-user-v2))
-  (make-instance 'external-user
-                 :id (oid user)
-                 :external-id (ignore-errors
-                               (scim-user-external-id user))
-                 :activep (scim-user-activep user)
-                 :user-name (scim-user-user-name user)
-                 :emails
-                 (loop for email in (scim-user-emails user)
-                       for count from 0
-                       collect
-                          (make-instance 'external-email
-                                         :type "work"
-                                         :value email
-                                         :primary (eql 0 count)))))
-
-
 (defun scim-post (company json)
   (bt:with-lock-held (*lock*)
     (let ((dto (decode-json
@@ -329,3 +313,6 @@
                       dto)
         collect
         (external-email-value email)))
+
+
+
