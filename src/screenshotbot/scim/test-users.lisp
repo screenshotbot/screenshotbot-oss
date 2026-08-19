@@ -101,6 +101,28 @@
         (contains
          "barbara.jensen@example.com"))))))
 
+(test list-users-with-a-basic-filter
+  (with-fixture state ()
+    (scim-post
+     company
+     example-post)
+    (let ((list-response (%list-users company "userName eq \"barbara.jensen@example.com\"")))
+     (let ((user (only! (list-response-resources list-response))))
+       (assert-that
+        (mapcar #'external-email-value (external-user-emails user))
+        (contains
+         "barbara.jensen@example.com"))))))
+
+(test list-users-with-a-basic-filter-that-does-not-match
+  (with-fixture state ()
+    (scim-post
+     company
+     example-post)
+    (let ((list-response (%list-users company "userName eq \"carbar@example.com\"")))
+     (assert-that
+      (list-response-resources list-response)
+      (has-length 0)))))
+
 (test uniqueness
   (with-fixture state ()
     (finishes

@@ -17,7 +17,8 @@
   (:import-from #:util/store/object-id
                 #:oid)
   (:export
-   #:list-response-resources))
+   #:list-response-resources
+   #:external-user-id))
 (in-package :screenshotbot/scim/dto)
 
 (defclass external-name ()
@@ -61,7 +62,8 @@
          :reader external-user-name)
    (id :json-type :string
        :initarg :id
-       :json-key "id")
+       :json-key "id"
+       :reader external-user-id)
    (external-id :json-type :string
                 :initarg :external-id
                 :json-key "externalId"

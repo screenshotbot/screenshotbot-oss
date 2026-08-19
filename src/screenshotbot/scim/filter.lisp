@@ -10,14 +10,16 @@
                 #:~ ;; a case insensitive terminal
                 #:?
                 #:defrule)
-  (:import-from #:screenshotbot/scim/model
-                #:scim-user-external-id
-                #:scim-user-activep
-                #:scim-user-emails
-                #:scim-user-user-name
-                #:scim-user-v2)
   (:import-from #:util/store/object-id
                 #:oid)
+  (:import-from #:screenshotbot/scim/dto
+                #:external-user-activep
+                #:external-user-external-id
+                #:external-user-id
+                #:external-email-value
+                #:external-user-emails
+                #:external-user-user-name
+                #:external-user)
   (:export
    #:make-filter
    #:parse-filter
@@ -339,21 +341,24 @@ compared case insensitively) on OBJECT. Single valued attributes return
 a one element list, and multi-valued attributes return one element per
 value. Signals INVALID-FILTER if OBJECT has no such attribute."))
 
-(defmethod attribute-values ((self scim-user-v2) name)
+(defmethod attribute-values ((self external-user) name)
   (cond
     ((string-equal name "userName")
-     (list (scim-user-user-name self)))
+     (list (external-user-user-name self)))
     ((string-equal name "id")
      ;; The oid, since that's the id we hand out in USER-TO-DTO
-     (list (oid self)))
+     (list (external-user-id self)))
     ((string-equal name "active")
-     (list (scim-user-activep self)))
+     (list (external-user-activep self)))
     ((string-equal name "emails")
-     (scim-user-emails self))
+     (mapcar #'external-email-value (external-user-emails self)))
     ((string-equal name "externalId")
      ;; The slot is unbound on users stored before it existed, which
      ;; is why USER-TO-DTO reads it through IGNORE-ERRORS too
-     (list (ignore-errors (scim-user-external-id self))))
+     (list (handler-case
+               (external-user-external-id self)
+             (unbound-slot ()
+               nil))))
     (t
      (invalid-filter "Unsupported attribute: ~a" name))))
 

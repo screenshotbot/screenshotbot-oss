@@ -115,7 +115,7 @@
                 (or
                  (hunchentoot:parameter "count")
                  "100"))))
-    (let* ((users (fset:convert 'list (scim-users-for-company company)))
+    (let* ((users (mapcar #'user-to-dto (fset:convert 'list (scim-users-for-company company))))
            (users (remove-if-not filter users)))
       (set-success 200)
       (let ((resources
@@ -125,7 +125,7 @@
                         (<= start-index i)
                         (< i (+ start-index count)))
                       collect
-                      (user-to-dto user))))
+                      user)))
         (make-instance
          'list-response
          :total-results (length users)

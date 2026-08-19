@@ -25,7 +25,10 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/model/user
-                #:make-user))
+                #:make-user)
+  (:import-from #:screenshotbot/scim/dto
+                #:external-user-id
+                #:user-to-dto))
 (in-package :screenshotbot/scim/test-filter)
 
 
@@ -246,17 +249,19 @@ be compared with EQUAL."
   (with-installation ()
    (with-test-store ()
      (let* ((company (make-instance 'company))
-            (user (make-instance 'scim-user-v2
-                                 :company company
-                                 :user (make-user :companies (list company))
-                                 :user-name "bjensen@example.com"
-                                 :external-id "ext-0001"
-                                 :emails (list "barbara.jensen@example.com"
-                                               "bjensen@example.org")))
-            (empty-user (make-instance 'scim-user-v2
-                                       :company company
-                                       :user-name "empty"
-                                       :activep nil)))
+            (user (user-to-dto
+                   (make-instance 'scim-user-v2
+                                  :company company
+                                  :user (make-user :companies (list company))
+                                  :user-name "bjensen@example.com"
+                                  :external-id "ext-0001"
+                                  :emails (list "barbara.jensen@example.com"
+                                                "bjensen@example.org"))))
+            (empty-user (user-to-dto
+                         (make-instance 'scim-user-v2
+                                        :company company
+                                        :user-name "empty"
+                                        :activep nil))))
        (&body)))))
 
 (defun matchesp (expr user)
@@ -305,9 +310,9 @@ be compared with EQUAL."
   ;; The id has to be the one USER-TO-DTO hands out, or a client can't
   ;; look up a user by the id we just gave it
   (with-fixture state ()
-    (is-true (matchesp (format nil "id eq \"~a\"" (oid user)) user))
-    (is-false (matchesp (format nil "id eq \"~a\"" (oid user)) empty-user))
-    (is-true (matchesp (format nil "id eq \"~a\"" (oid empty-user))
+    (is-true (matchesp (format nil "id eq \"~a\"" (external-user-id user)) user))
+    (is-false (matchesp (format nil "id eq \"~a\"" (external-user-id user)) empty-user))
+    (is-true (matchesp (format nil "id eq \"~a\"" (external-user-id empty-user))
                        empty-user))))
 
 (test filter-on-external-id
@@ -361,7 +366,7 @@ be compared with EQUAL."
   ;; unbound on users that were stored before the slot existed. Filtering
   ;; on them has to be a miss, not an error.
   (with-fixture state ()
-    (slot-makunbound user 'screenshotbot/scim/model::%external-id)
+    (slot-makunbound user 'screenshotbot/scim/dto::external-id)
     (is-false (matchesp "externalId pr" user))
     (is-false (matchesp "externalId eq \"ext-0001\"" user))
     ;; the rest of the user is still filterable
