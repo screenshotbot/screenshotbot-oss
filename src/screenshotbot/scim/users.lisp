@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/scim/model
+                #:make-scim-user
                 #:scim-user-user
                 #:scim-user-activep
                 #:scim-user-emails
@@ -217,13 +218,13 @@
          (when (equal (scim-user-user-name existing-user)
                       username)
            (error 'uniqueness-error)))
-       (let ((obj (make-instance 'scim-user-v2
-                                 :company company
-                                 :user-name username
-                                 :activep (external-user-activep dto)
-                                 :external-id (ignore-errors
-                                               (external-user-external-id dto))
-                                 :emails (dto-emails dto))))
+       (let ((obj (make-scim-user
+                   :company company
+                   :user-name username
+                   :activep (external-user-activep dto)
+                   :external-id (ignore-errors
+                                 (external-user-external-id dto))
+                   :emails (dto-emails dto))))
          (setf (hunchentoot:header-out :location)
                (hex:make-full-url *request*
                                   "/scim/v2/Users/:id"

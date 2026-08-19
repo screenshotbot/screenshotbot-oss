@@ -12,6 +12,7 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/scim/model
+                #:make-scim-user
                 #:scim-user-v2)
   (:import-from #:screenshotbot/scim/filter
                 #:attr-path-sub-attr
@@ -250,18 +251,18 @@ be compared with EQUAL."
    (with-test-store ()
      (let* ((company (make-instance 'company))
             (user (user-to-dto
-                   (make-instance 'scim-user-v2
-                                  :company company
-                                  :user (make-user :companies (list company))
-                                  :user-name "bjensen@example.com"
-                                  :external-id "ext-0001"
-                                  :emails (list "barbara.jensen@example.com"
-                                                "bjensen@example.org"))))
+                   (make-scim-user
+                    :company company
+                    :user (make-user :companies (list company))
+                    :user-name "bjensen@example.com"
+                    :external-id "ext-0001"
+                    :emails (list "barbara.jensen@example.com"
+                                  "bjensen@example.org"))))
             (empty-user (user-to-dto
-                         (make-instance 'scim-user-v2
-                                        :company company
-                                        :user-name "empty"
-                                        :activep nil))))
+                         (make-scim-user
+                          :company company
+                          :user-name "empty"
+                          :activep nil))))
        (&body)))))
 
 (defun matchesp (expr user)

@@ -65,7 +65,9 @@
               :documentation "This is a unique, transparent, 'ID' on the IdP side. It might be a
 username, it might be an email.")
    (%activep :initarg :activep
-             :accessor scim-user-activep))
+             :accessor scim-user-activep)
+   (fake :initarg :fake
+         :initform (error "don't call make-instance directly on scim-user")))
   (:default-initargs :activep t))
 
 (defmethod oid ((self scim-user-v2) &key stringp)
@@ -90,6 +92,7 @@ username, it might be an email.")
     (loop for user in users
           collect
           (make-instance 'scim-user-v2
+                         :fake :disregard
                          :emails (list
                                   (user-email user))
                          :company company
@@ -107,7 +110,10 @@ username, it might be an email.")
       (setf (roles:user-role company user) 'roles:disabled-user)))))
 
 
-
+(defun make-scim-user (&rest args)
+  (apply #'make-instance 'scim-user-v2
+         :fake :disregard
+         args))
 
 
 
