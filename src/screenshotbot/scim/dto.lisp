@@ -9,6 +9,7 @@
   (:import-from #:util/json-mop
                 #:ext-json-serializable-class)
   (:import-from #:screenshotbot/scim/model
+                #:user-to-dto
                 #:scim-user-user-name
                 #:scim-user-activep
                 #:scim-user-external-id

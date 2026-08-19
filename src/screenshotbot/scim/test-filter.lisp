@@ -250,19 +250,17 @@ be compared with EQUAL."
   (with-installation ()
    (with-test-store ()
      (let* ((company (make-instance 'company))
-            (user (user-to-dto
-                   (make-scim-user
-                    :company company
-                    :user (make-user :companies (list company))
-                    :user-name "bjensen@example.com"
-                    :external-id "ext-0001"
-                    :emails (list "barbara.jensen@example.com"
-                                  "bjensen@example.org"))))
-            (empty-user (user-to-dto
-                         (make-scim-user
-                          :company company
-                          :user-name "empty"
-                          :activep nil))))
+            (user (make-scim-user
+                   :company company
+                   :user (make-user :companies (list company))
+                   :user-name "bjensen@example.com"
+                   :external-id "ext-0001"
+                   :emails (list "barbara.jensen@example.com"
+                                 "bjensen@example.org")))
+            (empty-user (make-scim-user
+                         :company company
+                         :user-name "empty"
+                         :activep nil)))
        (&body)))))
 
 (defun matchesp (expr user)

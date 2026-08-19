@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
+                #:scim-put
                 #:invalid-email
                 #:only-one-email
                 #:user-name-must-be-email
@@ -46,6 +47,7 @@
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
   (:import-from #:screenshotbot/scim/dto
+                #:external-user-id
                 #:external-email
                 #:external-email-value
                 #:external-user-emails
@@ -53,7 +55,9 @@
                 #:external-user-activep
                 #:external-user)
   (:import-from #:screenshotbot/user-api
-                #:user))
+                #:user)
+  (:import-from #:screenshotbot/model/user
+                #:user-with-email))
 (in-package :screenshotbot/scim/test-users)
 
 
@@ -85,7 +89,7 @@
      (has-length 2))
     (let ((user (only! (scim-users-for-company company))))
       (assert-that
-       (scim-user-emails user)
+       (mapcar #'external-email-value (external-user-emails user))
        (contains
         "barbara.jensen@example.com")))))
 
@@ -146,7 +150,7 @@
         (scim-get company id)))))
 
 (defun only-id! (company)
-  (oid (only! (scim-users-for-company company))))
+  (external-user-id (only! (scim-users-for-company company))))
 
 (test 404-for-another-company-user
   (with-fixture state ()
@@ -164,7 +168,7 @@
 (test active-handling
   (with-fixture state ()
     (scim-post company example-post)
-    (is-true (scim-user-activep (only! (scim-users-for-company company))))))
+    (is-true (external-user-activep (only! (scim-users-for-company company))))))
 
 (test active-handling-false
   (with-fixture state ()
@@ -179,7 +183,7 @@
       (scim-post company
                  (encode-json
                   external-user)))
-    (is-false (scim-user-activep (only! (scim-users-for-company company))))))
+    (is-false (external-user-activep (only! (scim-users-for-company company))))))
 
 (test object-validation
   (with-fixture state ()
@@ -231,4 +235,8 @@
       (signals invalid-email
         (validate-dto external-user)))))
 
-
+(test scim-put-happy-path
+  (with-fixture state ()
+    (scim-post company example-post)
+    (finishes
+      (scim-put company (oid (user-with-email "barbara.jensen@example.com")) example-post))))

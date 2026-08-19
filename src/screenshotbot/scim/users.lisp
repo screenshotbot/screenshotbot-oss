@@ -25,6 +25,7 @@
   (:import-from #:util/misc
                 #:not-null!)
   (:import-from #:screenshotbot/scim/dto
+                #:external-user-id
                 #:user-to-dto
                 #:external-user-activep
                 #:external-user-external-id
@@ -116,7 +117,7 @@
                 (or
                  (hunchentoot:parameter "count")
                  "100"))))
-    (let* ((users (mapcar #'user-to-dto (fset:convert 'list (scim-users-for-company company))))
+    (let* ((users (fset:convert 'list (scim-users-for-company company)))
            (users (remove-if-not filter users)))
       (set-success 200)
       (let ((resources
@@ -215,7 +216,7 @@
       (validate-dto dto)
       (let* ((username (external-user-user-name dto)))
         (dolist (existing-user (scim-users-for-company company))
-         (when (equal (scim-user-user-name existing-user)
+         (when (equal (external-user-user-name existing-user)
                       username)
            (error 'uniqueness-error)))
        (let ((obj (make-scim-user
@@ -228,9 +229,8 @@
          (setf (hunchentoot:header-out :location)
                (hex:make-full-url *request*
                                   "/scim/v2/Users/:id"
-                                  :id (oid  obj)))
-         (user-to-dto
-          obj))))))
+                                  :id (external-user-id  obj)))
+         obj)))))
 
 (defun validate-dto (dto)
   (let ((external-emails (dto-emails dto)))
@@ -249,19 +249,18 @@
   (scim-get (get-company!) id))
 
 (defun validate-user! (company user)
+  ;; In a previous version, we were validating the company of the
+  ;; user. However, the DTO model does not carry this information, and
+  ;; the fetching code always takes the company... 
+  (declare (ignore company))o
   (unless user
     (error 'does-not-exist))
-  (unless (typep user 'scim-user-v2)
-    (error 'does-not-exist))
-  (unless (eql (scim-user-company user)
-               company)
-    (error 'does-not-exist)))
+  (check-type user external-user))
 
 (defun scim-get (company id)
   (let ((user (scim-user-by-id company id)))
     (validate-user! company user)
-    (user-to-dto
-     user)))
+    user))
 
 (defscimhandler (nil :uri "/scim/v2/Users/:id" :method :delete) (id)
   (error 'api-error :code 501 :reason  "DELETE is not supported, send active=false instead"))
@@ -278,7 +277,7 @@
 
 (defun scim-user-by-id (company id)
   (loop for scim-user in (scim-users-for-company company)
-        if (equal id (oid scim-user))
+        if (equal id (external-user-id scim-user))
           return scim-user))
 
 (defun scim-put (company id json)
@@ -292,21 +291,26 @@
         (validate-user! company existing)
         (dolist (existing-user (scim-users-for-company company))
           (when (and
-                 (not (eql (scim-user-user existing) (scim-user-user existing-user)))
-                 (equal (scim-user-user-name existing-user)
+                 (not (equal (external-user-id existing) id))
+                 (equal (external-user-user-name existing-user)
                         username))
             (error 'uniqueness-error)))
+        #+nil
         (setf (scim-user-user-name existing)
               username)
+        #+nil
         (setf (scim-user-emails existing)
               (dto-emails dto))
+        #+nil
         (setf (scim-user-external-id existing)
               (ignore-errors (external-user-external-id dto)))
+
+        #+nil
         (setf (scim-user-activep existing)
               (external-user-activep dto))
+
         (set-success 200)
-        (user-to-dto
-         existing)))))
+        existing))))
 
 (defun dto-emails (dto)
   "Get a list of all the emails from the DTO"

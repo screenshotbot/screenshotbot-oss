@@ -91,14 +91,15 @@ username, it might be an email.")
   (let ((users (roles:users-for-company company)))
     (loop for user in users
           collect
-          (make-instance 'scim-user-v2
-                         :fake :disregard
-                         :emails (list
-                                  (user-email user))
-                         :company company
-                         :user-name (user-email user)
-                         :activep (roles:has-role-p company user 'roles:standard-member)
-                         :user user))))
+          (user-to-dto
+           (make-instance 'scim-user-v2
+                          :fake :disregard
+                          :emails (list
+                                   (user-email user))
+                          :company company
+                          :user-name (user-email user)
+                          :activep (roles:has-role-p company user 'roles:standard-member)
+                          :user user)))))
 
 (defmethod (setf scim-user-activep) :after (value scim-user)
   (let ((company (scim-user-company scim-user))
@@ -111,11 +112,12 @@ username, it might be an email.")
 
 
 (defun make-scim-user (&rest args)
-  (apply #'make-instance 'scim-user-v2
-         :fake :disregard
-         args))
+  (user-to-dto
+   (apply #'make-instance 'scim-user-v2
+          :fake :disregard
+          args)))
 
-
+(defgeneric user-to-dto (scim-user))
 
 
 
