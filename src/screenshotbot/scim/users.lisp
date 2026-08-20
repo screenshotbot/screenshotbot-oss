@@ -9,6 +9,7 @@
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:screenshotbot/scim/model
+                #:set-user-activep
                 #:make-scim-user
                 #:scim-user-user
                 #:scim-user-activep
@@ -252,7 +253,7 @@
   ;; In a previous version, we were validating the company of the
   ;; user. However, the DTO model does not carry this information, and
   ;; the fetching code always takes the company... 
-  (declare (ignore company))o
+  (declare (ignore company))
   (unless user
     (error 'does-not-exist))
   (check-type user external-user))
@@ -287,7 +288,11 @@
                 'external-user)))
       (validate-dto dto)
       (let* ((username (external-user-user-name dto))
-             (existing (scim-user-by-id company id)))
+             (existing (scim-user-by-id company id))
+             (internal-user
+               (loop for user in (roles:users-for-company company)
+                     if (equal id (oid user))
+                       return user)))
         (validate-user! company existing)
         (dolist (existing-user (scim-users-for-company company))
           (when (and
@@ -305,9 +310,11 @@
         (setf (scim-user-external-id existing)
               (ignore-errors (external-user-external-id dto)))
 
-        #+nil
-        (setf (scim-user-activep existing)
-              (external-user-activep dto))
+        (set-user-activep
+         company
+         internal-user
+         (external-user-activep dto))
+
 
         (set-success 200)
         existing))))

@@ -104,11 +104,14 @@ username, it might be an email.")
 (defmethod (setf scim-user-activep) :after (value scim-user)
   (let ((company (scim-user-company scim-user))
         (user (scim-user-user scim-user)))
-   (cond
-     (value
-      (roles:ensure-has-role company user 'roles:standard-member))
-     (t
-      (setf (roles:user-role company user) 'roles:disabled-user)))))
+    (set-user-activep company user value)))
+
+(defun set-user-activep (company user value)
+  (cond
+    (value
+     (roles:ensure-has-role company user 'roles:standard-member))
+    (t
+     (setf (roles:user-role company user) 'roles:disabled-user))))
 
 
 (defun make-scim-user (&rest args)
@@ -118,7 +121,5 @@ username, it might be an email.")
           args)))
 
 (defgeneric user-to-dto (scim-user))
-
-
 
 

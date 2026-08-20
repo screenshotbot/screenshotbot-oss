@@ -73,7 +73,7 @@
             :json-key "active"
             :initform t
             :initarg :activep
-            :reader external-user-activep)
+            :accessor external-user-activep)
    (emails :json-type (:list external-email)
            :initform nil
            :initarg :emails

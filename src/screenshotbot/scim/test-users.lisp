@@ -240,3 +240,25 @@
     (scim-post company example-post)
     (finishes
       (scim-put company (oid (user-with-email "barbara.jensen@example.com")) example-post))))
+
+(test scim-put-update-activep
+  (with-fixture state ()
+    (scim-post company example-post)
+    (let ((old (scim-get company (only-id! company))))
+      (setf (external-user-activep old) nil)
+      (finishes
+        (scim-put company (only-id! company)
+                  (encode-json old)))
+      (is-false
+       (external-user-activep
+        (scim-get company (only-id! company))))
+
+      ;; set back to true:
+
+      (setf (external-user-activep old) t)
+      (finishes
+        (scim-put company (only-id! company)
+                  (encode-json old)))
+      (is-true
+       (external-user-activep
+        (scim-get company (only-id! company)))))))
