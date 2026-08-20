@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
+                #:api-error
                 #:invalid-value
                 #:scim-put
                 #:invalid-email
@@ -275,3 +276,32 @@
       (signals invalid-value
         (scim-put company (only-id! company)
                   (encode-json old))))))
+
+
+(test list-users-doesnt-list-hidden-owners
+  (with-fixture state ()
+    (roles:ensure-has-role
+     company
+     user 'roles:standard-member)
+    (assert-that
+     (list-response-resources (%list-users company nil))
+     (has-length 1))
+    (roles:ensure-has-role
+     company
+     user 'roles:hidden-user)
+    (assert-that
+     (list-response-resources (%list-users company nil))
+     (has-length 0))))
+
+(test cant-get-hidden-user
+  (with-fixture state ()
+    (roles:ensure-has-role
+     company
+     user 'roles:standard-member)
+    (finishes
+      (scim-get company (oid user)))
+    (roles:ensure-has-role
+     company
+     user 'roles:hidden-user)
+    (signals does-not-exist
+     (scim-get company (oid user)))))

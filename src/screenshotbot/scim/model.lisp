@@ -90,6 +90,9 @@ username, it might be an email.")
 (defmethod scim-users-for-company (company)
   (let ((users (roles:users-for-company company)))
     (loop for user in users
+          unless (roles:has-role-p
+                  company
+                  user 'roles:hidden-user)
           collect
           (user-to-dto
            (make-instance 'scim-user-v2
