@@ -71,7 +71,6 @@
                 :reader external-user-external-id)
    (activep :json-type :bool
             :json-key "active"
-            :initform t
             :initarg :activep
             :accessor external-user-activep)
    (emails :json-type (:list external-email)

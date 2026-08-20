@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
+                #:scim-patch
                 #:api-error
                 #:invalid-value
                 #:scim-put
@@ -49,6 +50,7 @@
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
   (:import-from #:screenshotbot/scim/dto
+                #:activep
                 #:external-user-id
                 #:external-email
                 #:external-email-value
@@ -243,6 +245,12 @@
     (finishes
       (scim-put company (oid (user-with-email "barbara.jensen@example.com")) example-post))))
 
+(test scim-patch-happy-path
+  (with-fixture state ()
+    (scim-post company example-post)
+    (finishes
+      (scim-patch company (oid (user-with-email "barbara.jensen@example.com")) example-post))))
+
 (test scim-put-update-activep
   (with-fixture state ()
     (scim-post company example-post)
@@ -264,6 +272,25 @@
       (is-true
        (external-user-activep
         (scim-get company (only-id! company)))))))
+
+(test scim-patch-with-active-missing
+  (with-fixture state ()
+    (scim-post company example-post)
+    (dolist (user (roles:users-for-company company))
+      (setf (roles:user-role company user) 'roles:disabled-user))
+    (is-false
+     (external-user-activep
+      (scim-get company (only-id! company))))    
+    (let ((old (scim-get company (only-id! company))))
+      (slot-makunbound old 'activep)
+      (finishes
+        (scim-patch company (only-id! company)
+                    (encode-json old)))
+      (is-false
+       (external-user-activep
+        (scim-get company (only-id! company)))))))
+
+
 
 (test scim-put-activep-refuses-owners
   (with-fixture state ()

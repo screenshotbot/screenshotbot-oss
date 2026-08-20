@@ -26,6 +26,7 @@
   (:import-from #:util/misc
                 #:not-null!)
   (:import-from #:screenshotbot/scim/dto
+                #:activep
                 #:external-user-id
                 #:user-to-dto
                 #:external-user-activep
@@ -263,16 +264,17 @@
   (scim-put (get-company!) id
               (hunchentoot:raw-post-data :force-text t)))
 
-(defscimhandler (nil :uri "/scim/v2/Users/:id" :method :patch) (id)
+(defscimhandler (nil :uri "/qscim/v2/Users/:id" :method :patch) (id)
   (log:info "PATCH user for SCIM")
-  (error 'api-error :code 501 :reason "PATCH not supported for SCIM"))
+  (scim-patch (get-company!) id
+              (hunchentoot:raw-post-data :force-text t)))
 
 (defun scim-user-by-id (company id)
   (loop for scim-user in (scim-users-for-company company)
         if (equal id (external-user-id scim-user))
           return scim-user))
 
-(defun scim-put (company id json)
+(def-easy-macro with-write-handling (&binding dto company id json &key &binding internal-user &fn fn)
   (bt:with-lock-held (*lock*)
     (let ((dto (decode-json
                 json
@@ -292,29 +294,40 @@
                         username))
             (error 'uniqueness-error)))
 
-        #+nil
-        (setf (scim-user-user-name existing)
-              username)
-        #+nil
-        (setf (scim-user-emails existing)
-              (dto-emails dto))
-        #+nil
-        (setf (scim-user-external-id existing)
-              (ignore-errors (external-user-external-id dto)))
-
-        (when (and
-               (not (external-user-activep dto))
-               (roles:has-role-p company internal-user 'roles:owner))
-          (invalid-value "Cannot disable an organization owner via SCIM, please contact support@screenshotbot.io"))
-
-        (set-user-activep
-         company
-         internal-user
-         (external-user-activep dto))
-
+        (fn dto internal-user)
 
         (set-success 200)
         existing))))
+
+(defun scim-put (company id json)
+  (with-write-handling (dto company id json :internal-user internal-user)
+    #+nil
+    (setf (scim-user-user-name existing)
+          username)
+    #+nil
+    (setf (scim-user-emails existing)
+          (dto-emails dto))
+    #+nil
+    (setf (scim-user-external-id existing)
+          (ignore-errors (external-user-external-id dto)))
+
+    (update-activep company dto internal-user)))
+
+(defun update-activep (company dto internal-user)
+  (when (and
+         (not (external-user-activep dto))
+         (roles:has-role-p company internal-user 'roles:owner))
+    (invalid-value "Cannot disable an organization owner via SCIM, please contact support@screenshotbot.io"))
+  
+  (set-user-activep
+   company
+   internal-user
+   (external-user-activep dto)))
+
+(defmethod scim-patch (company id json)
+  (with-write-handling (dto company id json :internal-user internal-user)
+    (when (slot-boundp dto 'activep)
+     (update-activep company dto internal-user))))
 
 (defun dto-emails (dto)
   "Get a list of all the emails from the DTO"
