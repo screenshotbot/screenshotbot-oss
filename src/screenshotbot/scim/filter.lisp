@@ -20,6 +20,9 @@
                 #:external-user-emails
                 #:external-user-user-name
                 #:external-user)
+  (:import-from #:screenshotbot/scim/error
+                #:api-error-reason
+                #:api-error)
   (:export
    #:make-filter
    #:parse-filter
@@ -59,15 +62,14 @@
 ;;      subAttr   = "." ATTRNAME
 ;;                  ; a sub-attribute of a complex attribute
 
-(define-condition invalid-filter (error)
-  ((message :initarg :message
-            :reader invalid-filter-message))
+(define-condition invalid-filter (api-error)
+  ()
   (:report (lambda (self stream)
              (format stream "Invalid SCIM filter: ~a"
-                     (invalid-filter-message self)))))
+                     (api-error-reason self)))))
 
 (defun invalid-filter (fmt &rest args)
-  (error 'invalid-filter :message (apply #'format nil fmt args)))
+  (error 'invalid-filter :reason (apply #'format nil fmt args)))
 
 (defstruct (attr-path (:constructor make-attr-path (uri name sub-attr)))
   "A parsed attrPath: an optional schema URI, the attribute name, and an
