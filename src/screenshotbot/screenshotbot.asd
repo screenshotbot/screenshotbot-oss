@@ -352,6 +352,7 @@
     :serial t
     :components ((:file "model")
                  (:file "dto")
+                 (:file "error")
                  (:file "filter")
                  (:file "users")
                  (:file "service-provider-config")))

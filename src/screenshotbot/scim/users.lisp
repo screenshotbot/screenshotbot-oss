@@ -56,7 +56,12 @@
   (:import-from #:screenshotbot/scim/filter
                 #:make-filter)
   (:import-from #:screenshotbot/login/signup
-                #:valid-email-address-p))
+                #:valid-email-address-p)
+  (:import-from #:screenshotbot/scim/error
+                #:api-error-reason
+                #:api-error-type
+                #:api-error-code
+                #:api-error))
 (in-package :screenshotbot/scim/users)
 
 (defvar *lock* (bt:make-lock))
@@ -136,20 +141,6 @@
          :items-per-page (length resources)
          :resources
          resources)))))
-
-(define-condition api-error (error)
-  ((code :initarg :code
-         :reader api-error-code)
-   (scim-type :initarg :type
-              :initform nil
-              :reader api-error-type)
-   (reason :initarg :reason
-           :initform "NA"
-           :reader api-error-reason)))
-
-(defmethod print-object ((self api-error) output)
-  (format output "API-ERROR: ~a"
-          (api-error-reason self)))
 
 (define-condition invalid-value (api-error)
   ()
