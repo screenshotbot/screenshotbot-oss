@@ -290,6 +290,26 @@
        (external-user-activep
         (scim-get company (only-id! company)))))))
 
+(test scim-put-with-active-missing
+  "The RFC allows PUT to not need active, in which case any missing
+attributes are guessed, as long as we return the updated JSON at the
+end."
+  (with-fixture state ()
+    (scim-post company example-post)
+    (dolist (user (roles:users-for-company company))
+      (setf (roles:user-role company user) 'roles:disabled-user))
+    (is-false
+     (external-user-activep
+      (scim-get company (only-id! company))))    
+    (let ((old (scim-get company (only-id! company))))
+      (slot-makunbound old 'activep)
+      (finishes
+        (scim-put company (only-id! company)
+                    (encode-json old)))
+      (is-false
+       (external-user-activep
+        (scim-get company (only-id! company)))))))
+
 
 
 (test scim-put-activep-refuses-owners

@@ -314,20 +314,22 @@
     (update-activep company dto internal-user)))
 
 (defun update-activep (company dto internal-user)
-  (when (and
-         (not (external-user-activep dto))
-         (roles:has-role-p company internal-user 'roles:owner))
-    (invalid-value "Cannot disable an organization owner via SCIM, please contact support@screenshotbot.io"))
-  
-  (set-user-activep
-   company
-   internal-user
-   (external-user-activep dto)))
+  ;; The standard allows PUT to not have "active" provided at all, in
+  ;; which case what we do is up to us. We choose to handle it like
+  ;; it's a PATCH
+  (when (slot-boundp dto 'activep)
+   (when (and
+          (not (external-user-activep dto))
+          (roles:has-role-p company internal-user 'roles:owner))
+     (invalid-value "Cannot disable an organization owner via SCIM, please contact support@screenshotbot.io"))
+   (set-user-activep
+    company
+    internal-user
+    (external-user-activep dto))))
 
 (defmethod scim-patch (company id json)
   (with-write-handling (dto company id json :internal-user internal-user)
-    (when (slot-boundp dto 'activep)
-     (update-activep company dto internal-user))))
+    (update-activep company dto internal-user)))
 
 (defun dto-emails (dto)
   "Get a list of all the emails from the DTO"
