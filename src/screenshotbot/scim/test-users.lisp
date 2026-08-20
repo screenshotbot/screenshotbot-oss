@@ -10,6 +10,7 @@
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/scim/users
+                #:invalid-value
                 #:scim-put
                 #:invalid-email
                 #:only-one-email
@@ -262,3 +263,15 @@
       (is-true
        (external-user-activep
         (scim-get company (only-id! company)))))))
+
+(test scim-put-activep-refuses-owners
+  (with-fixture state ()
+    (scim-post company example-post)
+    (roles:ensure-has-role
+     company (user-with-email "barbara.jensen@example.com")
+     'roles:owner)
+    (let ((old (scim-get company (only-id! company))))
+      (setf (external-user-activep old) nil)
+      (signals invalid-value
+        (scim-put company (only-id! company)
+                  (encode-json old))))))

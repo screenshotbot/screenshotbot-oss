@@ -300,6 +300,7 @@
                  (equal (external-user-user-name existing-user)
                         username))
             (error 'uniqueness-error)))
+
         #+nil
         (setf (scim-user-user-name existing)
               username)
@@ -309,6 +310,11 @@
         #+nil
         (setf (scim-user-external-id existing)
               (ignore-errors (external-user-external-id dto)))
+
+        (when (and
+               (not (external-user-activep dto))
+               (roles:has-role-p company internal-user 'roles:owner))
+          (invalid-value "Cannot disable an organization owner via SCIM, please contact support@screenshotbot.io"))
 
         (set-user-activep
          company
