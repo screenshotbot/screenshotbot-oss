@@ -7,10 +7,7 @@
 (defpackage :screenshotbot/magick/magick-lw
   (:use #:cl
         #:screenshotbot/magick/magick
-        #+magick-7
         #:screenshotbot/magick/ffi-7
-        #+magick-6
-        #:screenshotbot/magick/ffi-6
         #:screenshotbot/mask-rect-api)
   (:import-from #:screenshotbot/magick
                 #:with-magick-gatekeeper

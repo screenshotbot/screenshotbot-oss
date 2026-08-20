@@ -137,7 +137,7 @@
              (pushnew add *features*)))
      (ecase (elt version 0)
        (#\6
-        (add-feature :magick-6 :magick-7))
+        (error "ImageMagick 6 is no longer supported by Screenshotbot"))
        (#\7
         (add-feature :magick-7 :magick-6))))))
 

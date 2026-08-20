@@ -203,11 +203,6 @@
   (finishes
    (load-magick-native :force t)))
 
-;; Dummy test to look at the test output in builds to see which
-;; version of magick is being used.
-(test #+magick-6 using-magick-6 #+magick-7 using-magick7
-  (pass))
-
 (def-easy-macro with-large-wand (&binding wand &key (height 16385)  &fn fn)
   (with-wand (wand)
     (with-pixel-wand (pwand)
@@ -230,10 +225,6 @@
   (with-large-wand (before)
     (with-large-wand (after)
       (uiop:with-temporary-file (:pathname output :type "webp")
-        ;; This does not work in Magick-6. I don't know why. Ideally
-        ;; I'd like to make it work, but for now I'll just disable
-        ;; this test. Essentially, expect compare-wands to fail on
-        ;; large images in magic-6.
         (finishes
           (compare-wands before after output))))))
 
