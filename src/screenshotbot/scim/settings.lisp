@@ -23,6 +23,14 @@
         Please <a href="/ticket/create">contact us</a> to enable SCIM for this organization
       </div>
     </settings-template>)
+   ((not (roles:has-role-p (auth:current-company)
+                           (auth:current-user)
+                           'roles:owner))
+    <settings-template>
+      <div class="alert alert-info">
+        You must be an organization Owner to update the SCIM configuration
+      </div>
+    </settings-template>)
    (t
     <settings-template>
       unimplemented
