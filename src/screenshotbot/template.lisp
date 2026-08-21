@@ -103,27 +103,27 @@
 (deftag dashboard-head (&key jquery-ui
                         (title "Screenshotbot")
                         codemirror)
-      <head>
-      <meta charset="utf-8" />
-      <title>,(or title "Screenshotbot")</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <!-- App favicon -->
-        <link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
+  <head>
+    <meta charset="utf-8" />
+    <title>,(or title "Screenshotbot")</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- App favicon -->
+    <link rel="shortcut icon" href= (util.cdn:make-cdn *favicon*) />
 
-        <og-details />
-  ,(when jquery-ui
-     <link rel= "stylesheet" href= "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />)
+    <og-details />
+    ,(when jquery-ui
+       <link rel= "stylesheet" href= "https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />)
 
-  ,@(when codemirror
-     (list
-      <:link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.css" />
-      <:link rel= "stylesheeet"
-            href= "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/theme/blackboard.min.css" /> ))
-  <link href="/assets/css/default.css" rel="stylesheet" type="text/css" id="light-style" />
-  <google-analytics />
+    ,@(when codemirror
+        (list
+         <:link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.css" />
+         <:link rel= "stylesheeet"
+                href= "https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/theme/blackboard.min.css" /> ))
+    <link href="/assets/css/default.css" rel="stylesheet" type="text/css" id="light-style" />
+    <google-analytics />
 
-  <selenium-css />
-    </head>)
+    <selenium-css />
+  </head>)
 
 (defmethod billing-banner (installation company user)
   nil)
