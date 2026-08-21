@@ -91,7 +91,11 @@
                (:file "rb-tree")))
 
 (defsystem "util/emacs"
-  :depends-on (#:alexandria)
+  :depends-on (#:alexandria
+               ;; emacs.lisp uses both, and without them here the system
+               ;; only loads when something else has pulled them in first.
+               #:str
+               #:log4cl)
   :serial t
   :components ((:file "emacs")))
 
