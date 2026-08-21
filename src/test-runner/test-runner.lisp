@@ -50,6 +50,7 @@
   (append
    (%find-tests "src/")
    (%find-tests "third-party/bknr.datastore/")
+   (%find-tests "third-party/lw-paredit/")
    (%find-tests "local-projects/cl-mongo-id/")))
 
 (defun %find-tests (pathname)
