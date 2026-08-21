@@ -284,6 +284,7 @@
                              (:file "harbormaster")
                              (:file "project")
                              (:file "maniphest")
+                             (:file "differential")
                              (:file "passphrase")))))
 
 (defsystem :util/clsql
@@ -400,7 +401,8 @@
                              (:file "test-lispworks")))
                (:module "phabricator"
                 :components ((:file "test-conduit")
-                             (:file "test-harbormaster")))))
+                             (:file "test-harbormaster")
+                             (:file "test-differential")))))
 
 (defsystem :util/events
   :serial t
