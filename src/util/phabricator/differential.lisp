@@ -8,15 +8,18 @@
   (:use #:cl)
   (:import-from #:util/phabricator/conduit
                 #:call-conduit
+                #:search-conduit
                 #:phab-instance)
+  (:import-from #:util/phabricator/harbormaster
+                #:builds-for-diffs)
   (:import-from #:alexandria
-                #:alist-hash-table
                 #:assoc-value)
   (:export #:search-revisions
            #:revision
            #:revision-p
            #:revision-id
            #:revision-phid
+           #:revision-diff-phid
            #:revision-title
            #:revision-uri
            #:revision-status
@@ -24,7 +27,8 @@
            #:revision-author
            #:revision-date-modified
            #:revision-summary
-           #:*page-size*))
+           #:revision-builds
+           #:attach-builds))
 (in-package :util/phabricator/differential)
 
 ;;; Reading Differential: the revisions on an install, through
@@ -32,32 +36,13 @@
 ;;;
 ;;; The search returns author PHIDs rather than names, so a second call to
 ;;; phid.query turns those into something readable. That one is per page
-;;; of results, not per revision.
+;;; of results, not per revision, and the same goes for the builds.
 
 (defstruct revision
-  id phid title uri status closed-p author date-modified summary)
+  id phid diff-phid title uri status closed-p author date-modified summary
+  builds)
 
-(defparameter *page-size* 100
-  "How many revisions to ask for in one call. Phabricator's own maximum
-is 100, so asking for more gets you 100 anyway.")
-
-;; * Reading a page of results
-
-(defun revision-page (phab after constraints limit)
-  "One call to differential.revision.search, newest revision first.
-
-Returns the raw rows, and the cursor to continue from as a second value
--- NIL when that was the last page."
-  (let* ((params `(("limit" . ,(min limit *page-size*))
-                   ,@(when after
-                       (list (cons "after" after)))
-                   ,@(when constraints
-                       (list (cons "constraints"
-                                   (alist-hash-table constraints :test #'equal))))))
-         (result (assoc-value (call-conduit phab "differential.revision.search" params)
-                              :result)))
-    (values (assoc-value result :data)
-            (assoc-value (assoc-value result :cursor) :after))))
+;; * Reading the results
 
 (defun author-phids (rows)
   "The distinct author PHIDs in ROWS, in one list to look up together."
@@ -99,6 +84,9 @@ their PHID, which is at least a thing you can search for."
     (make-revision
      :id (assoc-value row :id)
      :phid (assoc-value row :phid)
+     ;; The diff the revision currently points at. Harbormaster hangs its
+     ;; buildables off this, not off the revision.
+     :diff-phid (assoc-value fields :diff-+phid+)
      :title (assoc-value fields :title)
      :uri (assoc-value fields :uri)
      :status (assoc-value status :name)
@@ -109,29 +97,36 @@ their PHID, which is at least a thing you can search for."
 
 ;; * The search itself
 
-(defmethod search-revisions ((phab phab-instance) &key (limit 100) constraints)
+(defmethod attach-builds ((phab phab-instance) revisions)
+  "Fill in each revision's BUILDS from Harbormaster, and return them.
+
+Two calls for the whole list rather than two per revision, which is why
+this takes all of them at once."
+  (let ((builds (builds-for-diffs phab (remove nil (mapcar #'revision-diff-phid
+                                                           revisions)))))
+    (dolist (revision revisions revisions)
+      (setf (revision-builds revision)
+            (gethash (revision-phid revision) builds)))))
+
+(defmethod search-revisions ((phab phab-instance) &key (limit 100) constraints
+                                                       with-builds)
   "The revisions on PHAB, newest first, at most LIMIT of them.
 
 CONSTRAINTS is an alist passed through to differential.revision.search,
-or NIL for every revision on the install.
+or NIL for every revision on the install. WITH-BUILDS fills in what
+Harbormaster ran for each of them, which is two more calls for the whole
+list.
 
 Returns the revisions, and as a second value whether Phabricator had
 more to give. An install has far more revisions than anyone wants in a
 list, so a caller that stops early is expected to say so rather than
 present a prefix as the whole thing."
-  (let ((rows '())
-        (after nil)
-        (morep nil))
-    (loop
-      (multiple-value-bind (page next)
-          (revision-page phab after constraints (- limit (length rows)))
-        (setf rows (append rows page)
-              after next)
-        (when (or (null page) (null next) (>= (length rows) limit))
-          (setf morep (and next (>= (length rows) limit) t))
-          (return))))
-    (when (> (length rows) limit)
-      (setf rows (subseq rows 0 limit)))
-    (values (let ((names (author-names phab (author-phids rows))))
-              (loop for row in rows collect (parse-revision row names)))
-            morep)))
+  (multiple-value-bind (rows morep)
+      (search-conduit phab "differential.revision.search"
+                      :constraints constraints
+                      :limit limit)
+    (let* ((names (author-names phab (author-phids rows)))
+           (revisions (loop for row in rows collect (parse-revision row names))))
+      (when with-builds
+        (attach-builds phab revisions))
+      (values revisions morep))))

@@ -12,7 +12,13 @@
                 #:delete-after-epoch
                 #:create-artifact
                 #:download-file
-                #:upload-file)
+                #:upload-file
+                #:build-failed-p
+                #:build-name
+                #:build-passed-p
+                #:build-status
+                #:build-status-name
+                #:build-waiting-p)
   (:import-from #:util/phabricator/conduit
                 #:phab-instance
                 #:call-conduit
@@ -95,3 +101,37 @@
                          "PHID-HMBT-6fznwctbnptklhw36y63"
                          p :name (format nil "Test Artifact ~a"
                                          (timestamp-to-universal (local-time:now))))))))
+
+;;; * Builds
+;;;
+;;; The parsing and the three states, against rows shaped the way
+;;; harbormaster.build.search really returns them -- buildStatus arrives
+;;; from cl-json as :BUILD-STATUS, with the raw value and a display name.
+
+(defun build-fields (&key (name "Lispworks Tests") (value "passed") (status-name "Passed"))
+  `((:buildable-+phid+ . "PHID-HMBB-vchbzu5typ6f3wpd6lw6")
+    (:build-status (:value . ,value) (:name . ,status-name) (:color.ansi . "green"))
+    (:name . ,name)
+    (:date-created . 1787332250)))
+
+(test a-row-becomes-a-build
+  (let ((build (util/phabricator/harbormaster::parse-build (build-fields))))
+    (is (equal "Lispworks Tests" (build-name build)))
+    (is (equal "passed" (build-status build)))
+    (is (equal "Passed" (build-status-name build)))
+    (is-true (build-passed-p build))
+    (is-false (build-failed-p build))
+    (is-false (build-waiting-p build))))
+
+(test every-status-lands-in-exactly-one-state
+  (flet ((build (value)
+           (util/phabricator/harbormaster::parse-build (build-fields :value value))))
+    (dolist (value '("failed" "aborted" "error" "deadlocked"))
+      (is-true (build-failed-p (build value)) "~a should count as failed" value)
+      (is-false (build-waiting-p (build value))))
+    (dolist (value '("pending" "building" "paused"))
+      (is-true (build-waiting-p (build value)) "~a should count as waiting" value)
+      (is-false (build-failed-p (build value))))
+    ;; A status Phabricator grows later is unfinished, not passed.
+    (is-true (build-waiting-p (build "something-new")))
+    (is-false (build-passed-p (build "something-new")))))

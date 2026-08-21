@@ -8,16 +8,27 @@
   (:use #:cl)
   (:import-from #:util/phabricator/conduit
                 #:call-conduit
+                #:search-conduit
                 #:phab-instance)
   (:import-from #:alexandria
-                #:assoc-value)
+                #:assoc-value
+                #:hash-table-keys)
   (:import-from #:local-time
                 #:timestamp+
                 #:timestamp-to-unix)
   (:export
    #:download-file
    #:upload-file
-   #:create-artifact))
+   #:create-artifact
+   #:builds-for-diffs
+   #:build
+   #:build-p
+   #:build-name
+   #:build-status
+   #:build-status-name
+   #:build-failed-p
+   #:build-passed-p
+   #:build-waiting-p))
 (in-package :util/phabricator/harbormaster)
 
 (defun delete-after-epoch ()
@@ -140,3 +151,65 @@
          ("artifactKey" . ,name)
          ("artifactType" . "file")
          ("artifactData" . ,data))))))
+
+;;; * Builds
+;;;
+;;; What Harbormaster ran for a revision. Buildables hang off diffs
+;;; rather than revisions -- a revision has one buildable for every diff
+;;; it has ever had -- so the way in is the diff the revision currently
+;;; points at, and the way back out is the buildable's container, which
+;;; is the revision.
+
+(defstruct build
+  name
+  status                                ; the raw value, e.g. "failed"
+  status-name)                          ; and what to call it, e.g. "Failed"
+
+(defparameter *failed-build-statuses*
+  '("failed" "aborted" "error" "deadlocked")
+  "The build statuses that mean it isn't going to pass.")
+
+(defun build-failed-p (build)
+  (and (member (build-status build) *failed-build-statuses* :test #'equal) t))
+
+(defun build-passed-p (build)
+  (equal "passed" (build-status build)))
+
+(defun build-waiting-p (build)
+  "Whether BUILD hasn't finished: pending, building, paused, or a status
+we've never heard of. An unknown status counts as unfinished rather than
+as passed, which is the answer that can't mislead."
+  (not (or (build-failed-p build) (build-passed-p build))))
+
+(defun parse-build (fields)
+  (let ((status (assoc-value fields :build-status)))
+    (make-build :name (assoc-value fields :name)
+                :status (assoc-value status :value)
+                :status-name (assoc-value status :name))))
+
+(defmethod builds-for-diffs ((phab phab-instance) diff-phids &key (limit 1000))
+  "The builds Harbormaster ran for the diffs in DIFF-PHIDS.
+
+Returns a hash table from revision PHID to a list of BUILDs, which is
+two calls for the whole list rather than two per revision. A diff with no
+buildable, or a buildable with no builds, simply isn't in the table."
+  (let ((builds (make-hash-table :test #'equal)))
+    (when diff-phids
+      (let ((revision-of (make-hash-table :test #'equal)))
+        (dolist (buildable (search-conduit
+                            phab "harbormaster.buildable.search"
+                            :limit limit
+                            :constraints `(("objectPHIDs" . ,(coerce diff-phids 'vector)))))
+          (setf (gethash (assoc-value buildable :phid) revision-of)
+                (assoc-value (assoc-value buildable :fields) :container-+phid+)))
+        (when (plusp (hash-table-count revision-of))
+          (dolist (row (search-conduit
+                        phab "harbormaster.build.search"
+                        :limit limit
+                        :constraints `(("buildables" . ,(coerce (hash-table-keys revision-of)
+                                                                'vector)))))
+            (let* ((fields (assoc-value row :fields))
+                   (revision (gethash (assoc-value fields :buildable-+phid+) revision-of)))
+              (when revision
+                (push (parse-build fields) (gethash revision builds))))))))
+    builds))

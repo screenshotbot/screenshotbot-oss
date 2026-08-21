@@ -18,6 +18,7 @@
                 #:revision-author
                 #:revision-closed-p
                 #:revision-date-modified
+                #:revision-diff-phid
                 #:revision-id
                 #:revision-status
                 #:revision-title
@@ -38,6 +39,7 @@ leaves it: authorPHID arrives as :AUTHOR-+PHID+ and dateModified as
      (:uri . "https://phabricator.tdrhq.com/D13454")
      (:author-+phid+ . ,author)
      (:status (:value . "draft") (:name . ,status) (:closed . ,closed))
+     (:diff-+phid+ . "PHID-DIFF-t6tpzihvmd6zq27gel5s")
      (:date-created . 1787331507)
      (:date-modified . 1787331507)
      (:summary . "A subject, a body, and a Maniphest task."))
@@ -57,7 +59,10 @@ leaves it: authorPHID arrives as :AUTHOR-+PHID+ and dateModified as
     (is (equal "Draft" (revision-status revision)))
     (is (equal "arnold" (revision-author revision)))
     (is (eql 1787331507 (revision-date-modified revision)))
-    (is-false (revision-closed-p revision))))
+    (is-false (revision-closed-p revision))
+    ;; Harbormaster's buildables hang off the diff, not the revision, so
+    ;; this is what the build lookup is keyed on.
+    (is (equal "PHID-DIFF-t6tpzihvmd6zq27gel5s" (revision-diff-phid revision)))))
 
 (test an-author-we-couldnt-name-keeps-their-phid
   (let ((revision (parse-revision (row) (names))))

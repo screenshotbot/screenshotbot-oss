@@ -13,6 +13,7 @@
                 #:alist-hash-table)
   (:export #:phab-instance
            #:call-conduit
+           #:search-conduit
            #:url
            #:api-key
            #:make-phab-instance-from-arcrc
@@ -76,6 +77,47 @@
          (error "Got conduit error: ~A " (str:shorten 500 error-info)))
        res))))
 
+
+;; * The *.search methods
+
+(defmethod search-page ((phab phab-instance) method constraints after limit)
+  "One page of a *.search method. Returns the rows, and the cursor to
+continue from -- NIL when that was the last page."
+  (let* ((params `(("limit" . ,(min limit 100))
+                   ,@(when after
+                       (list (cons "after" after)))
+                   ,@(when constraints
+                       (list (cons "constraints"
+                                   (alist-hash-table constraints :test #'equal))))))
+         (result (assoc-value (call-conduit phab method params) :result)))
+    (values (assoc-value result :data)
+            (assoc-value (assoc-value result :cursor) :after))))
+
+(defmethod search-conduit ((phab phab-instance) method &key constraints (limit 100))
+  "The rows a *.search method returns, at most LIMIT of them.
+
+Every *.search method in Conduit answers in pages of at most 100 and
+hands back a cursor, so this follows the cursor until it has LIMIT rows
+or Phabricator runs out. CONSTRAINTS is an alist, and is passed through
+as the method's constraints object.
+
+Returns the rows, and as a second value whether there were more to be
+had -- which is a thing a caller that stops early ought to admit to."
+  (let ((rows '())
+        (after nil)
+        (morep nil))
+    (loop
+      (multiple-value-bind (page next)
+          (search-page phab method constraints after (- limit (length rows)))
+        (setf rows (append rows page)
+              after next)
+        (when (or (null page) (null next) (>= (length rows) limit))
+          (setf morep (and next (>= (length rows) limit) t))
+          (return))))
+    (values (if (> (length rows) limit)
+                (subseq rows 0 limit)
+                rows)
+            morep)))
 
 (defmethod whoami ((phab phab-instance))
   (let ((body
