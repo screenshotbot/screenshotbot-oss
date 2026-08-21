@@ -355,6 +355,7 @@
                  (:file "error")
                  (:file "filter")
                  (:file "users")
+                 (:file "settings")
                  (:file "service-provider-config")))
    (:module "admin"
     :serial t
