@@ -14,18 +14,23 @@
   (:import-from #:util/phabricator/project
                 #:project-phid)
   (:import-from #:alexandria
-                #:assoc-value))
+                #:assoc-value)
+  (:export #:create-task))
 (in-package :util/phabricator/maniphest)
 
 (defmethod create-task ((phab phab-instance)
                         &key title description project)
-  (let ((result (call-conduit
-                 phab
-                 "maniphest.createtask"
-                 `(("title" . ,title)
+  "Create a Maniphest task owned by whoever the API token belongs to.
+
+PROJECT is a project name, or NIL to file the task under no project at
+all -- Phabricator is happy with a task that only has an owner."
+  (let* ((params `(("title" . ,title)
                    ("description" . ,description)
                    ("ownerPHID" . ,(whoami phab))
-                   ("projectPHIDs" . #(,(project-phid phab project)))))))
+                   ,@(when project
+                       (list (cons "projectPHIDs"
+                                   (vector (project-phid phab project)))))))
+         (result (call-conduit phab "maniphest.createtask" params)))
     (assoc-value (assoc-value result :result) :id)))
 
 ;; (create-task (phab-test) :title "foobar" :description "stuff here" :project "screenshotbot")
