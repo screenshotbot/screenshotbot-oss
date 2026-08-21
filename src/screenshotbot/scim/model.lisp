@@ -22,7 +22,9 @@
   (:import-from #:screenshotbot/model/user
                 #:make-user)
   (:import-from #:auth
-                #:user-email))
+                #:user-email)
+  (:import-from #:core/api/model/api-key
+                #:generate-api-secret))
 (in-package :screenshotbot/scim/model)
 
 (defindex +config-company-index+
@@ -42,7 +44,8 @@
            :index +token-index+
            :index-reader scim-config-for-token
            :reader scim-config-token))
-  (:metaclass persistent-class))
+  (:metaclass persistent-class)
+  (:default-initargs :token (generate-api-secret)))
 
 (defindex +user-company-index+
   'fset-set-index

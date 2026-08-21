@@ -81,7 +81,7 @@
   (generate-random-string 20 (concatenate 'string (%all-alpha #\A #\Z)
                                           (%all-alpha #\0 #\9))))
 
-(Defun generate-api-secret ()
+(defun generate-api-secret ()
   (generate-random-string +secret-length+ (concatenate 'string
                                                        (%all-alpha #\A #\Z)
                                                        (%all-alpha #\a #\z)

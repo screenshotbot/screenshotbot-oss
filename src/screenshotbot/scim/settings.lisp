@@ -2,7 +2,15 @@
   (:use #:cl)
   (:import-from #:screenshotbot/settings-api
                 #:defsettings
-                #:settings-template))
+                #:settings-template)
+  (:import-from #:screenshotbot/scim/model
+                #:scim-configs-for-company
+                #:scim-config-token
+                #:scim-config)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:core/ui/simple-card-page
+                #:simple-card-page))
 (in-package #:screenshotbot/scim/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -41,7 +49,14 @@
 
         <div class="card-body">
           <h4>Bearer tokens</h4>
-          <!-- todo: I still don't know what this looks like -->
+          ,@(loop for config in (fset:convert 'list (scim-configs-for-company (auth:current-company)))
+                  collect
+                  <div>
+                    hello ,(last-four (scim-config-token config))
+                  </div>)
+          <form method="post" action= (nibble () (%create-token-flow))>
+            <input type="submit" value="Create Token" class="btn btn-secondary"/>
+          </form>
         </div>
 
         <table>
@@ -52,3 +67,23 @@
         </div>
       </div>
     </settings-template>)))
+
+(defun %create-token-flow ()
+  (let ((config (make-instance 'scim-config :company (auth:current-company))))
+    (hex:safe-redirect
+     (nibble ()
+       <simple-card-page>
+         <div class="mb-1">
+           <label for="token" class="form-label">
+             Your new SCIM token
+           </label>
+           <input type="disabled" value=(scim-config-token config) class="form-control" />
+         </div>
+         <div class="card-footer">
+           <a href="/settings/scim" class="btn btn-primary">Done</a>
+         </div>
+       </simple-card-page>))))
+
+(defun last-four (str)
+  (format nil "********~a"
+          (str:substring (- (length str) 4) nil str)))
