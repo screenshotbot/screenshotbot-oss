@@ -10,7 +10,10 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:core/ui/simple-card-page
-                #:simple-card-page))
+                #:simple-card-page
+                #:confirmation-page)
+  (:import-from #:util/copying
+                #:copying))
 (in-package #:screenshotbot/scim/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -49,26 +52,35 @@
 
         <div class="card-body">
           <h4>Bearer tokens</h4>
+
+          <table class="table border">
+            <thead>
+              <th>Token</th>
+              <th>Actions</th>
+            </thead>
           ,@(loop for config in (fset:convert 'list (scim-configs-for-company (auth:current-company)))
                   collect
-                  <div>
+                  <tr>
+                    <td>
                     hello ,(last-four (scim-config-token config))
-                  </div>)
+                    </td>
+                    <td>
+                      <form method="post" action=(copying (config) (nibble () (%delete-config config))) >
+                        <input type="submit" value="Delete" class="btn btn-danger" />
+                      </form>
+                    </td>
+                  </tr>)
+          </table>
           <form method="post" action= (nibble () (%create-token-flow))>
             <input type="submit" value="Create Token" class="btn btn-secondary"/>
           </form>
         </div>
 
-        <table>
-
-        </table>
         <div class="card-footer">
           <input type="submit" value="Save" class="btn btn-primary" />
         </div>
       </div>
-    </settings-template>)))
-
-(defun %create-token-flow ()
+    </settings-template>)))te-token-flow ()
   (let ((config (make-instance 'scim-config :company (auth:current-company))))
     (hex:safe-redirect
      (nibble ()
@@ -83,6 +95,18 @@
            <a href="/settings/scim" class="btn btn-primary">Done</a>
          </div>
        </simple-card-page>))))
+
+(defun go-home ()
+  (hex:safe-redirect "/settings/scim"))
+
+(defun %delete-config (config)
+  (confirmation-page
+   :yes (nibble ()
+          (bknr.datastore:delete-object config)
+          (go-home))
+   :no (nibble ()
+         (go-home))
+   "Delete this token? Any SCIM clients using this token will start failing."))
 
 (defun last-four (str)
   (format nil "********~a"
