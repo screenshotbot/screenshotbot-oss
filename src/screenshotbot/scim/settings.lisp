@@ -29,9 +29,26 @@
     <settings-template>
       <div class="alert alert-info">
         You must be an organization Owner to update the SCIM configuration
+
       </div>
     </settings-template>)
    (t
     <settings-template>
-      unimplemented
+      <div class="card">
+        <div class="card-header">
+          <h3>SCIM</h3>
+        </div>
+
+        <div class="card-body">
+          <h4>Bearer tokens</h4>
+          <!-- todo: I still don't know what this looks like -->
+        </div>
+
+        <table>
+
+        </table>
+        <div class="card-footer">
+          <input type="submit" value="Save" class="btn btn-primary" />
+        </div>
+      </div>
     </settings-template>)))
