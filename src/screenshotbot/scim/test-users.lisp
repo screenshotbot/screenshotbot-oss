@@ -67,17 +67,22 @@
 
 (util/fiveam:def-suite)
 
+(defun read-example (name)
+  (uiop:read-file-string
+   ;; Example taken from scim.dev
+   (asdf:system-relative-pathname
+    :screenshotbot
+    (format nil "scim/~a.json"
+            name))))
+
 (def-fixture state ()
   (with-test-store ()
     (with-test-user (:company company
                      :user user
                      :logged-in-p t)
       (setf (roles:user-role company user) nil) ;; to keep old tests passing
-      (let ((example-post (uiop:read-file-string
-                           ;; Example taken from scim.dev
-                           (asdf:system-relative-pathname
-                            :screenshotbot
-                            "scim/post-example.json"))))
+      (symbol-macrolet ((example-post (read-example "post-example"))
+                        (example-patch (read-example "patch-example")))
         (&body)))))
 
 (test simple-post
