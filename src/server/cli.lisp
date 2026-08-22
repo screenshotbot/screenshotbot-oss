@@ -31,19 +31,23 @@
                 #:*config-file*)
   (:import-from #:util/threading
                 #:make-thread)
+  #+(and lispworks linux)
   (:import-from #:server/cluster/status
                 #:cluster-status/command)
+  #+(and lispworks linux)
   (:import-from #:server/cluster/leadership
                 #:cluster-leadership/command)
+  #+(and lispworks linux)
   (:import-from #:server/cluster/peers
                 #:add-peer/command
                 #:remove-peer/command)
   #+lispworks
   (:import-from #:hunchentoot-extensions/existing-socket
                 #:existing-socket)
+  #+(and lispworks linux)
   (:import-from #:server/cluster/cluster-init
                 #:cluster-init/command)
-  #+lispworks
+  #+(and lispworks linux)
   (:import-from #:server/config-cli
                 #:config/command)
   (:export
@@ -279,6 +283,7 @@ the server will respond"
                                      (benchmark:run-all)
                                      (uiop:quit 0)))))
 
+#+(and lispworks linux)
 (defun cluster/command ()
   (clingon:make-command :name "cluster"
                         :description "Cluster management commands"
@@ -320,8 +325,9 @@ the server will respond"
                                        :acceptor acceptor)
                           #+lispworks
                           (server/eval:eval/command)
-                          #+lispworks
+                          #+(and lispworks linux)
                           (config/command)
+                          #+(and lispworks linux)
                           (cluster/command)))))
 
 (defun legacy-mode-p (args)
