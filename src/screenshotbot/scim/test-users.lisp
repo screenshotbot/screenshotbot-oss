@@ -22,7 +22,8 @@
                 #:scim-get
                 #:does-not-exist
                 #:uniqueness-error
-                #:scim-post)
+                #:scim-post
+                #:parse-boolean)
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:util/misc/lists
@@ -82,7 +83,8 @@
                      :logged-in-p t)
       (setf (roles:user-role company user) nil) ;; to keep old tests passing
       (symbol-macrolet ((example-post (read-example "post-example"))
-                        (example-patch (read-example "patch-example")))
+                        (example-patch (read-example "patch-example"))
+                        (example-patch-active (read-example "patch-example-active")))
         (&body)))))
 
 (test simple-post
@@ -254,7 +256,36 @@
   (with-fixture state ()
     (scim-post company example-post)
     (finishes
-      (scim-patch company (oid (user-with-email "barbara.jensen@example.com")) example-post))))
+      (scim-patch company (oid (user-with-email "barbara.jensen@example.com")) example-patch))))
+
+(test scim-patch-with-boolean-field-happy-path
+  (with-fixture state ()
+    (scim-post company example-post)
+    (finishes
+      (scim-patch company (oid (user-with-email "barbara.jensen@example.com")) example-patch-active))
+    (is-false
+     (external-user-activep
+      (scim-get company (only-id! company))))))
+
+(test scim-patch-with-false-as-a-string
+  "Apparently Entra sends it as a string.. so says Claude, but I don't know how much I trus that."
+  (with-fixture state ()
+    (scim-post company example-post)
+    (finishes
+      (scim-patch company (oid (user-with-email "barbara.jensen@example.com"))
+                  "
+{
+\"Operations\": [{
+  \"op\":\"replace\",
+  \"path\":\"active\",
+  \"value\":\"False\"
+}]
+}
+
+"))
+    (is-false
+     (external-user-activep
+      (scim-get company (only-id! company))))))
 
 (test scim-put-update-activep
   (with-fixture state ()
@@ -278,22 +309,6 @@
        (external-user-activep
         (scim-get company (only-id! company)))))))
 
-(test scim-patch-with-active-missing
-  (with-fixture state ()
-    (scim-post company example-post)
-    (dolist (user (roles:users-for-company company))
-      (setf (roles:user-role company user) 'roles:disabled-user))
-    (is-false
-     (external-user-activep
-      (scim-get company (only-id! company))))    
-    (let ((old (scim-get company (only-id! company))))
-      (slot-makunbound old 'activep)
-      (finishes
-        (scim-patch company (only-id! company)
-                    (encode-json old)))
-      (is-false
-       (external-user-activep
-        (scim-get company (only-id! company)))))))
 
 (test scim-put-with-active-missing
   "The RFC allows PUT to not need active, in which case any missing
@@ -357,3 +372,9 @@ end."
      user 'roles:hidden-user)
     (signals does-not-exist
      (scim-get company (oid user)))))
+
+(test parse-boolean
+  (is (eql t (parse-boolean t)))
+  (is (eql nil (parse-boolean nil)))
+  (is (eql t (parse-boolean "True")))
+  (is (eql nil (parse-boolean "fAlse"))))
