@@ -91,7 +91,7 @@
            <label for="token" class="form-label">
              Your new SCIM token
            </label>
-           <input type="disabled" value=(scim-config-token config) class="form-control" />
+           <input type="text" disabled="disabled" value=(scim-config-token config) class="form-control" />
          </div>
          <div class="card-footer">
            <a href="/settings/scim" class="btn btn-primary">Done</a>
