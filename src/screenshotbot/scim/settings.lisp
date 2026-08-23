@@ -62,7 +62,7 @@
                   collect
                   <tr>
                     <td>
-                    hello ,(last-four (scim-config-token config))
+                    Bearer ,(last-four (scim-config-token config))
                     </td>
                     <td>
                       <form method="post" action=(copying (config) (nibble () (%delete-config config))) >
