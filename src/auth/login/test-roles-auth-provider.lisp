@@ -28,7 +28,8 @@
 (def-fixture state ()
   (with-test-store ()
     (let ((*installation* 'fake-installation))
-     (let ((user 'test-user))
+     (let ((user 'test-user)
+           (user2 'test-user-2))
        (&body)))))
 
 (test simple-on-user-sign-in
@@ -61,3 +62,14 @@
        (has-length 1))
       (is-true
        (roles:has-role-p 'something user 'roles:standard-member)))))
+
+(test first-user-is-always-an-owner
+  (with-fixture state ()
+    (let ((auth-provider (make-instance 'roles-auth-provider
+                                        :company-provider (lambda () 'something))))
+      (on-user-sign-in auth-provider user)
+      (is-true
+       (roles:has-role-p 'something user 'roles:owner))
+      (on-user-sign-in auth-provider user2)
+      (is-true
+       (roles:has-role-p 'something user2 'roles:standard-member)))))

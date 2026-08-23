@@ -32,7 +32,10 @@
                      *installation*
                      self)))))
     (when company
-      (roles:ensure-has-role company user 'roles:standard-member))))
+      (roles:ensure-has-role company user
+                             (if (= 0 (length (roles:users-for-company company)))
+                                 'roles:owner
+                               'roles:standard-member)))))
 
 (defmethod get-company-for-auth-provider (installation (self roles-auth-provider))
   "By creating a method that is specialized on installation, we can make
