@@ -69,11 +69,6 @@
 
 (defvar *lock* (bt:make-lock))
 
-(defun wrap-handlers (callback)
-  (encode-json
-   (with-api-error-handling ()
-     (funcall callback))))
-
 (defmacro defscimhandler ((name &key uri method) params &body body)
   (assert method)
   `(progn
@@ -188,9 +183,18 @@
                      :detail (api-error-reason e)
                      :status (coerce
                               (format nil "~a" (api-error-code e))
-                              'vector)))))
+                              'vector)))
+    (error (e)
+      (log:info "Internal error for SCIM")
+      (set-success)
+      (setf (hunchentoot:return-code*) 500)
+      (make-instance 'error-response
+                     :detail (format nil "Internal Error: ~a" e)))))
 
-
+(defun wrap-handlers (callback)
+  (encode-json
+   (with-api-error-handling ()
+     (funcall callback))))
 
 (defun set-success (&optional (code 201))
   (setf (hunchentoot:return-code*) code) ;; SCIM requires this
