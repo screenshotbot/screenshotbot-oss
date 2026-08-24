@@ -23,8 +23,7 @@
                 #:store-objects-with-class
                 #:with-transaction)
   (:import-from #:bknr.indices
-                #:destroy-object
-                #:unique-index)
+                #:destroy-object)
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:multi-org-feature
@@ -143,9 +142,6 @@
             :initarg :email
             :initform nil
             :reader user-email
-            :index-initargs (:test #'equal)
-            :index-type unique-index
-            :index-reader %user-with-email
             :writer (setf user-email))
      (password-hash :type (or null string)
                     :initform nil
@@ -234,22 +230,12 @@ SSO. The user is still connected via roles:"))
   (store-objects-with-class 'user))
 
 (defun user-with-email (email)
-  (let ((old-val (%user-with-email email)))
-   (let ((user
-           (gethash (str:downcase email) *lowercase-email-map*)))
-     (cond
-       ((and user
-             (not (bknr.datastore::object-destroyed-p user))
-             (string-equal email (user-email user)))
-        user)
-       (t
-        (when old-val
-          ;; Safety measure. Once we verify this is not happening, we
-          ;; can safely delete the use of old-val and just always
-          ;; return nil
-          (log:warn "Old user: ~a, new user: ~a" old-val user)
-          (warn "The new index did not match the new-index for ~a" email))
-        old-val)))))
+  (let ((user
+          (gethash (str:downcase email) *lowercase-email-map*)))
+    (when (and user
+               (not (bknr.datastore::object-destroyed-p user))
+               (string-equal email (user-email user)))
+      user)))
 
 (defun make-user (&rest args &key companies  &allow-other-keys)
   (let ((user (apply #'make-instance 'user (alexandria:remove-from-plist
