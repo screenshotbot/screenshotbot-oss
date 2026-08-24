@@ -64,7 +64,10 @@
                 #:api-error-code
                 #:api-error)
   (:import-from #:alexandria
-                #:assoc-value))
+                #:assoc-value)
+  (:import-from #:util/threading
+                #:funcall-with-sentry-logs
+                #:handle-error))
 (in-package :screenshotbot/scim/users)
 
 (defvar *lock* (bt:make-lock))
@@ -174,7 +177,7 @@
 
 (def-easy-macro with-api-error-handling (&fn fn)
   (handler-case
-      (fn)
+      (funcall-with-sentry-logs fn)
     (api-error (e)
       (set-success) ;; we'll override this in the next line!
       (setf (hunchentoot:return-code*) (api-error-code e))
