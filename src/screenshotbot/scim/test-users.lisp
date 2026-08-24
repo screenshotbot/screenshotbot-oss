@@ -62,6 +62,7 @@
   (:import-from #:screenshotbot/user-api
                 #:user)
   (:import-from #:screenshotbot/model/user
+                #:make-user
                 #:user-with-email))
 (in-package :screenshotbot/scim/test-users)
 
@@ -378,3 +379,37 @@ end."
   (is (eql nil (parse-boolean nil)))
   (is (eql t (parse-boolean "True")))
   (is (eql nil (parse-boolean "fAlse"))))
+
+
+(test scim-post-for-a-user-that-exists-but-not-in-org
+  "Current behavior is to just add that user to the org... however, this
+isn't great in the long run if we ever enable SCIM in the
+non-enterprise version."
+  (with-fixture state ()
+    (let ((another-user (make-user :email "zoidberg@example.com")))
+      (scim-post company "
+{
+  \"schemas\": [
+    \"urn:ietf:params:scim:schemas:core:2.0:User\",
+    \"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\"
+  ],
+  \"name\": {
+    \"formatted\": \"Ms. Barbara J Jensen III\",
+    \"familyName\": \"Jensen\",
+    \"givenName\": \"Barbara\"
+  },
+  \"active\": true,
+  \"emails\": [
+    {
+      \"value\": \"zoidberg@example.com\"
+    }
+  ],
+  \"userName\": \"zoidberg@example.com\",
+  \"password\": \"changeit\",
+  \"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\": {
+    \"employeeNumber\": \"701984\"
+  }
+}
+
+
+"))))

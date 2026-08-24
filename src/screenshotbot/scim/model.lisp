@@ -22,9 +22,12 @@
   (:import-from #:screenshotbot/model/user
                 #:make-user)
   (:import-from #:auth
+                #:find-or-create-user
                 #:user-email)
   (:import-from #:core/api/model/api-key
-                #:generate-api-secret))
+                #:generate-api-secret)
+  (:import-from #:core/installation/installation
+                #:*installation*))
 (in-package :screenshotbot/scim/model)
 
 (defindex +config-company-index+
@@ -83,7 +86,8 @@ username, it might be an email.")
                                                           activep)
   (unless user
     ;; We're creating a new user
-    (let ((user (make-user
+    (let ((user (auth:find-or-create-user
+                 *installation*
                  :email user-name)))
       (roles:ensure-has-role company user 'roles:disabled-user) 
       (setf (scim-user-user self) user)
