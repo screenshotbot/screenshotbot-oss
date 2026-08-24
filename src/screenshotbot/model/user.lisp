@@ -118,7 +118,7 @@
    #:with-user-lock))
 (in-package :screenshotbot/model/user)
 
-(defvar *lock* (bt:make-lock))
+(defvar *rlock* (bt:make-recursive-lock))
 
 (def-store-local *lowercase-email-map*
     (make-hash-table :test #'equal)
@@ -358,7 +358,7 @@ SSO. The user is still connected via roles:"))
   (user-with-email email))
 
 (defmethod auth:find-or-create-user ((self installation) &key email)
-  (bt:with-lock-held (*lock*)
+  (bt:with-recursive-lock-held (*rlock*)
    (or
     (values (user-with-email email) nil)
     (values (make-user :email email) t))))
