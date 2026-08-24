@@ -72,4 +72,6 @@
        (roles:has-role-p 'something user 'roles:owner))
       (on-user-sign-in auth-provider user2)
       (is-true
-       (roles:has-role-p 'something user2 'roles:standard-member)))))
+       (roles:has-role-p 'something user2 'roles:standard-member))
+      (is-false
+       (roles:has-role-p 'something user2 'roles:owner)))))
