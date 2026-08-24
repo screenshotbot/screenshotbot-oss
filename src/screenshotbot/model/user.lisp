@@ -58,6 +58,7 @@
   (:import-from #:util/store/object-id
                 #:object-with-oid)
   (:import-from #:util/store/store
+                #:defindex
                 #:def-store-local
                 #:with-class-validation)
   (:import-from #:auth/model/email-confirmation
@@ -123,7 +124,23 @@
     (make-hash-table :test #'equal)
   "A map from lowercase emails to the user. There might be stale
   mappings, so please use user-with-email to access this map, and
-  don't directly use this map.")
+  don't directly use this map.
+
+Technically this could be part of the index, but we're keeping it
+separate for a migration purpose. We can move it into the index in the
+future.")
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defclass lowercase-email-index ()
+    ((slot-name :initarg :slot-name
+                :initform nil))))
+
+(defindex +lowercase-email-index+ 'lowercase-email-index
+  :slot-name 'email)
+
+(defmethod bknr.indices:index-reinitialize ((one lowercase-email-index)
+                                            (two lowercase-email-index))
+  (assert (eql one two)))
 
 (defun arnold ()
   (user-with-email "arnold@tdrhq.com"))
@@ -189,7 +206,27 @@
     change this when the user 'switches' companies in the UI. If no
     default company is provided it should default to the personal
     company."))
-    (:metaclass persistent-class)))
+    (:metaclass persistent-class)
+    (:class-indices (lowercase-email-index
+                     :index +lowercase-email-index+
+                     :slots (email)))))
+
+(defmethod bknr.indices:index-add ((self lowercase-email-index)
+                                   (user user))
+  (update-lowercase-email-map user))
+
+(defmethod bknr.indices:index-remove ((self lowercase-email-index)
+                                      (user user))
+  (remhash (str:downcase (user-email user)) *lowercase-email-map*))
+
+(defmethod bknr.indices:index-get ((Self lowercase-email-index) email)
+  (error "Unimplemented: current use user-with-email directly"))
+
+
+(defmethod bknr.indices:index-clear ((self lowercase-email-index))
+  ;; The def-store-local already handles this for now
+  (ignore-errors
+   (clrhash *lowercase-email-map*)))
 
 (defclass single-company-user (object-with-oid abstract-user)
   ((email :initarg :email
@@ -209,7 +246,8 @@ SSO. The user is still connected via roles:"))
 
 (defmethod update-lowercase-email-map ((user user))
   "Update the lowercase email index. This might be called inside the transaction to make-user, in which case it should correctly error and not update the state"
-  (when (slot-boundp user 'email)
+  (when (and (slot-boundp user 'email)
+             (user-email user))
     (let ((email (str:downcase (user-email user))))
       (when email ;; mostly for tests
         (symbol-macrolet ((place (gethash email *lowercase-email-map*)))
@@ -222,6 +260,7 @@ SSO. The user is still connected via roles:"))
                (error 'user-email-exists :email (user-email user))))))))))
 
 (defmethod bknr.datastore:initialize-transient-instance :after ((user user))
+  #+nil
   (update-lowercase-email-map user))
 
 ;; (mapc #'update-lowercase-email-map (all-users))
@@ -338,6 +377,7 @@ SSO. The user is still connected via roles:"))
   (error "deprecated"))
 
 (defmethod (setf user-email) :after (email (user user))
+  #+nil
   (update-lowercase-email-map user))
 
 (defmethod auth:find-user ((self installation) &key email)
