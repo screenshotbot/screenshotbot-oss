@@ -150,6 +150,25 @@
       (is (eql ancient-user
                (user-with-email "zoidberg@example.com"))))))
 
+
+(test we-check-if-object-is-index-before-attempting-to-remove-it
+  "I don't anticipate this to happen in prod, but let's be careful about
+it anyway."
+  (with-fixture state ()
+    (let ((one (make-user :email "IT@example.com"))
+          ;; Intentionally bypass make-user
+          (two (make-instance 'user
+                              :email "it@example.com")))
+      (is
+       (eql
+        one
+        (user-with-email "it@example.com")))
+
+      (setf
+       (user-email two) "zoidberg@example.com")
+
+      (is (eql one (user-with-email "it@example.com"))))))
+
 (test simple-find-or-create-user
   (with-fixture state ()
     (assert-that

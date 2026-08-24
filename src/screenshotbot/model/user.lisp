@@ -226,7 +226,9 @@ future.")
 
 (defmethod bknr.indices:index-remove ((self lowercase-email-index)
                                       (user user))
-  (remhash (str:downcase (user-email user)) *lowercase-email-map*))
+  (let ((key (str:downcase (user-email user))))
+   (when (eql user (gethash key *lowercase-email-map*))
+     (remhash key *lowercase-email-map*))))
 
 (defmethod bknr.indices:index-get ((Self lowercase-email-index) email)
   (error "Unimplemented: current use user-with-email directly"))
