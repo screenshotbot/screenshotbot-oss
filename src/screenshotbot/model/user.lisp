@@ -17,6 +17,7 @@
                 #:password-hash
                 #:user-email)
   (:import-from #:bknr.datastore
+                #:store-object-id
                 #:store-object
                 #:class-instances
                 #:persistent-class
@@ -211,6 +212,14 @@ future.")
                      :index +lowercase-email-index+
                      :slots (email)))))
 
+(defmethod older-of ((one user) (two user))
+  (cond
+    ((< (store-object-id one)
+        (store-object-id two))
+     one)
+    (t
+     two)))
+
 (defmethod bknr.indices:index-add ((self lowercase-email-index)
                                    (user user))
   (update-lowercase-email-map user))
@@ -245,7 +254,7 @@ SSO. The user is still connected via roles:"))
           (slot-value e 'email)))
 
 (defmethod update-lowercase-email-map ((user user))
-  "Update the lowercase email index. This might be called inside the transaction to make-user, in which case it should correctly error and not update the state"
+  "Update the lowercase email index, this used to be called manually, but now it's part of the index"
   (when (and (slot-boundp user 'email)
              (user-email user))
     (let ((email (str:downcase (user-email user))))
@@ -253,11 +262,10 @@ SSO. The user is still connected via roles:"))
         (symbol-macrolet ((place (gethash email *lowercase-email-map*)))
           (let ((prev-user place))
             (cond
-              ((or (null prev-user)
-                   (bknr.datastore::object-destroyed-p prev-user))
-               (setf place user))
-              ((not (eql prev-user user))
-               (error 'user-email-exists :email (user-email user))))))))))
+              (prev-user
+               (setf place (older-of prev-user user)))
+              (t
+               (setf place user)))))))))
 
 (defmethod bknr.datastore:initialize-transient-instance :after ((user user))
   #+nil
@@ -276,7 +284,13 @@ SSO. The user is still connected via roles:"))
                (string-equal email (user-email user)))
       user)))
 
-(defun make-user (&rest args &key companies  &allow-other-keys)
+(defun make-user (&rest args &key email &allow-other-keys)
+  (bt:with-recursive-lock-held (*rlock*)
+    (when (user-with-email email)
+      (error 'user-email-exists :email email))
+    (apply #'%make-user args)))
+
+(defun %make-user (&rest args &key companies  &allow-other-keys)
   (let ((user (apply #'make-instance 'user (alexandria:remove-from-plist
                                             args
                                             :companies))))
@@ -387,7 +401,7 @@ SSO. The user is still connected via roles:"))
   (bt:with-recursive-lock-held (*rlock*)
    (or
     (values (user-with-email email) nil)
-    (values (make-user :email email) t))))
+    (values (%make-user :email email) t))))
 
 (defmethod auth:make-user ((self installation) &rest args &key &allow-other-keys)
   (apply #'make-user args))

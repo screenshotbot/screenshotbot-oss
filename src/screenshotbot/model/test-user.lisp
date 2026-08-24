@@ -124,6 +124,32 @@
     (signals user-email-exists
       (make-user :email "IT@example.com"))))
 
+(test if-we-do-create-the-same-email-the-index-is-prioritized
+  (with-fixture state ()
+    (let ((ancient-user (make-user :email "zoidberg@example.com"))
+          (one (make-user :email "IT@example.com"))
+          ;; Intentionally bypass make-user
+          (two (make-instance 'user
+                              :email "it@example.com")))
+      (is
+       (eql
+        one
+        (user-with-email "it@example.com")))
+
+      ;; If the data model gets corrupted for some reason, we always
+      ;; prefer the older objects
+      (setf (user-email ancient-user) "iT@example.com")
+      (is (eql ancient-user
+               (user-with-email "it@example.com")))
+
+      ;; But we don't handle intentionally attempting to break the
+      ;; index:
+      (setf (user-email ancient-user) "zoidberg@example.com")
+      (is (eql nil ;; even though there are other users with it@example.com
+               (user-with-email "it@example.com")))
+      (is (eql ancient-user
+               (user-with-email "zoidberg@example.com"))))))
+
 (test simple-find-or-create-user
   (with-fixture state ()
     (assert-that
