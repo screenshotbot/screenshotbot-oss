@@ -197,8 +197,12 @@ satisfied, then it is set to this role."
   ;; user-role may be overriden, but we want to sync it if that's the
   ;; case.
   (let ((role (user-role company user))
+        ;; Heads up: there was a long time where this line was buggy,
+        ;; and was always returning NIL. I "fixed" the behavior, but
+        ;; not sure if the new behavior change might cause cascading
+        ;; issues, in particular for Apadmi
         (saved-role (bknr.indices:index-get +user-role-index+
-                                            (list company user))))
+                                            (list user company))))
     (cond
       ((not (typep role type))
        (setf (user-role company user) type))

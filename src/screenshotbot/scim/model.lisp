@@ -89,6 +89,7 @@ username, it might be an email.")
     (let ((user (auth:find-or-create-user
                  *installation*
                  :email user-name)))
+      (assert user)
       (roles:ensure-has-role company user 'roles:disabled-user) 
       (setf (scim-user-user self) user)
       (setf (scim-user-activep self) activep))))

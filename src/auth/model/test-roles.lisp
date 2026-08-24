@@ -110,7 +110,22 @@
 
     ;; But after we remove the override, we should still have the
     ;; ensured-role saved.
-    (is (roles:has-role-p 'foo 'bar 'roles:admin))))
+    (is-true (roles:has-role-p 'foo 'bar 'roles:admin))))
+
+(test if-user-role-is-overriden-we-still-write-the-new-role--but-only-if-needed
+  (with-fixture state ()
+    ;; There's already a persisted role:
+    (setf (user-role 'foo 'bar) 'roles:standard-member)
+
+    (cl-mock:with-mocks ()
+      ;; But now, user-role is overriden:
+      (answer (user-role 'foo 'bar) (make-instance 'roles:admin))
+      (ensure-has-role 'foo 'bar 'roles:standard-member)
+      (is (roles:has-role-p 'foo 'bar 'roles:admin)))
+
+    ;; But after we remove the override, we should still have the old
+    ;; role.
+    (is-false (roles:has-role-p 'foo 'bar 'roles:admin))))
 
 (test we-cant-set-a-role-for-a-nil-user
   (with-fixture state ()
