@@ -75,6 +75,7 @@
     (answer (hunchentoot:authorization) nil)
     (answer (hunchentoot:parameter "api-key")  "foo")
     (answer (hunchentoot:parameter "api-secret-key") "bar")
+    (answer (hunchentoot:header-in* :authorization) "")
     (with-api-key (key secret)
       (is (equal "foo" key))
       (is (equal "bar" secret)))))
@@ -83,8 +84,18 @@
   (with-mocks ()
     (answer (hunchentoot:authorization)
       (values "foo" "bar"))
+    (answer (hunchentoot:header-in* :authorization) nil)
     (with-api-key (key secret)
       (is (equal "foo" key))
+      (is (equal "bar" secret)))))
+
+(test with-bearer-for-authorization
+  (with-mocks ()
+    (answer (hunchentoot:authorization)
+      nil)
+    (answer (hunchentoot:header-in* :authorization) "Bearer bar")
+    (with-api-key (key secret)
+      (is (equal nil key))
       (is (equal "bar" secret)))))
 
 (test internal-error-gets-logged

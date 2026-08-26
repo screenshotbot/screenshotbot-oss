@@ -357,6 +357,18 @@
                  (:file "users")
                  (:file "settings")
                  (:file "service-provider-config")))
+   (:module "auth-server"
+    :serial t
+    :components ((:file "scopes")
+                 (:file "errors")
+                 (:file "pkce")
+                 (:file "model")
+                 (:file "authorize")
+                 (:file "token")
+                 (:file "device")
+                 (:file "revoke")
+                 (:file "authorizations")
+                 (:file "metadata")))
    (:module "admin"
     :serial t
     :components ((:file "core")
@@ -451,6 +463,12 @@
                 :components ((:file "test-dto")
                              (:file "test-filter")
                              (:file "test-users")))
+               (:module "auth-server"
+                :components ((:file "test-pkce")
+                             (:file "test-scopes")
+                             (:file "test-model")
+                             (:file "test-authorize")
+                             (:file "test-token")))
                (:file "test-invite")
                (:file "test-uname")
                (:module "model"

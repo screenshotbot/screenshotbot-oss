@@ -61,14 +61,34 @@
   "Wrap internal errors in a way that can be presented better to the
 user. The intention of this flag is to set to NIL for some tests.")
 
+(defun bearer-token ()
+  "The token from an `Authorization: Bearer ...` header, if there is one.
+
+See RFC 6750 §2.1. HUNCHENTOOT:AUTHORIZATION only understands Basic, so
+we parse this ourselves."
+  (let ((header (hunchentoot:header-in* :authorization)))
+    (when header
+      (destructuring-bind (&optional type token)
+          (str:split " " (str:trim header) :limit 2)
+        (when (and token (string-equal "bearer" type))
+          (let ((token (str:trim token)))
+            (unless (str:emptyp token)
+              token)))))))
+
 (def-easy-macro with-api-key (&binding api-key &binding api-secret &fn fn)
   (multiple-value-bind (key secret) (hunchentoot:authorization)
-    (cond
-      (key
-       (funcall fn key secret))
-      (t
-       (funcall fn (hunchentoot:parameter "api-key")
-                (hunchentoot:parameter "api-secret-key"))))))
+    (let ((bearer-token (bearer-token)))
+      (cond
+        (key
+         (funcall fn key secret))
+        (bearer-token
+         ;; An OAuth 2.0 access token. The token encodes the key id
+         ;; alongside the secret, so AUTHENTICATE-API-REQUEST will pull the
+         ;; key out of it for us.
+         (funcall fn nil bearer-token))
+        (t
+         (funcall fn (hunchentoot:parameter "api-key")
+                  (hunchentoot:parameter "api-secret-key")))))))
 
 (defmethod authenticate-api-request ((request auth:authenticated-request))
   "Like auth:authenticate-request, but for API handling, and modifies the request"

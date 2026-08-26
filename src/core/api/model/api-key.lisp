@@ -51,6 +51,7 @@
    #:render-api-token
    #:company-api-keys
    #:api-key-for-secret
+   #:api-key-user-visible-p
    #:validate-api-key-secret
    #:make-encoded-secret))
 (in-package :core/api/model/api-key)
@@ -313,9 +314,18 @@ need a better deletion model in the future."
 (defmethod delete-api-key ((api-key api-key))
   (tx-delete-api-key api-key))
 
+(defmethod api-key-user-visible-p ((self api-key))
+  "Should this key be listed on the API keys dashboard?
+
+Subclasses that are managed elsewhere -- OAuth access tokens, for
+instance, which are minted hourly and revoked via their grant -- return
+NIL so they don't bury the user's own keys."
+  t)
+
 (defmethod company-api-keys (company)
   (loop for api-key in (bknr.datastore:class-instances 'api-key)
         if (and (slot-boundp api-key 'api-key) ;; See T929
+                (api-key-user-visible-p api-key)
                 (eq company (api-key-company api-key)))
           collect api-key))
 
