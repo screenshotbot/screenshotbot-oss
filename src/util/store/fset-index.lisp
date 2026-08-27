@@ -7,6 +7,7 @@
 (defpackage :util/store/fset-index
   (:use #:cl)
   (:import-from #:bknr.indices
+                #:index-mapvalues
                 #:index-reinitialize)
   (:import-from #:bknr.indices
                 #:index-add)
@@ -275,6 +276,12 @@ the index reader returns a list in reverse sorted order instead of a set."))
                     (%index-values-for-key self val)
                     result)))))))
     (fset:convert 'list (build-values (%map self) (fset:empty-set)))))
+
+(defmethod index-mapvalues ((self fset-unique-index)
+                            fn)
+  (fset:do-map (key val (%map self))
+    (declare (ignore key))
+    (funcall fn val)))
 
 (defmethod %index-values-for-key ((self fset-unique-index) val)
   (fset:with (fset:empty-set) val))

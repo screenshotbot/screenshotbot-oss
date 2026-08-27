@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/login/saml
+                #:clear-relay-states
                 #:relay-state-expired
                 #:relay-state-for-id
                 #:relay-state-id
@@ -113,3 +114,13 @@
     (is
      (eql nil
           (relay-state-for-id nil)))))
+
+(test clear-relay-state-happy-path
+  (with-fixture state ()
+    (with-fake-request ()
+     (auth:with-sessions ()
+       (let* ((relay-state (make-relay-state
+                            (make-instance 'saml-auth-provider
+                                           :metadata-xml *xml*)))
+              (id (relay-state-id relay-state)))
+         (clear-relay-states))))))

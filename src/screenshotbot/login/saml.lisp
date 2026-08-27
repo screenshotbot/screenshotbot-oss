@@ -45,6 +45,8 @@
                 #:logout-link)
   (:import-from #:nibble
                 #:nibble)
+  (:import-from #:util/cron
+                #:def-cron)
   (:export
    #:saml-auth-provider))
 (in-package :screenshotbot/login/saml)
@@ -147,6 +149,7 @@
   ((id :initarg :id
        :index +id-index+
        :index-reader %relay-state-for-id
+       :index-mapvalues map-relay-states
        :accessor relay-state-id
        :initform (format nil "~a_~a" (get-universal-time) (secure-random:number 10000000000000000)))
    (saml-auth-provider :initarg :saml-auth-provider
@@ -492,3 +495,12 @@
 
 (defmethod end-session-endpoint ((self saml-auth-provider))
   "/saml/logout")
+
+(defun clear-relay-states ()
+  (map-relay-states
+   (lambda (relay-state)
+     (when (< (created-at relay-state) (- (get-universal-time) 600))
+       (setf (relay-state-id relay-state)  nil)))))
+
+(def-cron clear-old-replay-states ()
+  (clear-relay-states))
