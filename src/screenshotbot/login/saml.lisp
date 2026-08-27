@@ -41,6 +41,7 @@
   (:import-from #:screenshotbot/login/common
                 #:oauth-signin-link)
   (:import-from #:oidc/oidc
+                #:end-session-endpoint
                 #:logout-link)
   (:import-from #:nibble
                 #:nibble)
@@ -466,3 +467,6 @@
   <html>
     You've been logged out. <a href= "/">Go back.</a>
   </html>)
+
+(defmethod end-session-endpoint ((self saml-auth-provider))
+  "/saml/logout")
