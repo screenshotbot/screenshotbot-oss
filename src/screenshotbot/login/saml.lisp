@@ -147,7 +147,7 @@
                      :reader idp-metadata-url)
    (metadata-xml :initform nil
                  :initarg :metadata-xml
-                 :reader %metadata-xml)
+                 :accessor %metadata-xml)
    (%defaultp :initform nil
               :initarg :defaultp
               :index +default-provider-index+
@@ -179,7 +179,7 @@
       "Error loading metadata")))
 
 (defmethod metadata-xml ((self saml-auth-provider))
-  (or
+  (util/misc:or-setf
    (%metadata-xml self)
    (fetch-metadata-xml (idp-metadata-url self))))
 
