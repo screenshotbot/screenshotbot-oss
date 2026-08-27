@@ -302,6 +302,7 @@ Disallow: /n
 Disallow: /runs/by-tag
 Disallow: /badge
 Disallow: /active-run
+Disallow: /one-time-note
 ")))
 
 (defhandler (nil :uri "/") ()
