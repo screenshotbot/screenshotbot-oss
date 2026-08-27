@@ -214,7 +214,13 @@
 (defhandler (nil :uri "/sso/saml/callback") ()
   (let* ((saml-response (hunchentoot:post-parameter "SAMLResponse"))
          (relay-state-id (hunchentoot:post-parameter "RelayState"))
-         (relay-state (relay-state-for-id relay-state-id))
+         (relay-state (or
+                       (relay-state-for-id relay-state-id)
+                       ;; Assume default provider. TODO: for
+                       ;; self-service we might need to do something
+                       ;; better, perhaps a dedicated ACS url.
+                       (let ((default (default-saml-auth-provider)))
+                         (make-relay-state default))))
          (request-uri (current-request-uri)))
     (let ((resp (make-saml-response (relay-state-settings relay-state)
                                     request-uri
@@ -373,29 +379,36 @@
                 key
                 sig-alg))))
 
+(defmethod make-relay-state ((self saml-auth-provider))
+  (let* ((xml (metadata-xml self))
+         (url (quri:uri (parse-xml xml)))
+         (settings (create-settings-builder-for-xml (saml-company self) xml)))
+    (values
+     (make-instance 'relay-state
+                    :saml-auth-provider self
+                    :settings settings)
+     settings
+     url)))
+
 
 (defmethod signin-link ((self saml-auth-provider) redirect)
-  (let ((xml (metadata-xml self)))
-    (let* ((url (quri:uri (parse-xml xml)))
-           (settings (create-settings-builder-for-xml (saml-company self) xml))
-           (relay-state (make-instance 'relay-state
-                                       :saml-auth-provider self
-                                       :settings settings))
-           (arg (authn-request-get-encoded-authn-request
-                 (make-authn-request settings)))
-           (sig-alg (settings-get-signature-algorithm settings))
-           (signature (build-request-signature
-                       arg
-                       (relay-state-id relay-state)
-                       sig-alg
-                       (get-sp-key settings))))
-      (setf
-       (quri:uri-query-params url)
-       `(("SAMLRequest" . ,arg)
-         ("RelayState" . ,(relay-state-id relay-state))
-         ("SigAlg" . ,sig-alg)
-         ("Signature" . ,signature)))
-      (quri:render-uri url))))
+  (multiple-value-bind (relay-state settings url)
+      (make-relay-state self)
+   (let* ((arg (authn-request-get-encoded-authn-request
+                (make-authn-request settings)))
+          (sig-alg (settings-get-signature-algorithm settings))
+          (signature (build-request-signature
+                      arg
+                      (relay-state-id relay-state)
+                      sig-alg
+                      (get-sp-key settings))))
+     (setf
+      (quri:uri-query-params url)
+      `(("SAMLRequest" . ,arg)
+        ("RelayState" . ,(relay-state-id relay-state))
+        ("SigAlg" . ,sig-alg)
+        ("Signature" . ,signature)))
+     (quri:render-uri url))))
 
 (defmethod logo-svg ((self saml-auth-provider))
   nil)
