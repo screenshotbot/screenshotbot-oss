@@ -134,7 +134,10 @@
    (saml-auth-provider :initarg :saml-auth-provider
                        :reader saml-auth-provider)
    (settings :initarg :settings
-             :reader relay-state-settings))
+             :reader relay-state-settings)
+   (redirect :initarg :redirect
+             :initform nil
+             :reader redirect))
   (:metaclass indexed-class))
 
 (defindex +default-provider-index+
@@ -248,7 +251,10 @@
       (setf (auth:current-user :expires-in (expiration-seconds saml))
             user)
       (setf (auth:session-value :sso-company) (saml-company saml))
-      (hex:safe-redirect "/runs"))))
+      (hex:safe-redirect
+       (or
+        (redirect relay-state)
+        "/runs")))))
 
 
 (defclass saml-user (single-company-user)
@@ -379,21 +385,22 @@
                 key
                 sig-alg))))
 
-(defmethod make-relay-state ((self saml-auth-provider))
+(defmethod make-relay-state ((self saml-auth-provider) &key redirect)
   (let* ((xml (metadata-xml self))
          (url (quri:uri (parse-xml xml)))
          (settings (create-settings-builder-for-xml (saml-company self) xml)))
     (values
      (make-instance 'relay-state
                     :saml-auth-provider self
-                    :settings settings)
+                    :settings settings
+                    :redirect redirect)
      settings
      url)))
 
 
 (defmethod signin-link ((self saml-auth-provider) redirect)
   (multiple-value-bind (relay-state settings url)
-      (make-relay-state self)
+      (make-relay-state self :redirect redirect)
    (let* ((arg (authn-request-get-encoded-authn-request
                 (make-authn-request settings)))
           (sig-alg (settings-get-signature-algorithm settings))
@@ -438,5 +445,12 @@
 (defmethod oauth-signin-link ((self saml-auth-provider) redirect)
   (signin-link self (or redirect "/runs")))
 
+
 (defmethod logout-link ((self saml-auth-provider))
-  "#")
+  "/saml/logout")
+
+(defhandler (nil :uri "/saml/logout") ()
+  (setf (auth:current-user) nil)
+  <html>
+    You've been logged out. <a href= "/">Go back.</a>
+  </html>)
