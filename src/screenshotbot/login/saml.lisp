@@ -237,26 +237,31 @@
     :path (hunchentoot:request-uri*))))
 
 (defhandler (nil :uri "/sso/saml/callback") ()
-  (let* ((saml-response (hunchentoot:post-parameter "SAMLResponse"))
-         (relay-state-id (hunchentoot:post-parameter "RelayState"))
-         (relay-state (or
-                       (relay-state-for-id relay-state-id)
-                       ;; Assume default provider. TODO: for
-                       ;; self-service we might need to do something
-                       ;; better, perhaps a dedicated ACS url.
-                       (let ((default (default-saml-auth-provider)))
-                         (make-relay-state default))))
-         (request-uri (current-request-uri)))
-    (let ((resp (make-saml-response (relay-state-settings relay-state)
-                                    request-uri
-                                    saml-response )))
-      (let ((is-valid (saml-response-is-valid resp)))
-        (unless is-valid
-          (error "SamlResponse failed to validate: ~a [~a]"
-                 (saml-response-get-error resp)
-                 is-valid)))
+  (handler-case
+      (let* ((saml-response (hunchentoot:post-parameter "SAMLResponse"))
+             (relay-state-id (hunchentoot:post-parameter "RelayState"))
+             (relay-state (or
+                           (relay-state-for-id relay-state-id)
+                           ;; Assume default provider. TODO: for
+                           ;; self-service we might need to do something
+                           ;; better, perhaps a dedicated ACS url.
+                           (let ((default (default-saml-auth-provider)))
+                             (make-relay-state default))))
+             (request-uri (current-request-uri)))
+        (let ((resp (make-saml-response (relay-state-settings relay-state)
+                                        request-uri
+                                        saml-response )))
+          (let ((is-valid (saml-response-is-valid resp)))
+            (unless is-valid
+              (error "SamlResponse failed to validate: ~a [~a]"
+                     (saml-response-get-error resp)
+                     is-valid)))
 
-      (process-validated-callback resp relay-state))))
+          (process-validated-callback resp relay-state)))
+    (relay-state-expired ()
+      <html>
+        <p>This SAML session has expired, probably because of a rogue refresh. <a href= "/">Try again.</a></p>
+      </html>)))
 
 (lw-ji:define-java-callers "java.util.List"
   (list-get "get"))
