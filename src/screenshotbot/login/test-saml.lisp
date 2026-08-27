@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/login/saml
+                #:default-saml-auth-provider
                 #:find-or-create-saml-cert
                 #:make-cert-pair
                 #:find-user-for-sso
@@ -74,3 +75,15 @@
     (is (eql
          (find-or-create-saml-cert company)
          (find-or-create-saml-cert company)))))
+
+(test default-saml-provider
+  (with-fixture state ()
+    (is (eql nil (default-saml-auth-provider)))
+    (let ((one (make-instance 'saml-auth-provider))
+         (two (make-instance 'saml-auth-provider
+                             :defaultp t))
+         (three (make-instance 'saml-auth-provider
+                               :defaultp nil))
+         (four (make-instance 'saml-auth-provider
+                              :defaultp nil)))
+      (is (eql two (default-saml-auth-provider))))))

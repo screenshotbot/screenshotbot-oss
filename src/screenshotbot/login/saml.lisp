@@ -124,6 +124,9 @@
              :reader relay-state-settings))
   (:metaclass indexed-class))
 
+(defindex +default-provider-index+
+  'fset-unique-index
+  :slot-name '%defaultp)
 
 (defclass saml-auth-provider (auth-provider
                               object-with-oid)
@@ -132,6 +135,11 @@
    (metadata-xml :initform nil
                  :initarg :metadata-xml
                  :reader %metadata-xml)
+   (%defaultp :initform nil
+              :initarg :defaultp
+              :index +default-provider-index+
+              :index-reader %find-by-defaultp
+              :reader defaultp)
    (%company :initform nil
              :initarg :company
              :index +company-index+
@@ -144,6 +152,9 @@
                        :reader expiration-seconds
                        :initform (* 20 3600)))
   (:metaclass persistent-class))
+
+(defun default-saml-auth-provider ()
+  (%find-by-defaultp t))
 
 (defmethod saml-entity-id ((self saml-auth-provider))
   (handler-case
