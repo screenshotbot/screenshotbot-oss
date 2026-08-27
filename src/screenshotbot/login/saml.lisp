@@ -128,12 +128,27 @@
      (saml-cert-for-company company)
      (make-new-saml-cert company))))
 
+(define-condition relay-state-expired (error)
+  ())
+
+(defun relay-state-for-id (id)
+  (when id
+   (let ((result (%relay-state-for-id id)))
+     (cond
+       (result
+        ;; clear from index
+        (setf (relay-state-id result)
+              nil)
+        result)
+       (t
+        (error 'relay-state-expired))))))
+
 (defclass relay-state (base-indexed-object)
   ((id :initarg :id
        :index +id-index+
-       :index-reader relay-state-for-id
-       :reader relay-state-id
-       :initform (format nil "~a" (secure-random:number 10000000000000000)))
+       :index-reader %relay-state-for-id
+       :accessor relay-state-id
+       :initform (format nil "~a_~a" (get-universal-time) (secure-random:number 10000000000000000)))
    (saml-auth-provider :initarg :saml-auth-provider
                        :reader saml-auth-provider)
    (settings :initarg :settings
@@ -142,7 +157,9 @@
                            :reader original-session-token)
    (redirect :initarg :redirect
              :initform nil
-             :reader redirect))
+             :reader redirect)
+   (created-at :initform (get-universal-time)
+               :reader created-at))
   (:metaclass indexed-class))
 
 (defindex +default-provider-index+

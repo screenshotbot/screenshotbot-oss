@@ -8,6 +8,10 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/login/saml
+                #:relay-state-expired
+                #:relay-state-for-id
+                #:relay-state-id
+                #:make-relay-state
                 #:default-saml-auth-provider
                 #:find-or-create-saml-cert
                 #:make-cert-pair
@@ -27,7 +31,9 @@
   (:import-from #:fiveam-matchers/misc
                 #:is-not-null)
   (:import-from #:screenshotbot/testing
-                #:with-installation))
+                #:with-installation)
+  (:import-from #:util/testing
+                #:with-fake-request))
 (in-package :screenshotbot/login/test-saml)
 
 
@@ -87,3 +93,23 @@
          (four (make-instance 'saml-auth-provider
                               :defaultp nil)))
       (is (eql two (default-saml-auth-provider))))))
+
+(test dont-allow-session-replays
+  (with-fixture state ()
+    (with-fake-request ()
+     (auth:with-sessions ()
+       (let* ((relay-state (make-relay-state
+                            (make-instance 'saml-auth-provider
+                                           :metadata-xml *xml*)))
+              (id (relay-state-id relay-state)))
+         (is
+          (eql relay-state
+               (relay-state-for-id id)))
+         (signals relay-state-expired
+           (relay-state-for-id id)))))))
+
+(test relay-state-for-id-handles-nil
+  (with-fixture state ()
+    (is
+     (eql nil
+          (relay-state-for-id nil)))))
