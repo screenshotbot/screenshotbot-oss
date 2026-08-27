@@ -961,6 +961,8 @@ make-object-snapshot once we delete make-object-snapshot."
   (mapc #'close (batch-streams self))
   (setf (batch-streams self) nil))
 
+(defvar *debug-snapshot-p* nil)
+
 (defun encode-object-slots (snapshot-coordinator)
   (let ((subsystem (subsystem snapshot-coordinator))
         (class-layouts (class-layouts snapshot-coordinator))
@@ -998,11 +1000,14 @@ make-object-snapshot once we delete make-object-snapshot."
                               (batch batch))
                           (safe-make-thread
                            (lambda ()
-                             (let ((*in-restore-p* t))
-                               (loop for object in batch
-                                     do (encode-set-slots class-layouts object s))
-                               (bt:with-lock-held (lock)
-                                 (incf count)))))))))
+                             (handler-bind ((error (lambda (e)
+                                                     (when *debug-snapshot-p*
+                                                       (invoke-debugger e)))))
+                              (let ((*in-restore-p* t))
+                                (loop for object in batch
+                                      do (encode-set-slots class-layouts object s))
+                                (bt:with-lock-held (lock)
+                                  (incf count))))))))))
             (mapc #'bt:join-thread threads)
 
             (unless (= count (length threads))
