@@ -247,19 +247,16 @@
 
 (defclass saml-user (single-company-user)
   ()
-  (:metaclass persistent-class))
+  (:metaclass persistent-class)
+  (:documentation "deprecated: we use regular users now. This class didn't exist for too long"))
 
 (defmethod find-user-for-sso ((company company) email)
   (bt:with-lock-held (*lock*)
-    (loop for user in (roles:users-for-company company)
-          if (string-equal (auth:user-email user) email)
-            return user
-          finally
-          (let ((user (make-instance 'saml-user
-                                     :company company
-                                     :email email)))
-            (roles:ensure-has-role company user 'roles:standard-member)
-            (return user)))))
+    ;; TODO: If this is self-service, we need domain trust, but that's
+    ;; for another diff.
+    (let ((user (auth:find-or-create-user *installation* :email email)))
+      (roles:ensure-has-role company user 'roles:standard-member)
+      user)))
 
 
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.IdPMetadataParser"
