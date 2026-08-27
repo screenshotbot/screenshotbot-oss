@@ -298,6 +298,11 @@
           "/saml/metadata")
     (quri:render-uri uri)))
 
+(defun callback-url ()
+  (quri:render-uri
+   (quri:make-uri
+    :path "/sso/saml/callback"
+    :defaults (quri:uri (installation-domain *installation*)))))
 
 (defun create-settings-builder-for-xml (company xml)
   (let ((settings-map (cond
@@ -307,8 +312,7 @@
                          (make-hash-map)))))
     (java-map-put settings-map "onelogin.saml2.sp.entityid" (entity-id))
     (java-map-put settings-map "onelogin.saml2.sp.assertion_consumer_service.url"
-                  ;; todo
-                  "https://staging.screenshotbot.io/sso/saml/callback")
+                  (callback-url))
     (java-map-put settings-map "onelogin.saml2.sp.x509cert"
                   (saml-public-cert
                    (find-or-create-saml-cert company)))
