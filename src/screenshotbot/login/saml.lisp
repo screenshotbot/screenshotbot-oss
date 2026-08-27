@@ -38,6 +38,10 @@
   (:import-from #:util/store/object-id
                 #:find-by-oid
                 #:object-with-oid)
+  (:import-from #:screenshotbot/login/common
+                #:oauth-signin-link)
+  (:import-from #:oidc/oidc
+                #:logout-link)
   (:export
    #:saml-auth-provider))
 (in-package :screenshotbot/login/saml)
@@ -257,6 +261,7 @@
             (roles:ensure-has-role company user 'roles:standard-member)
             (return user)))))
 
+
 (lw-ji:define-java-callers "com.onelogin.saml2.settings.IdPMetadataParser"
   (parse-file-xml "parseFileXML")
   (parse-remote-xml "parseRemoteXML"))
@@ -420,3 +425,8 @@
                      nil)))
       (get-sp-metadata settings))))
 
+(defmethod oauth-signin-link ((self saml-auth-provider) redirect)
+  (signin-link self (or redirect "/runs")))
+
+(defmethod logout-link ((self saml-auth-provider))
+  "#")
