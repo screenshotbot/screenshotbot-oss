@@ -27,9 +27,10 @@
       </body>
     </html>))
 
-(markup:deftag app-template (children &key title stripe)
+(markup:deftag app-template (children &key title stripe (left-nav-bar t))
   (render-template
    *app-template*
    children
    :title title
-   :stripe stripe))
+   :stripe stripe
+   :left-nav-bar left-nav-bar))

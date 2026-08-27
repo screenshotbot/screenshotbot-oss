@@ -21,6 +21,7 @@
                                  script-name
                                  stripe
                                  form-action
+                                 (left-nav-bar t) 
                                  form-id
                                  enctype)
   (let* ((children (remove-if 'stringp children))
@@ -44,7 +45,7 @@
                     </div>
                     ,(progn footer)
                   </div>)))
-    <app-template title=title stripe=stripe >
+    <app-template title=title stripe=stripe left-nav-bar=left-nav-bar >
       <div class= "main-content" >
         <div class= "card-page-container mt-3 mx-auto"
              style= (when max-width

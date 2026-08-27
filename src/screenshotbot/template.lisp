@@ -213,6 +213,7 @@
                       scripts
                       (content t)
                       script-name
+                      (left-nav-bar t)
                       (nav-bar-style :dark))
   (declare (ignore nav-bar-style
                    transparent))
@@ -224,6 +225,7 @@
      <dashboard-template admin=admin jquery-ui=jquery-ui stripe=stripe scripts=scripts
                          codemirror=codemirror
                          title=title
+                         left-nav-bar=left-nav-bar
                          body-class=body-class
                          content=content
                          script-name= (or script-name (hunchentoot:script-name*)) >,@children </dashboard-template>)))
@@ -410,7 +412,7 @@
   </html>)
 
 (defmethod render-template ((self screenshotbot-template)
-                            children &key title stripe)
-  <app-template title=title stripe=stripe >
+                            children &key title stripe (left-nav-bar t))
+  <app-template title=title stripe=stripe left-nav-bar=left-nav-bar >
     ,@children
   </app-template>)
