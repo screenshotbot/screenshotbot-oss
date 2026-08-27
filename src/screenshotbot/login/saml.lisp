@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/login/saml
   (:use #:cl)
   (:import-from #:core/installation/auth-provider
+                #:default-oidc-provider
                 #:auth-provider-signin-form
                 #:auth-provider)
   (:import-from #:auth/login/roles-auth-provider
@@ -68,6 +69,14 @@
              :index-reader saml-cert-for-company))
   (:metaclass persistent-class)
   (:documentation "The singleton private-key/cert used for SAML"))
+
+(defclass saml-installation-mixin ()
+  ())
+
+(defmethod default-oidc-provider :around ((self saml-installation-mixin))
+  (or
+   (default-saml-auth-provider)
+   (call-next-method)))
 
 (defun make-cert-pair ()
   (tmpdir:with-tmpdir (dir)
@@ -410,3 +419,4 @@
                      (auth:current-company)
                      nil)))
       (get-sp-metadata settings))))
+

@@ -156,3 +156,4 @@ every user will have only one company that they are an owner of."))
 
 (defmethod validate ((config (eql :sso.oidc.expiration-seconds)) value)
   (parse-integer value))
+
