@@ -326,14 +326,18 @@ value."
 (defun auth:reset-session ()
   (let ((new-token (generate-session-token)))
     (when (session-created-p *current-session*)
-      (make-instance 'session-reset
-                     :old-token (%session-token *current-session*)
-                     :domain (host-without-port)
-                     :new-token new-token))
+      (make-session-reset :old-token (%session-token *current-session*)
+                          :new-token new-token))
     (setf (%session-token *current-session*)
           new-token))
 
   (set-session *current-session*))
+
+(defun make-session-reset (&key old-token new-token)
+  (make-instance 'session-reset
+                 :old-token old-token
+                 :domain (host-without-port)
+                 :new-token new-token))
 
 
 (defun auth:is-same-session-disregarding-resets-p (from-session to-session)

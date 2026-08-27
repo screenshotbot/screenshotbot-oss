@@ -96,7 +96,9 @@
            #:user-full-name
            #:user-first-name
            #:is-same-session-disregarding-resets-p
-           #:reset-session))
+           #:reset-session
+           #:set-session
+           #:make-session-reset))
 (in-package :auth)
 
 (util/store/migrations:ensure-symbol-in-package

@@ -42,6 +42,8 @@
                 #:oauth-signin-link)
   (:import-from #:oidc/oidc
                 #:logout-link)
+  (:import-from #:nibble
+                #:nibble)
   (:export
    #:saml-auth-provider))
 (in-package :screenshotbot/login/saml)
@@ -135,6 +137,8 @@
                        :reader saml-auth-provider)
    (settings :initarg :settings
              :reader relay-state-settings)
+   (original-session-token :initarg :original-session-token
+                           :reader original-session-token)
    (redirect :initarg :redirect
              :initform nil
              :reader redirect))
@@ -233,6 +237,7 @@
           (error "SamlResponse failed to validate: ~a [~a]"
                  (saml-response-get-error resp)
                  is-valid)))
+
       (process-validated-callback resp relay-state))))
 
 (lw-ji:define-java-callers "java.util.List"
@@ -250,6 +255,12 @@
       ;; only this company.
       (setf (auth:current-user :expires-in (expiration-seconds saml))
             user)
+      ;; During the POST, we lose the original session because of
+      ;; SameSite=Lax. This allows us to still call nibbles from that
+      ;; session.
+      (auth:make-session-reset
+       :old-token (original-session-token relay-state)
+       :new-token (auth::%session-token (auth:current-session)))
       (setf (auth:session-value :sso-company) (saml-company saml))
       (hex:safe-redirect
        (or
@@ -385,15 +396,16 @@
                 key
                 sig-alg))))
 
-(defmethod make-relay-state ((self saml-auth-provider) &key redirect)
+(defmethod make-relay-state ((self saml-auth-provider) &rest args &key &allow-other-keys)
   (let* ((xml (metadata-xml self))
          (url (quri:uri (parse-xml xml)))
          (settings (create-settings-builder-for-xml (saml-company self) xml)))
     (values
-     (make-instance 'relay-state
-                    :saml-auth-provider self
-                    :settings settings
-                    :redirect redirect)
+     (apply #'make-instance 'relay-state
+            :saml-auth-provider self
+            :settings settings
+            :original-session-token (auth:%session-token (auth:current-session))
+            args)
      settings
      url)))
 
