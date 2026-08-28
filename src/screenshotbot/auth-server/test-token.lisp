@@ -15,6 +15,7 @@
   (:import-from #:screenshotbot/auth-server/errors
                 #:with-oauth-json-errors)
   (:import-from #:screenshotbot/auth-server/model
+                #:oauth-client-secret
                 #:*authorization-code-ttl*
                 #:*device-code-ttl*
                 #:*refresh-token-ttl*
@@ -259,6 +260,43 @@ which caller was the attacker, so neither of them keeps access."
                (field (post-token "grant_type" "authorization_code"
                                   "client_id" "conf-client")
                       "error")))))
+
+(test a-confidential-client-with-the-right-secret-is-accepted
+  "The negative test above passes even if the comparison is broken, so the
+success path needs its own."
+  (with-fixture state ()
+    (let* ((confidential (register-oauth-client
+                          :client-id "conf-client" :public nil
+                          :redirect-uris (list "http://127.0.0.1/callback")))
+           (grant (make-instance 'oauth-grant
+                                 :client confidential
+                                 :user user
+                                 :company company
+                                 :scopes '("api:read")))
+           (code (code-string (make-code grant :challenge-verifier nil))))
+      (cl-mock:with-mocks ()
+        ;; HTTP Basic is how RFC 6749 §2.3.1 says a confidential client
+        ;; authenticates; WITH-FAKE-REQUEST has no way to set the header.
+        (cl-mock:if-called 'hunchentoot:authorization
+                           (lambda ()
+                             (values "conf-client"
+                                     (oauth-client-secret confidential))))
+        (let ((response (post-token "grant_type" "authorization_code"
+                                    "code" code
+                                    "redirect_uri" +redirect-uri+)))
+          (is (equal "Bearer" (field response "token_type")))
+          (is-true (field response "access_token")))))))
+
+(test a-confidential-client-with-the-wrong-secret-is-refused
+  (with-fixture state ()
+    (register-oauth-client :client-id "conf-client" :public nil
+                           :redirect-uris (list "http://127.0.0.1/callback"))
+    (cl-mock:with-mocks ()
+      (cl-mock:if-called 'hunchentoot:authorization
+                         (lambda () (values "conf-client" "not-the-secret")))
+      (is (equal "invalid_client"
+                 (field (post-token "grant_type" "authorization_code")
+                        "error"))))))
 
 (test an-unsupported-grant-type-is-named-in-the-error
   (with-fixture state ()

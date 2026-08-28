@@ -468,7 +468,10 @@
                              (:file "test-scopes")
                              (:file "test-model")
                              (:file "test-authorize")
-                             (:file "test-token")))
+                             (:file "test-token")
+                             (:file "test-device")
+                             (:file "test-revoke")
+                             (:file "test-metadata")))
                (:file "test-invite")
                (:file "test-uname")
                (:module "model"
