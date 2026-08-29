@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/mcp/runs
+                #:+max-log-characters+
                 #:+max-screenshots+)
   (:import-from #:screenshotbot/mcp/test-util
                 #:add-channel
@@ -26,7 +27,8 @@
                 #:make-image)
   (:import-from #:screenshotbot/model/recorder-run
                 #:active-run
-                #:make-recorder-run)
+                #:make-recorder-run
+                #:promotion-log)
   (:import-from #:screenshotbot/model/screenshot
                 #:make-screenshot)
   (:import-from #:util/store/object-id
@@ -239,3 +241,108 @@ elsewhere has to read as simply absent."
                         (list (cons "channel" "web")))
         (is (equal 403 status))
         (is-false (str:containsp (oid run) body))))))
+
+;; ----------------------------------------------------------------------
+;; promotion_logs_for_run
+;; ----------------------------------------------------------------------
+
+(defun promotion-logs-as (token id)
+  (tool-text (call-tool-as token "promotion_logs_for_run"
+                           (list (cons "run_id" id)))))
+
+(defun write-promotion-log (run text)
+  (let ((file (bknr.datastore:blob-pathname (promotion-log run))))
+    (ensure-directories-exist file)
+    (with-open-file (out file :direction :output :if-exists :supersede
+                              :if-does-not-exist :create)
+      (write-string text out))
+    file))
+
+(test a-promotion-log-is-returned-as-text-between-markers
+  (with-fixture caller ()
+    (let* ((channel (add-channel "web"))
+           (run (make-run company channel)))
+      (write-promotion-log run "Beginning promotion~%something happened")
+      (multiple-value-bind (text result) (promotion-logs-as token (oid run))
+        (is-false (field result "isError"))
+        (is-true (str:containsp "something happened" text))
+        (is-true (str:containsp "--BEGIN LOGS--" text))
+        (is-true (str:containsp "--END LOGS--" text))))))
+
+(test the-log-is-labelled-with-the-run-it-came-from
+  "A debugging session gets several of these, and an unlabelled wall of
+log is one a model will attribute to the wrong run."
+  (with-fixture caller ()
+    (let* ((channel (add-channel "web"))
+           (run (make-run company channel)))
+      (write-promotion-log run "hello")
+      (let ((text (promotion-logs-as token (oid run))))
+        (is-true (str:containsp (oid run) text))
+        (is-true (str:containsp "web" text))
+        (is-true (str:containsp "abc123" text))))))
+
+(test a-run-that-was-never-promoted-says-so-and-is-not-an-error
+  "The ordinary state of an unpromoted run, and itself the answer when the
+question was why no report appeared."
+  (with-fixture caller ()
+    (let* ((channel (add-channel "web"))
+           (run (make-run company channel)))
+      (multiple-value-bind (text result) (promotion-logs-as token (oid run))
+        (is-false (field result "isError"))
+        (is-true (str:containsp "no promotion log" text))))))
+
+(test a-long-log-keeps-the-end-and-says-what-it-dropped
+  "A promotion that went wrong says so where it stopped, so the tail is
+the half worth having."
+  (with-fixture caller ()
+    (let* ((channel (add-channel "web"))
+           (run (make-run company channel)))
+      (write-promotion-log run
+                           (concatenate 'string
+                                        (make-string 100 :initial-element #\a)
+                                        "THE-INTERESTING-BIT"))
+      (let ((text (progv (list '+max-log-characters+) (list 25)
+                    (promotion-logs-as token (oid run)))))
+        (is-true (str:containsp "THE-INTERESTING-BIT" text))
+        (is-true (str:containsp "are not shown" text))
+        ;; The head is gone, not merely unmentioned.
+        (is-false (str:containsp (make-string 30 :initial-element #\a) text))))))
+
+(test a-short-log-says-nothing-about-truncation
+  (with-fixture caller ()
+    (let* ((channel (add-channel "web"))
+           (run (make-run company channel)))
+      (write-promotion-log run "short")
+      (is-false (str:containsp "are not shown"
+                               (promotion-logs-as token (oid run)))))))
+
+(test asking-for-an-unknown-runs-logs-is-a-tool-error
+  (with-fixture caller ()
+    (dolist (id (list "not-an-oid" "000000000000000000000000"))
+      (multiple-value-bind (text result) (promotion-logs-as token id)
+        (declare (ignore text))
+        (is-true (field result "isError")
+                 "id ~s did not produce a tool error" id)))))
+
+(test another-accounts-promotion-log-is-not-readable
+  "Promotion logs name commits, branches and build URLs."
+  (with-fixture caller ()
+    (let* ((other (make-instance 'screenshotbot/model/company:company
+                                 :name "someone else"))
+           (channel (make-instance 'channel :name "theirs" :company other))
+           (run (make-run other channel)))
+      (write-promotion-log run "their-secret-branch")
+      (multiple-value-bind (text result) (promotion-logs-as token (oid run))
+        (is-true (field result "isError"))
+        (is-false (str:containsp "their-secret-branch" text))))))
+
+(test reading-promotion-logs-without-the-scope-never-reaches-it
+  (with-fixture caller ()
+    (let* ((channel (add-channel "web"))
+           (run (make-run company channel)))
+      (write-promotion-log run "secret-log-content")
+      (multiple-value-bind (body status)
+          (call-tool-as (token-with '("profile")) "promotion_logs_for_run"
+                        (list (cons "run_id" (oid run))))
+        (is (equal 403 status))
+        (is-false (str:containsp "secret-log-content" body))))))

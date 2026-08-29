@@ -7,3 +7,7 @@
   processing. The diff image is transparent except for the changed pixels, which
   makes "a few characters moved" and "the whole layout shifted" tell apart at a
   glance, and `differenceValue` sorts the changes worth looking at to the top.
+
+# Masks
+
+- bulk edit masks
