@@ -13,8 +13,13 @@
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:screenshotbot/mcp/mcp
+                #:*tools*
                 #:call-tool
+                #:register-tool
+                #:tool
                 #:tool-definitions
+                #:tool-description
+                #:tool-name
                 #:%dispatch
                 #:+supported-protocol-versions+
                 #:mcp-handler
@@ -401,9 +406,10 @@ wrong, and there is no tool whose failure this could be."
 ;; ----------------------------------------------------------------------
 
 (test every-advertised-tool-is-callable
-  "tools/list and the dispatcher are separate lists, so they can drift.
-Advertising a tool that does not dispatch gives a model a capability that
-fails only when it tries to use it."
+  "Structural since DEF-TOOL: advertising and dispatching read the same
+registry, so this can no longer drift. Kept as a guard in case anyone
+re-splits them, because a tool advertised but not dispatched is a
+capability a model only discovers is missing when it tries to use it."
   (with-fixture caller ()
     (dolist (definition (tool-definitions))
       (let ((name (gethash "name" definition)))
@@ -595,3 +601,53 @@ one's output is the other's input."
       (multiple-value-bind (text result) (fetch-image-url-as token (oid image))
         (declare (ignore text))
         (is-true (field result "isError"))))))
+
+;; ----------------------------------------------------------------------
+;; DEF-TOOL and the registry
+;; ----------------------------------------------------------------------
+
+(defun probe-tool (name description)
+  (make-instance 'tool
+                 :name name
+                 :description description
+                 :parameters nil
+                 :handler (lambda (arguments)
+                            (declare (ignore arguments))
+                            description)))
+
+(test redefining-a-tool-replaces-it-rather-than-adding-a-second
+  "This file is reloaded into a running image. A registry that appended
+would advertise every tool twice after the second load, and a client
+would see duplicates with no way to tell which one it was calling."
+  (let ((*tools* nil))
+    (register-tool (probe-tool "probe" "first"))
+    (register-tool (probe-tool "probe" "second"))
+    (is (equal 1 (length *tools*)))
+    (is (equal "second" (tool-description (first *tools*))))))
+
+(test redefining-a-tool-keeps-its-position
+  "Otherwise reloading would silently reorder what tools/list advertises."
+  (let ((*tools* nil))
+    (register-tool (probe-tool "a" "a"))
+    (register-tool (probe-tool "b" "b"))
+    (register-tool (probe-tool "a" "a-again"))
+    (is (equal '("a" "b") (mapcar #'tool-name *tools*)))
+    (is (equal "a-again" (tool-description (first *tools*))))))
+
+(test a-missing-required-argument-is-refused-by-name
+  "DEF-TOOL generates the check, so the body never sees a blank argument.
+Naming it is what lets a model fix its own call."
+  (with-fixture caller ()
+    (multiple-value-bind (text result) (fetch-report-as token "")
+      (is-true (field result "isError"))
+      (is-true (str:containsp "report_id is required" text)))))
+
+(test a-declared-parameter-reaches-the-advertised-schema
+  "The schema is derived from the same declaration the handler binds, so
+they cannot describe different arguments."
+  (let* ((report-tool (find "fetch_report" (tool-definitions)
+                            :key (lambda (tool) (gethash "name" tool))
+                            :test #'equal))
+         (schema (gethash "inputSchema" report-tool)))
+    (is-true (gethash "report_id" (gethash "properties" schema)))
+    (is (equal "report_id" (aref (gethash "required" schema) 0)))))

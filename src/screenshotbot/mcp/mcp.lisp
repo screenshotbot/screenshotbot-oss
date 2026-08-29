@@ -106,38 +106,6 @@ the response unintelligible to a client that is being polite about it."
 them would otherwise produce a result no model can use and no reviewer
 would enjoy reading in a log.")
 
-(defun tool-definitions ()
-  (list
-   (obj "name" "list_channels"
-        "description"
-        "List the channels (projects) in the authenticated Screenshotbot account. Returns JSON: an array of objects with `name` and `url`."
-        ;; #() not NIL: CL-JSON renders NIL as null, and a JSON Schema
-        ;; `required' of null is invalid where an empty array is fine.
-        "inputSchema" (obj "type" "object"
-                           "properties" (obj)
-                           "required" #()))
-   (obj "name" "fetch_image_url"
-        "description"
-        "Resolve a Screenshotbot image id into a URL. Image ids come from fetch_report. Returns JSON with a `url` you can fetch or view."
-        "inputSchema" (obj "type" "object"
-                           "properties"
-                           (obj "image_id"
-                                (obj "type" "string"
-                                     "description" "An image id, as returned by fetch_report"))
-                           "required" #("image_id")))
-   (obj "name" "fetch_report"
-        "description"
-        "Fetch a Screenshotbot report by id, describing what changed between two runs. Returns JSON with the report metadata and, for each screenshot, the ids of the before and after images. Use fetch_image_url to turn an image id into a URL you can look at."
-        "inputSchema" (obj "type" "object"
-                           "properties"
-                           (obj "report_id"
-                                (obj "type" "string"
-                                     "description" "The report id, as it appears in a report URL"))
-                           "required" #("report_id")))))
-
-(defun list-tools ()
-  (obj "tools" (tool-definitions)))
-
 ;; ----------------------------------------------------------------------
 ;; Tools
 ;; ----------------------------------------------------------------------
@@ -156,6 +124,99 @@ transport error hides it from the model entirely."
       ;; null, which is not the same thing.
       (setf (gethash "isError" result) t))
     result))
+
+(defvar *tools* nil
+  "Every MCP tool, in definition order. DEF-TOOL registers here.
+
+One list rather than two: advertising and dispatching used to be separate
+lists that could drift, and a tool advertised but not dispatched is a
+capability a model only discovers is missing when it tries to use it.")
+
+(defclass tool ()
+  ((name :initarg :name
+         :reader tool-name
+         :documentation "The name on the wire.")
+   (description :initarg :description
+                :reader tool-description
+                :documentation "What the model reads to decide whether to call this.")
+   (parameters :initarg :parameters
+               :reader tool-parameters
+               :documentation "A list of (JSON-NAME DESCRIPTION). All required.")
+   (handler :initarg :handler
+            :reader tool-handler)))
+
+(defun register-tool (tool)
+  "Add TOOL, replacing any existing tool of the same name.
+
+Replacing rather than pushing matters: this file gets reloaded into a
+running image, and a registry that appended would advertise every tool
+twice after the second load."
+  (let ((existing (position (tool-name tool) *tools*
+                            :key #'tool-name :test #'equal)))
+    (if existing
+        (setf (nth existing *tools*) tool)
+        (setf *tools* (append *tools* (list tool))))
+    tool))
+
+(defmacro def-tool (name (&rest parameters) description &body body)
+  "Define an MCP tool called NAME.
+
+Each parameter is (VARIABLE JSON-NAME DESCRIPTION) and is required: the
+generated handler answers with a tool error when one is missing, so BODY
+never sees a blank argument.
+
+DESCRIPTION is a required positional rather than a docstring because it
+is the only thing a model reads when deciding whether to call this at
+all, and a docstring is the sort of thing that gets dropped."
+  (let ((arguments (gensym "ARGUMENTS")))
+    `(register-tool
+      (make-instance 'tool
+                     :name ,name
+                     :description ,description
+                     :parameters ',(loop for (nil json-name parameter-description)
+                                           in parameters
+                                         collect (list json-name
+                                                       parameter-description))
+                     :handler
+                     (lambda (,arguments)
+                       (declare (ignorable ,arguments))
+                       (let ,(loop for (variable json-name) in parameters
+                                   collect `(,variable (field ,arguments ,json-name)))
+                         (cond
+                           ,@(loop for (variable json-name) in parameters
+                                   collect `((str:emptyp ,variable)
+                                             (tool-result
+                                              ,(format nil "~a is required." json-name)
+                                              :errorp t)))
+                           (t ,@body))))))))
+
+(defun tool-schema (tool)
+  (obj "type" "object"
+       "properties"
+       (apply #'obj
+              (loop for (json-name description) in (tool-parameters tool)
+                    append (list json-name
+                                 (obj "type" "string"
+                                      "description" description))))
+       ;; #() rather than a list, which CL-JSON renders as null.
+       "required" (coerce (mapcar #'first (tool-parameters tool)) 'vector)))
+
+(defun tool-definitions ()
+  (mapcar (lambda (tool)
+            (obj "name" (tool-name tool)
+                 "description" (tool-description tool)
+                 "inputSchema" (tool-schema tool)))
+          *tools*))
+
+(defun list-tools ()
+  (obj "tools" (tool-definitions)))
+
+(defun call-tool (name arguments)
+  "Run the named tool. Second value is NIL if there is no such tool."
+  (let ((tool (find name *tools* :key #'tool-name :test #'equal)))
+    (if tool
+        (values (funcall (tool-handler tool) arguments) t)
+        (values nil nil))))
 
 (defun channel-url (channel)
   (format nil "~a/channels/~a"
@@ -176,34 +237,39 @@ asking is the habit that eventually lists the wrong ones."
      #'string<
      :key #'channel-name)))
 
-(defun list-channels-tool ()
+(defun list-channels-result (company)
+  (let* ((channels (visible-channels company))
+         (shown (if (> (length channels) +max-channels+)
+                    (subseq channels 0 +max-channels+)
+                    channels)))
+    (tool-result
+     (format nil "~a~@[~%~%~a~]"
+             (encode-json-to-string
+              ;; A vector, so that no channels renders as [] rather than
+              ;; the null CL-JSON gives for an empty list. A model reading
+              ;; null has been told something quite different from "there
+              ;; are none".
+              (coerce (mapcar (lambda (channel)
+                                (obj "name" (channel-name channel)
+                                     "url" (channel-url channel)))
+                              shown)
+                      'vector))
+             ;; Say so rather than silently truncating: a model that
+             ;; cannot see the cut will confidently report a partial list
+             ;; as the whole one.
+             (when (> (length channels) +max-channels+)
+               (format nil "Showing the first ~a of ~a channels."
+                       +max-channels+ (length channels)))))))
+
+(def-tool "list_channels" ()
+    "List the channels (projects) in the authenticated Screenshotbot account. Returns JSON: an array of objects with `name` and `url`."
   (let ((company (auth:current-company)))
-    (unless company
-      (return-from list-channels-tool
-        (tool-result "This token is not associated with an account."
-                     :errorp t)))
-    (let* ((channels (visible-channels company))
-           (shown (if (> (length channels) +max-channels+)
-                      (subseq channels 0 +max-channels+)
-                      channels)))
-      (tool-result
-       (format nil "~a~@[~%~%~a~]"
-               (encode-json-to-string
-                ;; A vector, so that no channels renders as [] rather than
-                ;; the null CL-JSON gives for an empty list. A model
-                ;; reading null has been told something quite different
-                ;; from "there are none".
-                (coerce (mapcar (lambda (channel)
-                                  (obj "name" (channel-name channel)
-                                       "url" (channel-url channel)))
-                                shown)
-                        'vector))
-               ;; Say so rather than silently truncating: a model that
-               ;; cannot see the cut will confidently report a partial
-               ;; list as the whole one.
-               (when (> (length channels) +max-channels+)
-                 (format nil "Showing the first ~a of ~a channels."
-                         +max-channels+ (length channels))))))))
+    (cond
+      ((null company)
+       (tool-result "This token is not associated with an account."
+                    :errorp t))
+      (t
+       (list-channels-result company)))))
 
 (defparameter +max-changes+ 100
   "Cap on screenshots reported per section. Same reasoning as
@@ -292,23 +358,20 @@ simply returns NIL for every image id."
                     do (setf (gethash key result) total))
             result))))))
 
-(defun fetch-report-tool (arguments)
-  (let ((id (field arguments "report_id")))
+(def-tool "fetch_report"
+    ((id "report_id" "The report id, as it appears in a report URL"))
+    "Fetch a Screenshotbot report by id, describing what changed between two runs. Returns JSON with the report metadata and, for each screenshot, the ids of the before and after images. Use fetch_image_url to turn an image id into a URL you can look at."
+  (let ((report (find-report-by-id id)))
     (cond
-      ((str:emptyp id)
-       (tool-result "report_id is required." :errorp t))
+      ((null report)
+       ;; Deliberately one message for "no such report" and "not yours".
+       ;; Distinguishing them would let a caller enumerate which report
+       ;; ids exist.
+       (tool-result
+        (format nil "No report ~a is visible to this account." id)
+        :errorp t))
       (t
-       (let ((report (find-report-by-id id)))
-         (cond
-           ((null report)
-            ;; Deliberately one message for "no such report" and "not
-            ;; yours". Distinguishing them would let a caller enumerate
-            ;; which report ids exist.
-            (tool-result
-             (format nil "No report ~a is visible to this account." id)
-             :errorp t))
-           (t
-            (tool-result (encode-json-to-string (report-json report))))))))))
+       (tool-result (encode-json-to-string (report-json report)))))))
 
 (defun image-url (image)
   "A publicly fetchable URL for IMAGE.
@@ -320,36 +383,21 @@ run API does makes MAKE-CDN absolutize it."
                                    (installation-domain *installation*))))
     (util.cdn:make-cdn (image-public-url image :originalp t))))
 
-(defun fetch-image-url-tool (arguments)
-  (let ((id (field arguments "image_id")))
+(def-tool "fetch_image_url"
+    ((id "image_id" "An image id, as returned by fetch_report"))
+    "Resolve a Screenshotbot image id into a URL. Image ids come from fetch_report. Returns JSON with a `url` you can fetch or view."
+  (let ((image (find-image-by-id id)))
     (cond
-      ((str:emptyp id)
-       (tool-result "image_id is required." :errorp t))
+      ((null image)
+       ;; One answer for missing and forbidden, as with reports.
+       (tool-result
+        (format nil "No image ~a is visible to this account." id)
+        :errorp t))
       (t
-       (let ((image (find-image-by-id id)))
-         (cond
-           ((null image)
-            ;; One answer for missing and forbidden, as with reports.
-            (tool-result
-             (format nil "No image ~a is visible to this account." id)
-             :errorp t))
-           (t
-            (tool-result
-             (encode-json-to-string
-              (obj "id" (util:oid image)
-                   "url" (image-url image)))))))))))
-
-(defun call-tool (name arguments)
-  "Run the named tool. Second value is NIL if there is no such tool."
-  (cond
-    ((equal name "list_channels")
-     (values (list-channels-tool) t))
-    ((equal name "fetch_report")
-     (values (fetch-report-tool arguments) t))
-    ((equal name "fetch_image_url")
-     (values (fetch-image-url-tool arguments) t))
-    (t
-     (values nil nil))))
+       (tool-result
+        (encode-json-to-string
+         (obj "id" (util:oid image)
+              "url" (image-url image))))))))
 
 (defun list-resources ()
   (obj "resources"
