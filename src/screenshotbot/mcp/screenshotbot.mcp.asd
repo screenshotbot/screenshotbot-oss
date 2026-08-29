@@ -19,6 +19,7 @@
                :util/fiveam
                :util.testing
                :util.store
-               :cl-mock)
+               :cl-mock
+               :screenshotbot/testing-lib)
   :components ((:file "test-mcp")))
 

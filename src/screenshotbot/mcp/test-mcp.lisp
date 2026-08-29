@@ -19,7 +19,12 @@
                 #:negotiate-protocol-version)
   (:import-from #:screenshotbot/api/core
                 #:authenticate-api-request
+                #:authenticate-request-from-key
                 #:bearer-token)
+  (:import-from #:screenshotbot/model/channel
+                #:channel)
+  (:import-from #:screenshotbot/model/company
+                #:company-channels)
   (:import-from #:screenshotbot/auth-server/model
                 #:make-access-token
                 #:oauth-grant
@@ -216,8 +221,14 @@ outside it, and the failure looks nothing like the cause."
   (with-fake-request (:script-name "/mcp")
     (cl-mock:with-mocks ()
       (cl-mock:if-called 'bearer-token (lambda () "a-token"))
+      ;; Stub only the credential *extraction*. The real function also
+      ;; binds the user, the account and the viewer context on the
+      ;; request, and every one of those is something the tools read --
+      ;; a mock that skipped them would test a caller who is
+      ;; authenticated as nobody.
       (cl-mock:if-called 'authenticate-api-request
-                         (lambda (request) (declare (ignore request)) api-key))
+                         (lambda (request)
+                           (authenticate-request-from-key request api-key)))
       (cl-mock:if-called 'hunchentoot:raw-post-data
                          (lambda (&rest args) (declare (ignore args)) json))
       (setf (hunchentoot:return-code*) 200)
@@ -227,6 +238,9 @@ outside it, and the failure looks nothing like the cause."
                 (hunchentoot:headers-out*))))))
 
 (def-fixture caller ()
+  ;; One fixture rather than two nested ones: FiveAM's &BODY is a macrolet,
+  ;; so a DEF-FIXTURE whose body uses WITH-FIXTURE shadows its own marker
+  ;; and the inner (&BODY) resolves to the wrong one.
   (with-test-store ()
     (with-test-user (:company company :user user)
       (let ((*installation* (make-instance 'abstract-installation
@@ -238,8 +252,15 @@ outside it, and the failure looks nothing like the cause."
                   (make-instance 'oauth-grant :client client :user user
                                               :company company :scopes scopes)
                   :scopes scopes
-                  :resource (mcp-resource-identifier))))
-          (&body))))))
+                  :resource (mcp-resource-identifier)))
+               (add-channel (name)
+                 (let ((channel (make-instance 'channel :name name
+                                                        :company company)))
+                   (push channel (company-channels company))
+                   channel)))
+          (let ((token (token-with '("api:read"))))
+            (declare (ignorable token))
+            (&body)))))))
 
 (test a-caller-holding-the-required-scope-reaches-the-dispatcher
   (with-fixture caller ()
@@ -259,3 +280,101 @@ checked it."
         (is-true (str:containsp "insufficient_scope" challenge))
         ;; Naming it is what lets the client ask for the right thing next.
         (is-true (str:containsp "scope=\"api:read\"" challenge))))))
+
+;; ----------------------------------------------------------------------
+;; tools/call
+;; ----------------------------------------------------------------------
+
+(defun call-tool-as (api-key name)
+  (post-as api-key
+           :json (format nil "{\"jsonrpc\":\"2.0\",\"id\":9,~
+\"method\":\"tools/call\",\"params\":{\"name\":~s,\"arguments\":{}}}"
+                         name)))
+
+(defun tool-text (body)
+  "The text content out of a tools/call result."
+  (let* ((response (let ((json:*json-identifier-name-to-lisp* #'identity)
+                         (json:*identifier-name-to-key* #'identity))
+                     (json:decode-json-from-string body)))
+         (result (field response "result")))
+    (values (field (first (field result "content")) "text")
+            result
+            response)))
+
+(test listing-channels-returns-them-as-json-with-names-and-urls
+  (with-fixture caller ()
+    (add-channel "beta")
+    (add-channel "alpha")
+    (multiple-value-bind (text result)
+        (tool-text (call-tool-as token "list_channels"))
+      ;; No isError on a successful call -- the spec defaults it, and
+      ;; saying "false" in CL-JSON would mean saying null.
+      (is-false (field result "isError"))
+      (let ((channels (let ((json:*json-identifier-name-to-lisp* #'identity)
+                            (json:*identifier-name-to-key* #'identity))
+                        (json:decode-json-from-string text))))
+        (is (equal 2 (length channels)))
+        ;; Sorted, so the output does not reshuffle between calls for no
+        ;; reason a reader could see.
+        (is (equal "alpha" (field (first channels) "name")))
+        (is (equal "beta" (field (second channels) "name")))
+        (is-true (str:containsp "/channels/"
+                                (field (first channels) "url")))))))
+
+(test an-account-with-no-channels-gets-an-empty-list-not-an-error
+  "A model handles [] fine; it handles a tool failure by giving up."
+  (with-fixture caller ()
+    (multiple-value-bind (text result) (tool-text (call-tool-as token "list_channels"))
+      (is-false (field result "isError"))
+      (is (equal "[]" (str:trim text))))))
+
+(test channels-belonging-to-another-account-are-not-listed
+  (with-fixture caller ()
+    (add-channel "ours")
+    (let ((other (make-instance 'screenshotbot/model/company:company
+                                :name "someone else")))
+      (make-instance 'channel :name "theirs" :company other))
+    (let ((text (tool-text (call-tool-as token "list_channels"))))
+      (is-true (str:containsp "ours" text))
+      (is-false (str:containsp "theirs" text)))))
+
+(test a-truncated-listing-says-so
+  "A model that cannot see the cut will report a partial list as the
+whole one."
+  (with-fixture caller ()
+    (dotimes (i 3)
+      (add-channel (format nil "channel-~a" i)))
+    (let ((max-channels 2))
+      (let ((text (progv (list 'screenshotbot/mcp/mcp::+max-channels+)
+                      (list max-channels)
+                    (tool-text (call-tool-as token "list_channels")))))
+        (is-true (str:containsp "Showing the first 2 of 3 channels" text))
+        (is-true (str:containsp "channel-0" text))
+        (is-false (str:containsp "channel-2" text))))))
+
+(test an-untruncated-listing-says-nothing-about-truncation
+  (with-fixture caller ()
+    (add-channel "only-one")
+    (let ((text (tool-text (call-tool-as token "list_channels"))))
+      (is-false (str:containsp "Showing the first" text)))))
+
+(test calling-an-unknown-tool-is-a-protocol-error-not-a-tool-failure
+  "-32602 rather than an isError result: the caller got the protocol
+wrong, and there is no tool whose failure this could be."
+  (with-fixture caller ()
+    (let* ((body (call-tool-as token "no_such_tool"))
+           (response (let ((json:*json-identifier-name-to-lisp* #'identity)
+                           (json:*identifier-name-to-key* #'identity))
+                       (json:decode-json-from-string body)))
+           (failure (field response "error")))
+      (is (equal -32602 (field failure "code")))
+      (is-true (str:containsp "no_such_tool" (field failure "message")))
+      (is-false (field response "result")))))
+
+(test calling-a-tool-without-the-scope-never-reaches-it
+  (with-fixture caller ()
+    (add-channel "secret-project")
+    (multiple-value-bind (body status)
+        (call-tool-as (token-with '("profile")) "list_channels")
+      (is (equal 403 status))
+      (is-false (str:containsp "secret-project" body)))))

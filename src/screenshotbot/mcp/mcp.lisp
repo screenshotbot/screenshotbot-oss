@@ -14,6 +14,15 @@
                 #:mcp-resource-metadata-url)
   (:import-from #:screenshotbot/auth-server/resource-server
                 #:with-bearer-authentication)
+  (:import-from #:bknr.datastore
+                #:store-object-id)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:installation-domain)
+  (:import-from #:screenshotbot/model/channel
+                #:channel-name)
+  (:import-from #:screenshotbot/model/company
+                #:company-channels)
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:json
@@ -72,16 +81,97 @@ the response unintelligible to a client that is being polite about it."
        "serverInfo" (obj "name" "Screenshotbot MCP Server"
                          "version" "1.0.0")))
 
+(defparameter +max-channels+ 200
+  "Cap on how many channels one call returns. A company with thousands of
+them would otherwise produce a result no model can use and no reviewer
+would enjoy reading in a log.")
+
 (defun list-tools ()
   (obj "tools"
        (list (obj "name" "list_channels"
-                  "description" "List all channels (projects) in Screenshotbot"
+                  "description"
+                  "List the channels (projects) in the authenticated Screenshotbot account. Returns JSON: an array of objects with `name` and `url`."
                   ;; #() not NIL: CL-JSON renders NIL as null, and a
                   ;; JSON Schema `required' of null is invalid where an
                   ;; empty array is fine.
                   "inputSchema" (obj "type" "object"
                                      "properties" (obj)
                                      "required" #())))))
+
+;; ----------------------------------------------------------------------
+;; Tools
+;; ----------------------------------------------------------------------
+
+(defun tool-result (text &key errorp)
+  "An MCP tool result.
+
+A tool that fails reports it *in the result* with isError, not as a
+JSON-RPC error. JSON-RPC errors mean the protocol broke; a tool failing
+is an answer the model should see and react to, and burying it in a
+transport error hides it from the model entirely."
+  (let ((result (obj "content" (list (obj "type" "text" "text" text)))))
+    (when errorp
+      ;; Omitted rather than set to false in the ordinary case: the spec
+      ;; defaults it, and CL-JSON has no way to say false without saying
+      ;; null, which is not the same thing.
+      (setf (gethash "isError" result) t))
+    result))
+
+(defun channel-url (channel)
+  (format nil "~a/channels/~a"
+          (string-right-trim "/" (installation-domain *installation*))
+          (store-object-id channel)))
+
+(defun visible-channels (company)
+  "CHANNELS of COMPANY this caller may see, in a stable order.
+
+The viewer-context check is belt and braces -- every channel here belongs
+to the company the token authenticated as -- but listing objects without
+asking is the habit that eventually lists the wrong ones."
+  (let ((viewer (auth:viewer-context hunchentoot:*request*)))
+    (sort
+     (remove-if-not (lambda (channel)
+                      (auth:can-viewer-view viewer channel))
+                    (company-channels company))
+     #'string<
+     :key #'channel-name)))
+
+(defun list-channels-tool ()
+  (let ((company (auth:current-company)))
+    (unless company
+      (return-from list-channels-tool
+        (tool-result "This token is not associated with an account."
+                     :errorp t)))
+    (let* ((channels (visible-channels company))
+           (shown (if (> (length channels) +max-channels+)
+                      (subseq channels 0 +max-channels+)
+                      channels)))
+      (tool-result
+       (format nil "~a~@[~%~%~a~]"
+               (encode-json-to-string
+                ;; A vector, so that no channels renders as [] rather than
+                ;; the null CL-JSON gives for an empty list. A model
+                ;; reading null has been told something quite different
+                ;; from "there are none".
+                (coerce (mapcar (lambda (channel)
+                                  (obj "name" (channel-name channel)
+                                       "url" (channel-url channel)))
+                                shown)
+                        'vector))
+               ;; Say so rather than silently truncating: a model that
+               ;; cannot see the cut will confidently report a partial
+               ;; list as the whole one.
+               (when (> (length channels) +max-channels+)
+                 (format nil "Showing the first ~a of ~a channels."
+                         +max-channels+ (length channels))))))))
+
+(defun call-tool (name)
+  "Run the named tool. Second value is NIL if there is no such tool."
+  (cond
+    ((equal name "list_channels")
+     (values (list-channels-tool) t))
+    (t
+     (values nil nil))))
 
 (defun list-resources ()
   (obj "resources"
@@ -115,6 +205,15 @@ the response unintelligible to a client that is being polite about it."
        (%result id (list-tools)))
       ((equal method "resources/list")
        (%result id (list-resources)))
+      ((equal method "tools/call")
+       (let ((name (cdr (assoc :name params))))
+         (multiple-value-bind (result foundp) (call-tool name)
+           (if foundp
+               (%result id result)
+               ;; No such tool is a caller mistake about the protocol, not
+               ;; a tool failing, so it is a JSON-RPC error rather than an
+               ;; isError result.
+               (%error id -32602 (format nil "No such tool: ~a" name))))))
       (t
        (%error id -32601 (format nil "Method not found: ~a" method))))))
 
