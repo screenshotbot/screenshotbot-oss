@@ -260,8 +260,14 @@ all, and a docstring is the sort of thing that gets dropped."
 
 Read off the viewer context rather than re-parsing the header: the
 endpoint has already authenticated, and asking the same question twice is
-how the two answers start disagreeing."
-  (let ((viewer (auth:viewer-context hunchentoot:*request*)))
+how the two answers start disagreeing.
+
+Fails closed when there is no request at all, which is what a tool called
+from a REPL or a test harness looks like. Refusing is the safe answer,
+and it beats an UNBOUND-VARIABLE from deep inside a tool."
+  (let ((viewer (and (boundp 'hunchentoot:*request*)
+                     hunchentoot:*request*
+                     (auth:viewer-context hunchentoot:*request*))))
     (and (typep viewer 'api-viewer-context)
          (token-has-scope-p (viewer-context-api-key viewer) scope))))
 

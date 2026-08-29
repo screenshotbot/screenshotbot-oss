@@ -19,8 +19,9 @@
                 #:channel-name
                 #:channel-slack-channels)
   (:import-from #:screenshotbot/model/company
-                #:company-channels)
-  (:documentation "The list_channels MCP tool."))
+                #:company-channels
+                #:find-channel)
+  (:documentation "The list_channels and update_slack_channels MCP tools."))
 (in-package :screenshotbot/mcp/channels)
 
 (defparameter +max-channels+ 200
@@ -49,6 +50,11 @@ a run's tags; neither is a property of the channel."
                   (channel-slack-channels channel))
           'vector))
 
+(defun channel-json (channel)
+  (obj "name" (channel-name channel)
+       "url" (channel-url channel)
+       "slackChannels" (slack-channels channel)))
+
 (defun visible-channels (company)
   "CHANNELS of COMPANY this caller may see, in a stable order.
 
@@ -75,12 +81,7 @@ asking is the habit that eventually lists the wrong ones."
               ;; the null CL-JSON gives for an empty list. A model reading
               ;; null has been told something quite different from "there
               ;; are none".
-              (coerce (mapcar (lambda (channel)
-                                (obj "name" (channel-name channel)
-                                     "url" (channel-url channel)
-                                     "slackChannels" (slack-channels channel)))
-                              shown)
-                      'vector))
+              (coerce (mapcar #'channel-json shown) 'vector))
              ;; Say so rather than silently truncating: a model that
              ;; cannot see the cut will confidently report a partial list
              ;; as the whole one.
@@ -98,3 +99,61 @@ asking is the habit that eventually lists the wrong ones."
       (t
        (list-channels-result company)))))
 
+
+(defparameter +max-slack-channels+ 100
+  "Ceiling on how many Slack channels one Screenshotbot channel may
+notify, exclusive. The dashboard asserts (< n 100) on the same slot, and
+two paths writing one slot had better agree on what it will hold.")
+
+(defun parse-slack-channels (text)
+  "Parse a comma separated list of Slack channel names into stored form.
+
+Stored without the '#', which is what the settings page writes and what
+SEND-TASK expects to have to add back. The normalisation is deliberately
+the dashboard's, down to stripping every '#' rather than only a leading
+one, because a name typed into the settings box and the same name sent
+here must end up as the same string -- otherwise which door you came
+through starts to matter."
+  (remove-if #'str:emptyp
+             (mapcar #'str:trim
+                     (mapcar (lambda (name)
+                               (str:replace-all "#" "" name))
+                             (str:split "," text)))))
+
+(def-tool "update_slack_channels"
+    ((name "channel" "The channel (project) name, as returned by list_channels")
+     (slack "slack_channels"
+            "Comma separated Slack channel names, for example \"#eng, #releases\". Pass an empty string to stop notifying anyone."
+            :allow-empty t))
+    :scope "api:write"
+    "Set which Slack channels are notified when a Screenshotbot channel (project) changes. This REPLACES the channel's current list rather than adding to it, so call list_channels first if you mean to keep what is already there. Returns the channel's updated settings."
+  (let ((channel (find-channel (auth:current-company) name)))
+    (cond
+      ((null channel)
+       ;; Same wording as fetch_active_run's: lookup is scoped to the
+       ;; caller's company, so a name that exists elsewhere is simply
+       ;; absent, and saying anything more would confirm it exists.
+       (tool-result
+        (format nil "No channel named ~a in this account." name)
+        :errorp t))
+      ((not (auth:can-viewer-edit (auth:viewer-context hunchentoot:*request*)
+                                  channel))
+       ;; Reading a channel and reconfiguring it are different questions,
+       ;; and a token that passed the first does not automatically pass
+       ;; the second: a guest can list channels and may not change them.
+       (tool-result
+        (format nil "You do not have permission to change the settings for ~a." name)
+        :errorp t))
+      (t
+       (let ((parsed (parse-slack-channels slack)))
+         (cond
+           ((>= (length parsed) +max-slack-channels+)
+            (tool-result
+             (format nil "~a Slack channels is too many; fewer than ~a are allowed."
+                     (length parsed) +max-slack-channels+)
+             :errorp t))
+           (t
+            (setf (channel-slack-channels channel) parsed)
+            ;; The updated channel in the same shape list_channels uses,
+            ;; so a model can see what it just did without another call.
+            (tool-result (encode-json-to-string (channel-json channel))))))))))

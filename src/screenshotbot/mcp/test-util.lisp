@@ -56,6 +56,7 @@
    ;; body into its own bindings, so a test in another package can only
    ;; see them if it refers to these very symbols -- hence the exports.
    #:company
+   #:user
    #:token
    #:token-with
    #:add-channel)
