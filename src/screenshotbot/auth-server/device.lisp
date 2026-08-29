@@ -10,6 +10,9 @@
                 #:simple-card-page)
   (:import-from #:nibble
                 #:nibble)
+  (:import-from #:screenshotbot/auth-server/cors
+                #:allow-cross-origin
+                #:preflight)
   (:import-from #:screenshotbot/auth-server/errors
                 #:oauth-error!
                 #:with-oauth-json-errors
@@ -108,8 +111,12 @@ polls the token endpoint until they're done."))
              ("interval" . ,(device-interval request)))))))))
 
 (defhandler (nil :uri "/oauth/device/code" :method :post) ()
+  (allow-cross-origin)
   (with-oauth-json-errors ()
     (%device-code)))
+
+(defhandler (nil :uri "/oauth/device/code" :method :options) ()
+  (preflight))
 
 ;; ----------------------------------------------------------------------
 ;; The user-facing verification page (RFC 8628 §3.3)

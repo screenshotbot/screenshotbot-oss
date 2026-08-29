@@ -15,6 +15,9 @@
 (defsystem "screenshotbot.mcp/tests"
   :description "Tests for screenshotbot.mcp"
   :depends-on (:screenshotbot.mcp
-               :fiveam)
-  :components ())
+               :fiveam
+               :util/fiveam
+               :util.testing
+               :util.store)
+  :components ((:file "test-mcp")))
 

@@ -362,6 +362,7 @@
     :components ((:file "scopes")
                  (:file "errors")
                  (:file "pkce")
+                 (:file "cors")
                  ;; Before MODEL: the model stores resource indicators, and
                  ;; these two say which ones exist and what a valid one is.
                  (:file "protected-resource")
@@ -479,7 +480,8 @@
                              (:file "test-metadata")
                              (:file "test-protected-resource")
                              (:file "test-resource-server")
-                             (:file "test-resource-indicators")))
+                             (:file "test-resource-indicators")
+                             (:file "test-cors")))
                (:file "test-invite")
                (:file "test-uname")
                (:module "model"

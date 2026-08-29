@@ -6,6 +6,9 @@
 
 (defpackage :screenshotbot/auth-server/token
   (:use #:cl)
+  (:import-from #:screenshotbot/auth-server/cors
+                #:allow-cross-origin
+                #:preflight)
   (:import-from #:screenshotbot/auth-server/errors
                 #:oauth-error!
                 #:with-oauth-json-errors
@@ -296,5 +299,12 @@ more. An absent scope means the original set."
                               (or grant-type "(none)"))))))))
 
 (defhandler (nil :uri "/oauth/token" :method :post) ()
+  (allow-cross-origin)
   (with-oauth-json-errors ()
     (%token)))
+
+(defhandler (nil :uri "/oauth/token" :method :options) ()
+  ;; A public client posting form-encoded would be a simple request and
+  ;; skip preflight, but a confidential client sends Authorization, which
+  ;; does not.
+  (preflight))

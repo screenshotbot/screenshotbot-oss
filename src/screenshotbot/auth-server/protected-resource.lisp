@@ -9,6 +9,8 @@
   (:import-from #:core/installation/installation
                 #:*installation*
                 #:installation-domain)
+  (:import-from #:screenshotbot/auth-server/cors
+                #:allow-cross-origin)
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:export
@@ -86,6 +88,7 @@ confused-deputy shape resource indicators exist to prevent."
     ("resource_documentation" . ,(%url "/documentation/api"))))
 
 (defhandler (nil :uri "/.well-known/oauth-protected-resource/mcp" :method :get) ()
+  (allow-cross-origin)
   (setf (hunchentoot:content-type*) "application/json; charset=utf-8")
   ;; RFC 9728 §3.3: public and cacheable, like the authorization server
   ;; document next to it.

@@ -9,6 +9,8 @@
   (:import-from #:core/installation/installation
                 #:*installation*
                 #:installation-domain)
+  (:import-from #:screenshotbot/auth-server/cors
+                #:allow-cross-origin)
   (:import-from #:screenshotbot/auth-server/pkce
                 #:*supported-code-challenge-methods*)
   (:import-from #:screenshotbot/auth-server/scopes
@@ -43,6 +45,8 @@ hostname and discover the rest from here."))
     ("service_documentation" . ,(%url "/documentation/api"))))
 
 (defhandler (nil :uri "/.well-known/oauth-authorization-server" :method :get) ()
+  ;; Discovery is the first thing a browser-based client does.
+  (allow-cross-origin)
   (setf (hunchentoot:content-type*) "application/json; charset=utf-8")
   ;; RFC 8414 §3.2: the metadata is public and cacheable.
   (setf (hunchentoot:header-out :cache-control) "max-age=3600")

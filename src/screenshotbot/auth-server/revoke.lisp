@@ -9,6 +9,9 @@
   (:import-from #:core/api/model/api-key
                 #:%find-api-key
                 #:decode-api-token)
+  (:import-from #:screenshotbot/auth-server/cors
+                #:allow-cross-origin
+                #:preflight)
   (:import-from #:screenshotbot/auth-server/errors
                 #:oauth-error!
                 #:with-oauth-json-errors)
@@ -72,5 +75,9 @@ a hint, so we just try both."
     ""))
 
 (defhandler (nil :uri "/oauth/revoke" :method :post) ()
+  (allow-cross-origin)
   (with-oauth-json-errors ()
     (%revoke)))
+
+(defhandler (nil :uri "/oauth/revoke" :method :options) ()
+  (preflight))

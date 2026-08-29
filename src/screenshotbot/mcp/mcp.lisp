@@ -6,6 +6,9 @@
 
 (defpackage :screenshotbot/mcp/mcp
   (:use #:cl)
+  (:import-from #:screenshotbot/auth-server/cors
+                #:allow-cross-origin
+                #:preflight)
   (:import-from #:screenshotbot/auth-server/protected-resource
                 #:mcp-resource-identifier
                 #:mcp-resource-metadata-url)
@@ -77,8 +80,17 @@
                      (:message . "Method not found")))))))))
 
 (defhandler (mcp-handler :uri "/mcp" :method :post) ()
+  ;; Before the auth wrapper, so these land on the 401 as well as the 200.
+  ;; WWW-Authenticate is the header a browser client needs in order to
+  ;; discover the authorization server, and it is not CORS-safelisted --
+  ;; without the expose header the browser strips it and the client is
+  ;; left with an opaque rejection.
+  (allow-cross-origin :expose "WWW-Authenticate")
   ;; Every method is behind the token, including `initialize': the MCP
   ;; authorization spec protects the endpoint, not individual calls.
   (with-bearer-authentication (:resource-metadata-url (mcp-resource-metadata-url)
                                :resource (mcp-resource-identifier))
     (%dispatch)))
+
+(defhandler (nil :uri "/mcp" :method :options) ()
+  (preflight))
