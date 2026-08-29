@@ -20,6 +20,9 @@
 
 (defsystem "screenshotbot.mcp/tests"
   :description "Tests for screenshotbot.mcp"
+  ;; Serial because WITH-FIXTURE looks its fixture up at macroexpansion
+  ;; time: test-util has to be loaded before anything that uses CALLER.
+  :serial t
   :depends-on (:screenshotbot.mcp
                :fiveam
                :util/fiveam
@@ -27,5 +30,9 @@
                :util.store
                :cl-mock
                :screenshotbot/testing-lib)
-  :components ((:file "test-mcp")))
+  :components ((:file "test-util")
+               (:file "test-mcp")
+               (:file "test-channels")
+               (:file "test-reports")
+               (:file "test-images")))
 
