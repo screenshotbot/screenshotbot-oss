@@ -7,6 +7,7 @@
 (defpackage :screenshotbot/mcp/mcp
   (:use #:cl)
   (:import-from #:screenshotbot/auth-server/protected-resource
+                #:mcp-resource-identifier
                 #:mcp-resource-metadata-url)
   (:import-from #:screenshotbot/auth-server/resource-server
                 #:with-bearer-authentication)
@@ -78,5 +79,6 @@
 (defhandler (mcp-handler :uri "/mcp" :method :post) ()
   ;; Every method is behind the token, including `initialize': the MCP
   ;; authorization spec protects the endpoint, not individual calls.
-  (with-bearer-authentication (:resource-metadata-url (mcp-resource-metadata-url))
+  (with-bearer-authentication (:resource-metadata-url (mcp-resource-metadata-url)
+                               :resource (mcp-resource-identifier))
     (%dispatch)))

@@ -14,10 +14,21 @@
                 #:api-error
                 #:authenticate-api-request
                 #:bearer-token)
+  (:import-from #:core/api/model/api-key
+                #:api-key)
+  (:import-from #:screenshotbot/auth-server/model
+                #:make-access-token
+                #:oauth-grant
+                #:register-oauth-client)
   (:import-from #:screenshotbot/auth-server/resource-server
                 #:bearer-challenge
                 #:send-unauthorized
+                #:token-issued-for-p
                 #:with-bearer-authentication)
+  (:import-from #:screenshotbot/testing
+                #:with-test-user)
+  (:import-from #:util/store/store
+                #:with-test-store)
   (:import-from #:util/testing
                 #:with-fake-request)
   (:documentation "Tests for the 401 challenge that MCP clients rely on to
@@ -164,3 +175,99 @@ detail, and a 401 body is not the place to find out."
     (let ((body (protected)))
       (is-false ran)
       (is-false (equal "the-body" body)))))
+
+;; ----------------------------------------------------------------------
+;; Audience binding (RFC 8707)
+;; ----------------------------------------------------------------------
+
+(defparameter +mcp+ "https://staging.screenshotbot.io/mcp")
+(defparameter +other+ "https://staging.screenshotbot.io/other")
+
+(def-fixture tokens ()
+  (with-test-store ()
+    (with-test-user (:company company :user user)
+      (let ((client (register-oauth-client :client-id "c"
+                                           :scopes (list "api:read"))))
+        (flet ((token-for (resource)
+                 (make-access-token
+                  (make-instance 'oauth-grant :client client :user user
+                                              :company company
+                                              :scopes '("api:read"))
+                  :resource resource)))
+          (&body))))))
+
+(test a-token-issued-for-this-resource-is-accepted
+  (with-fixture tokens ()
+    (is-true (token-issued-for-p (token-for +mcp+) +mcp+))))
+
+(test a-token-issued-for-another-resource-is-refused
+  "The replay this exists to stop: a token handed to one MCP server must
+not work against a different one."
+  (with-fixture tokens ()
+    (is-false (token-issued-for-p (token-for +other+) +mcp+))))
+
+(test an-unaudienced-oauth-token-is-refused
+  "`No audience recorded' is not a confirmation that the token was issued
+for us, so it fails closed."
+  (with-fixture tokens ()
+    (is-false (token-issued-for-p (token-for nil) +mcp+))))
+
+(test a-plain-api-key-is-refused
+  "A dashboard API key has no audience at all. Accepting it would mean a
+leaked API key is automatically an MCP key."
+  (with-fixture tokens ()
+    (is-false (token-issued-for-p
+               (make-instance 'api-key :user user :company company)
+               +mcp+))
+    (is-false (token-issued-for-p nil +mcp+))))
+
+(test audience-matching-is-exact
+  (with-fixture tokens ()
+    (let ((token (token-for +mcp+)))
+      (is-false (token-issued-for-p token (format nil "~a/" +mcp+)))
+      (is-false (token-issued-for-p token (format nil "~a-evil" +mcp+)))
+      (is-false (token-issued-for-p token "https://evil.example.com/mcp")))))
+
+(def-fixture guarded ()
+  (with-mocks ()
+    (with-fake-request ()
+      (let ((ran nil))
+        (flet ((protected (api-key)
+                 (if-called 'bearer-token (lambda () "a-token"))
+                 (if-called 'authenticate-api-request
+                            (lambda (request)
+                              (declare (ignore request))
+                              api-key))
+                 (with-bearer-authentication (:resource-metadata-url +metadata-url+
+                                              :resource +mcp+)
+                   (setf ran t)
+                   "the-body")))
+          (&body))))))
+
+(test the-endpoint-runs-only-for-a-token-issued-for-it
+  (with-fixture tokens ()
+    (with-fixture guarded ()
+      (is (equal "the-body" (protected (token-for +mcp+))))
+      (is-true ran))))
+
+(test the-endpoint-refuses-a-token-meant-for-somewhere-else
+  (with-fixture tokens ()
+    (with-fixture guarded ()
+      (protected (token-for +other+))
+      (is-false ran)
+      (is (equal 401 (hunchentoot:return-code*)))
+      (let ((challenge (hunchentoot:header-out :www-authenticate)))
+        (is-true (str:containsp "error=\"invalid_token\"" challenge))
+        ;; Say which resource it needed: the client cannot guess that from
+        ;; a bare rejection, and the fix is for it to ask for this one.
+        (is-true (str:containsp +mcp+ challenge))
+        ;; And still point at the metadata, so a confused client can
+        ;; rediscover where to authenticate.
+        (is-true (str:containsp "resource_metadata=" challenge))))))
+
+(test the-endpoint-refuses-an-unaudienced-token
+  (with-fixture tokens ()
+    (with-fixture guarded ()
+      (protected (token-for nil))
+      (is-false ran)
+      (is (equal 401 (hunchentoot:return-code*))))))

@@ -13,9 +13,13 @@
                 #:api-error-msg
                 #:authenticate-api-request
                 #:bearer-token)
+  (:import-from #:screenshotbot/auth-server/model
+                #:access-token-resource
+                #:oauth-access-token)
   (:export
    #:bearer-challenge
    #:send-unauthorized
+   #:token-issued-for-p
    #:with-bearer-authentication)
   (:documentation "Helpers for endpoints acting as OAuth 2.0 resource servers.
 
@@ -76,38 +80,61 @@ anything else could be an internal detail, so it gets a flat answer."
     (api-error (api-error-msg condition))
     (t "The access token is not valid")))
 
-(def-easy-macro with-bearer-authentication (&key resource-metadata-url &fn fn)
-  "Run FN only if the request carries a usable bearer token.
+(defun token-issued-for-p (api-key resource)
+  "Was API-KEY issued for RESOURCE, per RFC 8707?
+
+Anything that is not an audience-bound OAuth token fails: a dashboard API
+key, a CLI key, or an OAuth token minted before its client started
+sending `resource`. That is the point rather than an oversight -- the MCP
+authorization spec requires the resource server to confirm the token was
+issued for *it*, and 'no audience recorded' is not a confirmation.
+
+Failing closed also means a leaked API key is not automatically an MCP
+key, which is the compartmentalisation audience binding exists to buy."
+  (and (typep api-key 'oauth-access-token)
+       (equal resource (access-token-resource api-key))
+       t))
+
+(def-easy-macro with-bearer-authentication (&key resource-metadata-url resource
+                                            &fn fn)
+  "Run FN only if the request carries a bearer token issued for RESOURCE.
 
 On success the request has a user, an account and a viewer context bound,
 exactly as it would for any other API call -- this reuses
 AUTHENTICATE-API-REQUEST rather than growing a second auth path.
 
-NOTE: this establishes *who* the caller is, not that the token was issued
-for *this* resource. Audience binding needs RFC 8707 resource indicators,
-which we don't implement yet."
+RESOURCE is the RFC 8707 identifier this endpoint answers to. A NIL
+RESOURCE checks only that the caller is authenticated, which is what any
+endpoint that has not been given a resource identifier wants."
   (block authenticated
     (let ((presented (bearer-token)))
-      (flet ((reject (condition)
+      (flet ((reject (description)
                (return-from authenticated
                  (send-unauthorized
                   resource-metadata-url
                   ;; RFC 6750 §3.1: only describe an error if they
                   ;; actually gave us something to reject.
                   :error (when presented "invalid_token")
-                  :description (when presented
-                                 (%failure-description condition))))))
-        (handler-bind
-            ;; An unauthenticated probe is not worth a log line; this
-            ;; endpoint is public and gets scanned. A *bad* token still
-            ;; warns, because that is worth seeing.
-            ((warning (lambda (w)
-                        (unless presented
-                          (muffle-warning w)))))
-          (handler-case
-              (authenticate-api-request hunchentoot:*request*)
-            (error (e)
-              (reject e))))
-        ;; AUTHENTICATE-API-REQUEST has bound the user and account on the
-        ;; request, so the body reads them through AUTH: like anything else.
-        (funcall fn)))))
+                  :description (when presented description)))))
+        (let ((api-key
+                (handler-bind
+                    ;; An unauthenticated probe is not worth a log line;
+                    ;; this endpoint is public and gets scanned. A *bad*
+                    ;; token still warns, because that is worth seeing.
+                    ((warning (lambda (w)
+                                (unless presented
+                                  (muffle-warning w)))))
+                  (handler-case
+                      (authenticate-api-request hunchentoot:*request*)
+                    (error (e)
+                      (reject (%failure-description e)))))))
+          (when (and resource
+                     (not (token-issued-for-p api-key resource)))
+            ;; The token is real, and belongs to someone -- it was just
+            ;; never meant for this API. Saying so plainly beats a generic
+            ;; rejection, because the fix is for the client to ask for the
+            ;; right resource, and it cannot guess that from silence.
+            (reject (format nil "This token was not issued for ~a" resource)))
+          ;; AUTHENTICATE-API-REQUEST has bound the user and account on
+          ;; the request, so the body reads them through AUTH: as usual.
+          (funcall fn))))))
