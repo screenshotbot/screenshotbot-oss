@@ -37,7 +37,14 @@
                 #:anyone-can-review)
   (:import-from #:fiveam-matchers/lists
                 #:contains
-                #:contains-in-any-order))
+                #:contains-in-any-order)
+  (:import-from #:auth/viewer-context
+                #:api-viewer-context
+                #:normal-viewer-context)
+  (:import-from #:screenshotbot/model/api-key
+                #:api-key)
+  (:import-from #:screenshotbot/user-api
+                #:user))
 
 (util/fiveam:def-suite)
 
@@ -327,3 +334,57 @@
              (shortened-channel-name
               "foobar:bar:dar:blah:la:car"
               :length 9))))
+
+;; ----------------------------------------------------------------------
+;; Who may change a channel's settings
+;; ----------------------------------------------------------------------
+
+(def-fixture editing ()
+  (with-test-store ()
+    (let* ((company (make-instance 'company))
+           (other-company (make-instance 'company))
+           (user (make-instance 'user))
+           (channel (make-instance 'channel :company company)))
+      (roles:ensure-has-role company user 'roles:standard-member)
+      (flet ((browser (user)
+               (make-instance 'normal-viewer-context :user user))
+             (api (user company)
+               (make-instance 'api-viewer-context
+                              :user user
+                              :api-key (make-instance 'api-key
+                                                      :user user
+                                                      :permissions '(:full)
+                                                      :company company))))
+        (&body)))))
+
+(test a-standard-member-may-edit-their-companys-channel
+  (with-fixture editing ()
+    (is-true (auth:can-viewer-edit (browser user) channel))))
+
+(test a-read-only-member-may-view-but-may-not-edit
+  "The distinction this method exists to draw. Before it, CAN-VIEWER-EDIT
+had no channel method at all and answered NIL for everyone."
+  (with-fixture editing ()
+    (roles:ensure-has-role company user 'roles:guest)
+    (is-true (auth:can-viewer-view (browser user) channel))
+    (is-false (auth:can-viewer-edit (browser user) channel))))
+
+(test someone-outside-the-company-may-not-edit
+  (with-fixture editing ()
+    (let ((outsider (make-instance 'user)))
+      (is-false (auth:can-viewer-edit (browser outsider) channel)))))
+
+(test an-api-key-may-edit-only-its-own-companys-channels
+  "A user can belong to several companies; the key is issued for one."
+  (with-fixture editing ()
+    (roles:ensure-has-role other-company user 'roles:standard-member)
+    (is-true (auth:can-viewer-edit (api user company) channel))
+    (is-false (auth:can-viewer-edit (api user other-company) channel))))
+
+(test a-public-channel-is-readable-by-outsiders-but-not-editable
+  "PUBLICP says anyone may look, not that anyone may reconfigure."
+  (with-fixture editing ()
+    (setf (publicp channel) t)
+    (let ((outsider (make-instance 'user)))
+      (is-true (auth:can-viewer-view (api outsider other-company) channel))
+      (is-false (auth:can-viewer-edit (api outsider other-company) channel)))))

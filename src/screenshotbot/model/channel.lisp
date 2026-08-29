@@ -55,6 +55,8 @@
                 #:def-store-migration)
   (:import-from #:auth/viewer-context
                 #:viewer-context-api-key
+                #:viewer-context-user
+                #:logged-in-viewer-context
                 #:api-viewer-context)
   (:import-from #:screenshotbot/model/api-key
                 #:api-key-company)
@@ -311,6 +313,36 @@
    (publicp channel)
    (eql (api-key-company (viewer-context-api-key vc))
         (company channel))))
+
+(defmethod auth:can-viewer-edit ((vc logged-in-viewer-context)
+                                 (channel channel))
+  "Whether VC may change CHANNEL's settings.
+
+A member of the channel's company, at STANDARD-MEMBER or above. Notably
+not READ-ONLY or GUEST: both can *view* a channel, and until this there
+was no CAN-VIEWER-EDIT method for channels at all, so every caller of it
+got the default NIL and the question had never actually been asked.
+
+Viewing is not restated here -- the :AROUND on CAN-VIEWER-EDIT already
+requires it -- which is what keeps a public channel of somebody else's
+company viewable but not editable."
+  (roles:has-role-p (company channel)
+                    (viewer-context-user vc)
+                    'roles:standard-member))
+
+(defmethod auth:can-viewer-edit ((vc api-viewer-context)
+                                 (channel channel))
+  "An API key is issued for one company, so it may only edit that
+company's channels -- even where the user behind it belongs to several.
+
+Deliberately no PUBLICP branch, unlike CAN-VIEWER-VIEW above: a channel
+being public says anyone may look at it, not that anyone may reconfigure
+it. CALL-NEXT-METHOD still applies the role check, so the key's company
+and the user's role must both agree."
+  (and
+   (eql (api-key-company (viewer-context-api-key vc))
+        (company channel))
+   (call-next-method)))
 
 (defmethod production-run-for ((channel channel)
                                &key commit
