@@ -13,6 +13,8 @@
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:screenshotbot/mcp/mcp
+                #:call-tool
+                #:tool-definitions
                 #:%dispatch
                 #:+supported-protocol-versions+
                 #:mcp-handler
@@ -23,6 +25,16 @@
                 #:bearer-token)
   (:import-from #:screenshotbot/model/channel
                 #:channel)
+  (:import-from #:screenshotbot/model/image
+                #:make-image)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:make-recorder-run)
+  (:import-from #:screenshotbot/model/report
+                #:report)
+  (:import-from #:screenshotbot/model/screenshot
+                #:make-screenshot)
+  (:import-from #:util/store/object-id
+                #:oid)
   (:import-from #:screenshotbot/model/company
                 #:company-channels)
   (:import-from #:screenshotbot/auth-server/model
@@ -178,17 +190,22 @@ does look like a protocol violation."
     (is (equal "" body))))
 
 (test tools-list-returns-an-object-keyed-by-tools
-  (let ((result (field (rpc-call
-                        "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/list\"}")
-                       "result")))
-    (let ((tools (field result "tools")))
-      (is (equal 1 (length tools)))
-      (is (equal "list_channels" (field (first tools) "name")))
-      ;; camelCase, and a schema whose `required' is an array rather than
-      ;; the null CL-JSON produces for NIL.
-      (let ((schema (field (first tools) "inputSchema")))
-        (is-true schema)
-        (is (equal "object" (field schema "type")))))))
+  (let* ((result (field (rpc-call
+                         "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/list\"}")
+                        "result"))
+         (tools (field result "tools"))
+         ;; By name, not by position or count: adding a tool should not
+         ;; break a test about the shape of the response.
+         (channels (find "list_channels" tools
+                         :key (lambda (tool) (field tool "name"))
+                         :test #'equal)))
+    (is-true tools)
+    (is-true channels)
+    ;; camelCase, and a schema whose `required' is an array rather than
+    ;; the null CL-JSON produces for NIL.
+    (let ((schema (field channels "inputSchema")))
+      (is-true schema)
+      (is (equal "object" (field schema "type"))))))
 
 (test resources-list-returns-an-object-keyed-by-resources
   (let ((result (field (rpc-call
@@ -378,3 +395,131 @@ wrong, and there is no tool whose failure this could be."
         (call-tool-as (token-with '("profile")) "list_channels")
       (is (equal 403 status))
       (is-false (str:containsp "secret-project" body)))))
+
+;; ----------------------------------------------------------------------
+;; The tool registry
+;; ----------------------------------------------------------------------
+
+(test every-advertised-tool-is-callable
+  "tools/list and the dispatcher are separate lists, so they can drift.
+Advertising a tool that does not dispatch gives a model a capability that
+fails only when it tries to use it."
+  (with-fixture caller ()
+    (dolist (definition (tool-definitions))
+      (let ((name (gethash "name" definition)))
+        (is-true (nth-value 1 (call-tool name (list (cons "report_id" "x"))))
+                 "advertised tool ~a does not dispatch" name)))))
+
+(test every-advertised-tool-declares-an-object-schema
+  (dolist (definition (tool-definitions))
+    (let ((schema (gethash "inputSchema" definition)))
+      (is (equal "object" (gethash "type" schema))
+          "~a has no object inputSchema" (gethash "name" definition))
+      ;; #() rather than NIL, which CL-JSON would render as null.
+      (is-true (vectorp (gethash "required" schema))
+               "~a declares required as a list, which encodes as null"
+               (gethash "name" definition)))))
+
+;; ----------------------------------------------------------------------
+;; fetch_report
+;; ----------------------------------------------------------------------
+
+(defun fetch-report-as (token id)
+  (tool-text
+   (post-as token
+            :json (format nil "{\"jsonrpc\":\"2.0\",\"id\":9,~
+\"method\":\"tools/call\",\"params\":{\"name\":\"fetch_report\",~
+\"arguments\":{\"report_id\":~s}}}" id))))
+
+(test fetching-an-unknown-report-is-a-tool-error-not-a-crash
+  "A model hands us whatever id it has. A malformed one has to come back
+as something it can read and correct."
+  (with-fixture caller ()
+    (dolist (id (list "not-an-oid" "" "000000000000000000000000"))
+      (multiple-value-bind (text result) (fetch-report-as token id)
+        (declare (ignore text))
+        (is-true (field result "isError")
+                 "id ~s did not produce a tool error" id)))))
+
+(test an-unknown-and-a-forbidden-report-are-indistinguishable
+  "Otherwise a caller could enumerate which report ids exist by watching
+the error change."
+  (with-fixture caller ()
+    (multiple-value-bind (missing) (fetch-report-as token "000000000000000000000000")
+      (multiple-value-bind (malformed) (fetch-report-as token "111111111111111111111111")
+        ;; Same shape of answer, differing only in the id echoed back.
+        (is (equal (str:replace-all "000000000000000000000000" "ID" missing)
+                   (str:replace-all "111111111111111111111111" "ID" malformed)))))))
+
+(test fetching-a-report-without-the-scope-never-reaches-it
+  (with-fixture caller ()
+    (multiple-value-bind (body status)
+        (post-as (token-with '("profile"))
+                 :json "{\"jsonrpc\":\"2.0\",\"id\":9,\"method\":\"tools/call\",~
+\"params\":{\"name\":\"fetch_report\",\"arguments\":{\"report_id\":\"x\"}}}")
+      (declare (ignore body))
+      (is (equal 403 status)))))
+
+(defun static-asset (file)
+  (path:catfile
+   (asdf:system-relative-pathname :screenshotbot "static/")
+   file))
+
+(defun make-changed-report (company channel)
+  "A report whose run changed one screenshot relative to its previous run."
+  (let* ((before-image (make-image :pathname
+                                   (static-asset "assets/images/example-view.svg.png")))
+         (after-image (make-image :pathname
+                                  (static-asset "assets/images/example-view-square.svg.png")))
+         (previous (make-recorder-run
+                    :company company :channel channel
+                    :screenshots (list (make-screenshot :name "home"
+                                                        :image before-image))))
+         (run (make-recorder-run
+               :company company :channel channel
+               :screenshots (list (make-screenshot :name "home"
+                                                   :image after-image)))))
+    (values (make-instance 'report
+                           :run run
+                           :previous-run previous
+                           :channel channel
+                           :title "1 change")
+            before-image
+            after-image)))
+
+(test a-report-describes-what-changed-with-image-ids
+  "The point of the tool: enough for a model to ask for the two images and
+see the difference itself."
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (multiple-value-bind (report before-image after-image)
+          (make-changed-report company channel)
+        (multiple-value-bind (text result)
+            (fetch-report-as token (oid report))
+          (is-false (field result "isError"))
+          (let* ((json (let ((json:*json-identifier-name-to-lisp* #'identity)
+                             (json:*identifier-name-to-key* #'identity))
+                         (json:decode-json-from-string text)))
+                 (changed (field json "changed")))
+            (is (equal (oid report) (field json "id")))
+            (is (equal "1 change" (field json "title")))
+            (is (equal "web" (field json "channel")))
+            (is-true (str:containsp "/report/" (field json "url")))
+            (is (equal 1 (length changed)))
+            (is (equal "home" (field (first changed) "name")))
+            ;; The ids a model then feeds to fetch_image_url, and they are
+            ;; the right way round -- before is the previous run's.
+            (is (equal (oid before-image)
+                       (field (field (first changed) "before") "imageId")))
+            (is (equal (oid after-image)
+                       (field (field (first changed) "after") "imageId")))))))))
+
+(test a-report-belonging-to-another-account-is-not-readable
+  (with-fixture caller ()
+    (let* ((other (make-instance 'screenshotbot/model/company:company
+                                 :name "someone else"))
+           (channel (make-instance 'channel :name "theirs" :company other)))
+      (multiple-value-bind (report) (make-changed-report other channel)
+        (multiple-value-bind (text result) (fetch-report-as token (oid report))
+          (declare (ignore text))
+          (is-true (field result "isError")))))))

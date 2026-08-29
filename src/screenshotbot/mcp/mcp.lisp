@@ -19,8 +19,24 @@
   (:import-from #:core/installation/installation
                 #:*installation*
                 #:installation-domain)
+  (:import-from #:screenshotbot/diff-report
+                #:after
+                #:before
+                #:diff-report-added
+                #:diff-report-changes
+                #:diff-report-deleted
+                #:make-diff-report)
   (:import-from #:screenshotbot/model/channel
                 #:channel-name)
+  (:import-from #:screenshotbot/model/report
+                #:report
+                #:report-channel
+                #:report-previous-run
+                #:report-run
+                #:report-title)
+  (:import-from #:screenshotbot/model/screenshot
+                #:screenshot-image
+                #:screenshot-name)
   (:import-from #:screenshotbot/model/company
                 #:company-channels)
   (:import-from #:screenshotbot/server
@@ -86,17 +102,28 @@ the response unintelligible to a client that is being polite about it."
 them would otherwise produce a result no model can use and no reviewer
 would enjoy reading in a log.")
 
+(defun tool-definitions ()
+  (list
+   (obj "name" "list_channels"
+        "description"
+        "List the channels (projects) in the authenticated Screenshotbot account. Returns JSON: an array of objects with `name` and `url`."
+        ;; #() not NIL: CL-JSON renders NIL as null, and a JSON Schema
+        ;; `required' of null is invalid where an empty array is fine.
+        "inputSchema" (obj "type" "object"
+                           "properties" (obj)
+                           "required" #()))
+   (obj "name" "fetch_report"
+        "description"
+        "Fetch a Screenshotbot report by id, describing what changed between two runs. Returns JSON with the report metadata and, for each screenshot, the ids of the before and after images. Use fetch_image_url to turn an image id into a URL you can look at."
+        "inputSchema" (obj "type" "object"
+                           "properties"
+                           (obj "report_id"
+                                (obj "type" "string"
+                                     "description" "The report id, as it appears in a report URL"))
+                           "required" #("report_id")))))
+
 (defun list-tools ()
-  (obj "tools"
-       (list (obj "name" "list_channels"
-                  "description"
-                  "List the channels (projects) in the authenticated Screenshotbot account. Returns JSON: an array of objects with `name` and `url`."
-                  ;; #() not NIL: CL-JSON renders NIL as null, and a
-                  ;; JSON Schema `required' of null is invalid where an
-                  ;; empty array is fine.
-                  "inputSchema" (obj "type" "object"
-                                     "properties" (obj)
-                                     "required" #())))))
+  (obj "tools" (tool-definitions)))
 
 ;; ----------------------------------------------------------------------
 ;; Tools
@@ -165,11 +192,107 @@ asking is the habit that eventually lists the wrong ones."
                  (format nil "Showing the first ~a of ~a channels."
                          +max-channels+ (length channels))))))))
 
-(defun call-tool (name)
+(defparameter +max-changes+ 100
+  "Cap on screenshots reported per section. Same reasoning as
++MAX-CHANNELS+: a 2000-screenshot report helps nobody.")
+
+(defun find-visible (id type)
+  "The object with ID, if it exists, is of TYPE, and this caller may see it.
+
+Never signals. A model hands us whatever string it has, and a malformed
+id has to come back as something it can read and correct rather than as
+an internal error it can only retry."
+  (let ((object (ignore-errors (util:find-by-oid id type))))
+    (when (and object
+               (auth:can-viewer-view (auth:viewer-context hunchentoot:*request*)
+                                     object))
+      object)))
+
+(defun screenshot-json (screenshot)
+  (let ((image (screenshot-image screenshot)))
+    (obj "name" (screenshot-name screenshot)
+         ;; The id rather than the URL: a report can carry hundreds of
+         ;; screenshots, and a model should spend a call only on the ones
+         ;; it decides to look at. fetch_image_url resolves them.
+         "imageId" (when image (util:oid image)))))
+
+(defun change-json (change)
+  (obj "name" (screenshot-name (after change))
+       "before" (screenshot-json (before change))
+       "after" (screenshot-json (after change))))
+
+(defun capped (items renderer)
+  "Render at most +MAX-CHANGES+ of ITEMS, and say so when there are more."
+  (let ((shown (if (> (length items) +max-changes+)
+                   (subseq items 0 +max-changes+)
+                   items)))
+    (values (coerce (mapcar renderer shown) 'vector)
+            (when (> (length items) +max-changes+)
+              (length items)))))
+
+(defun report-json (report)
+  (let* ((run (report-run report))
+         (previous (report-previous-run report))
+         (diff-report (when (and run previous)
+                        (make-diff-report run previous))))
+    (multiple-value-bind (changed changed-total)
+        (capped (if diff-report (diff-report-changes diff-report) nil)
+                #'change-json)
+      (multiple-value-bind (added added-total)
+          (capped (if diff-report (diff-report-added diff-report) nil)
+                  #'screenshot-json)
+        (multiple-value-bind (deleted deleted-total)
+            (capped (if diff-report (diff-report-deleted diff-report) nil)
+                    #'screenshot-json)
+          (let ((result
+                  (obj "id" (util:oid report)
+                       "title" (report-title report)
+                       "channel" (let ((channel (report-channel report)))
+                                   (when channel (channel-name channel)))
+                       "url" (format nil "~a/report/~a"
+                                     (string-right-trim
+                                      "/" (installation-domain *installation*))
+                                     (util:oid report))
+                       "run" (when run (util:oid run))
+                       "previousRun" (when previous (util:oid previous))
+                       "changed" changed
+                       "added" added
+                       "deleted" deleted)))
+            ;; Truncation is stated, not implied by a short list: a model
+            ;; that cannot see the cut reports a partial diff as the whole
+            ;; one, which is worse than refusing to answer.
+            (loop for (key total) in (list (list "changedTotal" changed-total)
+                                           (list "addedTotal" added-total)
+                                           (list "deletedTotal" deleted-total))
+                  if total
+                    do (setf (gethash key result) total))
+            result))))))
+
+(defun fetch-report-tool (arguments)
+  (let ((id (field arguments "report_id")))
+    (cond
+      ((str:emptyp id)
+       (tool-result "report_id is required." :errorp t))
+      (t
+       (let ((report (find-visible id 'report)))
+         (cond
+           ((null report)
+            ;; Deliberately one message for "no such report" and "not
+            ;; yours". Distinguishing them would let a caller enumerate
+            ;; which report ids exist.
+            (tool-result
+             (format nil "No report ~a is visible to this account." id)
+             :errorp t))
+           (t
+            (tool-result (encode-json-to-string (report-json report))))))))))
+
+(defun call-tool (name arguments)
   "Run the named tool. Second value is NIL if there is no such tool."
   (cond
     ((equal name "list_channels")
      (values (list-channels-tool) t))
+    ((equal name "fetch_report")
+     (values (fetch-report-tool arguments) t))
     (t
      (values nil nil))))
 
@@ -180,14 +303,28 @@ asking is the habit that eventually lists the wrong ones."
                   "description" "List of all channels (projects) in Screenshotbot"
                   "mimeType" "application/json"))))
 
+(defun decode-request (raw)
+  "Decode a JSON-RPC request with member names left as strings.
+
+Same reason as OBJ on the way out. CL-JSON's default mapping turns
+protocolVersion into :PROTOCOL-VERSION and would turn report_id into
+something you have to go and check -- and every such guess is a bug that
+only shows up against a real client."
+  (let ((json:*json-identifier-name-to-lisp* #'identity)
+        (json:*identifier-name-to-key* #'identity))
+    (json:decode-json-from-string raw)))
+
+(defun field (object name)
+  (cdr (assoc name object :test #'equal)))
+
 (defun %dispatch ()
   (setf (hunchentoot:header-out :content-type) "application/json")
   (let* ((request-body (hunchentoot:raw-post-data :force-text t))
-         (request-json (when request-body
-                         (cl-json:decode-json-from-string request-body)))
-         (method (cdr (assoc :method request-json)))
-         (id (cdr (assoc :id request-json)))
-         (params (cdr (assoc :params request-json))))
+         (request-json (unless (str:emptyp request-body)
+                         (decode-request request-body)))
+         (method (field request-json "method"))
+         (id (field request-json "id"))
+         (params (field request-json "params")))
     (log:info "Got body: ~a" request-body)
     (cond
       ;; JSON-RPC 2.0 §4.1: a request without an id is a notification, and
@@ -199,15 +336,15 @@ asking is the habit that eventually lists the wrong ones."
        (setf (hunchentoot:return-code*) hunchentoot:+http-accepted+)
        "")
       ((equal method "initialize")
-       (%result id (initialize-result
-                    (cdr (assoc :protocol-version params)))))
+       (%result id (initialize-result (field params "protocolVersion"))))
       ((equal method "tools/list")
        (%result id (list-tools)))
       ((equal method "resources/list")
        (%result id (list-resources)))
       ((equal method "tools/call")
-       (let ((name (cdr (assoc :name params))))
-         (multiple-value-bind (result foundp) (call-tool name)
+       (let ((name (field params "name")))
+         (multiple-value-bind (result foundp)
+             (call-tool name (field params "arguments"))
            (if foundp
                (%result id result)
                ;; No such tool is a caller mistake about the protocol, not
