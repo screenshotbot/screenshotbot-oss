@@ -39,7 +39,12 @@
                 #:installation
                 #:multi-org-feature)
   (:import-from #:auth/viewer-context
+                #:api-viewer-context
                 #:normal-viewer-context)
+  (:import-from #:screenshotbot/model/api-key
+                #:api-key)
+  (:import-from #:screenshotbot/user-api
+                #:user)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/model/test-report)
 
@@ -152,3 +157,72 @@
            (report (make-instance 'report :acceptable acceptable)))
       (is (equal "accepted" (dto:report-acceptable-state
                          (report-to-dto report)))))))
+
+;; ----------------------------------------------------------------------
+;; Who may review a report
+;; ----------------------------------------------------------------------
+
+(def-fixture reviewing ()
+  (with-test-store ()
+    (let* ((company (make-instance 'company))
+           (other-company (make-instance 'company))
+           (user (make-instance 'user))
+           (channel (make-instance 'channel :company company))
+           (run (make-recorder-run :company company :channel channel))
+           (report (make-instance 'report :run run :channel channel))
+           (acceptable (make-instance 'base-acceptable :report report)))
+      (roles:ensure-has-role company user 'roles:standard-member)
+      (flet ((browser (user)
+               (make-instance 'normal-viewer-context :user user))
+             (api (user company)
+               (make-instance 'api-viewer-context
+                              :user user
+                              :api-key (make-instance 'api-key
+                                                      :user user
+                                                      :permissions '(:full)
+                                                      :company company))))
+        (&body)))))
+
+(test a-standard-member-may-review-their-companys-report
+  (with-fixture reviewing ()
+    (is-true (auth:can-viewer-edit (browser user) acceptable))))
+
+(test a-guest-may-see-a-report-but-may-not-review-it
+  (with-fixture reviewing ()
+    (roles:ensure-has-role company user 'roles:guest)
+    (is-true (auth:can-viewer-view (browser user) acceptable))
+    (is-false (auth:can-viewer-edit (browser user) acceptable))))
+
+(test someone-outside-the-company-may-not-review
+  (with-fixture reviewing ()
+    (let ((outsider (make-instance 'user)))
+      (is-false (auth:can-viewer-edit (browser outsider) acceptable)))))
+
+(test an-api-key-may-review-only-its-own-companys-reports
+  "A user can belong to several companies; the key is issued for one. Before
+CAN-VIEWER-EDIT reached API contexts, the key's company was dropped on the
+way through the CAN-EDIT bridge and this second assertion was true."
+  (with-fixture reviewing ()
+    (roles:ensure-has-role other-company user 'roles:standard-member)
+    (is-true (auth:can-viewer-edit (api user company) acceptable))
+    (is-false (auth:can-viewer-edit (api user other-company) acceptable))))
+
+(test an-api-key-may-review-a-run-directly-under-the-same-rule
+  "The acceptable delegates to its run, so the run is where the rule lives."
+  (with-fixture reviewing ()
+    (roles:ensure-has-role other-company user 'roles:standard-member)
+    (is-true (auth:can-viewer-edit (api user company) run))
+    (is-false (auth:can-viewer-edit (api user other-company) run))))
+
+(test reviewing-does-not-go-through-the-legacy-can-edit-bridge
+  "CAN-EDIT-WITH-NORMAL-VIEWER-CONTEXT warns by design. Reaching it means
+the viewer context was thrown away somewhere, which is how the API key's
+company came to be ignored in the first place."
+  (with-fixture reviewing ()
+    (let ((warnings nil))
+      (handler-bind ((warning (lambda (w)
+                                (push (princ-to-string w) warnings)
+                                (muffle-warning w))))
+        (auth:can-viewer-edit (api user company) acceptable)
+        (auth:can-viewer-edit (browser user) acceptable))
+      (is (equal nil warnings)))))

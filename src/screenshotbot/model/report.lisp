@@ -46,7 +46,6 @@
   (:import-from #:util/store/object-id
                 #:oid)
   (:import-from #:auth/viewer-context
-                #:normal-viewer-context
                 #:logged-in-viewer-context)
   (:export
    #:report
@@ -206,8 +205,11 @@
   (auth:can-view-with-normal-viewer-context
    user self))
 
-(defmethod auth:can-viewer-view ((vc normal-viewer-context)
+(defmethod auth:can-viewer-view ((vc logged-in-viewer-context)
                                  (self base-acceptable))
+  "Was NORMAL-VIEWER-CONTEXT, which left the API to reach the same answer
+through the CAN-VIEW bridge and a warning. Nothing here is specific to a
+browser: an acceptable is visible to whoever can see its report."
   (and
    (slot-boundp self 'report)
    (auth:can-viewer-view vc (acceptable-report self))))
@@ -217,8 +219,12 @@
    user
    self))
 
-(defmethod auth:can-viewer-edit ((vc normal-viewer-context)
+(defmethod auth:can-viewer-edit ((vc logged-in-viewer-context)
                                  (self base-acceptable))
+  "Reviewing a report is an edit of the run it is about, so this asks the
+run and no more. No API-specific method is needed alongside it: once
+CAN-VIEWER-EDIT on RECORDER-RUN scopes an API key to its own company,
+this inherits that."
   (and
    (auth:can-viewer-view vc self)
    (when-let* ((report (acceptable-report self))

@@ -61,12 +61,12 @@
                 #:viewer-context-api-key
                 #:api-viewer-context
                 #:viewer-context-user
-                #:normal-viewer-context
                 #:logged-in-viewer-context
                 #:viewer-context)
   (:import-from #:util/store/simple-object-snapshot
                 #:simple-object-snapshot)
   (:import-from #:core/api/model/api-key
+                #:api-key-company
                 #:api-key-user
                 #:cli-api-key
                 #:api-key-permissions)
@@ -654,11 +654,34 @@ branch runs."
   (auth:can-edit-with-normal-viewer-context
    user run))
 
-(defmethod auth:can-viewer-edit ((vc normal-viewer-context) (run recorder-run))
+(defmethod auth:can-viewer-edit ((vc logged-in-viewer-context) (run recorder-run))
+  "A member of the run's company, at STANDARD-MEMBER or above.
+
+Was specialized on NORMAL-VIEWER-CONTEXT. Every other logged-in context
+reached this same role check anyway, but by way of the CAN-EDIT bridge,
+which throws the viewer context away, rebuilds a NORMAL-VIEWER-CONTEXT
+out of the user alone, and warns while doing it. Widening the specializer
+is also what lets the API method below exist: a method on a subclass can
+only refine one that applies to it."
   (roles:has-role-p
    (recorder-run-company run)
    (viewer-context-user vc)
    'roles:standard-member))
+
+(defmethod auth:can-viewer-edit ((vc api-viewer-context) (run recorder-run))
+  "An API key is issued for one company, so it may only edit that
+company's runs.
+
+The role check alone is not enough. A user can belong to several
+companies, and the bridge above kept only the user, so the key's own
+company was never consulted on the edit path: a key issued for one
+company could edit a run belonging to another, as long as the user behind
+it was a member of both. CALL-NEXT-METHOD still applies the role check,
+so the key and the user have to agree."
+  (and
+   (eql (api-key-company (viewer-context-api-key vc))
+        (recorder-run-company run))
+   (call-next-method)))
 
 (defmethod activep ((run recorder-run))
   (let ((channel (recorder-run-channel run)))
