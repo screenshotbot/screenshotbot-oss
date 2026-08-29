@@ -6,10 +6,16 @@
 
 (defpackage :screenshotbot/mcp/mcp
   (:use #:cl)
+  (:import-from #:screenshotbot/auth-server/protected-resource
+                #:mcp-resource-metadata-url)
+  (:import-from #:screenshotbot/auth-server/resource-server
+                #:with-bearer-authentication)
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:json
-                #:encode-json-to-string))
+                #:encode-json-to-string)
+  (:export
+   #:mcp-handler))
 (in-package :screenshotbot/mcp/mcp)
 
 (defun list-tools (id)
@@ -31,7 +37,7 @@
                                  (:description . "List of all channels (projects) in Screenshotbot")
                                  (:mimeType . "application/json")))))))))
 
-(defhandler (nil :uri "/mcp" :method :post) ()
+(defun %dispatch ()
   (setf (hunchentoot:header-out :content-type) "application/json")
   (let* ((request-body (hunchentoot:raw-post-data :force-text t))
          (request-json (when request-body
@@ -69,4 +75,8 @@
            (:error . ((:code . -32601)
                      (:message . "Method not found")))))))))
 
-
+(defhandler (mcp-handler :uri "/mcp" :method :post) ()
+  ;; Every method is behind the token, including `initialize': the MCP
+  ;; authorization spec protects the endpoint, not individual calls.
+  (with-bearer-authentication (:resource-metadata-url (mcp-resource-metadata-url))
+    (%dispatch)))

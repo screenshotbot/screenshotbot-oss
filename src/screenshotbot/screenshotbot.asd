@@ -369,7 +369,8 @@
                  (:file "revoke")
                  (:file "authorizations")
                  (:file "metadata")
-                 (:file "protected-resource")))
+                 (:file "protected-resource")
+                 (:file "resource-server")))
    (:module "admin"
     :serial t
     :components ((:file "core")
@@ -473,7 +474,8 @@
                              (:file "test-device")
                              (:file "test-revoke")
                              (:file "test-metadata")
-                             (:file "test-protected-resource")))
+                             (:file "test-protected-resource")
+                             (:file "test-resource-server")))
                (:file "test-invite")
                (:file "test-uname")
                (:module "model"
