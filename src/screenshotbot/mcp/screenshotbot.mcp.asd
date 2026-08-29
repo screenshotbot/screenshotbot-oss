@@ -18,6 +18,7 @@
                :fiveam
                :util/fiveam
                :util.testing
-               :util.store)
+               :util.store
+               :cl-mock)
   :components ((:file "test-mcp")))
 

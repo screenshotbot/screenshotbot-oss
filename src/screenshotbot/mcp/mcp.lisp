@@ -22,24 +22,68 @@
    #:mcp-handler))
 (in-package :screenshotbot/mcp/mcp)
 
-(defun list-tools (id)
-  (encode-json-to-string
-   `((:jsonrpc . "2.0")
-     (:id . ,id)
-     (:result . ((:tools . (((:name . "list_channels")
-                             (:description . "List all channels (projects) in Screenshotbot")
-                             (:inputSchema . ((:type . "object")
-                                              (:properties . ())
-                                              (:required . ())))))))))))
+(defparameter +supported-protocol-versions+
+  '("2025-11-25" "2025-06-18" "2025-03-26" "2024-11-05")
+  "Newest first. Our JSON-RPC surface is the same under all of them.
 
-(defun list-resources (id)
+MCP negotiation says: echo the client's version if we support it,
+otherwise answer with one we do and let the client decide. Answering with
+a fixed old version regardless -- which is what this did -- reads to a
+modern client as a server it cannot talk to.")
+
+(defun obj (&rest plist)
+  "Build a JSON object with the keys exactly as written.
+
+Hash tables rather than alists on purpose. CL-JSON downcases keyword keys
+\(so :protocolVersion ships as \"protocolversion\") and encodes an alist as
+an array of arrays rather than an object. Both are silent, and both make
+the response unintelligible to a client that is being polite about it."
+  (let ((table (make-hash-table :test #'equal)))
+    (loop for (key value) on plist by #'cddr
+          do (setf (gethash key table) value))
+    table))
+
+(defun %result (id result)
+  (encode-json-to-string (obj "jsonrpc" "2.0" "id" id "result" result)))
+
+(defun %error (id code message)
   (encode-json-to-string
-   `((:jsonrpc . "2.0")
-     (:id . ,id)
-     (:result . ((:resources . (((:uri . "channel://list")
-                                 (:name . "channels")
-                                 (:description . "List of all channels (projects) in Screenshotbot")
-                                 (:mimeType . "application/json")))))))))
+   (obj "jsonrpc" "2.0" "id" id
+        "error" (obj "code" code "message" message))))
+
+(defun negotiate-protocol-version (requested)
+  (if (member requested +supported-protocol-versions+ :test #'equal)
+      requested
+      (first +supported-protocol-versions+)))
+
+(defun initialize-result (requested-version)
+  (obj "protocolVersion" (negotiate-protocol-version requested-version)
+       ;; Only what we actually answer. Advertising prompts and logging
+       ;; while `prompts/list' returns method-not-found is worse than
+       ;; staying quiet: the client believes the capability is there and
+       ;; fails on use rather than at discovery.
+       "capabilities" (obj "tools" (obj)
+                           "resources" (obj))
+       "serverInfo" (obj "name" "Screenshotbot MCP Server"
+                         "version" "1.0.0")))
+
+(defun list-tools ()
+  (obj "tools"
+       (list (obj "name" "list_channels"
+                  "description" "List all channels (projects) in Screenshotbot"
+                  ;; #() not NIL: CL-JSON renders NIL as null, and a
+                  ;; JSON Schema `required' of null is invalid where an
+                  ;; empty array is fine.
+                  "inputSchema" (obj "type" "object"
+                                     "properties" (obj)
+                                     "required" #())))))
+
+(defun list-resources ()
+  (obj "resources"
+       (list (obj "uri" "channel://list"
+                  "name" "channels"
+                  "description" "List of all channels (projects) in Screenshotbot"
+                  "mimeType" "application/json"))))
 
 (defun %dispatch ()
   (setf (hunchentoot:header-out :content-type) "application/json")
@@ -47,37 +91,27 @@
          (request-json (when request-body
                          (cl-json:decode-json-from-string request-body)))
          (method (cdr (assoc :method request-json)))
-         (id (cdr (assoc :id request-json))))
+         (id (cdr (assoc :id request-json)))
+         (params (cdr (assoc :params request-json))))
     (log:info "Got body: ~a" request-body)
     (cond
-      ((string= method "initialize")
-       (encode-json-to-string
-         `((:jsonrpc . "2.0")
-           (:id . ,id)
-           (:result . 
-             ((:protocolVersion . "2024-11-05")
-              (:capabilities . 
-                ((:tools . ((:listChanged . nil)))
-                 (:resources . ((:subscribe . nil)
-                               (:listChanged . nil)))
-                 (:prompts . ((:listChanged . nil)))
-                 (:logging . nil)))
-              (:serverInfo . 
-                ((:name . "Screenshotbot MCP Server")
-                 (:version . "1.0.0"))))))))
-      
-      ((string= method "tools/list")
-       (list-tools id))
-      
-      ((string= method "resources/list")
-       (list-resources id))
-      
+      ;; JSON-RPC 2.0 §4.1: a request without an id is a notification, and
+      ;; a server MUST NOT reply to one -- not even to say it did not
+      ;; understand. `notifications/initialized' arrives right after the
+      ;; handshake, so answering it makes the very first thing a client
+      ;; does look like a protocol violation.
+      ((null id)
+       (setf (hunchentoot:return-code*) hunchentoot:+http-accepted+)
+       "")
+      ((equal method "initialize")
+       (%result id (initialize-result
+                    (cdr (assoc :protocol-version params)))))
+      ((equal method "tools/list")
+       (%result id (list-tools)))
+      ((equal method "resources/list")
+       (%result id (list-resources)))
       (t
-       (encode-json-to-string
-         `((:jsonrpc . "2.0")
-           (:id . ,id)
-           (:error . ((:code . -32601)
-                     (:message . "Method not found")))))))))
+       (%error id -32601 (format nil "Method not found: ~a" method))))))
 
 (defhandler (mcp-handler :uri "/mcp" :method :post) ()
   ;; Before the auth wrapper, so these land on the 401 as well as the 200.
