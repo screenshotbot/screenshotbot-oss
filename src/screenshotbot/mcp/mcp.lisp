@@ -22,6 +22,11 @@
    #:mcp-handler))
 (in-package :screenshotbot/mcp/mcp)
 
+(defparameter +mcp-scope+ "api:read"
+  "What a caller must have agreed to. Matches scopes_supported in the
+protected resource document; the two have to say the same thing or a
+client is told to ask for something that will not let it in.")
+
 (defparameter +supported-protocol-versions+
   '("2025-11-25" "2025-06-18" "2025-03-26" "2024-11-05")
   "Newest first. Our JSON-RPC surface is the same under all of them.
@@ -123,7 +128,12 @@ the response unintelligible to a client that is being polite about it."
   ;; Every method is behind the token, including `initialize': the MCP
   ;; authorization spec protects the endpoint, not individual calls.
   (with-bearer-authentication (:resource-metadata-url (mcp-resource-metadata-url)
-                               :resource (mcp-resource-identifier))
+                               :resource (mcp-resource-identifier)
+                               ;; The scope the protected-resource document
+                               ;; has been advertising all along. Until now
+                               ;; nothing checked it, which was survivable
+                               ;; only because /mcp returned static stubs.
+                               :scope +mcp-scope+)
     (%dispatch)))
 
 (defhandler (nil :uri "/mcp" :method :options) ()

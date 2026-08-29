@@ -22,7 +22,9 @@
                 #:register-oauth-client)
   (:import-from #:screenshotbot/auth-server/resource-server
                 #:bearer-challenge
+                #:send-forbidden
                 #:send-unauthorized
+                #:token-has-scope-p
                 #:token-issued-for-p
                 #:with-bearer-authentication)
   (:import-from #:screenshotbot/testing
@@ -271,3 +273,93 @@ leaked API key is automatically an MCP key."
       (protected (token-for nil))
       (is-false ran)
       (is (equal 401 (hunchentoot:return-code*))))))
+
+;; ----------------------------------------------------------------------
+;; Scope
+;; ----------------------------------------------------------------------
+
+(test a-token-carrying-the-scope-passes
+  (with-fixture tokens ()
+    (is-true (token-has-scope-p (token-for +mcp+) "api:read"))))
+
+(test a-token-without-the-scope-does-not
+  (with-fixture tokens ()
+    (is-false (token-has-scope-p (token-for +mcp+) "api:write"))))
+
+(test only-oauth-tokens-have-scopes-at-all
+  "An API key carries permissions, but nothing about it records that a
+user agreed to this particular access."
+  (with-fixture tokens ()
+    (is-false (token-has-scope-p
+               (make-instance 'api-key :user user :company company)
+               "api:read"))
+    (is-false (token-has-scope-p nil "api:read"))))
+
+(test insufficient-scope-is-403-not-401
+  "RFC 6750 §3.1 pairs insufficient_scope with 403 so a client does not
+re-authenticate in a loop -- a fresh token with the same scopes would
+fail identically."
+  (with-fake-request ()
+    (send-forbidden +metadata-url+ :scope "api:write")
+    (is (equal 403 (hunchentoot:return-code*)))
+    (let ((challenge (hunchentoot:header-out :www-authenticate)))
+      (is-true (str:containsp "error=\"insufficient_scope\"" challenge))
+      ;; Naming the scope is what lets a client fix itself on the next
+      ;; authorization request instead of guessing.
+      (is-true (str:containsp "scope=\"api:write\"" challenge))
+      (is-true (str:containsp "resource_metadata=" challenge)))))
+
+(test a-challenge-without-a-scope-does-not-mention-one
+  (is-false (str:containsp "scope=" (bearer-challenge +metadata-url+)))
+  (is-false (str:containsp "scope="
+                           (bearer-challenge +metadata-url+
+                                             :error "invalid_token"
+                                             :description "nope"))))
+
+(def-fixture scoped ()
+  (with-mocks ()
+    (with-fake-request ()
+      (let ((ran nil))
+        (flet ((protected (api-key required-scope)
+                 (if-called 'bearer-token (lambda () "a-token"))
+                 (if-called 'authenticate-api-request
+                            (lambda (request)
+                              (declare (ignore request))
+                              api-key))
+                 (with-bearer-authentication (:resource-metadata-url +metadata-url+
+                                              :resource +mcp+
+                                              :scope required-scope)
+                   (setf ran t)
+                   "the-body")))
+          (&body))))))
+
+(test the-endpoint-runs-for-a-token-with-the-required-scope
+  (with-fixture tokens ()
+    (with-fixture scoped ()
+      (is (equal "the-body" (protected (token-for +mcp+) "api:read")))
+      (is-true ran))))
+
+(test the-endpoint-refuses-a-token-missing-the-scope
+  (with-fixture tokens ()
+    (with-fixture scoped ()
+      (protected (token-for +mcp+) "api:write")
+      (is-false ran)
+      (is (equal 403 (hunchentoot:return-code*))))))
+
+(test the-audience-is-checked-before-the-scope
+  "A token for another resource should not be told which scope it is
+missing -- that would answer a question the caller was not entitled to
+ask, and the audience failure is the one they need to fix first."
+  (with-fixture tokens ()
+    (with-fixture scoped ()
+      (protected (token-for +other+) "api:read")
+      (is-false ran)
+      (is (equal 401 (hunchentoot:return-code*)))
+      (is-false (str:containsp "insufficient_scope"
+                               (hunchentoot:header-out :www-authenticate))))))
+
+(test an-endpoint-with-no-scope-requirement-skips-the-check
+  (with-fixture tokens ()
+    (with-fixture scoped ()
+      (is (equal "the-body" (protected (token-for +mcp+) nil)))
+      (is-true ran))))

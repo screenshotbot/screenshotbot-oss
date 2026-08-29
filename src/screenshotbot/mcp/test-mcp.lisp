@@ -17,6 +17,17 @@
                 #:+supported-protocol-versions+
                 #:mcp-handler
                 #:negotiate-protocol-version)
+  (:import-from #:screenshotbot/api/core
+                #:authenticate-api-request
+                #:bearer-token)
+  (:import-from #:screenshotbot/auth-server/model
+                #:make-access-token
+                #:oauth-grant
+                #:register-oauth-client)
+  (:import-from #:screenshotbot/auth-server/protected-resource
+                #:mcp-resource-identifier)
+  (:import-from #:screenshotbot/testing
+                #:with-test-user)
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
@@ -189,3 +200,62 @@ does look like a protocol violation."
     (is (equal -32601 (field failure "code")))
     ;; Naming it turns an unimplemented method into something greppable.
     (is-true (str:containsp "server/discover" (field failure "message")))))
+
+;; ----------------------------------------------------------------------
+;; Scope, at the endpoint rather than in the helper
+;; ----------------------------------------------------------------------
+
+(defparameter +initialize+
+  "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{}}")
+
+(defun post-as (api-key &key (json +initialize+))
+  "POST /mcp with API-KEY as the authenticated caller.
+
+Headers are read inside the fake request: HUNCHENTOOT:*REPLY* is unbound
+outside it, and the failure looks nothing like the cause."
+  (with-fake-request (:script-name "/mcp")
+    (cl-mock:with-mocks ()
+      (cl-mock:if-called 'bearer-token (lambda () "a-token"))
+      (cl-mock:if-called 'authenticate-api-request
+                         (lambda (request) (declare (ignore request)) api-key))
+      (cl-mock:if-called 'hunchentoot:raw-post-data
+                         (lambda (&rest args) (declare (ignore args)) json))
+      (setf (hunchentoot:return-code*) 200)
+      (let ((body (mcp-handler)))
+        (values body
+                (hunchentoot:return-code*)
+                (hunchentoot:headers-out*))))))
+
+(def-fixture caller ()
+  (with-test-store ()
+    (with-test-user (:company company :user user)
+      (let ((*installation* (make-instance 'abstract-installation
+                                           :domain "https://staging.screenshotbot.io"))
+            (client (register-oauth-client :client-id "c"
+                                           :scopes (list "profile" "api:read"))))
+        (flet ((token-with (scopes)
+                 (make-access-token
+                  (make-instance 'oauth-grant :client client :user user
+                                              :company company :scopes scopes)
+                  :scopes scopes
+                  :resource (mcp-resource-identifier))))
+          (&body))))))
+
+(test a-caller-holding-the-required-scope-reaches-the-dispatcher
+  (with-fixture caller ()
+    (multiple-value-bind (body status) (post-as (token-with '("api:read")))
+      (is (equal 200 status))
+      ;; It got as far as JSON-RPC, which is the point.
+      (is-true (str:containsp "jsonrpc" body)))))
+
+(test a-caller-without-the-required-scope-is-forbidden
+  "/mcp advertises scopes_supported=[api:read] and, until this, never
+checked it."
+  (with-fixture caller ()
+    (multiple-value-bind (body status headers) (post-as (token-with '("profile")))
+      (declare (ignore body))
+      (is (equal 403 status))
+      (let ((challenge (header-of headers :www-authenticate)))
+        (is-true (str:containsp "insufficient_scope" challenge))
+        ;; Naming it is what lets the client ask for the right thing next.
+        (is-true (str:containsp "scope=\"api:read\"" challenge))))))
