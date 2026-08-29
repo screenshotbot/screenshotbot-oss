@@ -17,7 +17,8 @@
                (:file "channels")
                (:file "reports")
                (:file "images")
-               (:file "runs")))
+               (:file "runs")
+               (:file "masks")))
 
 (defsystem "screenshotbot.mcp/tests"
   :description "Tests for screenshotbot.mcp"
@@ -36,5 +37,6 @@
                (:file "test-channels")
                (:file "test-reports")
                (:file "test-images")
-               (:file "test-runs")))
+               (:file "test-runs")
+               (:file "test-masks")))
 
