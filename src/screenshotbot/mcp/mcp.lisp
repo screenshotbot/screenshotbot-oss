@@ -6,6 +6,9 @@
 
 (defpackage :screenshotbot/mcp/mcp
   (:use #:cl)
+  (:import-from #:core/installation/installation
+                #:*installation*
+                #:installation-domain)
   (:import-from #:screenshotbot/auth-server/cors
                 #:allow-cross-origin
                 #:preflight)
@@ -24,6 +27,8 @@
    ;; TOOL-RESULT and STR:EMPTYP, but by symbol identity rather than
    ;; through the using package, so those need no import to work --
    ;; TOOL-RESULT is exported because tool bodies call it directly.
+   #:capped
+   #:dashboard-url
    #:def-tool
    #:obj
    #:tool-result
@@ -55,6 +60,33 @@ the response unintelligible to a client that is being polite about it."
     (loop for (key value) on plist by #'cddr
           do (setf (gethash key table) value))
     table))
+
+(defun dashboard-url (path id)
+  "An absolute URL for an object's page on this installation.
+
+Absolute because the reader is a model somewhere else on the internet: a
+site-relative path is one it cannot follow and cannot repair."
+  (format nil "~a/~a/~a"
+          (string-right-trim "/" (installation-domain *installation*))
+          path id))
+
+(defun capped (items max renderer)
+  "Render at most MAX of ITEMS with RENDERER, as a JSON array.
+
+The second value is the true count, and only when it exceeded MAX, so a
+caller can say so rather than let a short list imply completeness. A model
+that cannot see the cut reports a partial list as the whole one, which is
+worse than refusing to answer.
+
+A vector, not a list: CL-JSON renders an empty list as null, and a model
+told `null' has been told something quite different from `there are
+none'."
+  (let ((shown (if (> (length items) max)
+                   (subseq items 0 max)
+                   items)))
+    (values (coerce (mapcar renderer shown) 'vector)
+            (when (> (length items) max)
+              (length items)))))
 
 (defun %result (id result)
   (encode-json-to-string (obj "jsonrpc" "2.0" "id" id "result" result)))

@@ -6,9 +6,6 @@
 
 (defpackage :screenshotbot/mcp/reports
   (:use #:cl)
-  (:import-from #:core/installation/installation
-                #:*installation*
-                #:installation-domain)
   (:import-from #:json
                 #:encode-json-to-string)
   (:import-from #:screenshotbot/diff-report
@@ -19,6 +16,8 @@
                 #:diff-report-deleted
                 #:make-diff-report)
   (:import-from #:screenshotbot/mcp/mcp
+                #:capped
+                #:dashboard-url
                 #:def-tool
                 #:obj
                 #:tool-result
@@ -65,15 +64,6 @@ an internal error it can only retry."
        "before" (screenshot-json (before change))
        "after" (screenshot-json (after change))))
 
-(defun capped (items renderer)
-  "Render at most +MAX-CHANGES+ of ITEMS, and say so when there are more."
-  (let ((shown (if (> (length items) +max-changes+)
-                   (subseq items 0 +max-changes+)
-                   items)))
-    (values (coerce (mapcar renderer shown) 'vector)
-            (when (> (length items) +max-changes+)
-              (length items)))))
-
 (defun report-json (report)
   (let* ((run (report-run report))
          (previous (report-previous-run report))
@@ -81,22 +71,19 @@ an internal error it can only retry."
                         (make-diff-report run previous))))
     (multiple-value-bind (changed changed-total)
         (capped (if diff-report (diff-report-changes diff-report) nil)
-                #'change-json)
+                +max-changes+ #'change-json)
       (multiple-value-bind (added added-total)
           (capped (if diff-report (diff-report-added diff-report) nil)
-                  #'screenshot-json)
+                  +max-changes+ #'screenshot-json)
         (multiple-value-bind (deleted deleted-total)
             (capped (if diff-report (diff-report-deleted diff-report) nil)
-                    #'screenshot-json)
+                    +max-changes+ #'screenshot-json)
           (let ((result
                   (obj "id" (util:oid report)
                        "title" (report-title report)
                        "channel" (let ((channel (report-channel report)))
                                    (when channel (channel-name channel)))
-                       "url" (format nil "~a/report/~a"
-                                     (string-right-trim
-                                      "/" (installation-domain *installation*))
-                                     (util:oid report))
+                       "url" (dashboard-url "report" (util:oid report))
                        "run" (when run (util:oid run))
                        "previousRun" (when previous (util:oid previous))
                        "changed" changed

@@ -8,12 +8,10 @@
   (:use #:cl)
   (:import-from #:bknr.datastore
                 #:store-object-id)
-  (:import-from #:core/installation/installation
-                #:*installation*
-                #:installation-domain)
   (:import-from #:json
                 #:encode-json-to-string)
   (:import-from #:screenshotbot/mcp/mcp
+                #:dashboard-url
                 #:def-tool
                 #:obj
                 #:tool-result)
@@ -30,9 +28,7 @@ them would otherwise produce a result no model can use and no reviewer
 would enjoy reading in a log.")
 
 (defun channel-url (channel)
-  (format nil "~a/channels/~a"
-          (string-right-trim "/" (installation-domain *installation*))
-          (store-object-id channel)))
+  (dashboard-url "channels" (store-object-id channel)))
 
 (defun visible-channels (company)
   "CHANNELS of COMPANY this caller may see, in a stable order.
