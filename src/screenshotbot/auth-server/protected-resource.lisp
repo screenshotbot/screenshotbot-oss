@@ -78,9 +78,12 @@ confused-deputy shape resource indicators exist to prevent."
     ;; Same installation: we are our own authorization server, which is
     ;; why opaque tokens suffice and there is no jwks_uri here.
     ("authorization_servers" ,(installation-domain *installation*))
-    ;; What the MCP endpoint actually requires today. A dedicated mcp:
-    ;; scope belongs with the change that gives MCP its own permissions.
-    ("scopes_supported" "api:read")
+    ;; api:read gets a client in; api:write is what the tools that change
+    ;; something additionally require, and is advertised so a client can
+    ;; ask for it up front rather than discovering it on a refusal. A
+    ;; dedicated mcp: scope belongs with the change that gives MCP its own
+    ;; permissions.
+    ("scopes_supported" "api:read" "api:write")
     ;; RFC 6750 §2.1. We deliberately don't accept the form-encoded or
     ;; query-parameter variants: a token in a URL ends up in logs.
     ("bearer_methods_supported" "header")

@@ -16,7 +16,11 @@
                 #:mcp-resource-identifier
                 #:mcp-resource-metadata-url)
   (:import-from #:screenshotbot/auth-server/resource-server
+                #:token-has-scope-p
                 #:with-bearer-authentication)
+  (:import-from #:auth/viewer-context
+                #:api-viewer-context
+                #:viewer-context-api-key)
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:json
@@ -148,6 +152,12 @@ capability a model only discovers is missing when it tries to use it.")
    (parameters :initarg :parameters
                :reader tool-parameters
                :documentation "A list of (JSON-NAME DESCRIPTION). All required.")
+   (scope :initarg :scope
+          :initform nil
+          :reader tool-scope
+          :documentation "An OAuth scope the caller must hold on top of the
+endpoint's own, or NIL. Every read tool is NIL: the endpoint already
+requires +MCP-SCOPE+, and asking twice for the same thing buys nothing.")
    (handler :initarg :handler
             :reader tool-handler)))
 
@@ -164,37 +174,65 @@ twice after the second load."
         (setf *tools* (append *tools* (list tool))))
     tool))
 
-(defmacro def-tool (name (&rest parameters) description &body body)
+(defmacro def-tool (name (&rest parameters) &body options-description-and-body)
   "Define an MCP tool called NAME.
 
-Each parameter is (VARIABLE JSON-NAME DESCRIPTION) and is required: the
-generated handler answers with a tool error when one is missing, so BODY
-never sees a blank argument.
+Each parameter is (VARIABLE JSON-NAME DESCRIPTION &key ALLOW-EMPTY) and
+is required: the generated handler answers with a tool error when one is
+missing, so BODY never sees a blank argument. ALLOW-EMPTY lifts that for
+a parameter whose empty value means something -- `set this to nothing' is
+a real request, and without it there is no way to express it. Such a
+parameter is still advertised as required, because it must be *present*;
+it just may be empty. An absent one arrives as \"\" rather than NIL, so
+BODY has one case to handle instead of two.
+
+Keyword options may follow the parameter list, before the description:
+
+  :scope   an OAuth scope required on top of the endpoint's own. Use it
+           for anything that writes. Without it a tool inherits only
+           +MCP-SCOPE+, which the consent screen describes as read
+           access.
 
 DESCRIPTION is a required positional rather than a docstring because it
 is the only thing a model reads when deciding whether to call this at
 all, and a docstring is the sort of thing that gets dropped."
-  (let ((arguments (gensym "ARGUMENTS")))
-    `(register-tool
-      (make-instance 'tool
-                     :name ,name
-                     :description ,description
-                     :parameters ',(loop for (nil json-name parameter-description)
-                                           in parameters
-                                         collect (list json-name
-                                                       parameter-description))
-                     :handler
-                     (lambda (,arguments)
-                       (declare (ignorable ,arguments))
-                       (let ,(loop for (variable json-name) in parameters
-                                   collect `(,variable (field ,arguments ,json-name)))
-                         (cond
-                           ,@(loop for (variable json-name) in parameters
-                                   collect `((str:emptyp ,variable)
-                                             (tool-result
-                                              ,(format nil "~a is required." json-name)
-                                              :errorp t)))
-                           (t ,@body))))))))
+  (let ((arguments (gensym "ARGUMENTS"))
+        (options nil))
+    (loop while (keywordp (first options-description-and-body))
+          do (push (pop options-description-and-body) options)
+             (push (pop options-description-and-body) options))
+    (setf options (nreverse options))
+    (let ((description (pop options-description-and-body))
+          (body options-description-and-body))
+      (flet ((allow-empty-p (parameter)
+               (getf (cdddr parameter) :allow-empty)))
+        `(register-tool
+          (make-instance 'tool
+                         :name ,name
+                         :description ,description
+                         :scope ,(getf options :scope)
+                         :parameters ',(loop for (nil json-name parameter-description)
+                                               in parameters
+                                             collect (list json-name
+                                                           parameter-description))
+                         :handler
+                         (lambda (,arguments)
+                           (declare (ignorable ,arguments))
+                           (let ,(loop for parameter in parameters
+                                       for (variable json-name) = parameter
+                                       collect
+                                       (if (allow-empty-p parameter)
+                                           `(,variable (or (field ,arguments ,json-name) ""))
+                                           `(,variable (field ,arguments ,json-name))))
+                             (cond
+                               ,@(loop for parameter in parameters
+                                       for (variable json-name) = parameter
+                                       unless (allow-empty-p parameter)
+                                         collect `((str:emptyp ,variable)
+                                                   (tool-result
+                                                    ,(format nil "~a is required." json-name)
+                                                    :errorp t)))
+                               (t ,@body))))))))))
 
 (defun tool-schema (tool)
   (obj "type" "object"
@@ -217,12 +255,35 @@ all, and a docstring is the sort of thing that gets dropped."
 (defun list-tools ()
   (obj "tools" (tool-definitions)))
 
+(defun caller-has-scope-p (scope)
+  "Does the token behind this request carry SCOPE?
+
+Read off the viewer context rather than re-parsing the header: the
+endpoint has already authenticated, and asking the same question twice is
+how the two answers start disagreeing."
+  (let ((viewer (auth:viewer-context hunchentoot:*request*)))
+    (and (typep viewer 'api-viewer-context)
+         (token-has-scope-p (viewer-context-api-key viewer) scope))))
+
 (defun call-tool (name arguments)
   "Run the named tool. Second value is NIL if there is no such tool."
   (let ((tool (find name *tools* :key #'tool-name :test #'equal)))
-    (if tool
-        (values (funcall (tool-handler tool) arguments) t)
-        (values nil nil))))
+    (cond
+      ((null tool)
+       (values nil nil))
+      ((and (tool-scope tool)
+            (not (caller-has-scope-p (tool-scope tool))))
+       ;; Checked here rather than in the generated handler so that every
+       ;; tool in the registry is covered by construction, including ones
+       ;; added later by someone who did not read this comment.
+       (values
+        (tool-result
+         (format nil "The ~a tool needs the ~s scope, which this connection was not granted. Reconnect to Screenshotbot and approve it to use this tool."
+                 name (tool-scope tool))
+         :errorp t)
+        t))
+      (t
+       (values (funcall (tool-handler tool) arguments) t)))))
 
 (defun visible-to-caller (object type)
   "OBJECT, if it is of TYPE and this caller may see it. Otherwise NIL."

@@ -13,8 +13,10 @@
   (:import-from #:screenshotbot/mcp/mcp
                 #:*tools*
                 #:call-tool
+                #:def-tool
                 #:register-tool
                 #:tool
+                #:tool-result
                 #:tool-definitions
                 #:tool-description
                 #:tool-name
@@ -329,3 +331,105 @@ they cannot describe different arguments."
          (schema (gethash "inputSchema" report-tool)))
     (is-true (gethash "report_id" (gethash "properties" schema)))
     (is (equal "report_id" (aref (gethash "required" schema) 0)))))
+
+;; ----------------------------------------------------------------------
+;; Per-tool scope
+;; ----------------------------------------------------------------------
+
+;; These register into a rebound *TOOLS* so the probe is invisible to
+;; everything else -- notably EVERY-ADVERTISED-TOOL-IS-CALLABLE, which
+;; walks the whole registry.
+
+(test a-tool-declaring-a-scope-is-refused-when-the-token-lacks-it
+  "The endpoint only requires api:read, whose consent line reads `Read
+your runs, channels and reports'. Anything that writes has to ask for
+more than the user agreed to on that screen."
+  (with-fixture caller ()
+    (let ((*tools* nil))
+      (def-tool "probe_write" () :scope "api:write"
+        "Probe."
+        (tool-result "wrote"))
+      (multiple-value-bind (text result)
+          (tool-text (call-tool-as (token-with '("api:read")) "probe_write"))
+        (is-true (field result "isError"))
+        (is-false (str:containsp "wrote" text))))))
+
+(test the-refusal-names-the-scope-that-would-let-it-through
+  "Naming it is the only thing that tells the user what to reconnect with."
+  (with-fixture caller ()
+    (let ((*tools* nil))
+      (def-tool "probe_write" () :scope "api:write"
+        "Probe."
+        (tool-result "wrote"))
+      (let ((text (tool-text (call-tool-as (token-with '("api:read"))
+                                           "probe_write"))))
+        (is-true (str:containsp "api:write" text))))))
+
+(test a-tool-declaring-a-scope-runs-when-the-token-carries-it
+  (with-fixture caller ()
+    (let ((*tools* nil))
+      (def-tool "probe_write" () :scope "api:write"
+        "Probe."
+        (tool-result "wrote"))
+      (multiple-value-bind (text result)
+          (tool-text (call-tool-as (token-with '("api:read" "api:write"))
+                                   "probe_write"))
+        (is-false (field result "isError"))
+        (is (equal "wrote" text))))))
+
+(test a-tool-without-a-scope-still-runs-on-the-endpoint-scope-alone
+  "The read tools must not have been made harder to reach by this."
+  (with-fixture caller ()
+    (multiple-value-bind (text result)
+        (tool-text (call-tool-as (token-with '("api:read")) "list_channels"))
+      (is-false (field result "isError"))
+      (is (equal "[]" (str:trim text))))))
+
+;; ----------------------------------------------------------------------
+;; Parameters that may be empty
+;; ----------------------------------------------------------------------
+
+(test an-allow-empty-parameter-accepts-an-empty-value
+  "`Set this to nothing' is a real request, and the required-argument check
+would otherwise make it unexpressible."
+  (with-fixture caller ()
+    (let ((*tools* nil))
+      (def-tool "probe_empty" ((value "value" "Anything" :allow-empty t))
+        "Probe."
+        (tool-result (format nil "got ~s" value)))
+      (multiple-value-bind (text result)
+          (tool-text (call-tool-as token "probe_empty" '(("value" . ""))))
+        (is-false (field result "isError"))
+        (is (equal "got \"\"" text))))))
+
+(test an-absent-allow-empty-parameter-arrives-as-the-empty-string
+  "So a tool body has one case to handle rather than two."
+  (with-fixture caller ()
+    (let ((*tools* nil))
+      (def-tool "probe_empty" ((value "value" "Anything" :allow-empty t))
+        "Probe."
+        (tool-result (format nil "got ~s" value)))
+      (let ((text (tool-text (call-tool-as token "probe_empty"))))
+        (is (equal "got \"\"" text))))))
+
+(test an-allow-empty-parameter-is-still-advertised-as-required
+  "It must be *present*; it may be empty. Dropping it from `required'
+would tell a client the argument is optional, which is a different claim."
+  (let ((*tools* nil))
+    (def-tool "probe_empty" ((value "value" "Anything" :allow-empty t))
+      "Probe."
+      (tool-result value))
+    (let ((schema (gethash "inputSchema" (first (tool-definitions)))))
+      (is (equal "value" (aref (gethash "required" schema) 0)))
+      (is-true (gethash "value" (gethash "properties" schema))))))
+
+(test a-parameter-not-marked-allow-empty-still-refuses-an-empty-value
+  (with-fixture caller ()
+    (let ((*tools* nil))
+      (def-tool "probe_strict" ((value "value" "Anything"))
+        "Probe."
+        (tool-result value))
+      (multiple-value-bind (text result)
+          (tool-text (call-tool-as token "probe_strict" '(("value" . ""))))
+        (is-true (field result "isError"))
+        (is-true (str:containsp "value is required" text))))))
