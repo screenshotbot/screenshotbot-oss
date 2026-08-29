@@ -367,7 +367,7 @@ whole one."
     (dotimes (i 3)
       (add-channel (format nil "channel-~a" i)))
     (let ((max-channels 2))
-      (let ((text (progv (list 'screenshotbot/mcp/mcp::+max-channels+)
+      (let ((text (progv (list 'screenshotbot/mcp/channels::+max-channels+)
                       (list max-channels)
                     (tool-text (call-tool-as token "list_channels")))))
         (is-true (str:containsp "Showing the first 2 of 3 channels" text))

@@ -10,7 +10,13 @@
                :dexador
                :log4cl
                :str)
-  :components ((:file "mcp")))
+  :components ((:file "mcp")
+               ;; Each tool registers itself with DEF-TOOL at load time,
+               ;; so these only need to load after mcp; nothing references
+               ;; them by name.
+               (:file "channels")
+               (:file "reports")
+               (:file "images")))
 
 (defsystem "screenshotbot.mcp/tests"
   :description "Tests for screenshotbot.mcp"

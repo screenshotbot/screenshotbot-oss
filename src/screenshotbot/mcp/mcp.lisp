@@ -14,41 +14,20 @@
                 #:mcp-resource-metadata-url)
   (:import-from #:screenshotbot/auth-server/resource-server
                 #:with-bearer-authentication)
-  (:import-from #:bknr.datastore
-                #:store-object-id)
-  (:import-from #:core/installation/installation
-                #:*installation*
-                #:installation-domain)
-  (:import-from #:screenshotbot/diff-report
-                #:after
-                #:before
-                #:diff-report-added
-                #:diff-report-changes
-                #:diff-report-deleted
-                #:make-diff-report)
-  (:import-from #:screenshotbot/model/channel
-                #:channel-name)
-  (:import-from #:screenshotbot/model/image
-                #:find-image-by-oid
-                #:image
-                #:image-public-url)
-  (:import-from #:screenshotbot/model/report
-                #:report
-                #:report-channel
-                #:report-previous-run
-                #:report-run
-                #:report-title)
-  (:import-from #:screenshotbot/model/screenshot
-                #:screenshot-image
-                #:screenshot-name)
-  (:import-from #:screenshotbot/model/company
-                #:company-channels)
   (:import-from #:screenshotbot/server
                 #:defhandler)
   (:import-from #:json
                 #:encode-json-to-string)
   (:export
-   #:mcp-handler))
+   #:mcp-handler
+   ;; What a tool file needs. DEF-TOOL's expansion also reaches FIELD,
+   ;; TOOL-RESULT and STR:EMPTYP, but by symbol identity rather than
+   ;; through the using package, so those need no import to work --
+   ;; TOOL-RESULT is exported because tool bodies call it directly.
+   #:def-tool
+   #:obj
+   #:tool-result
+   #:visible-to-caller))
 (in-package :screenshotbot/mcp/mcp)
 
 (defparameter +mcp-scope+ "api:read"
@@ -100,11 +79,6 @@ the response unintelligible to a client that is being polite about it."
                            "resources" (obj))
        "serverInfo" (obj "name" "Screenshotbot MCP Server"
                          "version" "1.0.0")))
-
-(defparameter +max-channels+ 200
-  "Cap on how many channels one call returns. A company with thousands of
-them would otherwise produce a result no model can use and no reviewer
-would enjoy reading in a log.")
 
 ;; ----------------------------------------------------------------------
 ;; Tools
@@ -218,186 +192,12 @@ all, and a docstring is the sort of thing that gets dropped."
         (values (funcall (tool-handler tool) arguments) t)
         (values nil nil))))
 
-(defun channel-url (channel)
-  (format nil "~a/channels/~a"
-          (string-right-trim "/" (installation-domain *installation*))
-          (store-object-id channel)))
-
-(defun visible-channels (company)
-  "CHANNELS of COMPANY this caller may see, in a stable order.
-
-The viewer-context check is belt and braces -- every channel here belongs
-to the company the token authenticated as -- but listing objects without
-asking is the habit that eventually lists the wrong ones."
-  (let ((viewer (auth:viewer-context hunchentoot:*request*)))
-    (sort
-     (remove-if-not (lambda (channel)
-                      (auth:can-viewer-view viewer channel))
-                    (company-channels company))
-     #'string<
-     :key #'channel-name)))
-
-(defun list-channels-result (company)
-  (let* ((channels (visible-channels company))
-         (shown (if (> (length channels) +max-channels+)
-                    (subseq channels 0 +max-channels+)
-                    channels)))
-    (tool-result
-     (format nil "~a~@[~%~%~a~]"
-             (encode-json-to-string
-              ;; A vector, so that no channels renders as [] rather than
-              ;; the null CL-JSON gives for an empty list. A model reading
-              ;; null has been told something quite different from "there
-              ;; are none".
-              (coerce (mapcar (lambda (channel)
-                                (obj "name" (channel-name channel)
-                                     "url" (channel-url channel)))
-                              shown)
-                      'vector))
-             ;; Say so rather than silently truncating: a model that
-             ;; cannot see the cut will confidently report a partial list
-             ;; as the whole one.
-             (when (> (length channels) +max-channels+)
-               (format nil "Showing the first ~a of ~a channels."
-                       +max-channels+ (length channels)))))))
-
-(def-tool "list_channels" ()
-    "List the channels (projects) in the authenticated Screenshotbot account. Returns JSON: an array of objects with `name` and `url`."
-  (let ((company (auth:current-company)))
-    (cond
-      ((null company)
-       (tool-result "This token is not associated with an account."
-                    :errorp t))
-      (t
-       (list-channels-result company)))))
-
-(defparameter +max-changes+ 100
-  "Cap on screenshots reported per section. Same reasoning as
-+MAX-CHANNELS+: a 2000-screenshot report helps nobody.")
-
-(defun visible (object type)
+(defun visible-to-caller (object type)
   "OBJECT, if it is of TYPE and this caller may see it. Otherwise NIL."
   (when (and (typep object type)
              (auth:can-viewer-view (auth:viewer-context hunchentoot:*request*)
                                    object))
     object))
-
-(defun find-report-by-id (id)
-  "The report with ID, if this caller may see it.
-
-Never signals. A model hands us whatever string it has, and a malformed
-id has to come back as something it can read and correct rather than as
-an internal error it can only retry."
-  (visible (ignore-errors (util:find-by-oid id 'report)) 'report))
-
-(defun find-image-by-id (id)
-  "The image with ID, if this caller may see it.
-
-Images are not in the generic object-id index -- they carry their own oid
-and their own lookup -- so this cannot go through FIND-BY-OID, which
-simply returns NIL for every image id."
-  (visible (ignore-errors (find-image-by-oid id)) 'image))
-
-(defun screenshot-json (screenshot)
-  (let ((image (screenshot-image screenshot)))
-    (obj "name" (screenshot-name screenshot)
-         ;; The id rather than the URL: a report can carry hundreds of
-         ;; screenshots, and a model should spend a call only on the ones
-         ;; it decides to look at. fetch_image_url resolves them.
-         "imageId" (when image (util:oid image)))))
-
-(defun change-json (change)
-  (obj "name" (screenshot-name (after change))
-       "before" (screenshot-json (before change))
-       "after" (screenshot-json (after change))))
-
-(defun capped (items renderer)
-  "Render at most +MAX-CHANGES+ of ITEMS, and say so when there are more."
-  (let ((shown (if (> (length items) +max-changes+)
-                   (subseq items 0 +max-changes+)
-                   items)))
-    (values (coerce (mapcar renderer shown) 'vector)
-            (when (> (length items) +max-changes+)
-              (length items)))))
-
-(defun report-json (report)
-  (let* ((run (report-run report))
-         (previous (report-previous-run report))
-         (diff-report (when (and run previous)
-                        (make-diff-report run previous))))
-    (multiple-value-bind (changed changed-total)
-        (capped (if diff-report (diff-report-changes diff-report) nil)
-                #'change-json)
-      (multiple-value-bind (added added-total)
-          (capped (if diff-report (diff-report-added diff-report) nil)
-                  #'screenshot-json)
-        (multiple-value-bind (deleted deleted-total)
-            (capped (if diff-report (diff-report-deleted diff-report) nil)
-                    #'screenshot-json)
-          (let ((result
-                  (obj "id" (util:oid report)
-                       "title" (report-title report)
-                       "channel" (let ((channel (report-channel report)))
-                                   (when channel (channel-name channel)))
-                       "url" (format nil "~a/report/~a"
-                                     (string-right-trim
-                                      "/" (installation-domain *installation*))
-                                     (util:oid report))
-                       "run" (when run (util:oid run))
-                       "previousRun" (when previous (util:oid previous))
-                       "changed" changed
-                       "added" added
-                       "deleted" deleted)))
-            ;; Truncation is stated, not implied by a short list: a model
-            ;; that cannot see the cut reports a partial diff as the whole
-            ;; one, which is worse than refusing to answer.
-            (loop for (key total) in (list (list "changedTotal" changed-total)
-                                           (list "addedTotal" added-total)
-                                           (list "deletedTotal" deleted-total))
-                  if total
-                    do (setf (gethash key result) total))
-            result))))))
-
-(def-tool "fetch_report"
-    ((id "report_id" "The report id, as it appears in a report URL"))
-    "Fetch a Screenshotbot report by id, describing what changed between two runs. Returns JSON with the report metadata and, for each screenshot, the ids of the before and after images. Use fetch_image_url to turn an image id into a URL you can look at."
-  (let ((report (find-report-by-id id)))
-    (cond
-      ((null report)
-       ;; Deliberately one message for "no such report" and "not yours".
-       ;; Distinguishing them would let a caller enumerate which report
-       ;; ids exist.
-       (tool-result
-        (format nil "No report ~a is visible to this account." id)
-        :errorp t))
-      (t
-       (tool-result (encode-json-to-string (report-json report)))))))
-
-(defun image-url (image)
-  "A publicly fetchable URL for IMAGE.
-
-IMAGE-PUBLIC-URL can return a site-relative path, which is useless to a
-model on the other side of the internet. Binding *CDN-DOMAIN* the way the
-run API does makes MAKE-CDN absolutize it."
-  (let ((util.cdn:*cdn-domain* (or util.cdn:*cdn-domain*
-                                   (installation-domain *installation*))))
-    (util.cdn:make-cdn (image-public-url image :originalp t))))
-
-(def-tool "fetch_image_url"
-    ((id "image_id" "An image id, as returned by fetch_report"))
-    "Resolve a Screenshotbot image id into a URL. Image ids come from fetch_report. Returns JSON with a `url` you can fetch or view."
-  (let ((image (find-image-by-id id)))
-    (cond
-      ((null image)
-       ;; One answer for missing and forbidden, as with reports.
-       (tool-result
-        (format nil "No image ~a is visible to this account." id)
-        :errorp t))
-      (t
-       (tool-result
-        (encode-json-to-string
-         (obj "id" (util:oid image)
-              "url" (image-url image))))))))
 
 (defun list-resources ()
   (obj "resources"
