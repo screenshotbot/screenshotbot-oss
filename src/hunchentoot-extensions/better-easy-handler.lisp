@@ -287,7 +287,9 @@ Apache log analysis tools.)"
   (null hunchentoot::*close-hunchentoot-stream*))
 
 (defun %only-request-of-type (uri type)
-  (assert (member type '(nil :get :post :delete :put :patch)))
+  ;; :OPTIONS is here for CORS preflight. Previously it was rejected
+  ;; outright, so allowing it cannot change any existing handler.
+  (assert (member type '(nil :get :post :delete :put :patch :options)))
   (lambda (request)
     (and (or (not type)
              (eq (hunchentoot:request-method request) type))

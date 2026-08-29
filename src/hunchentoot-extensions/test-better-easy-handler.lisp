@@ -13,7 +13,10 @@
   (:import-from :cl-ppcre
                 :scan-to-strings)
   (:import-from #:hunchentoot-extensions
-                #:def-named-url)
+                #:def-named-url
+                #:%only-request-of-type)
+  (:import-from #:util/testing
+                #:with-fake-request)
   (:export))
 (in-package :hunchentoot-extensions/test-better-easy-handler)
 
@@ -101,3 +104,42 @@
   (signals hex:redirected
     (hex:safe-redirect "/")))
 
+(defun accepts-method-p (method)
+  "Can a handler even be registered for METHOD?
+
+This is the whole surface of the :OPTIONS change -- the assertion in
+%ONLY-REQUEST-OF-TYPE is what decides, and it fires when the matcher is
+built rather than when a request arrives."
+  (and (%only-request-of-type "/foo" method) t))
+
+(defun serves-get-p (method)
+  "Would a handler registered for METHOD serve the GET that
+WITH-FAKE-REQUEST sets up?"
+  (with-fake-request (:script-name "/foo")
+    (and (funcall (%only-request-of-type "/foo" method) hunchentoot:*request*)
+         t)))
+
+(test options-handlers-can-be-registered
+  "CORS preflight arrives as OPTIONS, so a handler has to be able to ask
+for that method. Before this, :OPTIONS tripped the assertion."
+  (is-true (accepts-method-p :options)))
+
+(test the-previously-allowed-methods-are-still-allowed
+  (dolist (method '(nil :get :post :delete :put :patch))
+    (is-true (accepts-method-p method)
+             "expected ~s to still be registerable" method)))
+
+(test an-unknown-method-is-still-refused
+  "The assertion is what stops a typo becoming a handler that never fires,
+so widening it must not turn it off."
+  (signals error (accepts-method-p :head))
+  (signals error (accepts-method-p :trace))
+  (signals error (accepts-method-p :post-ish)))
+
+(test dispatch-is-unchanged-for-existing-methods
+  (is-true (serves-get-p :get))
+  (is-false (serves-get-p :post))
+  ;; NIL still means any method.
+  (is-true (serves-get-p nil))
+  ;; And an OPTIONS handler does not start swallowing GETs.
+  (is-false (serves-get-p :options)))
