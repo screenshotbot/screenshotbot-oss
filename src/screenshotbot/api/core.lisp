@@ -48,7 +48,8 @@
    #:api-result
    #:api-response
    #:*dtd*
-   #:*api-key*))
+   #:*api-key*
+   #:authenticate-request-from-key))
 (in-package :screenshotbot/api/core)
 
 (defparameter *dtd*

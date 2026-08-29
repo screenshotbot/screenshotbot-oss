@@ -369,6 +369,7 @@
                  (:file "resource-indicators")
                  (:file "model")
                  (:file "authorize")
+                 (:file "authentication") ;; authenticate the api key itself
                  (:file "token")
                  (:file "device")
                  (:file "revoke")
@@ -478,6 +479,7 @@
                              (:file "test-token")
                              (:file "test-device")
                              (:file "test-revoke")
+                             (:file "test-authentication")
                              (:file "test-metadata")
                              (:file "test-protected-resource")
                              (:file "test-resource-server")
