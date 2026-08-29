@@ -16,7 +16,8 @@
                ;; them by name.
                (:file "channels")
                (:file "reports")
-               (:file "images")))
+               (:file "images")
+               (:file "runs")))
 
 (defsystem "screenshotbot.mcp/tests"
   :description "Tests for screenshotbot.mcp"
@@ -34,5 +35,6 @@
                (:file "test-mcp")
                (:file "test-channels")
                (:file "test-reports")
-               (:file "test-images")))
+               (:file "test-images")
+               (:file "test-runs")))
 
