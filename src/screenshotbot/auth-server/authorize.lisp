@@ -22,6 +22,7 @@
                 #:make-oauth-code
                 #:oauth-client-name
                 #:oauth-client-scopes
+                #:oauth-client-self-registered-p
                 #:oauth-grant
                 #:public-client-p
                 #:redirect-uri-allowed-p)
@@ -160,6 +161,17 @@ port is exactly the case PKCE exists for."
 
       <p><b>,(progn app-name)</b> wants to access your Screenshotbot account
         as <b>,(auth:user-email (auth:current-user))</b>.</p>
+
+      ,(when (oauth-client-self-registered-p client)
+         ;; Registration is open, so this name was chosen by whoever
+         ;; registered the application rather than by anyone here. Saying
+         ;; so is the only thing standing between a user and a consent
+         ;; screen that reads "Screenshotbot Official Backup".
+         <div class= "alert alert-warning" >
+           <b>This application registered itself.</b> Its name has not been
+           verified by Screenshotbot. Only continue if you started this
+           yourself and recognise where you started it from.
+         </div>)
 
       <p class= "mb-1" >It will be able to:</p>
       <ul>

@@ -37,7 +37,8 @@ here, so a wrong value is a client that silently can't sign in."))
   "Relative URLs here would resolve against whatever the client guessed."
   (with-fixture state ()
     (dolist (name '("authorization_endpoint" "token_endpoint"
-                    "device_authorization_endpoint" "revocation_endpoint"))
+                    "device_authorization_endpoint" "revocation_endpoint"
+                    "registration_endpoint"))
       (let ((url (field name)))
         (is-true url)
         (is-true (str:starts-with-p "https://staging.screenshotbot.io/" url))))))
@@ -52,6 +53,13 @@ here, so a wrong value is a client that silently can't sign in."))
                (field "device_authorization_endpoint")))
     (is (equal "https://staging.screenshotbot.io/oauth/revoke"
                (field "revocation_endpoint")))))
+
+(test the-registration-endpoint-is-advertised
+  "A client that cannot find this asks a human for a client_id instead,
+which is where Claude.ai stopped before dynamic registration existed."
+  (with-fixture state ()
+    (is (equal "https://staging.screenshotbot.io/oauth/register"
+               (field "registration_endpoint")))))
 
 (test the-issuer-is-the-installation-domain
   (with-fixture state ()

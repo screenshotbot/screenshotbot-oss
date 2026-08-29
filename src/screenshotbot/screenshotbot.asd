@@ -372,6 +372,7 @@
                  (:file "token")
                  (:file "device")
                  (:file "revoke")
+                 (:file "register")
                  (:file "authorizations")
                  (:file "metadata")
                  (:file "resource-server")))
@@ -481,7 +482,8 @@
                              (:file "test-protected-resource")
                              (:file "test-resource-server")
                              (:file "test-resource-indicators")
-                             (:file "test-cors")))
+                             (:file "test-cors")
+                             (:file "test-register")))
                (:file "test-invite")
                (:file "test-uname")
                (:module "model"

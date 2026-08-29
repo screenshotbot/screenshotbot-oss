@@ -37,6 +37,9 @@ hostname and discover the rest from here."))
     ("token_endpoint" . ,(%url "/oauth/token"))
     ("device_authorization_endpoint" . ,(%url "/oauth/device/code"))
     ("revocation_endpoint" . ,(%url "/oauth/revoke"))
+    ;; RFC 7591. Advertising this is how a client knows it can register
+    ;; itself rather than asking a human for a client_id.
+    ("registration_endpoint" . ,(%url "/oauth/register"))
     ("scopes_supported" . ,(supported-scope-names))
     ("response_types_supported" "code")
     ("grant_types_supported" . ,(supported-grant-types))

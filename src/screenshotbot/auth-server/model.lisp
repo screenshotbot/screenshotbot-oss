@@ -45,6 +45,7 @@
    #:oauth-client-redirect-uris
    #:oauth-client-scopes
    #:public-client-p
+   #:oauth-client-self-registered-p
    #:find-oauth-client
    #:register-oauth-client
    #:redirect-uri-allowed-p
@@ -173,7 +174,16 @@ secret shipped inside a binary on the user's machine isn't a secret.")
               :documentation "The scopes this client is allowed to ask for.")
      (%created-at :initarg :created-at
                   :initform nil
-                  :reader oauth-client-created-at))
+                  :reader oauth-client-created-at)
+     (%self-registered :initarg :self-registered
+                       :initform nil
+                       :reader oauth-client-self-registered-p
+                       :documentation "True if this client registered itself through RFC 7591
+dynamic registration, rather than being created by someone here.
+
+Nobody vetted its name or its redirect URIs, and the consent screen
+renders it differently because of that: the name on that screen is the
+only thing a user has to go on, and a self-registered client chose it."))
     (:metaclass persistent-class)
     (:default-initargs
      :client-id (random-token 16)
@@ -183,13 +193,18 @@ secret shipped inside a binary on the user's machine isn't a secret.")
   (null (oauth-client-secret self)))
 
 (defun register-oauth-client (&key client-id name redirect-uris scopes
-                                (public t))
+                                (public t) self-registered)
   "Create an OAuth client. Public clients (the default) get no secret and
-must use PKCE."
+must use PKCE.
+
+SELF-REGISTERED marks a client that arrived through dynamic registration;
+it defaults to NIL so anything created from here or from a REPL counts as
+vetted."
   (apply #'make-instance 'oauth-client
          :name name
          :redirect-uris redirect-uris
          :scopes scopes
+         :self-registered self-registered
          :secret (unless public (random-token 32))
          (when client-id (list :client-id client-id))))
 
