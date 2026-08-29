@@ -15,7 +15,9 @@
    #:+mcp-path+
    #:mcp-resource-identifier
    #:mcp-resource-metadata-url
-   #:mcp-resource-metadata)
+   #:mcp-resource-metadata
+   #:known-resource-identifiers
+   #:known-resource-p)
   (:documentation "OAuth 2.0 Protected Resource Metadata, RFC 9728.
 
 An MCP client that has only been given a hostname needs to find out which
@@ -52,6 +54,22 @@ well-known segment, so a resource at /mcp is described at
 /.well-known/oauth-protected-resource/mcp -- not at the bare well-known
 path, which would describe the origin itself."
   (%url (format nil "/.well-known/oauth-protected-resource~a" +mcp-path+)))
+
+(defun known-resource-identifiers ()
+  "Every resource this installation will audience-bind a token to.
+
+RFC 8707 §2 says the authorization server SHOULD reject an unknown
+target. Without that a client could ask for, and be handed, a token
+audienced to a URI we have nothing to do with -- which is exactly the
+confused-deputy shape resource indicators exist to prevent."
+  (list (mcp-resource-identifier)))
+
+(defun known-resource-p (resource)
+  "Exact match, deliberately. Prefix matching would let /mcp-evil pass as
+/mcp, and we know our own resources by name."
+  (and resource
+       (member resource (known-resource-identifiers) :test #'equal)
+       t))
 
 (defun mcp-resource-metadata ()
   `(("resource" . ,(mcp-resource-identifier))

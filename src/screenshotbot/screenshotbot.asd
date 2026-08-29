@@ -362,6 +362,10 @@
     :components ((:file "scopes")
                  (:file "errors")
                  (:file "pkce")
+                 ;; Before MODEL: the model stores resource indicators, and
+                 ;; these two say which ones exist and what a valid one is.
+                 (:file "protected-resource")
+                 (:file "resource-indicators")
                  (:file "model")
                  (:file "authorize")
                  (:file "token")
@@ -369,7 +373,6 @@
                  (:file "revoke")
                  (:file "authorizations")
                  (:file "metadata")
-                 (:file "protected-resource")
                  (:file "resource-server")))
    (:module "admin"
     :serial t
@@ -475,7 +478,8 @@
                              (:file "test-revoke")
                              (:file "test-metadata")
                              (:file "test-protected-resource")
-                             (:file "test-resource-server")))
+                             (:file "test-resource-server")
+                             (:file "test-resource-indicators")))
                (:file "test-invite")
                (:file "test-uname")
                (:module "model"

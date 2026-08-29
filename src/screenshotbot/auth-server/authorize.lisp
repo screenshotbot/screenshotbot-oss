@@ -27,6 +27,8 @@
                 #:redirect-uri-allowed-p)
   (:import-from #:screenshotbot/auth-server/pkce
                 #:valid-code-challenge-method-p)
+  (:import-from #:screenshotbot/auth-server/resource-indicators
+                #:read-resource)
   (:import-from #:screenshotbot/auth-server/scopes
                 #:default-scopes
                 #:find-scope
@@ -120,7 +122,7 @@ port is exactly the case PKCE exists for."
        method))))
 
 (defun %grant-and-redirect (&key client redirect-uri scopes state
-                              challenge challenge-method)
+                              challenge challenge-method resource)
   (let* ((grant (make-instance 'oauth-grant
                                :client client
                                :user (auth:current-user)
@@ -129,20 +131,22 @@ port is exactly the case PKCE exists for."
          (code (make-oauth-code :grant grant
                                 :redirect-uri redirect-uri
                                 :challenge challenge
-                                :challenge-method challenge-method)))
+                                :challenge-method challenge-method
+                                :resource resource)))
     (redirect-to-client redirect-uri
                         (cons "code" (code-string code))
                         (cons "state" state))))
 
 (defun consent-page (&key client redirect-uri scopes state
-                       challenge challenge-method)
+                       challenge challenge-method resource)
   (let ((approve (nibble ()
                    (%grant-and-redirect :client client
                                         :redirect-uri redirect-uri
                                         :scopes scopes
                                         :state state
                                         :challenge challenge
-                                        :challenge-method challenge-method)))
+                                        :challenge-method challenge-method
+                                        :resource resource)))
         (deny (nibble ()
                 (redirect-to-client redirect-uri
                                     (cons "error" "access_denied")
@@ -175,7 +179,10 @@ port is exactly the case PKCE exists for."
     </simple-card-page>))
 
 (defun %authorize (&key response-type client-id redirect-uri scope state
-                     code-challenge code-challenge-method)
+                     code-challenge code-challenge-method
+                     (resource-parameters
+                      (when (boundp 'hunchentoot:*request*)
+                        (hunchentoot:get-parameters*))))
   (ensure-builtin-clients)
   (multiple-value-bind (client client-problem) (%validate-client client-id)
     (cond
@@ -198,14 +205,18 @@ port is exactly the case PKCE exists for."
                              "Only the authorization code flow is supported"))
              (let ((scopes (%requested-scopes scope client))
                    (challenge-method (%validate-pkce client code-challenge
-                                                     code-challenge-method)))
+                                                     code-challenge-method))
+                   ;; RFC 8707. Absent is fine -- an audience-less token is
+                   ;; still good anywhere that doesn't demand one.
+                   (resource (read-resource resource-parameters)))
                (with-login (:allow-url-redirect t)
                  (consent-page :client client
                                :redirect-uri redirect-uri
                                :scopes scopes
                                :state state
                                :challenge code-challenge
-                               :challenge-method challenge-method))))
+                               :challenge-method challenge-method
+                               :resource resource))))
          (oauth-error (e)
            (redirect-to-client redirect-uri
                                (cons "error" (oauth-error-code e))

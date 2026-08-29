@@ -18,6 +18,9 @@
                 #:code-expires-at
                 #:code-grant
                 #:code-redirect-uri
+                #:code-resource
+                #:device-resource
+                #:refresh-token-resource
                 #:consume-device-request
                 #:consume-oauth-code
                 #:device-client
@@ -45,6 +48,9 @@
   (:import-from #:screenshotbot/auth-server/pkce
                 #:constant-time-equal
                 #:verify-code-verifier)
+  (:import-from #:screenshotbot/auth-server/resource-indicators
+                #:narrowed-resource
+                #:read-resource)
   (:import-from #:screenshotbot/auth-server/scopes
                 #:parse-scope-string
                 #:render-scope-list)
@@ -102,15 +108,20 @@ per-code redirect_uri check carry the weight for public clients."
 ;; Responses
 ;; ----------------------------------------------------------------------
 
-(defun %token-response (grant &key scopes refresh-token)
+(defun %token-response (grant &key scopes refresh-token resource)
   (let* ((scopes (or scopes (grant-scopes grant)))
-         (access-token (make-access-token grant :scopes scopes)))
+         (access-token (make-access-token grant :scopes scopes
+                                                :resource resource)))
     `(("access_token" . ,(access-token-string access-token))
       ("token_type" . "Bearer")
       ("expires_in" . ,(access-token-expires-in access-token))
       ,@(when refresh-token
           `(("refresh_token" . ,(refresh-token-string refresh-token))))
       ("scope" . ,(render-scope-list scopes)))))
+
+(defun %requested-resource ()
+  "The RFC 8707 resource indicator on this token request, if any."
+  (read-resource (hunchentoot:post-parameters*)))
 
 ;; ----------------------------------------------------------------------
 ;; grant_type=authorization_code
@@ -151,7 +162,16 @@ per-code redirect_uri check carry the weight for public clients."
                    :code-verifier code-verifier)
             (oauth-error! "invalid_grant" "PKCE verification failed")))
 
-        (%token-response grant :refresh-token (make-refresh-token grant))))))
+        ;; RFC 8707 §2.2: the token request may repeat the resource, and it
+        ;; has to be the one the code was authorized for. Omitting it
+        ;; inherits, so a client can name the resource once at the
+        ;; authorization endpoint and not again here.
+        (let ((resource (narrowed-resource (%requested-resource)
+                                           (code-resource code))))
+          (%token-response grant
+                           :resource resource
+                           :refresh-token (make-refresh-token
+                                           grant :resource resource)))))))
 
 ;; ----------------------------------------------------------------------
 ;; grant_type=refresh_token
@@ -194,11 +214,17 @@ more. An absent scope means the original set."
         (unless (grant-valid-p grant)
           (oauth-error! "invalid_grant" "This authorization has been revoked"))
 
-        (let ((scopes (%narrowed-scopes grant scope)))
+        (let ((scopes (%narrowed-scopes grant scope))
+              ;; The audience rides along across rotation. A refresh can
+              ;; never reach a resource the original exchange didn't.
+              (resource (narrowed-resource (%requested-resource)
+                                           (refresh-token-resource refresh-token))))
           (revoke-refresh-token refresh-token)
           (%token-response grant
                            :scopes scopes
-                           :refresh-token (make-refresh-token grant)))))))
+                           :resource resource
+                           :refresh-token (make-refresh-token
+                                           grant :resource resource)))))))
 
 ;; ----------------------------------------------------------------------
 ;; grant_type=urn:ietf:params:oauth:grant-type:device_code
@@ -239,7 +265,12 @@ more. An absent scope means the original set."
              (oauth-error! "invalid_grant" "This device code has already been used"))
            (unless (grant-valid-p grant)
              (oauth-error! "invalid_grant" "This authorization has been revoked"))
-           (%token-response grant :refresh-token (make-refresh-token grant))))))))
+           (let ((resource (narrowed-resource (%requested-resource)
+                                              (device-resource request))))
+             (%token-response grant
+                              :resource resource
+                              :refresh-token (make-refresh-token
+                                              grant :resource resource)))))))))
 
 ;; ----------------------------------------------------------------------
 ;; The endpoint

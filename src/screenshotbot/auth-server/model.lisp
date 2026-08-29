@@ -73,6 +73,7 @@
    #:code-challenge-method
    #:code-expires-at
    #:code-consumed-p
+   #:code-resource
    #:find-oauth-code
    #:make-oauth-code
    #:consume-oauth-code
@@ -82,6 +83,9 @@
    #:oauth-refresh-token
    #:access-token-grant
    #:access-token-scopes
+   #:access-token-resource
+   #:refresh-token-resource
+   #:device-resource
    #:refresh-token-string
    #:refresh-token-grant
    #:refresh-token-expires-at
@@ -328,6 +332,12 @@ requires the token request to present the identical value.")
      (%challenge-method :initarg :challenge-method
                         :initform nil
                         :reader code-challenge-method)
+     (%resource :initarg :resource
+                :initform nil
+                :reader code-resource
+                :documentation "The RFC 8707 resource indicator this code was
+authorized for, or NIL. Carried here so the token endpoint can stamp it on
+whatever it issues.")
      (%expires-at :initarg :expires-at
                   :index +code-expiry-index+
                   :reader code-expires-at)
@@ -339,12 +349,14 @@ requires the token request to present the identical value.")
      :code (random-token 32)
      :expires-at (+ (get-universal-time) *authorization-code-ttl*))))
 
-(defun make-oauth-code (&key grant redirect-uri challenge challenge-method)
+(defun make-oauth-code (&key grant redirect-uri challenge challenge-method
+                          resource)
   (make-instance 'oauth-code
                  :grant grant
                  :redirect-uri redirect-uri
                  :challenge challenge
-                 :challenge-method challenge-method))
+                 :challenge-method challenge-method
+                 :resource resource))
 
 (defvar *code-lock* (bt:make-lock "oauth-code"))
 
@@ -381,6 +393,12 @@ expected to revoke the grant."
               :reader access-token-scopes
               :documentation "May be narrower than the grant's scopes: RFC 6749 §6 lets a
 client ask for less than it was given when it refreshes.")
+     (%resource :initarg :resource
+                :initform nil
+                :reader access-token-resource
+                :documentation "The audience this token was issued for, per RFC 8707.
+NIL means unaudienced: still valid anywhere that doesn't demand an
+audience, which is what keeps pre-existing tokens working.")
      (expires-at :initarg :expires-at
                  :index +access-token-expiry-index+
                  :accessor expires-at))
@@ -405,10 +423,11 @@ on the API keys page would bury the user's real keys. The grant they
 came from is listed instead, on the authorized-applications page."
   nil)
 
-(defun make-access-token (grant &key (scopes (grant-scopes grant)))
+(defun make-access-token (grant &key (scopes (grant-scopes grant)) resource)
   (make-instance 'oauth-access-token
                  :grant grant
                  :scopes scopes
+                 :resource resource
                  :user (grant-user grant)
                  :company (grant-company grant)
                  :permissions (scopes-permissions scopes)
@@ -448,6 +467,11 @@ OAuth-specific lookup."
              :reader refresh-token-string)
      (%grant :initarg :grant
              :reader refresh-token-grant)
+     (%resource :initarg :resource
+                :initform nil
+                :reader refresh-token-resource
+                :documentation "Carried across rotation so a refreshed token keeps the
+audience the original exchange established.")
      (%expires-at :initarg :expires-at
                   :index +refresh-token-expiry-index+
                   :reader refresh-token-expires-at)
@@ -459,8 +483,8 @@ OAuth-specific lookup."
      :token (random-token 32)
      :expires-at (+ (get-universal-time) *refresh-token-ttl*))))
 
-(defun make-refresh-token (grant)
-  (make-instance 'oauth-refresh-token :grant grant))
+(defun make-refresh-token (grant &key resource)
+  (make-instance 'oauth-refresh-token :grant grant :resource resource))
 
 (defmethod revoke-refresh-token ((self oauth-refresh-token))
   (with-transaction ()
@@ -518,6 +542,9 @@ OAuth-specific lookup."
      (%scopes :initarg :scopes
               :initform nil
               :reader device-scopes)
+     (%resource :initarg :resource
+                :initform nil
+                :reader device-resource)
      (%status :initarg :status
               :initform :pending
               :accessor device-status
@@ -541,10 +568,11 @@ OAuth-specific lookup."
      :interval *device-poll-interval*
      :expires-at (+ (get-universal-time) *device-code-ttl*))))
 
-(defun make-device-request (&key client scopes)
+(defun make-device-request (&key client scopes resource)
   (make-instance 'oauth-device-request
                  :client client
-                 :scopes scopes))
+                 :scopes scopes
+                 :resource resource))
 
 (defmethod approve-device-request ((self oauth-device-request) grant)
   (with-transaction ()

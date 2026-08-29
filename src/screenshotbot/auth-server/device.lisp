@@ -32,6 +32,8 @@
                 #:oauth-client-name
                 #:oauth-client-scopes
                 #:oauth-grant)
+  (:import-from #:screenshotbot/auth-server/resource-indicators
+                #:read-resource)
   (:import-from #:screenshotbot/auth-server/scopes
                 #:default-scopes
                 #:find-scope
@@ -85,7 +87,14 @@ polls the token endpoint until they're done."))
             (oauth-error! "invalid_scope"
                           (format nil "This application is not allowed the scope(s): ~a"
                                   (str:join ", " forbidden)))))
-        (let ((request (make-device-request :client client :scopes scopes))
+        (let ((request (make-device-request
+                        :client client
+                        :scopes scopes
+                        ;; RFC 8707 applies here too. Without it a device
+                        ;; flow token would be the one kind that could never
+                        ;; reach an audience-checking resource.
+                        :resource (read-resource
+                                   (hunchentoot:post-parameters*))))
               (verification-uri (verification-uri)))
           (write-json
            `(("device_code" . ,(device-code-string request))

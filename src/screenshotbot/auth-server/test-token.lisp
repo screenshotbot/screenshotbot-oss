@@ -14,7 +14,12 @@
                 #:decode-api-token)
   (:import-from #:screenshotbot/auth-server/errors
                 #:with-oauth-json-errors)
+  (:import-from #:screenshotbot/auth-server/protected-resource
+                #:mcp-resource-identifier)
   (:import-from #:screenshotbot/auth-server/model
+                #:access-token-resource
+                #:find-refresh-token
+                #:refresh-token-resource
                 #:oauth-client-secret
                 #:*authorization-code-ttl*
                 #:*device-code-ttl*
@@ -87,10 +92,12 @@
                                 :company company
                                 :scopes scopes))
                (make-code (grant &key (redirect-uri +redirect-uri+)
-                                   (challenge-verifier verifier))
+                                   (challenge-verifier verifier)
+                                   resource)
                  (make-oauth-code
                   :grant grant
                   :redirect-uri redirect-uri
+                  :resource resource
                   :challenge (when challenge-verifier
                                (s256-challenge challenge-verifier))
                   :challenge-method (when challenge-verifier "S256"))))
@@ -460,3 +467,110 @@ of it is out there."
   (with-fixture state ()
     (is (equal "invalid_grant"
                (field (poll-device "nope") "error")))))
+
+;; ----------------------------------------------------------------------
+;; RFC 8707 resource indicators
+;; ----------------------------------------------------------------------
+
+(test the-issued-token-is-audience-bound-to-the-codes-resource
+  (with-fixture state ()
+    (let* ((resource (mcp-resource-identifier))
+           (grant (make-grant))
+           (code (make-code grant :resource resource))
+           (response (post-token "grant_type" "authorization_code"
+                                 "client_id" "test-client"
+                                 "code" (code-string code)
+                                 "redirect_uri" +redirect-uri+
+                                 "code_verifier" verifier)))
+      (is-true (field response "access_token"))
+      (multiple-value-bind (key) (decode-api-token (field response "access_token"))
+        (is (equal resource (access-token-resource (%find-api-key key))))))))
+
+(test a-token-request-may-repeat-the-resource-it-was-authorized-for
+  (with-fixture state ()
+    (let* ((resource (mcp-resource-identifier))
+           (code (code-string (make-code (make-grant) :resource resource)))
+           (response (post-token "grant_type" "authorization_code"
+                                 "client_id" "test-client"
+                                 "code" code
+                                 "redirect_uri" +redirect-uri+
+                                 "code_verifier" verifier
+                                 "resource" resource)))
+      (is-true (field response "access_token")))))
+
+(test a-token-request-cannot-ask-for-a-resource-it-was-not-authorized-for
+  (with-fixture state ()
+    (let* ((code (code-string (make-code (make-grant) :resource nil)))
+           (response (post-token "grant_type" "authorization_code"
+                                 "client_id" "test-client"
+                                 "code" code
+                                 "redirect_uri" +redirect-uri+
+                                 "code_verifier" verifier
+                                 "resource" (mcp-resource-identifier))))
+      (is (equal "invalid_target" (field response "error")))
+      (is-false (field response "access_token")))))
+
+(test a-token-with-no-resource-stays-unaudienced
+  "Existing clients don't send `resource'; their tokens must keep working."
+  (with-fixture state ()
+    (let* ((code (code-string (make-code (make-grant))))
+           (response (post-token "grant_type" "authorization_code"
+                                 "client_id" "test-client"
+                                 "code" code
+                                 "redirect_uri" +redirect-uri+
+                                 "code_verifier" verifier)))
+      (is-true (field response "access_token"))
+      (multiple-value-bind (key) (decode-api-token (field response "access_token"))
+        (is (equal nil (access-token-resource (%find-api-key key))))))))
+
+(test the-audience-survives-a-refresh
+  "Rotation mints a new pair; losing the audience there would quietly
+downgrade a bound token into an unbound one."
+  (with-fixture state ()
+    (let* ((resource (mcp-resource-identifier))
+           (grant (make-grant))
+           (refresh-token (make-refresh-token grant :resource resource))
+           (response (post-token "grant_type" "refresh_token"
+                                 "client_id" "test-client"
+                                 "refresh_token" (refresh-token-string refresh-token))))
+      (multiple-value-bind (key) (decode-api-token (field response "access_token"))
+        (is (equal resource (access-token-resource (%find-api-key key)))))
+      ;; And the replacement refresh token carries it too, so it survives
+      ;; the *next* rotation as well.
+      (let ((rotated (find-refresh-token (field response "refresh_token"))))
+        (is (equal resource (refresh-token-resource rotated)))))))
+
+(test a-refresh-cannot-widen-the-audience
+  (with-fixture state ()
+    (let ((refresh-token (make-refresh-token (make-grant) :resource nil)))
+      (is (equal "invalid_target"
+                 (field (post-token "grant_type" "refresh_token"
+                                    "client_id" "test-client"
+                                    "refresh_token" (refresh-token-string refresh-token)
+                                    "resource" (mcp-resource-identifier))
+                        "error"))))))
+
+(test an-unknown-resource-is-refused-at-the-token-endpoint
+  (with-fixture state ()
+    (let ((code (code-string (make-code (make-grant)))))
+      (is (equal "invalid_target"
+                 (field (post-token "grant_type" "authorization_code"
+                                    "client_id" "test-client"
+                                    "code" code
+                                    "redirect_uri" +redirect-uri+
+                                    "code_verifier" verifier
+                                    "resource" "https://evil.example.com/")
+                        "error"))))))
+
+(test an-approved-device-request-yields-an-audience-bound-token
+  (with-fixture state ()
+    (let* ((resource (mcp-resource-identifier))
+           (request (make-device-request :client client :scopes '("api:read")
+                                                        :resource resource))
+           (grant (make-grant)))
+      (approve-device-request request grant)
+      (let ((response (post-token "grant_type" +device-code-grant-type+
+                                  "client_id" "test-client"
+                                  "device_code" (device-code-string request))))
+        (multiple-value-bind (key) (decode-api-token (field response "access_token"))
+          (is (equal resource (access-token-resource (%find-api-key key)))))))))
