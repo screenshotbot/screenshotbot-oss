@@ -16,7 +16,8 @@
                 #:obj
                 #:tool-result)
   (:import-from #:screenshotbot/model/channel
-                #:channel-name)
+                #:channel-name
+                #:channel-slack-channels)
   (:import-from #:screenshotbot/model/company
                 #:company-channels)
   (:documentation "The list_channels MCP tool."))
@@ -29,6 +30,24 @@ would enjoy reading in a log.")
 
 (defun channel-url (channel)
   (dashboard-url "channels" (store-object-id channel)))
+
+(defun slack-channels (channel)
+  "The Slack channels notified when CHANNEL changes.
+
+With the leading '#'. They are stored without one -- the settings page
+strips it on save and SEND-TASK puts it back before posting -- but '#eng'
+is what a person calls the channel, and a bare 'eng' invites a model to
+report it as something else.
+
+This is the per-channel setting only. An account may also have a default
+Slack channel that receives everything, and there are tag rules keyed off
+a run's tags; neither is a property of the channel."
+  ;; A vector, so a channel notifying nobody renders as [] rather than the
+  ;; null CL-JSON gives for an empty list.
+  (coerce (mapcar (lambda (name)
+                    (str:ensure-prefix "#" name))
+                  (channel-slack-channels channel))
+          'vector))
 
 (defun visible-channels (company)
   "CHANNELS of COMPANY this caller may see, in a stable order.
@@ -58,7 +77,8 @@ asking is the habit that eventually lists the wrong ones."
               ;; are none".
               (coerce (mapcar (lambda (channel)
                                 (obj "name" (channel-name channel)
-                                     "url" (channel-url channel)))
+                                     "url" (channel-url channel)
+                                     "slackChannels" (slack-channels channel)))
                               shown)
                       'vector))
              ;; Say so rather than silently truncating: a model that
@@ -69,7 +89,7 @@ asking is the habit that eventually lists the wrong ones."
                        +max-channels+ (length channels)))))))
 
 (def-tool "list_channels" ()
-    "List the channels (projects) in the authenticated Screenshotbot account. Returns JSON: an array of objects with `name` and `url`."
+    "List the channels (projects) in the authenticated Screenshotbot account. Returns JSON: an array of objects with `name`, `url`, and `slackChannels` -- the Slack channels notified when that channel changes, which is empty if none are configured."
   (let ((company (auth:current-company)))
     (cond
       ((null company)

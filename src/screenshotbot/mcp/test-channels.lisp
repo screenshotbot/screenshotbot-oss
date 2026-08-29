@@ -18,7 +18,8 @@
                 #:token
                 #:tool-text)
   (:import-from #:screenshotbot/model/channel
-                #:channel)
+                #:channel
+                #:channel-slack-channels)
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:documentation "The list_channels tool."))
@@ -79,3 +80,48 @@ whole one."
     (add-channel "only-one")
     (let ((text (list-channels-as token)))
       (is-false (str:containsp "Showing the first" text)))))
+
+;; ----------------------------------------------------------------------
+;; Slack channels
+;; ----------------------------------------------------------------------
+
+(defun slack-channels-of (text name)
+  "The slackChannels reported for the channel called NAME."
+  (let ((entry (find name (decode text)
+                     :key (lambda (entry) (field entry "name"))
+                     :test #'equal)))
+    (coerce (field entry "slackChannels") 'list)))
+
+(test a-channel-reports-the-slack-channels-notified-for-it
+  (with-fixture caller ()
+    (setf (channel-slack-channels (add-channel "web"))
+          (list "eng" "web-ui"))
+    (is (equal '("#eng" "#web-ui")
+               (slack-channels-of (list-channels-as token) "web")))))
+
+(test slack-channel-names-are-reported-with-a-leading-hash
+  "They are stored bare -- the settings page strips the '#' on save and
+only SEND-TASK puts it back -- so passing them through unchanged would
+report `eng' for what everyone calls `#eng'."
+  (with-fixture caller ()
+    (setf (channel-slack-channels (add-channel "web")) (list "eng"))
+    (is (equal '("#eng")
+               (slack-channels-of (list-channels-as token) "web")))))
+
+(test a-slack-name-already-carrying-a-hash-is-not-doubled
+  (with-fixture caller ()
+    (setf (channel-slack-channels (add-channel "web")) (list "#eng"))
+    (is (equal '("#eng")
+               (slack-channels-of (list-channels-as token) "web")))))
+
+(test a-channel-notifying-nobody-reports-an-empty-list-not-null
+  "CL-JSON renders an empty list as null, and a model told `null' has been
+told something quite different from `nobody is notified'."
+  (with-fixture caller ()
+    (add-channel "quiet")
+    (let ((entry (first (decode (list-channels-as token)))))
+      (is (equal "quiet" (field entry "name")))
+      ;; The decoder gives NIL for both [] and null, so the encoded text is
+      ;; the only place the difference is visible.
+      (is-true (str:containsp "\"slackChannels\":[]"
+                              (list-channels-as token))))))
