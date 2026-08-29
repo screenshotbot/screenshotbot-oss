@@ -8,7 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/mcp/masks
-                #:+max-masked-screenshots+)
+                #:+max-masked-screenshots+
+                #:+max-masks-per-screenshot+)
   (:import-from #:screenshotbot/mcp/test-util
                 #:add-channel
                 #:call-tool-as
@@ -18,15 +19,18 @@
                 #:field
                 #:token
                 #:token-with
-                #:tool-text)
+                #:tool-text
+                #:user)
   (:import-from #:screenshotbot/model/channel
                 #:channel
+                #:masks
                 #:set-channel-screenshot-mask)
   (:import-from #:screenshotbot/model/company
                 #:company-channels)
   (:import-from #:screenshotbot/model/image
-                #:mask-rect)
-  (:documentation "The list_masks tool."))
+                #:mask-rect
+                #:mask-rect-left)
+  (:documentation "The list_masks and edit_masks tools."))
 (in-package :screenshotbot/mcp/test-masks)
 
 (util/fiveam:def-suite)
@@ -156,3 +160,168 @@ screenshot as masked."
                         (list (cons "channel" "web")))
         (is (equal 403 status))
         (is-false (str:containsp "secret-screen" body))))))
+
+;; ----------------------------------------------------------------------
+;; edit_masks
+;; ----------------------------------------------------------------------
+
+(defun edit-masks-as (token name screenshot rects)
+  (tool-text (call-tool-as token "edit_masks"
+                           (list (cons "channel" name)
+                                 (cons "screenshot" screenshot)
+                                 (cons "masks" rects)))))
+
+(defun stored-masks (channel screenshot)
+  (cdr (assoc screenshot (masks channel) :test #'equal)))
+
+(defun sole-mask (text)
+  (first (coerce (field (decode (first (str:lines text))) "masks") 'list)))
+
+(test setting-masks-stores-them-and-reports-them-back
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (multiple-value-bind (text result)
+          (edit-masks-as (token-with '("api:read" "api:write")) "web" "home"
+                         "[{\"left\":1,\"top\":2,\"width\":3,\"height\":4}]")
+        (is-false (field result "isError"))
+        (is (equal 1 (length (stored-masks channel "home"))))
+        (let ((mask (sole-mask text)))
+          (is (equal 1 (field mask "left")))
+          (is (equal 2 (field mask "top")))
+          (is (equal 3 (field mask "width")))
+          (is (equal 4 (field mask "height"))))))))
+
+(test setting-masks-replaces-rather-than-adds
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (set-channel-screenshot-mask channel "home" (list (rect :left 99)))
+      (edit-masks-as (token-with '("api:read" "api:write")) "web" "home"
+                     "[{\"left\":1,\"top\":2,\"width\":3,\"height\":4}]")
+      (is (equal 1 (length (stored-masks channel "home"))))
+      (is (equal 1 (mask-rect-left (first (stored-masks channel "home"))))))))
+
+(test what-edit-masks-writes-is-what-list-masks-reports
+  "A model checking its own work has to see what it just did."
+  (with-fixture caller ()
+    (add-channel "web")
+    (edit-masks-as (token-with '("api:read" "api:write")) "web" "home"
+                   "[{\"left\":1,\"top\":2,\"width\":3,\"height\":4}]")
+    (let ((mask (first (coerce (field (entry-for (list-masks-as token "web") "home")
+                                      "masks")
+                               'list))))
+      (is (equal 1 (field mask "left")))
+      (is (equal 3 (field mask "width"))))))
+
+(test a-backwards-rectangle-is-written-normalised
+  "The editor stores whichever way a rectangle was dragged and normalises
+on read. Writing the canonical form is what makes edit_masks then
+list_masks report back the numbers that were sent."
+  (with-fixture caller ()
+    (add-channel "web")
+    (let ((text (edit-masks-as (token-with '("api:read" "api:write")) "web" "home"
+                               "[{\"left\":30,\"top\":40,\"width\":-10,\"height\":-20}]")))
+      (let ((mask (sole-mask text)))
+        (is (equal 20 (field mask "left")))
+        (is (equal 20 (field mask "top")))
+        (is (equal 10 (field mask "width")))
+        (is (equal 20 (field mask "height")))))))
+
+(test an-empty-value-removes-every-mask-from-the-screenshot
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (set-channel-screenshot-mask channel "home" (list (rect)))
+      (multiple-value-bind (text result)
+          (edit-masks-as (token-with '("api:read" "api:write")) "web" "home" "")
+        (is-false (field result "isError"))
+        (is (equal nil (stored-masks channel "home")))
+        (is-true (str:containsp "\"masks\":[]" text))))))
+
+(test an-empty-json-array-also-removes-them
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (set-channel-screenshot-mask channel "home" (list (rect)))
+      (edit-masks-as (token-with '("api:read" "api:write")) "web" "home" "[]")
+      (is (equal nil (stored-masks channel "home"))))))
+
+(test malformed-masks-come-back-as-a-tool-error-saying-what-is-wrong
+  "The model wrote this argument and can rewrite it, but only if told
+which part was wrong."
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (dolist (case (list
+                     ;; not JSON at all
+                     (list "left 0 top 0" "valid JSON")
+                     ;; a single rectangle sent bare, which needs to point
+                     ;; at the array rather than at the rectangle
+                     (list "{\"left\":0,\"top\":0,\"width\":1,\"height\":1}" "wrap it in []")
+                     ;; a field missing
+                     (list "[{\"left\":0,\"top\":0,\"width\":1}]" "height")
+                     ;; a field that is not a number
+                     (list "[{\"left\":\"a\",\"top\":0,\"width\":1,\"height\":1}]" "whole number")
+                     ;; a scalar
+                     (list "7" "array")))
+        (destructuring-bind (input expected) case
+          (multiple-value-bind (text result)
+              (edit-masks-as (token-with '("api:read" "api:write")) "web" "home" input)
+            (is-true (field result "isError") "~s was accepted" input)
+            (is-true (str:containsp expected text)
+                     "~s said ~s, which does not mention ~s" input text expected)
+            ;; and nothing was written
+            (is (equal nil (stored-masks channel "home")))))))))
+
+(test a-float-is-refused-rather-than-silently-truncated
+  "Pixel coordinates are whole numbers, and a model that sent 10.5 should
+be told so rather than have it become something else."
+  (with-fixture caller ()
+    (add-channel "web")
+    (multiple-value-bind (text result)
+        (edit-masks-as (token-with '("api:read" "api:write")) "web" "home"
+                       "[{\"left\":10.5,\"top\":0,\"width\":1,\"height\":1}]")
+      (is-true (field result "isError"))
+      (is-true (str:containsp "whole number" text)))))
+
+(test too-many-masks-on-one-screenshot-is-refused
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (multiple-value-bind (text result)
+          (edit-masks-as (token-with '("api:read" "api:write")) "web" "home"
+                         (format nil "[~{~a~^,~}]"
+                                 (loop repeat (1+ +max-masks-per-screenshot+)
+                                       collect "{\"left\":0,\"top\":0,\"width\":1,\"height\":1}")))
+        (is-true (field result "isError"))
+        (is-true (str:containsp "more than" text))
+        (is (equal nil (stored-masks channel "home")))))))
+
+(test editing-masks-needs-the-write-scope
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (multiple-value-bind (text result)
+          (edit-masks-as (token-with '("api:read")) "web" "home"
+                         "[{\"left\":1,\"top\":2,\"width\":3,\"height\":4}]")
+        (is-true (field result "isError"))
+        (is-true (str:containsp "api:write" text))
+        (is (equal nil (stored-masks channel "home")))))))
+
+(test a-guest-may-list-masks-but-may-not-edit-them
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (roles:ensure-has-role company user 'roles:guest)
+      (multiple-value-bind (text result)
+          (edit-masks-as (token-with '("api:read" "api:write")) "web" "home"
+                         "[{\"left\":1,\"top\":2,\"width\":3,\"height\":4}]")
+        (is-true (field result "isError"))
+        (is-true (str:containsp "permission" text))
+        (is (equal nil (stored-masks channel "home")))))))
+
+(test another-accounts-channel-cannot-have-its-masks-edited
+  (with-fixture caller ()
+    (let* ((other (make-instance 'screenshotbot/model/company:company
+                                 :name "someone else"))
+           (theirs (make-instance 'channel :name "theirs" :company other)))
+      (push theirs (company-channels other))
+      (multiple-value-bind (text result)
+          (edit-masks-as (token-with '("api:read" "api:write")) "theirs" "home"
+                         "[{\"left\":1,\"top\":2,\"width\":3,\"height\":4}]")
+        (declare (ignore text))
+        (is-true (field result "isError"))
+        (is (equal nil (stored-masks theirs "home")))))))
