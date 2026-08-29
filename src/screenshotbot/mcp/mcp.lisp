@@ -28,6 +28,10 @@
                 #:make-diff-report)
   (:import-from #:screenshotbot/model/channel
                 #:channel-name)
+  (:import-from #:screenshotbot/model/image
+                #:find-image-by-oid
+                #:image
+                #:image-public-url)
   (:import-from #:screenshotbot/model/report
                 #:report
                 #:report-channel
@@ -112,6 +116,15 @@ would enjoy reading in a log.")
         "inputSchema" (obj "type" "object"
                            "properties" (obj)
                            "required" #()))
+   (obj "name" "fetch_image_url"
+        "description"
+        "Resolve a Screenshotbot image id into a URL. Image ids come from fetch_report. Returns JSON with a `url` you can fetch or view."
+        "inputSchema" (obj "type" "object"
+                           "properties"
+                           (obj "image_id"
+                                (obj "type" "string"
+                                     "description" "An image id, as returned by fetch_report"))
+                           "required" #("image_id")))
    (obj "name" "fetch_report"
         "description"
         "Fetch a Screenshotbot report by id, describing what changed between two runs. Returns JSON with the report metadata and, for each screenshot, the ids of the before and after images. Use fetch_image_url to turn an image id into a URL you can look at."
@@ -196,17 +209,28 @@ asking is the habit that eventually lists the wrong ones."
   "Cap on screenshots reported per section. Same reasoning as
 +MAX-CHANNELS+: a 2000-screenshot report helps nobody.")
 
-(defun find-visible (id type)
-  "The object with ID, if it exists, is of TYPE, and this caller may see it.
+(defun visible (object type)
+  "OBJECT, if it is of TYPE and this caller may see it. Otherwise NIL."
+  (when (and (typep object type)
+             (auth:can-viewer-view (auth:viewer-context hunchentoot:*request*)
+                                   object))
+    object))
+
+(defun find-report-by-id (id)
+  "The report with ID, if this caller may see it.
 
 Never signals. A model hands us whatever string it has, and a malformed
 id has to come back as something it can read and correct rather than as
 an internal error it can only retry."
-  (let ((object (ignore-errors (util:find-by-oid id type))))
-    (when (and object
-               (auth:can-viewer-view (auth:viewer-context hunchentoot:*request*)
-                                     object))
-      object)))
+  (visible (ignore-errors (util:find-by-oid id 'report)) 'report))
+
+(defun find-image-by-id (id)
+  "The image with ID, if this caller may see it.
+
+Images are not in the generic object-id index -- they carry their own oid
+and their own lookup -- so this cannot go through FIND-BY-OID, which
+simply returns NIL for every image id."
+  (visible (ignore-errors (find-image-by-oid id)) 'image))
 
 (defun screenshot-json (screenshot)
   (let ((image (screenshot-image screenshot)))
@@ -274,7 +298,7 @@ an internal error it can only retry."
       ((str:emptyp id)
        (tool-result "report_id is required." :errorp t))
       (t
-       (let ((report (find-visible id 'report)))
+       (let ((report (find-report-by-id id)))
          (cond
            ((null report)
             ;; Deliberately one message for "no such report" and "not
@@ -286,6 +310,35 @@ an internal error it can only retry."
            (t
             (tool-result (encode-json-to-string (report-json report))))))))))
 
+(defun image-url (image)
+  "A publicly fetchable URL for IMAGE.
+
+IMAGE-PUBLIC-URL can return a site-relative path, which is useless to a
+model on the other side of the internet. Binding *CDN-DOMAIN* the way the
+run API does makes MAKE-CDN absolutize it."
+  (let ((util.cdn:*cdn-domain* (or util.cdn:*cdn-domain*
+                                   (installation-domain *installation*))))
+    (util.cdn:make-cdn (image-public-url image :originalp t))))
+
+(defun fetch-image-url-tool (arguments)
+  (let ((id (field arguments "image_id")))
+    (cond
+      ((str:emptyp id)
+       (tool-result "image_id is required." :errorp t))
+      (t
+       (let ((image (find-image-by-id id)))
+         (cond
+           ((null image)
+            ;; One answer for missing and forbidden, as with reports.
+            (tool-result
+             (format nil "No image ~a is visible to this account." id)
+             :errorp t))
+           (t
+            (tool-result
+             (encode-json-to-string
+              (obj "id" (util:oid image)
+                   "url" (image-url image)))))))))))
+
 (defun call-tool (name arguments)
   "Run the named tool. Second value is NIL if there is no such tool."
   (cond
@@ -293,6 +346,8 @@ an internal error it can only retry."
      (values (list-channels-tool) t))
     ((equal name "fetch_report")
      (values (fetch-report-tool arguments) t))
+    ((equal name "fetch_image_url")
+     (values (fetch-image-url-tool arguments) t))
     (t
      (values nil nil))))
 

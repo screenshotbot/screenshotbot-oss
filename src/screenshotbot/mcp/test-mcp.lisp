@@ -467,9 +467,13 @@ the error change."
 
 (defun make-changed-report (company channel)
   "A report whose run changed one screenshot relative to its previous run."
-  (let* ((before-image (make-image :pathname
+  ;; :COMPANY matters -- AUTH:CAN-VIEWER-VIEW on an image defers to its
+  ;; company, so an image without one is visible to nobody.
+  (let* ((before-image (make-image :company company
+                                   :pathname
                                    (static-asset "assets/images/example-view.svg.png")))
-         (after-image (make-image :pathname
+         (after-image (make-image :company company
+                                  :pathname
                                   (static-asset "assets/images/example-view-square.svg.png")))
          (previous (make-recorder-run
                     :company company :channel channel
@@ -523,3 +527,71 @@ see the difference itself."
         (multiple-value-bind (text result) (fetch-report-as token (oid report))
           (declare (ignore text))
           (is-true (field result "isError")))))))
+
+;; ----------------------------------------------------------------------
+;; fetch_image_url
+;; ----------------------------------------------------------------------
+
+(defun fetch-image-url-as (token id)
+  (tool-text
+   (post-as token
+            :json (format nil "{\"jsonrpc\":\"2.0\",\"id\":9,~
+\"method\":\"tools/call\",\"params\":{\"name\":\"fetch_image_url\",~
+\"arguments\":{\"image_id\":~s}}}" id))))
+
+(test an-image-id-resolves-to-an-absolute-url
+  "IMAGE-PUBLIC-URL can return a site-relative path, which is useless to a
+model on the other side of the internet."
+  (with-fixture caller ()
+    (let ((image (make-image :company company
+                             :pathname
+                             (static-asset "assets/images/example-view.svg.png"))))
+      (multiple-value-bind (text result) (fetch-image-url-as token (oid image))
+        (is-false (field result "isError"))
+        (let* ((json (let ((json:*json-identifier-name-to-lisp* #'identity)
+                           (json:*identifier-name-to-key* #'identity))
+                       (json:decode-json-from-string text)))
+               (url (field json "url")))
+          (is (equal (oid image) (field json "id")))
+          (is-true url)
+          (is-true (str:starts-with-p "http" url)))))))
+
+(test the-ids-a-report-hands-out-are-the-ids-this-tool-accepts
+  "The two tools are only useful composed, and nothing else checks that
+one's output is the other's input."
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (multiple-value-bind (report) (make-changed-report company channel)
+        (let* ((report-json
+                 (let ((json:*json-identifier-name-to-lisp* #'identity)
+                       (json:*identifier-name-to-key* #'identity))
+                   (json:decode-json-from-string
+                    (fetch-report-as token (oid report)))))
+               (change (first (field report-json "changed"))))
+          (dolist (side (list "before" "after"))
+            (let ((image-id (field (field change side) "imageId")))
+              (is-true image-id "~a had no imageId" side)
+              (multiple-value-bind (text result) (fetch-image-url-as token image-id)
+                (is-false (field result "isError")
+                          "~a image id ~a did not resolve" side image-id)
+                (is-true (str:containsp "http" text))))))))))
+
+(test an-unknown-or-malformed-image-id-is-a-tool-error
+  (with-fixture caller ()
+    (dolist (id (list "not-an-oid" "" "000000000000000000000000"))
+      (multiple-value-bind (text result) (fetch-image-url-as token id)
+        (declare (ignore text))
+        (is-true (field result "isError")
+                 "id ~s did not produce a tool error" id)))))
+
+(test an-image-belonging-to-another-account-is-not-resolvable
+  "Otherwise an image id leaked from anywhere would resolve to a URL."
+  (with-fixture caller ()
+    (let* ((other (make-instance 'screenshotbot/model/company:company
+                                 :name "someone else"))
+           (image (make-image :company other
+                              :pathname (static-asset
+                                         "assets/images/example-view.svg.png"))))
+      (multiple-value-bind (text result) (fetch-image-url-as token (oid image))
+        (declare (ignore text))
+        (is-true (field result "isError"))))))
