@@ -267,7 +267,10 @@ a no-op when either is nil."
                   "base-uri 'self'"
                   ;; Chrome enforces form-action on redirect targets,
                   ;; so nibble forms that redirect to OAuth providers get blocked.
-                  "form-action 'self' https:"
+                  ;; The http loopback origins are for OAuth flows from MCP
+                  ;; clients (e.g. Claude Code) whose redirect_uri is a local
+                  ;; http server.
+                  "form-action 'self' https: http://localhost:* http://127.0.0.1:*"
                   "report-uri /csp-report"
                   "report-to csp-endpoint"))))
 
