@@ -28,6 +28,9 @@
            :index +domain-index+
            :index-reader enterprise-install-by-domain
            :index-values all-enterprise-installs
-           :accessor enterprise-install-domain))
-  (:metaclass persistent-class))
+           :accessor enterprise-install-domain)
+   (email-domains :initarg :email-domains
+                  :reader email-domains))
+  (:metaclass persistent-class)
+  (:default-initargs :email-domains nil))
 
