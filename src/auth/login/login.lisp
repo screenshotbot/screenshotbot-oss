@@ -32,6 +32,8 @@
                 #:impersonation
                 #:make-impersonation)
   (:import-from #:screenshotbot/login/common
+                #:email-domain
+                #:email-redirect-url
                 #:auth-common-header
                 #:or-divider
                 #:auth-template
@@ -141,20 +143,27 @@
 
 (defmethod sign-in-step1-post ((auth-provider standard-auth-provider) &key email redirect)
   (throttle! *signin-step1-throttler*)
-  (with-error-builder (:check check :errors errors
-                       :form-builder (signin-get)
-                       :success (hex:safe-redirect
-                                 (nibble ()
-                                   (sign-in-after-email auth-provider
-                                                        :email email
-                                                        :redirect redirect))))
-    (check :email (not (str:emptyp email))
-           "Email must be provided")
-    (check :email (< (length email) 250)
-           "Email is too long")
-    (check :email (auth:find-user *installation* :email email)
-           (format nil "Could not find a user with email: ~a" email))
-    (push-event :signin-attempt :email email)))
+  (flet ((email-redirect-url ()
+           (email-redirect-url auth-provider (email-domain email))))
+   (with-error-builder (:check check :errors errors
+                        :form-builder (signin-get)
+                        :success (hex:safe-redirect
+                                  (nibble ()
+                                    (cond
+                                      ((email-redirect-url)
+                                       (hex:safe-redirect (email-redirect-url)))
+                                      (t
+                                       (sign-in-after-email auth-provider
+                                                            :email email
+                                                            :redirect redirect))))))
+     (check :email (not (str:emptyp email))
+            "Email must be provided")
+     (check :email (< (length email) 250)
+            "Email is too long")
+     (unless (email-redirect-url)
+       (check :email (auth:find-user *installation* :email email)
+              (format nil "Could not find a user with email: ~a" email)))
+     (push-event :signin-attempt :email email))))
 
 (defmethod auth-provider-signin-form ((auth-provider standard-auth-provider) redirect)
 
