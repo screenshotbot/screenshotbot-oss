@@ -385,7 +385,7 @@ bugs. (See corresponding tests.)"
       (when (valid-email-address-p email)
         (check
          (allowed-domain-p auth-provider email)
-         "You may qnot sign up with this email domain.")))))
+         "You may not sign up with this email domain.")))))
 
 (defun allowed-domain-p (auth-provider email)
   (cond
