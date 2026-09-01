@@ -263,3 +263,6 @@
                       :ensure-prepared ,ensure-prepared
                       :allow-url-redirect ,allow-url-redirect
                       :alert ,alert))
+
+(defun email-domain (email)
+  (car (last (str:split "@" email))))

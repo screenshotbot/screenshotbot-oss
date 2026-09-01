@@ -17,6 +17,7 @@
                 #:test
                 #:with-fixture)
   (:import-from #:screenshotbot/login/common
+                #:email-domain
                 #:illegal-oauth-redirect
                 #:server-with-login
                 #:signin-get)
@@ -117,3 +118,7 @@
           (fail "expected to redirect"))
         (is (equal (hunchentoot:header-out :location hunchentoot:*reply*)
                    "https://trusted.example.com/account/oauth-callback?state=12345&code=test-code"))))))
+
+(test email-domain
+  (is (equal "gmail.com" (email-domain "arnstein87@gmail.com")))
+  (is (equal "example.com" (email-domain "zoidberg@example.com"))))
