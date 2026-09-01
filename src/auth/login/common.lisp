@@ -243,6 +243,12 @@
                     :initform :all
                     :reader allowed-domains)))
 
+(defgeneric email-redirect-url (auth-provider
+                                domain)
+  (:documentation "If non-NIL, we'll redirect to this URL if a user types in an email with this domain")
+  (:method (self domain)
+    nil))
+
 (defmacro with-login ((&key (needs-login t) (signup nil)
                          (company nil)
                          (invite nil)
