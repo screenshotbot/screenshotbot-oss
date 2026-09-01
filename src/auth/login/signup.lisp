@@ -27,6 +27,8 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/login/common
+                #:email-domain
+                #:email-redirect-url
                 #:allowed-domains
                 #:verify-email-p
                 #:auth-common-header
@@ -201,7 +203,12 @@
                                                  :redirect redirect)
                        :success (hex:safe-redirect
                                  (nibble ()
-                                   (apply #'signup-after-email/get auth-provider args))))
+                                   (let ((email-redirect-url (email-redirect-url auth-provider (email-domain email))))
+                                     (cond
+                                       (email-redirect-url
+                                        (hex:safe-redirect email-redirect-url))
+                                       (t
+                                        (apply #'signup-after-email/get auth-provider args)))))))
     (push-event :signup-attempt :email email
                                 :ip-address (hunchentoot:real-remote-addr))
 
@@ -369,15 +376,16 @@ bugs. (See corresponding tests.)"
   (flet ((check (&rest args)
            (apply check field args)))
     (check (< (length email) 150)
-           "Password is too long")
+           "Email is too long")
     (check (valid-email-address-p email)
            "That doesn't look like a valid email address")
-    (check (not (auth:find-user *installation* :email (string-downcase email)))
-           (format nil "That email address is already in use: ~a" email))
-    (when (valid-email-address-p email)
-      (check
-       (allowed-domain-p auth-provider email)
-       "You may not sign up with this email domain."))))
+    (unless (email-redirect-url auth-provider (email-domain email))
+      (check (not (auth:find-user *installation* :email (string-downcase email)))
+             (format nil "That email address is already in use: ~a" email))
+      (when (valid-email-address-p email)
+        (check
+         (allowed-domain-p auth-provider email)
+         "You may qnot sign up with this email domain.")))))
 
 (defun allowed-domain-p (auth-provider email)
   (cond

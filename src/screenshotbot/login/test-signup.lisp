@@ -15,6 +15,7 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains)
   (:import-from #:it.bese.fiveam
+                #:is
                 #:is-false
                 #:is-true
                 #:def-fixture
@@ -26,11 +27,13 @@
                 #:installation
                 #:multi-org-feature)
   (:import-from #:screenshotbot/login/common
+                #:email-redirect-url
                 #:signup-get
                 #:standard-auth-provider)
   (:import-from #:screenshotbot/login/github-oauth
                 #:github-oauth-provider)
   (:import-from #:screenshotbot/login/signup
+                #:check-email
                 #:allowed-domain-p
                 #:signup-after-email/get
                 #:valid-email-address-p
@@ -49,12 +52,17 @@
                 #:screenshot-test
                 #:with-installation)
   (:import-from #:util/form-errors
+                #:with-error-builder
                 #:with-form-errors)
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/testing
                 #:screenshot-static-page
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:fiveam-matchers/has-length
+                #:has-length)
+  (:import-from #:cl-mock
+                #:answer))
 (in-package :screenshotbot/login/test-signup)
 
 (util/fiveam:def-suite)
@@ -228,3 +236,39 @@
             (make-instance 'standard-auth-provider
                            :allowed-domains (list "example.com" "car.com"))
             "foo@car.com")))
+
+(test check-email-checks-for-existance-without-enterprise-flow
+  (with-fixture state ()
+    (let ((errors nil))
+      (flet ((check (name test message)
+               (unless test
+                 (push (cons name message)
+                       errors))))
+        (make-user :email "zoidberg@example.com")
+        (check-email
+         (make-instance 'standard-auth-provider)
+         #'check
+         :email
+         "zoidberg@example.com")
+        (assert-that errors
+                     (has-length 1))))))
+
+(test check-email-doesnt-check-if-doing-enterprise-flow
+  (with-fixture state ()
+    (let ((errors nil))
+      (cl-mock:with-mocks ()
+       (flet ((check (name test message)
+                (unless test
+                  (push (cons name message)
+                        errors))))
+         (make-user :email "zoidberg@example.com")
+         (let ((auth-provider (make-instance 'standard-auth-provider)))
+           (answer (email-redirect-url auth-provider "example.com")
+             "https://example.screenshotbot.io/login")
+           (check-email
+            auth-provider
+            #'check
+            :email
+            "zoidberg@example.com"))
+         (assert-that errors
+                      (has-length 0)))))))
