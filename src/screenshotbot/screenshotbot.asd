@@ -310,6 +310,7 @@
                  (:file "microsoft-entra")
                  (:file "aws-cognito")
                  (:file "require-invite-sso-mixin")
+                 (:file "email-auth-provider")
                  (:file "template")))
    (:module "company"
     :serial t
