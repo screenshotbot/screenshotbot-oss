@@ -908,8 +908,15 @@ us build additional coordination logic in the future."))
         (mapc
          (lambda (object)
            (encode-create-object (class-layouts snapshot-coordinator) object stream))
-         (all-objects snapshot-coordinator)))
+         (%sort-objects (all-objects snapshot-coordinator))))
       (write-encode-set-slots-in-background snapshot-coordinator))))
+
+(defun %sort-objects (objects)
+  (sort
+   (copy-list
+    objects)
+   #'<
+   :key #'store-object-id))
 
 (defvar *crash-output-stream* t)
 
