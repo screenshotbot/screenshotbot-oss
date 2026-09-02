@@ -10,6 +10,7 @@
                 #:persistent-class
                 #:store-object)
   (:import-from #:util/store/store
+                #:with-class-validation
                 #:defindex)
   (:import-from #:util/store/fset-index
                 #:fset-unique-index)
@@ -23,14 +24,15 @@
   'fset-unique-index
   :slot-name 'domain)
 
-(defclass enterprise-install (store-object)
-  ((domain :initarg :domain
-           :index +domain-index+
-           :index-reader enterprise-install-by-domain
-           :index-values all-enterprise-installs
-           :accessor enterprise-install-domain)
-   (email-domains :initarg :email-domains
-                  :reader email-domains))
-  (:metaclass persistent-class)
-  (:default-initargs :email-domains nil))
+(with-class-validation
+ (defclass enterprise-install (store-object)
+   ((domain :initarg :domain
+            :index +domain-index+
+            :index-reader enterprise-install-by-domain
+            :index-values all-enterprise-installs
+            :accessor enterprise-install-domain)
+    (email-domains :initarg :email-domains
+                   :reader email-domains))
+   (:metaclass persistent-class)
+   (:default-initargs :email-domains nil)))
 
