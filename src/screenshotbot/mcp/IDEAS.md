@@ -13,6 +13,12 @@
   requests, so pair it with a GitHub MCP server (or the `gh` CLI) to get from a
   PR to its report ids: Screenshotbot posts one check per channel and its
   details link is `/report/<report_id>`.
+- "What's still unreviewed on PR #123?" -- an account using batches gets one
+  check per commit rather than one per channel, and its details link is
+  `/batch/<batch_id>`. `list_batch_reports` opens that up into a channel per
+  line, with the report id for each one that changed, so the PR -> report ->
+  accept path works for batched setups too. `status` is where the answer is:
+  `action-required` means a person still has to look.
 
 # Masks
 

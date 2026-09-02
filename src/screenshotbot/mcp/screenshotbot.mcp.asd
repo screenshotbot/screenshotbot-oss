@@ -15,6 +15,7 @@
                ;; so these only need to load after mcp; nothing references
                ;; them by name.
                (:file "channels")
+               (:file "batches")
                (:file "reports")
                (:file "images")
                (:file "runs")
@@ -35,6 +36,7 @@
   :components ((:file "test-util")
                (:file "test-mcp")
                (:file "test-channels")
+               (:file "test-batches")
                (:file "test-reports")
                (:file "test-images")
                (:file "test-runs")
