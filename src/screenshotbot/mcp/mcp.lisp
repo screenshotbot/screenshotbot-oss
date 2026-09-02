@@ -23,6 +23,8 @@
                 #:viewer-context-api-key)
   (:import-from #:screenshotbot/server
                 #:defhandler)
+  (:import-from #:util/events
+                #:push-event)
   (:import-from #:json
                 #:encode-json-to-string)
   (:export
@@ -273,6 +275,10 @@ and it beats an UNBOUND-VARIABLE from deep inside a tool."
 
 (defun call-tool (name arguments)
   "Run the named tool. Second value is NIL if there is no such tool."
+  ;; Before the lookup, so an unknown name is recorded too: a client
+  ;; reaching again and again for a tool that does not exist is worth
+  ;; knowing about. The arguments are deliberately not recorded.
+  (push-event :mcp-tool :tool-name name)
   (let ((tool (find name *tools* :key #'tool-name :test #'equal)))
     (cond
       ((null tool)
