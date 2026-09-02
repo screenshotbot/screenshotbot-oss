@@ -1028,27 +1028,38 @@ make-object-snapshot once we delete make-object-snapshot."
        (lambda (object)
          (setf (gethash object (touched-objects snapshot-coordinator)) t))))))
 
+(defun %sort-object-snapshot-pairs (object-snapshot-pairs)
+  (sort
+   (copy-list object-snapshot-pairs)
+   #'<
+   :key (lambda (object-snapshot-pair)
+          (store-object-id
+           (object-snapshot-pair-object object-snapshot-pair)))))
+
 (defmethod write-encode-set-slots-in-background ((snapshot-coordinator snapshot-coordinator))
   "This combines all the previous encoded data, and other snapshotted
 data, to finally append all the encode-set-slot information to the
 output stream"
   (unwind-protect
-       (with-open-file (stream (snapshot-pathname snapshot-coordinator)
-                               :direction :output
-                               :element-type '(unsigned-byte 8)
-                               :if-exists :append)
-         (loop for s in (batch-streams snapshot-coordinator) do
-           (file-position s 0)
-           (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
+       (let ((object-snapshots
+               (%sort-object-snapshot-pairs (object-snapshots snapshot-coordinator))))
+        (with-open-file (stream (snapshot-pathname snapshot-coordinator)
+                                :direction :output
+                                :element-type '(unsigned-byte 8)
+                                :if-exists :append)
+          ;; TODO: reorder all the pre-written snapshots into a sorted order
+          (loop for s in (batch-streams snapshot-coordinator) do
+            (file-position s 0)
+            (uiop:copy-stream-to-stream s stream :element-type '(unsigned-byte 8)))
 
-         (format t "Encoding background snapshots (~a)~%" (length (object-snapshots snapshot-coordinator)))
-         ;; Encode the background snapshots
-         (loop for object-snapshot-pair in (object-snapshots snapshot-coordinator)
-               do (encode-set-slots-for-snapshot snapshot-coordinator
-                                                 object-snapshot-pair
-                                                 stream))
+          (format t "Encoding background snapshots (~a)~%" (length object-snapshots))
+          ;; Encode the background snapshots
+          (loop for object-snapshot-pair in object-snapshots
+                do (encode-set-slots-for-snapshot snapshot-coordinator
+                                                  object-snapshot-pair
+                                                  stream))
 
-         (finish-output stream))
+          (finish-output stream)))
     (setf *object-changed-hook* nil)
     (close-batch-streams snapshot-coordinator)))
 
