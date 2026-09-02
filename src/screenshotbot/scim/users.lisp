@@ -238,7 +238,7 @@
   (let ((external-emails (dto-emails dto)))
     (unless (eql 1 (length external-emails))
       (error 'only-one-email))
-    (unless (equal
+    (unless (string-equal
              (external-user-user-name dto)
              (external-email-value (car (external-user-emails dto))))
       (error 'user-name-must-be-email))
