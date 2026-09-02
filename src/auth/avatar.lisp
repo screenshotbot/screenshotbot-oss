@@ -46,6 +46,7 @@ for downloading the profile picture.")))
 
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/account/avatar") (id signature)
+  (check-type signature string)
   (assert
    (verify-hmac (format nil "avatar.~a" id)
                 (ironclad:hex-string-to-byte-array
