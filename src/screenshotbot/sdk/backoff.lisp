@@ -41,7 +41,8 @@
   (when (member response-code '(408 ;; Typically client side
                                 429
                                 502
-                                503))
+                                503
+                                504))
     (cond
       ((should-retry-p attempt)
        (let ((timeout (add-jitter (expt backoff (1+ attempt)))))
@@ -52,6 +53,8 @@
               (%warn "We're making too many requests"))
              ((eql 408 response-code)
               (%warn "Request timed out"))
+             ((eql 504 response-code)
+              (%warn "The server took too long to respond"))
              (t
               (%warn "The server is unavailable"))))
          (sleep timeout)

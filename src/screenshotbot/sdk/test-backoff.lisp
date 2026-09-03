@@ -19,7 +19,7 @@
 (test maybe-retry-request-happy-path
   "Just that for each of the codes, we correctly invoke the restart,
 since the logs might be different for each code."
-  (loop for code in '(429 502 503) do
+  (loop for code in '(429 502 503 504) do
     (is
      (eql :done
           (restart-case
@@ -43,7 +43,7 @@ since the logs might be different for each code."
          :done)))))
 
 (test if-weve-attempted-enough-times-crash-for-service-unavailable
-  (dolist (code '(408 502))
+  (dolist (code '(408 502 504))
    (signals server-unavailable
      (restart-case
          (maybe-retry-request
