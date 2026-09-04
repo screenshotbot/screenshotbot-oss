@@ -58,6 +58,7 @@
   (:import-from #:util/misc
                 #:make-mp-hash-table)
   (:import-from #:bknr.datastore
+                #:store-object-with-id
                 #:store-object-id
                 #:without-sync
                 #:deftransaction)
@@ -85,6 +86,8 @@
                 #:view-flaky-screenshots)
   (:import-from #:util/copying
                 #:copying)
+  (:import-from #:util/store/object-id
+                #:find-by-oid)
   (:export
    #:microsoft-teams-card))
 (in-package :screenshotbot/dashboard/channels)
@@ -268,6 +271,12 @@
        (can-view! run)
        (hex:safe-redirect 'run-page :id (oid run))))))
 
+(defhandler (list-runs :uri "/channels/:id/runs") (id)
+  (with-login ()
+    (let ((channel (store-object-with-id (parse-integer id))))
+      (check-type channel channel)
+      (auth:can-view! channel)
+      (view-channel-runs channel))))
 
 (defun single-channel-view (channel)
   <app-template title= (format nil "Screenshotbot: ~a" (channel-name channel)) >
@@ -302,7 +311,7 @@
                             No promoted screenshots
                           </li>))
                  <li>
-                   <a href= (nibble () (view-channel-runs channel)) >
+                   <a href= (hex:make-url 'list-runs :id (store-object-id channel)) >
                      <mdi name= "view_list" />
                      View recent runs
                    </a>
@@ -598,6 +607,7 @@
            for i from 0 below 200
            collect channel))))
 
+
 (defun %list-projects (&key
                          (user (current-user))
                          (company (current-company)))
@@ -620,7 +630,7 @@
                   data-target= "#channel-result" />
           </div>
        </taskie-page-title>
-
+       
        <div id= "channel-result" data-args= "{}" data-update=channel-search
             data-save-original= "true" >
          ,(%render-channels-as-taskie channels :next-link next-link
@@ -632,5 +642,8 @@
   (with-login ()
     (%list-projects)))
 
+
 (defhandler (channels-page :uri "/projects") ()
   (hex:safe-redirect 'projects-page))
+
+       
