@@ -272,3 +272,4 @@ upload-screenshots-oss: .PHONY
 
 emacs-tests:
 	cd src/emacs && make all
+	cd src/markup && make test-lisp-markup
