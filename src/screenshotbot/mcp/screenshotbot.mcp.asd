@@ -19,6 +19,7 @@
                (:file "reports")
                (:file "images")
                (:file "runs")
+               (:file "config")
                (:file "masks")))
 
 (defsystem "screenshotbot.mcp/tests"
