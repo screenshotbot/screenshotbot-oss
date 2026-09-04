@@ -616,7 +616,7 @@
                           (markup:write-html
                            (%render-channels-for-search-query company search))))
         (channels (sort (copy-list (company-channels company))
-                        '|STRING<| :key 'channel-name)))
+                        #'string< :key 'channel-name)))
     (with-pagination (channels channels :next-link next-link :prev-link prev-link)
       (dashboard-template :user user :company company :script-name "/channels" :title "Screenshotbot: Channels"
        <taskie-page-title title= (channel-page-title) >
