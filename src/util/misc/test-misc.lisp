@@ -84,10 +84,13 @@
 #-screenshotbot-oss
 (test safe-ensure-directories-exist-when-actually-cant-write-dir
   #-windows
-  (unless (equal "root" (uiop:getenv "USER"))
-    (signals
-        file-error
-      (safe-ensure-directories-exist "/foo/car/bar.txt"))))
+  (let ((user (uiop:getenv "USER")))
+    (when (and
+           user
+           (not (equal "root" user)))
+     (signals
+         file-error
+       (safe-ensure-directories-exist "/foo/car/bar.txt")))))
 
 (defun pathname-equal (a b)
   (string= (namestring a) (namestring b)))
