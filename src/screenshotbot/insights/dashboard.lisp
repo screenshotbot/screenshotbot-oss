@@ -32,9 +32,12 @@
                 #:active-screenshot-keys)
   (:import-from #:screenshotbot/insights/pull-requests
                 #:user-reviews-last-n-days
+                #:write-pr-actions-csv
                 #:pr-to-actions)
   (:import-from #:core/ui/taskie
                 #:taskie-page-title)
+  (:import-from #:core/ui/mdi
+                #:mdi)
   (:import-from #:auth
                 #:user-full-name)
   (:import-from #:util/throttler
@@ -243,7 +246,7 @@ monthly-active."
         (rejected "PRs with at least one rejection")
         (accepted "PRs with only accepted screenshots"))
    (let ((data (make-hash-table :test #'equal)))
-     (loop for action being the hash-values of (pr-to-actions company)
+     (loop for action being the hash-values of (pr-to-actions company :num-days days)
            do
               (ecase action
                 (:accepted
@@ -287,6 +290,17 @@ monthly-active."
                                                               (pct accepted)
                                                               (pct rejected))
                                                 :data  data)))))))
+
+(defun pull-requests-csv-link (company &key days)
+  "A nibble that downloads the data behind the pull requests chart as CSV."
+  (nibble (:name :insights-pull-requests-csv)
+    (auth:can-view! company)
+    (throttle! *throttler* :key company)
+    (setf (hunchentoot:content-type*) "text/csv; charset=utf-8")
+    (setf (hunchentoot:header-out :content-disposition)
+          (format nil "attachment; filename=pull-requests-~a-days.csv" days))
+    (with-output-to-string (output)
+      (write-pr-actions-csv company output :num-days days))))
 
 (defvar *random-names*
   (list
@@ -373,6 +387,13 @@ monthly-active."
           <div class= "col-md-6">
             <div class= "chart-container" >
               <canvas id= "pull-requests" />
+            </div>
+            <div class= "chart-actions" >
+              <a href=(pull-requests-csv-link company :days days)
+                 class= "btn btn-outline-primary btn-sm" >
+                <mdi name= "file_download" class= "me-1" />
+                Download CSV
+              </a>
             </div>
           </div>
 

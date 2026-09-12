@@ -62,7 +62,7 @@
     (loop for report in (fast-reports-for-run run) do
       (fn run report))))
 
-(defun pr-to-actions (company &key (num-days 30))
+(defun pr-to-actions (company &key (num-days *num-days*))
   (let ((actions (make-hash-table :test #'equal))
         (runs (runs-for-last-60-days company :num-days num-days))
         (failure-examples (make-hash-table :test #'equal)))
@@ -88,23 +88,38 @@
                    :accepted))))))
     (values actions failure-examples)))
 
+(defun csv-cell (value)
+  "Render VALUE as a single CSV cell, quoting it if required."
+  (let ((value (if value (format nil "~a" value) "")))
+    (if (find-if (lambda (ch)
+                   (member ch '(#\, #\" #\Newline #\Return)))
+                 value)
+        (format nil "\"~a\"" (str:replace-all "\"" "\"\"" value))
+        value)))
+
+(defun write-pr-actions-csv (company output &key (num-days *num-days*))
+  "Write the per-PR data behind the Insights pull requests chart as CSV."
+  (multiple-value-bind (actions failure-examples)
+      (pr-to-actions company :num-days num-days)
+    (format output
+            "PR URL,STATUS,REPORT URL,BUILD URL~%")
+    (loop for pr being the hash-keys of actions
+            using (hash-value state)
+          do
+             (format output "~{~a~^,~}~%"
+                     (mapcar #'csv-cell
+                             (list pr (string-downcase state)
+                                   (util/misc:?.
+                                    report-link
+                                    (gethash pr failure-examples))
+                                   (util/misc:?.
+                                    %run-build-url
+                                    (util/misc:?. report-run (gethash pr failure-examples)))))))))
+
 (defun pr-to-actions-to-csv (company output &key (num-days 60))
   "Meant to sending over this data manually to customers"
   (with-open-file (output output :direction :output :if-exists :supersede)
-    (multiple-value-bind (actions failure-examples)
-        (pr-to-actions company :num-days num-days)
-      (format output
-              "PR URL,INTERESTING FEEDBACK,REPORT URL,BUILD URL~%")
-      (loop for pr being the hash-keys of actions
-              using (hash-value state)
-           do
-              (format output "~a,~a,~a,~a~%" pr (string-downcase state)
-                      (util/misc:?.
-                       report-link
-                       (gethash pr failure-examples))
-                      (util/misc:?.
-                       %run-build-url
-                       (util/misc:?. report-run (gethash pr failure-examples))))))))
+    (write-pr-actions-csv company output :num-days num-days)))
 
 (defun user-reviews-last-n-days (company &key (num-days *num-days*))
   (let ((result (make-hash-table)))

@@ -1266,6 +1266,14 @@ input[type=number].number-to-text {
         min-height: 30em;
         background: white;
     }
+
+    /* Sits flush under a .chart-container so it reads as part of the
+       same card. */
+    .chart-actions {
+        background: white;
+        padding: 0 1.5rem 1.5rem;
+        text-align: right;
+    }
 }
 
 .channel-view {
