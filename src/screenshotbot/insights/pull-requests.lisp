@@ -27,12 +27,36 @@
                 #:report-acceptable)
   (:import-from #:screenshotbot/insights/variables
                 #:*num-days*)
+  (:import-from #:screenshotbot/dashboard/review-link
+                #:get-canonical-pull-request-url)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:pull-request-id)
+  (:import-from #:screenshotbot/user-api
+                #:recorder-run-channel
+                #:channel-repo)
+  (:import-from #:util/misc
+                #:?.)
   (:import-from #:screenshotbot/dashboard/reports
                 #:report-link))
 (in-package :screenshotbot/insights/pull-requests)
 
+(defun canonical-pr-url (run)
+  "The pull request URL on the run is whatever the CI reported, so it
+can look like git@github.com:foo/bar.git/pull/42. Rebuild it the same
+way the dashboard builds review links. Returns NIL if we don't know
+how to canonicalize it for this run's forge."
+  (when-let ((id (pull-request-id run)))
+    (let ((url (get-canonical-pull-request-url
+                (?. channel-repo (recorder-run-channel run))
+                id)))
+      ;; The default method returns "#", which would otherwise collapse
+      ;; every unrecognized repo into a single key.
+      (unless (equal "#" url)
+        url))))
+
 (defun safe-pr (run)
   (or
+   (canonical-pr-url run)
    (pull-request-url run)
    (gitlab-merge-request-iid run)
    ;; This is incorrect, needs revision here:

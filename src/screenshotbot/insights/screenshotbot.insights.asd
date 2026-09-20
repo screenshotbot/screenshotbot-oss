@@ -20,4 +20,5 @@
   :serial t
   :depends-on (:screenshotbot.insights
                :util/fiveam)
-  :components ((:file "test-date")))
+  :components ((:file "test-date")
+               (:file "test-pull-requests")))
