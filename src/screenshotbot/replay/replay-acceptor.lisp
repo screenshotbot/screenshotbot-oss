@@ -27,6 +27,7 @@
   (:import-from #:auto-restart
                 #:with-auto-restart)
   (:import-from #:screenshotbot/server
+                #:screenshotbot-acceptor
                 #:register-init-hook
                 #:*init-hooks*)
   (:import-from #:screenshotbot/model/company
@@ -41,6 +42,8 @@
   #+lispworks
   (:import-from #:server/acceptor-override
                 #:ipv6-acceptor)
+  (:import-from #:core/config/api
+                #:config)
   (:export
    #:call-with-hosted-snapshot
    #:render-acceptor
@@ -112,10 +115,27 @@
     (setf (gethash snapshot (asset-maps acceptor))
           asset-map)))
 
+(defmethod matches-replay-uri (request uri)
+  (equal (first (str:split ":" (hunchentoot:host request))) (config "replay.render-acceptor.domain")))
+
+(defmethod matches-replay-uri (request  (uri string))
+  (and
+   (equal (hunchentoot:script-name request) uri)
+   (call-next-method)))
+
+(defmethod matches-replay-uri (request (uri-test-fn function))
+  (and
+   (funcall uri-test-fn request)
+   (call-next-method)))
+
 (defmacro def-replay-handler ((name &key uri acceptor-names) &body body)
   (declare (ignore acceptor-names))
-  `(define-easy-handler (,name :uri ,uri :acceptor-names '(replay)) ()
-     ,@body))
+  `(progn
+     (define-easy-handler (,name :uri (lambda (request)
+                                        (matches-replay-uri request ,uri))
+                                 :acceptor-names '(replay
+                                                   screenshotbot-acceptor)) ()
+       ,@body)))
 
 (defmethod pop-snapshot ((acceptor render-acceptor)
                          (snapshot replay:snapshot))
@@ -268,10 +288,10 @@
             (send-404 script-name))))))))
 
 (defun send-404 (script-name &optional (cache-time 60))
-  (log:debug "No such asset: ~a" script-name)
+  (log:debug "No such asset: ~a (acceptor: ~a)" script-name hunchentoot:*acceptor*)
   (setf (hunchentoot:return-code*) 404)
   (set-cache-control cache-time)
-  "No such asset")
+  "No such asset.")
 
 (def-replay-handler (asset-from-company
                      :uri (lambda (request)
@@ -340,3 +360,4 @@
                                (hunchentoot:acceptor-port acceptor)
                                (replay:asset-file root-asset)))))
     (pop-snapshot (default-render-acceptor) snapshot)))
+
