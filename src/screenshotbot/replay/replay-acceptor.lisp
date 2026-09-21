@@ -112,6 +112,11 @@
     (setf (gethash snapshot (asset-maps acceptor))
           asset-map)))
 
+(defmacro def-replay-handler ((name &key uri acceptor-names) &body body)
+  (declare (ignore acceptor-names))
+  `(define-easy-handler (,name :uri ,uri :acceptor-names '(replay)) ()
+     ,@body))
+
 (defmethod pop-snapshot ((acceptor render-acceptor)
                          (snapshot replay:snapshot))
   (a:deletef (snapshots-company acceptor)
@@ -120,24 +125,23 @@
   (remhash snapshot (Asset-maps acceptor)))
 
 
-(define-easy-handler (root :uri "/root" :acceptor-names '(replay)) ()
+(def-replay-handler (root :uri "/root") ()
   (let ((snapshot (car (loop for snapshot being the hash-values of (acceptor-snapshots *acceptor*)
                              collect snapshot))))
    (handle-asset
     snapshot
     (car (replay:root-assets snapshot)))))
 
-(define-easy-handler (debug-replay :uri "/debug" :acceptor-names '(replay)) ()
+(def-replay-handler (debug-replay :uri "/debug") ()
   (format nil "snapshots: ~S"
           (loop for key being the hash-keys of  (acceptor-snapshots hunchentoot:*acceptor*)
                 collect key)))
 
-(define-easy-handler (iframe-not-support
-                      :uri "/iframe-not-supported"
-                      :acceptor-names '(replay)) ()
+(def-replay-handler (iframe-not-support
+                      :uri "/iframe-not-supported") ()
   "<h1>iframe removed by Screenshotbot</h1>")
 
-(define-easy-handler (replay.css :uri "/css/replay.css" :acceptor-names '(replay)) ()
+(def-replay-handler (replay.css :uri "/css/replay.css") ()
   (let ((file (path:catfile (document-root) "css/replay.css")))
    (hunchentoot:handle-static-file
     file)))
@@ -239,12 +243,11 @@
       (uiop:copy-stream-to-stream input out :element-type '(unsigned-byte 8)))))
 
 (defvar *lock* (bt:make-lock))
-(define-easy-handler (asset :uri (lambda (request)
-                                   (let ((script-name (hunchentoot:script-name request)))
+(def-replay-handler (asset :uri (lambda (request)
+                                  (let ((script-name (hunchentoot:script-name request)))
                                     (and
                                      (str:starts-with-p "/snapshot/" script-name)
-                                     (str:containsp "/assets/" script-name))))
-                            :acceptor-names '(replay))
+                                     (str:containsp "/assets/" script-name)))))
     ()
   (let* ((script-name (hunchentoot:script-name hunchentoot:*request*))
          (parts (str:split "/" script-name))
@@ -270,13 +273,12 @@
   (set-cache-control cache-time)
   "No such asset")
 
-(define-easy-handler (asset-from-company
-                      :uri (lambda (request)
-                             (let ((script-name (hunchentoot:script-name request)))
-                               (and
-                                (str:starts-with-p "/company/" script-name)
-                                (str:containsp "/assets/" script-name))))
-                            :acceptor-names '(replay))
+(def-replay-handler (asset-from-company
+                     :uri (lambda (request)
+                            (let ((script-name (hunchentoot:script-name request)))
+                              (and
+                               (str:starts-with-p "/company/" script-name)
+                                (str:containsp "/assets/" script-name)))))
     ()
   (let* ((script-name (hunchentoot:script-name hunchentoot:*request*))
          (parts (str:split "/" script-name))
