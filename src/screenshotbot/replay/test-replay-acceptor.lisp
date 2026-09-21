@@ -38,8 +38,6 @@
                 #:with-global-binding)
   (:import-from #:flexi-streams
                 #:make-in-memory-output-stream)
-  (:import-from #:core/config/api
-                #:config)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/replay/test-replay-acceptor)
 
@@ -53,8 +51,7 @@
                     (status 200))
   (with-test-store (:globally t)
     (tmpdir:with-tmpdir (tmpdir)
-      (setf (config "replay.render-acceptor.domain") "127.0.0.1")
-      (with-local-acceptor (host :acceptor acceptor)
+     (with-local-acceptor (host :acceptor acceptor)
          ('render-acceptor)
        (unless (eql status 404)
          (fad:copy-file *fixture* (path:catfile tmpdir "abcd00.png")))
