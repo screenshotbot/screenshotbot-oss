@@ -46,10 +46,10 @@
                      :count (serapeum:count-cpus)))
 
 (defun call-with-semaphore (sem fn)
+  (unless (bt:wait-on-semaphore sem :timeout 60)
+    (error "timeout while waiting for semaphore"))
   (unwind-protect
-       (progn
-         (bt:wait-on-semaphore sem :timeout 60)
-         (funcall fn))
+       (funcall fn)
     (bt:signal-semaphore sem)))
 
 (defun magick-prefix-uncached ()
