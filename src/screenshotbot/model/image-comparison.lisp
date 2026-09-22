@@ -43,6 +43,8 @@
                 #:def-cron)
   (:import-from #:screenshotbot/events
                 #:push-event)
+  (:import-from #:screenshotbot/magick
+                #:with-magick-gatekeeper)
   (:import-from #:screenshotbot/magick/magick-lw
                 #:calculate-difference-rmse
                 #:compare-wands
@@ -168,12 +170,18 @@ images. If the first value was T, then this will always be 0.0"
   (with-tracing (:image-comparison)
     (with-local-image (before-file before-image)
       (with-local-image (after-file after-image)
-        (with-wand (before :file before-file)
-          (with-wand (after :file after-file)
-            (let ((rmse (calculate-difference-rmse before after)))
-             (let ((same-p (compare-wands before after p
-                                          :in-place-p t)))
-               (values same-p rmse)))))))))
+        ;; Gatekeep before the wands are read in, not around the
+        ;; comparison itself: the point is to bound how many decoded
+        ;; images are resident at once, so a thread waiting for a permit
+        ;; must not already be holding two of them. The local images are
+        ;; materialized above so we don't hold a permit over that I/O.
+        (with-magick-gatekeeper ()
+          (with-wand (before :file before-file)
+            (with-wand (after :file after-file)
+              (let ((rmse (calculate-difference-rmse before after)))
+                (let ((same-p (compare-wands before after p
+                                             :in-place-p t)))
+                  (values same-p rmse))))))))))
 
 (defmethod find-image-comparison-on-images ((before image)
                                             (after image)
