@@ -38,6 +38,9 @@ are nicknamed in their `defpackage` forms, e.g. `replay-acceptor.lisp`).
        send-remote-run (replay/remote.lisp)
          └─> background thread + persistent REMOTE-RUN object (status, logs)
                └─> schedule-replay-job (replay/integration.lisp)
+                     re-crawls the hosted snapshot #1 via
+                     https://screenshotbot-replay.tdrhq.com/... to build
+                     a SECOND snapshot in a server tmpdir
                      for each browser config:
                        selenium/webdriver navigates to the hosted snapshot
                        full-page screenshots taken via the replay proxy
@@ -130,12 +133,13 @@ The server handler (`pro/blobs.lisp`, `schedule-snapshot`):
    ever shipping the files inside the request.
 3. Creates an `integration:run` (`replay/integration.lisp`) carrying the
    company, user, channel, browser configs, the original request, and a
-   `urls` alist mapping each root asset's original URL path to a public
-   URL on `screenshotbot-replay.tdrhq.com` (a public hostname routed to
-   the render acceptor, mainly useful for debugging what was captured).
-4. Pushes the snapshot onto the global `*replay-acceptor*` (see Phase 4)
-   and hands the run to `remote:send-remote-run`; the cleanup callback
-   pops the snapshot when the run finishes.
+   `urls` alist mapping each root asset's original URL path (used as the
+   screenshot title) to a public URL on `screenshotbot-replay.tdrhq.com`
+   (a public hostname routed to the render acceptor). These URLs are the
+   input to the server-side re-crawl in Phase 4.
+4. Pushes the snapshot onto the global `*replay-acceptor*` so those public
+   URLs actually resolve, and hands the run to `remote:send-remote-run`;
+   the cleanup callback pops the snapshot when the run finishes.
 5. Responds with `{id, logs}` where `logs` is a
    `https://screenshotbot.io/replay/logs/<oid>` URL — the SDK prints this.
 
@@ -152,9 +156,28 @@ file, which the `/replay/logs/<oid>` page tails live over a websocket
 
 ## Phase 4: Rendering (taking the screenshots)
 
-For static-website runs, the snapshot already exists, so
-`schedule-replay-job` (`replay/integration.lisp`) has no URLs to crawl
-(that loop is for the sitemap-based flow) and goes straight to
+### The second snapshot
+
+Perhaps surprisingly, the uploaded snapshot is never rendered directly.
+`schedule-replay-job` (`replay/integration.lisp`) treats the run's `urls`
+— which for a static run point at the *hosted* copy of snapshot #1 on
+`screenshotbot-replay.tdrhq.com` — like any other list of URLs to crawl:
+it calls `load-url-into` on each one, building a **second snapshot** in a
+fresh server-side tmpdir. So the whole Phase 1 crawl/rewrite machinery
+runs again, this time on the server, fetching from the render acceptor
+over public HTTPS (through the server's HTTP cache and `validate-url`
+checks). Snapshot #1's role is purely to be the *source* this re-crawl
+fetches from; snapshot #2 (whose asset `url`s are the
+`replay.tdrhq.com` URLs) is what actually gets served to the browsers
+below, and is what `run-replay-on-urls` matches root assets against.
+
+This means the HTML is processed/rewritten twice end-to-end (once by the
+SDK, once by the server), and snapshot #2's assets live in a normal
+tmpdir for the duration of the job, not in the company blob store.
+
+### Driving the browsers
+
+`schedule-replay-job` then hands snapshot #2 to
 `replay-job-from-snapshot`. For each browser config:
 
 1. `with-selenium-server` obtains a selenium server (in prod, a static
@@ -172,8 +195,9 @@ For static-website runs, the snapshot already exists, so
    `http://<host>:5002/company/<encrypted-company-oid>/assets/<root-asset-name>`.
    The render acceptor looks the asset up in the snapshots pushed for that
    company and serves it — replaying the recorded status code and response
-   headers, and streaming the file body from the snapshot's tmpdir (which,
-   server-side, is the company blob store). Relative asset references in
+   headers, and streaming the file body from the snapshot's tmpdir (the
+   job's tmpdir for snapshot #2; the company blob store when serving
+   snapshot #1 to the re-crawl). Relative asset references in
    the rewritten HTML resolve to `/snapshot/<uuid>/assets/<hash>.<type>`,
    which the acceptor also serves. Missing assets get a cacheable 404.
 5. After a short settle sleep, `process-full-page-screenshot` asks the
@@ -232,12 +256,15 @@ no commit info, the run is marked as a periodic (trunk) job.
   must agree on the class definitions in `replay/core.lisp`
   (`snapshot`, `asset`, `http-header`, `snapshot-request`). These classes
   also carry `json-mop` metadata for a JSON encoding of the same request.
-- The same snapshot is pushed to the render acceptor **twice** for a
-  static run: once by `/api/replay/schedule` (for the public
-  `screenshotbot-replay.tdrhq.com` debug URLs, popped when the remote run
-  finishes) and once per browser config by `with-hosted-snapshot` during
-  rendering.
-- The crawler and asset-serving code paths are shared with the
-  sitemap-based "web replay" feature; the only real difference is who
-  builds the snapshot (the SDK locally vs. `schedule-replay-job` crawling
-  live URLs on the server) and that static runs arrive with git metadata.
+- Two different snapshots are live on the render acceptor during a static
+  run: snapshot #1 (pushed by `/api/replay/schedule`, backed by the blob
+  store, popped when the remote run finishes) serving the re-crawl on the
+  public hostname, and snapshot #2 (pushed per browser config by
+  `with-hosted-snapshot`, backed by the job tmpdir) serving the browsers
+  on port 5002.
+- Because of the re-crawl, the crawler and asset-serving code paths are
+  literally the same for static runs and the sitemap-based "web replay"
+  feature — a static run *is* a web replay whose target site happens to be
+  the hosted copy of the SDK's snapshot. The differences are just where
+  the `urls` list comes from and that static runs arrive with git
+  metadata.
