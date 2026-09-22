@@ -12,10 +12,14 @@
                 #:all-screenshots
                 #:process-results
                 #:replay-job-from-snapshot
+                #:schedule-replay-job
+                #:uploaded-snapshot
                 #:remove-base-url
                 #:get-local-addr)
   (:import-from #:screenshotbot/replay/core
                 #:asset
+                #:load-url-into
+                #:snapshot-request
                 #:snapshot)
   (:import-from #:screenshotbot/replay/browser-config
                 #:browser-config)
@@ -305,6 +309,60 @@
      :urls (list "https://www.google.com")
      :tmpdir tmpdir)
     (pass)))
+
+(def-fixture schedule-replay-job-mocks ()
+  (let (used-snapshot)
+    (cl-mock:if-called 'replay-job-from-snapshot
+                       (lambda (&key snapshot &allow-other-keys)
+                         (setf used-snapshot snapshot)
+                         :fake-results))
+    (cl-mock:if-called 'process-results
+                       (lambda (run results &key &allow-other-keys)
+                         (declare (ignore run))
+                         results))
+    (&body)))
+
+(test schedule-replay-job-renders-uploaded-snapshot-without-recrawling
+  (with-fixture state-2 ()
+    (with-fixture schedule-replay-job-mocks ()
+      (let ((run (make-instance 'integration:run
+                                :company company
+                                :request (make-instance 'snapshot-request
+                                                        :snapshot snapshot
+                                                        :channel-name "foo"
+                                                        :browser-configs
+                                                        (list (make-instance 'browser-config
+                                                                             :type "chrome")))
+                                :urls (list (cons "/" "https://foo.com"))
+                                :browser-configs
+                                (list (make-instance 'browser-config
+                                                     :type "chrome")))))
+        (cl-mock:if-called 'load-url-into
+                           (lambda (&rest args)
+                             (declare (ignore args))
+                             (error "Should not re-crawl an uploaded snapshot")))
+        (schedule-replay-job run)
+        (is (eql snapshot used-snapshot))))))
+
+(test schedule-replay-job-still-crawls-sitemap-style-runs
+  (with-fixture state-2 ()
+    (with-fixture schedule-replay-job-mocks ()
+      (let ((run (make-instance 'integration:run
+                                :company company
+                                :urls (list (cons "/" "https://foo.com"))
+                                :browser-configs
+                                (list (make-instance 'browser-config
+                                                     :type "chrome"))))
+            (crawled-urls))
+        (cl-mock:if-called 'load-url-into
+                           (lambda (context snapshot url tmpdir &rest args)
+                             (declare (ignore context tmpdir args))
+                             (push url crawled-urls)
+                             snapshot))
+        (schedule-replay-job run)
+        (is (equal (list "https://foo.com") crawled-urls))
+        (is (typep used-snapshot 'snapshot))
+        (is (not (eql snapshot used-snapshot)))))))
 
 
 (def-fixture fake-acceptor (&rest options)

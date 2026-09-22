@@ -539,6 +539,29 @@ accessing the urls or sitemap slot."
     (t
      "png")))
 
+(defun uploaded-snapshot (run)
+  "For static website runs, the SDK has already crawled the site and
+uploaded the snapshot, with its assets living in the company's blob
+store. In that case we render the uploaded snapshot directly, and
+there's nothing to crawl."
+  (?. replay:snapshot (original-request run)))
+
+(defun crawl-urls-into-snapshot (run urls tmpdir)
+  (let ((snapshot (make-instance 'snapshot :tmpdir tmpdir))
+        (context (make-instance 'context
+                                :custom-css (custom-css run)))
+        (count (length urls)))
+    (loop for (nil . url) in urls
+          for i from 1
+          do
+             (restart-case
+                 (progn
+                   (log:info "Loading ~a/~a" i count)
+                   (load-url-into context snapshot url tmpdir))
+               (ignore-this-url ()
+                 (values))))
+    snapshot))
+
 (with-auto-restart ()
   (defun schedule-replay-job (run)
     (with-extras (("run" run)
@@ -551,19 +574,9 @@ accessing the urls or sitemap slot."
                         (lambda (e)
                           (write-replay-log "SSL error: ~S~%" e))))
          (let* ((urls (sampled-urls run))
-                (snapshot (make-instance 'snapshot :tmpdir tmpdir))
-                (context (make-instance 'context
-                                        :custom-css (custom-css run)))
-                (count (length urls)))
-           (loop for (nil . url) in urls
-                 for i from 1
-                 do
-                    (restart-case
-                        (progn
-                          (log:info "Loading ~a/~a" i count)
-                          (load-url-into context snapshot url tmpdir))
-                      (ignore-this-url ()
-                        (values))))
+                (snapshot (or
+                           (uploaded-snapshot run)
+                           (crawl-urls-into-snapshot run urls tmpdir))))
            (let ((results (replay-job-from-snapshot
                            :snapshot snapshot
                            :urls urls
