@@ -141,6 +141,10 @@
       </div>
     </auth-template>))
 
+(define-condition email-redirect ()
+  ((domain :initarg :domain
+           :reader email-redirect-domain)))
+
 (defmethod sign-in-step1-post ((auth-provider standard-auth-provider) &key email redirect)
   (throttle! *signin-step1-throttler*)
   (flet ((email-redirect-url ()
@@ -151,6 +155,7 @@
                                   (nibble ()
                                     (cond
                                       ((email-redirect-url)
+                                       (signal 'email-redirect :domain (email-redirect-url))
                                        (hex:safe-redirect (email-redirect-url)))
                                       (t
                                        (sign-in-after-email auth-provider
