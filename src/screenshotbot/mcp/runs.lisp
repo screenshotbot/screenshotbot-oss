@@ -18,8 +18,10 @@
   (:import-from #:screenshotbot/model/channel
                 #:all-active-runs
                 #:channel
-                #:channel-name)
+                #:channel-name
+                #:runs-for-commit)
   (:import-from #:screenshotbot/model/company
+                #:company-channels
                 #:find-channel)
   (:import-from #:bknr.datastore
                 #:blob-pathname)
@@ -38,12 +40,13 @@
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot-image
                 #:screenshot-name)
-  (:documentation "The fetch_run, fetch_active_run and promotion_logs_for_run
-MCP tools.
+  (:documentation "The fetch_run, fetch_active_run, runs_for_commit and
+promotion_logs_for_run MCP tools.
 
 A run is a set of screenshots recorded from one CI job. fetch_report says
 what *changed* between two of them; these say what a single run contains,
-and which run a channel is currently comparing against."))
+which runs a commit produced, and which run a channel is currently
+comparing against."))
 (in-package :screenshotbot/mcp/runs)
 
 (defparameter +max-screenshots+ 200
@@ -150,6 +153,105 @@ is the habit that eventually lists the wrong ones."
               "activeRuns" (coerce (mapcar #'active-run-json
                                            (active-runs channel))
                                    'vector))))))))
+
+;; ----------------------------------------------------------------------
+;; runs_for_commit
+;; ----------------------------------------------------------------------
+
+(defparameter +max-runs-for-commit+ 200
+  "Cap on how many runs one commit lookup returns. A commit built across
+hundreds of channels is unusual, but a list that long is one no model can
+use and no reviewer would enjoy finding in a log.")
+
+(defun channels-to-search (company name)
+  "The channels a runs_for_commit call covers, in a stable order.
+
+NAME empty means all of them. Second value is whether NAME named a
+channel, so a caller can tell `that channel has no runs at this commit'
+from `there is no such channel' -- a distinction a model otherwise
+resolves by inventing one of the two.
+
+The viewer check repeats what the company scoping already established,
+as in VISIBLE-CHANNELS: listing objects without asking is the habit that
+eventually lists the wrong ones."
+  (let ((viewer (auth:viewer-context hunchentoot:*request*)))
+    (flet ((visible (channels)
+             (remove-if-not (lambda (channel)
+                              (auth:can-viewer-view viewer channel))
+                            channels)))
+      (cond
+        ((str:emptyp name)
+         (values (sort (visible (copy-list (company-channels company)))
+                       #'string< :key #'channel-name)
+                 t))
+        (t
+         (let ((channel (find-channel company name)))
+           (values (visible (when channel (list channel)))
+                   (not (null channel)))))))))
+
+(defun runs-at-commit (channels commit)
+  "Every run in CHANNELS recorded at COMMIT.
+
+Per channel rather than by scanning all of the company's runs -- which is
+what the /api/run endpoint does -- because each channel already indexes
+its runs by commit, and the answer is the same either way."
+  (let ((viewer (auth:viewer-context hunchentoot:*request*)))
+    (loop for channel in channels
+          append (remove-if-not (lambda (run)
+                                  (auth:can-viewer-view viewer run))
+                                (runs-for-commit channel commit)))))
+
+(defun run-for-commit-json (run)
+  "Just the channel and the id.
+
+Deliberately not RUN-JSON: the question here is *which* runs exist for a
+commit, and the answer is a list to choose from. A model that wants one
+of them calls fetch_run."
+  (obj "channel" (let ((channel (recorder-run-channel run)))
+                   (when channel (channel-name channel)))
+       "id" (util:oid run)))
+
+(def-tool "runs_for_commit"
+    ((commit "commit" "The commit hash. Matched exactly, so pass the full hash rather than an abbreviated one")
+     (name "channel"
+           "Optional. Restrict the answer to this channel (project) name, as returned by list_channels. Leave it out to search every channel in the account."
+           :optional t))
+    "Find the Screenshotbot runs recorded at a given commit. Use this to go from a commit -- the head of a pull request, say -- to the runs built from it. Searches every channel (project) in the account unless `channel` narrows it. Returns JSON with one entry per run carrying only the channel name and the run id; call fetch_run with an id for that run's screenshots and details."
+  (let ((company (auth:current-company)))
+    (cond
+      ((null company)
+       (tool-result "This token is not associated with an account."
+                    :errorp t))
+      (t
+       (multiple-value-bind (channels foundp) (channels-to-search company name)
+         (cond
+           ((not foundp)
+            ;; Same wording as fetch_active_run's: lookup is scoped to
+            ;; the caller's company, so a name that exists elsewhere is
+            ;; simply absent, and saying more would confirm it exists.
+            (tool-result
+             (format nil "No channel named ~a in this account." name)
+             :errorp t))
+           (t
+            (multiple-value-bind (listed total)
+                (capped (runs-at-commit channels commit)
+                        +max-runs-for-commit+ #'run-for-commit-json)
+              (tool-result
+               (format nil "~a~@[~%~%~a~]"
+                       (encode-json-to-string
+                        ;; An empty array rather than an error, as in
+                        ;; fetch_active_run: a commit nobody built is a
+                        ;; fact worth reporting, and a model handles []
+                        ;; fine where it handles a tool failure by
+                        ;; giving up.
+                        (obj "commit" commit
+                             "runs" listed))
+                       ;; Say so rather than truncate silently: a model
+                       ;; that cannot see the cut reports a partial list
+                       ;; as the whole one.
+                       (when total
+                         (format nil "Showing the first ~a of ~a runs."
+                                 +max-runs-for-commit+ total))))))))))))
 
 ;; ----------------------------------------------------------------------
 ;; Promotion logs

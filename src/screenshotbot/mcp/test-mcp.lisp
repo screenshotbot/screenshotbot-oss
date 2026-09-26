@@ -433,3 +433,61 @@ would tell a client the argument is optional, which is a different claim."
           (tool-text (call-tool-as token "probe_strict" '(("value" . ""))))
         (is-true (field result "isError"))
         (is-true (str:containsp "value is required" text))))))
+
+;; ----------------------------------------------------------------------
+;; Parameters that may be left out
+;; ----------------------------------------------------------------------
+
+(test an-optional-parameter-is-advertised-as-optional
+  "Unlike ALLOW-EMPTY, which still demands the key be present. A client
+that has to send an argument it has nothing to say about will send
+something, and whatever it invents we then have to interpret."
+  (let ((*tools* nil))
+    (def-tool "probe_optional" ((needed "needed" "Required")
+                                (extra "extra" "Optional" :optional t))
+      "Probe."
+      (tool-result (format nil "~a ~a" needed extra)))
+    (let ((schema (gethash "inputSchema" (first (tool-definitions)))))
+      (is (equalp #("needed") (gethash "required" schema)))
+      ;; Advertised all the same: a client cannot pass what it was never
+      ;; told about.
+      (is-true (gethash "extra" (gethash "properties" schema))))))
+
+(test an-omitted-optional-parameter-arrives-as-the-empty-string
+  "So a tool body has one case to handle rather than two, as with
+ALLOW-EMPTY."
+  (with-fixture caller ()
+    (let ((*tools* nil))
+      (def-tool "probe_optional" ((needed "needed" "Required")
+                                  (extra "extra" "Optional" :optional t))
+        "Probe."
+        (tool-result (format nil "got ~s" extra)))
+      (is (equal "got \"\""
+                 (tool-text (call-tool-as token "probe_optional"
+                                          '(("needed" . "x")))))))))
+
+(test an-optional-parameter-is-still-read-when-it-is-sent
+  (with-fixture caller ()
+    (let ((*tools* nil))
+      (def-tool "probe_optional" ((needed "needed" "Required")
+                                  (extra "extra" "Optional" :optional t))
+        "Probe."
+        (tool-result (format nil "got ~s" extra)))
+      (is (equal "got \"here\""
+                 (tool-text (call-tool-as token "probe_optional"
+                                          '(("needed" . "x")
+                                            ("extra" . "here")))))))))
+
+(test an-optional-parameter-does-not-make-its-neighbours-optional
+  "The required check is per parameter, and a tool that stopped enforcing
+it for the others would accept a call with nothing in it."
+  (with-fixture caller ()
+    (let ((*tools* nil))
+      (def-tool "probe_optional" ((needed "needed" "Required")
+                                  (extra "extra" "Optional" :optional t))
+        "Probe."
+        (tool-result (format nil "should not get here: ~a ~a" needed extra)))
+      (multiple-value-bind (text result)
+          (tool-text (call-tool-as token "probe_optional" '(("extra" . "here"))))
+        (is-true (field result "isError"))
+        (is-true (str:containsp "needed is required" text))))))

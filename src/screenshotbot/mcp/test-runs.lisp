@@ -9,6 +9,7 @@
         #:fiveam)
   (:import-from #:screenshotbot/mcp/runs
                 #:+max-log-characters+
+                #:+max-runs-for-commit+
                 #:+max-screenshots+)
   (:import-from #:screenshotbot/mcp/test-util
                 #:add-channel
@@ -33,16 +34,17 @@
                 #:make-screenshot)
   (:import-from #:util/store/object-id
                 #:oid)
-  (:documentation "The fetch_run and fetch_active_run tools."))
+  (:documentation "The fetch_run, fetch_active_run, runs_for_commit and
+promotion_logs_for_run tools."))
 (in-package :screenshotbot/mcp/test-runs)
 
 (util/fiveam:def-suite)
 
-(defun make-run (company channel &key (screenshots 1))
+(defun make-run (company channel &key (screenshots 1) (commit "abc123"))
   (make-recorder-run
    :company company
    :channel channel
-   :commit-hash "abc123"
+   :commit-hash commit
    ;; Deliberately different, because the tool reports them as separate
    ;; fields and a test that set them alike could not tell them apart.
    :branch "main"
@@ -239,6 +241,174 @@ elsewhere has to read as simply absent."
       (multiple-value-bind (body status)
           (call-tool-as (token-with '("profile")) "fetch_active_run"
                         (list (cons "channel" "web")))
+        (is (equal 403 status))
+        (is-false (str:containsp (oid run) body))))))
+
+;; ----------------------------------------------------------------------
+;; runs_for_commit
+;; ----------------------------------------------------------------------
+
+(defun runs-for-commit-as (token commit &optional channel)
+  (tool-text (call-tool-as token "runs_for_commit"
+                           (list* (cons "commit" commit)
+                                  (when channel
+                                    (list (cons "channel" channel)))))))
+
+(test runs-at-a-commit-are-found-across-every-channel
+  "The point of the tool: one commit, every channel that built it."
+  (with-fixture caller ()
+    (let* ((web (add-channel "web"))
+           (ios (add-channel "ios"))
+           (web-run (make-run company web :commit "deadbeef"))
+           (ios-run (make-run company ios :commit "deadbeef")))
+      (make-run company web :commit "otherhash")
+      (multiple-value-bind (text result) (runs-for-commit-as token "deadbeef")
+        (is-false (field result "isError"))
+        (let* ((json (decode text))
+               (runs (field json "runs")))
+          (is (equal "deadbeef" (field json "commit")))
+          (is (equal 2 (length runs)))
+          ;; By channel rather than by position: nothing promises an order.
+          (let ((by-channel (loop for run in runs
+                                  collect (cons (field run "channel")
+                                                (field run "id")))))
+            (is (equal (oid web-run)
+                       (cdr (assoc "web" by-channel :test #'equal))))
+            (is (equal (oid ios-run)
+                       (cdr (assoc "ios" by-channel :test #'equal))))))))))
+
+(test a-listed-run-carries-only-its-channel-and-id
+  "The answer is a list to choose from, not a set of runs to read. A model
+that wants one of them calls fetch_run."
+  (with-fixture caller ()
+    (let* ((channel (add-channel "web"))
+           (run (make-run company channel :commit "deadbeef" :screenshots 2)))
+      (declare (ignore run))
+      (let ((entry (first (field (decode (runs-for-commit-as token "deadbeef"))
+                                 "runs"))))
+        (is-false (field entry "screenshots"))
+        (is-false (field entry "mainBranch"))
+        (is-true (field entry "id"))
+        (is (equal "web" (field entry "channel")))))))
+
+(test the-ids-runs-for-commit-hands-out-are-the-ids-fetch-run-accepts
+  "runs_for_commit is only useful composed with fetch_run, and nothing else
+checks that one's output is the other's input."
+  (with-fixture caller ()
+    (let* ((channel (add-channel "web"))
+           (run (make-run company channel :commit "deadbeef")))
+      (let ((id (field (first (field (decode (runs-for-commit-as token "deadbeef"))
+                                     "runs"))
+                       "id")))
+        (is (equal (oid run) id))
+        (multiple-value-bind (text result) (fetch-run-as token id)
+          (declare (ignore text))
+          (is-false (field result "isError")))))))
+
+(test several-runs-in-one-channel-at-the-same-commit-are-all-listed
+  "A channel can be built twice at one commit -- a retry, or a rebuild --
+and the second one is exactly what someone chasing a flake is after."
+  (with-fixture caller ()
+    (let* ((channel (add-channel "web"))
+           (first-run (make-run company channel :commit "deadbeef"))
+           (second-run (make-run company channel :commit "deadbeef")))
+      (let ((ids (loop for run in (field (decode (runs-for-commit-as token "deadbeef"))
+                                         "runs")
+                       collect (field run "id"))))
+        (is (equal 2 (length ids)))
+        (is-true (member (oid first-run) ids :test #'equal))
+        (is-true (member (oid second-run) ids :test #'equal))))))
+
+(test a-commit-nobody-built-gets-an-empty-list-not-an-error
+  "A model handles [] fine; it handles a tool failure by giving up."
+  (with-fixture caller ()
+    (add-channel "web")
+    (multiple-value-bind (text result) (runs-for-commit-as token "never-built")
+      (is-false (field result "isError"))
+      (is-false (field (decode text) "runs")))))
+
+(test naming-a-channel-narrows-the-answer-to-it
+  (with-fixture caller ()
+    (let* ((web (add-channel "web"))
+           (ios (add-channel "ios"))
+           (web-run (make-run company web :commit "deadbeef")))
+      (make-run company ios :commit "deadbeef")
+      (let ((runs (field (decode (runs-for-commit-as token "deadbeef" "web"))
+                         "runs")))
+        (is (equal 1 (length runs)))
+        (is (equal (oid web-run) (field (first runs) "id")))))))
+
+(test a-channel-that-did-not-build-the-commit-is-empty-not-an-error
+  "Different from `no such channel', and a model told the wrong one of the
+two goes looking in the wrong place."
+  (with-fixture caller ()
+    (let ((web (add-channel "web")))
+      (add-channel "ios")
+      (make-run company web :commit "deadbeef")
+      (multiple-value-bind (text result) (runs-for-commit-as token "deadbeef" "ios")
+        (is-false (field result "isError"))
+        (is-false (field (decode text) "runs"))))))
+
+(test naming-a-channel-that-does-not-exist-is-a-tool-error
+  (with-fixture caller ()
+    (add-channel "web")
+    (make-run company (add-channel "ios") :commit "deadbeef")
+    (multiple-value-bind (text result)
+        (runs-for-commit-as token "deadbeef" "no-such-channel")
+      (declare (ignore text))
+      (is-true (field result "isError")))))
+
+(test the-commit-is-required-but-the-channel-is-not
+  "The channel narrows the answer rather than asks for it, so a client
+with nothing to say about it should be able to leave it out."
+  (with-fixture caller ()
+    (add-channel "web")
+    (multiple-value-bind (text result)
+        (tool-text (call-tool-as token "runs_for_commit" nil))
+      (is-true (field result "isError"))
+      (is-true (str:containsp "commit is required" text)))
+    (is-false (field (nth-value 1 (runs-for-commit-as token "deadbeef"))
+                     "isError"))))
+
+(test another-accounts-runs-are-not-found-by-commit
+  "Commit hashes are guessable -- they are in the pull request -- so this
+is the check that stops one being used to enumerate someone else's runs."
+  (with-fixture caller ()
+    (let* ((other (make-instance 'screenshotbot/model/company:company
+                                 :name "someone else"))
+           (channel (make-instance 'channel :name "theirs" :company other))
+           (run (make-run other channel :commit "deadbeef")))
+      (multiple-value-bind (text result) (runs-for-commit-as token "deadbeef")
+        (is-false (field result "isError"))
+        (is-false (field (decode text) "runs"))
+        (is-false (str:containsp (oid run) text))))))
+
+(test a-truncated-run-list-says-so
+  "A model that cannot see the cut reports a partial list as the whole one."
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (dotimes (i 3)
+        (make-run company channel :commit "deadbeef"))
+      (multiple-value-bind (text)
+          (progv (list '+max-runs-for-commit+) (list 2)
+            (runs-for-commit-as token "deadbeef"))
+        (is (equal 2 (length (field (decode text) "runs"))))
+        (is-true (str:containsp "first 2 of 3 runs" text))))))
+
+(test an-untruncated-run-list-says-nothing-about-truncation
+  (with-fixture caller ()
+    (let ((channel (add-channel "web")))
+      (make-run company channel :commit "deadbeef")
+      (is-false (str:containsp "Showing the first"
+                               (runs-for-commit-as token "deadbeef"))))))
+
+(test looking-up-a-commit-without-the-scope-never-reaches-it
+  (with-fixture caller ()
+    (let* ((channel (add-channel "web"))
+           (run (make-run company channel :commit "deadbeef")))
+      (multiple-value-bind (body status)
+          (call-tool-as (token-with '("profile")) "runs_for_commit"
+                        (list (cons "commit" "deadbeef")))
         (is (equal 403 status))
         (is-false (str:containsp (oid run) body))))))
 

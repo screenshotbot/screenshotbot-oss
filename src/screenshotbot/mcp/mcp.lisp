@@ -153,7 +153,8 @@ capability a model only discovers is missing when it tries to use it.")
                 :documentation "What the model reads to decide whether to call this.")
    (parameters :initarg :parameters
                :reader tool-parameters
-               :documentation "A list of (JSON-NAME DESCRIPTION). All required.")
+               :documentation "A list of (JSON-NAME DESCRIPTION &key OPTIONAL).
+Required unless marked OPTIONAL.")
    (scope :initarg :scope
           :initform nil
           :reader tool-scope
@@ -179,14 +180,19 @@ twice after the second load."
 (defmacro def-tool (name (&rest parameters) &body options-description-and-body)
   "Define an MCP tool called NAME.
 
-Each parameter is (VARIABLE JSON-NAME DESCRIPTION &key ALLOW-EMPTY) and
-is required: the generated handler answers with a tool error when one is
-missing, so BODY never sees a blank argument. ALLOW-EMPTY lifts that for
-a parameter whose empty value means something -- `set this to nothing' is
-a real request, and without it there is no way to express it. Such a
-parameter is still advertised as required, because it must be *present*;
-it just may be empty. An absent one arrives as \"\" rather than NIL, so
-BODY has one case to handle instead of two.
+Each parameter is (VARIABLE JSON-NAME DESCRIPTION &key ALLOW-EMPTY
+OPTIONAL) and is required by default: the generated handler answers with
+a tool error when one is missing, so BODY never sees a blank argument.
+
+ALLOW-EMPTY lifts that for a parameter whose empty value means something
+-- `set this to nothing' is a real request, and without it there is no
+way to express it. Such a parameter is still advertised as required,
+because it must be *present*; it just may be empty.
+
+OPTIONAL goes further and drops the parameter from the schema's
+`required' list, for one that narrows an answer rather than asks for it.
+Either way an absent parameter arrives as \"\" rather than NIL, so BODY
+has one case to handle instead of two.
 
 Keyword options may follow the parameter list, before the description:
 
@@ -206,17 +212,26 @@ all, and a docstring is the sort of thing that gets dropped."
     (setf options (nreverse options))
     (let ((description (pop options-description-and-body))
           (body options-description-and-body))
-      (flet ((allow-empty-p (parameter)
-               (getf (cdddr parameter) :allow-empty)))
+      (flet ((optional-p (parameter)
+               (getf (cdddr parameter) :optional))
+             (allow-empty-p (parameter)
+               ;; An optional parameter is allow-empty by construction:
+               ;; a tool that tolerates its absence has nothing to say
+               ;; about it arriving empty either.
+               (or (getf (cdddr parameter) :allow-empty)
+                   (getf (cdddr parameter) :optional))))
         `(register-tool
           (make-instance 'tool
                          :name ,name
                          :description ,description
                          :scope ,(getf options :scope)
-                         :parameters ',(loop for (nil json-name parameter-description)
-                                               in parameters
-                                             collect (list json-name
-                                                           parameter-description))
+                         :parameters ',(loop for parameter in parameters
+                                             for (nil json-name parameter-description)
+                                               = parameter
+                                             collect (list* json-name
+                                                            parameter-description
+                                                            (when (optional-p parameter)
+                                                              (list :optional t))))
                          :handler
                          (lambda (,arguments)
                            (declare (ignorable ,arguments))
@@ -245,7 +260,10 @@ all, and a docstring is the sort of thing that gets dropped."
                                  (obj "type" "string"
                                       "description" description))))
        ;; #() rather than a list, which CL-JSON renders as null.
-       "required" (coerce (mapcar #'first (tool-parameters tool)) 'vector)))
+       "required" (coerce (loop for parameter in (tool-parameters tool)
+                                unless (getf (cddr parameter) :optional)
+                                  collect (first parameter))
+                          'vector)))
 
 (defun tool-definitions ()
   (mapcar (lambda (tool)

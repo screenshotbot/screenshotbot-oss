@@ -72,6 +72,7 @@
    #:channel-repo
    #:channel-promotion-lock
    #:production-run-for
+   #:runs-for-commit
    #:*channel-repo-overrides*
    #:masks
    #:channel-cv
@@ -360,7 +361,12 @@ and the user's role must both agree."
                             :commit (unchanged-run-other-commit unchanged-run)
                             :seen (fset:with seen commit)))))))
 
-(defmethod %runs-for-commit ((channel channel) commit)
+(defmethod runs-for-commit ((channel channel) commit)
+  "Every run of CHANNEL recorded at COMMIT, newest first.
+
+Read off the channel's persistent commit-map rather than by scanning the
+company's runs, so asking about one commit does not cost a walk over
+every run the account has ever recorded."
   (let ((new-version
           (reverse
            (fset:convert
@@ -382,7 +388,7 @@ and the user's role must both agree."
            y))
      (fset:filter
       #'trunkp
-      (%runs-for-commit channel commit))
+      (runs-for-commit channel commit))
      :initial-value nil)))
 
 (defmethod channel-active-run ((channel channel))
