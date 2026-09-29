@@ -490,7 +490,7 @@
                                :alert
                                <div class= "alert alert-info mt-3">
                                  <p class= "mb-0" >
-                                   Public link to report: <a href=link >,(progn link)</a>
+                                   Public link to run: <a href=link >,(progn link)</a>
                                  </p>
                                  ,(unless (str:emptyp expiry-date)
                                     <p class= "mb-0" >
