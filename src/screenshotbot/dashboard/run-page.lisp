@@ -99,6 +99,7 @@
   (:import-from #:screenshotbot/dashboard/commit-graph
                 #:view-git-graph)
   (:import-from #:screenshotbot/dashboard/share
+                #:with-share
                 #:with-expiration-validation)
   (:import-from #:util/events
                 #:push-event)
@@ -498,7 +499,10 @@
                                </div>)))))))))
 
 (defhandler (shared-run-page :uri "/runs/:eoid/public") (eoid)
-  (error "Unimplemented"))
+  (with-share (run eoid)
+    (check-type run recorder-run)
+    (render-run-page run
+                     :skip-access-checks t)))
 
 (defun create-filter-matcher (filter &key key)
   (cond
@@ -578,8 +582,10 @@
        </page-nav-dropdown>)))
 
 
-(defun render-run-page (run &key name alert)
-  (can-view! run)
+(defun render-run-page (run &key name alert skip-access-checks)
+  (unless (and skip-access-checks
+               (gk:check :sharing-runs-allowed (recorder-run-company run)))
+    (can-view! run))
   (let* ((channel (recorder-run-channel run))
          (screenshots (screenshot-map:to-map (run-screenshot-map run)))
          (filter (cond

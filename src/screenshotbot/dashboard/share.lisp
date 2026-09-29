@@ -7,8 +7,18 @@
 (defpackage :screenshotbot/dashboard/share
   (:use #:cl)
   (:import-from #:easy-macros
-                #:def-easy-macro))
+                #:def-easy-macro)
+  (:import-from #:util/store/object-id
+                #:find-by-oid)
+  (:import-from #:screenshotbot/model/sharing
+                #:share-expired-p
+                #:share-object
+                #:share)
+  (:import-from #:screenshotbot/template
+                #:app-template))
 (in-package :screenshotbot/dashboard/share)
+
+(named-readtables:in-readtable markup:syntax)
 
 (def-easy-macro with-expiration-validation (expiry-date &key &binding errors &fn fn)
   (let ((errors))
@@ -37,4 +47,19 @@
 
       (fn errors))))
 
+
+(def-easy-macro with-share (&binding object eoid &fn fn)
+  (let* ((oid (encrypt:decrypt-mongoid eoid))
+         (share (find-by-oid oid)))
+    (check-type share share)
+    (cond
+      ((share-expired-p share)
+       <app-template>
+         <div class= "alert alert-danger mt-3">
+           This shared URL has expired.
+         </div>
+       </app-template>)
+      (t
+       (let ((obj (share-object share)))
+         (fn obj))))))
 

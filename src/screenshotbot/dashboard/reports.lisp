@@ -81,6 +81,7 @@
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
   (:import-from #:screenshotbot/dashboard/share
+                #:with-share
                 #:with-expiration-validation)
   (:export #:report-page #:report-link
            #:shared-report-page)
@@ -340,27 +341,16 @@
           (make-url 'report-page :id (oid report))))
 
 (defhandler (shared-report-page :uri "/report/:eoid/public") (eoid)
-  (let* ((oid (encrypt:decrypt-mongoid eoid))
-         (share (find-by-oid oid)))
-    (check-type share share)
-    (cond
-      ((share-expired-p share)
-       <app-template>
-         <div class= "alert alert-danger mt-3">
-           This shared URL has expired.
-         </div>
-       </app-template>)
-      (t
-       (let ((report (share-object share)))
-         (check-type report report)
-
-         (add-sales-toast
-          (render-report-page report
-                              :skip-access-checks t
-                              :alert
-                              <div class= "alert alert-warning mt-3">
-                              <b>Caution!</b> This is a publicly shared URL of a private report. Some actions on this page will require an authorized logged-in user. <a href= (report-link report)>Click here to view the private report.</a>
-                              </div>)))))))
+  (with-share (report eoid)
+    (check-type report report)
+    
+    (add-sales-toast
+     (render-report-page report
+                         :skip-access-checks t
+                         :alert
+                         <div class= "alert alert-warning mt-3">
+                           <b>Caution!</b> This is a publicly shared URL of a private report. Some actions on this page will require an authorized logged-in user. <a href= (report-link report)>Click here to view the private report.</a>
+                         </div>))))
 
 (defun add-sales-toast (html)
   (mquery:with-document (html)
