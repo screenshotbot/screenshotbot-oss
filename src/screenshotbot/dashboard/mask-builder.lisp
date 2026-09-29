@@ -35,20 +35,21 @@
 (defun mask-editor (channel screenshot &key (redirect "/runs")
                                          overlay)
   (with-login ()
-   (let* ((dim (image-dimensions screenshot))
-          (mask (assoc-value (masks channel) (screenshot-name screenshot) :test 'equal))
-          (save (nibble (json :method :post)
-                  (let ((new-mask (loop for x in (json:decode-json-from-string json)
-                                        collect
-                                        (apply 'make-instance
+    (auth:can-view! channel)
+    (let* ((dim (image-dimensions screenshot))
+           (mask (assoc-value (masks channel) (screenshot-name screenshot) :test 'equal))
+           (save (nibble (json :method :post)
+                   (let ((new-mask (loop for x in (json:decode-json-from-string json)
+                                         collect
+                                         (apply 'make-instance
                                                 'mask-rect
-                                                 :allow-other-keys t
-                                                 (alist-plist x)))))
-                    (set-channel-screenshot-mask
-                     channel
-                     (screenshot-name screenshot)
-                     new-mask))
-                  (hex:safe-redirect redirect))))
+                                                :allow-other-keys t
+                                                (alist-plist x)))))
+                     (set-channel-screenshot-mask
+                      channel
+                      (screenshot-name screenshot)
+                      new-mask))
+                   (hex:safe-redirect redirect))))
      <app-template title= "Screenshotbot: Edit Masks" >
        <form action=save method= "POST" id= "mask-editor-form" >
          <div class= "page-title-box main-content" >
