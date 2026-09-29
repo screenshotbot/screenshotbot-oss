@@ -161,4 +161,5 @@
 
 (defmacro defgk (name)
   "Currently does nothing. But in the future this will be a good way of
-knowing which features are available.")
+knowing which features are available."
+  nil)
