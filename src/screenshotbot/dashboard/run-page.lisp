@@ -44,6 +44,7 @@
   (:import-from #:screenshotbot/model/image
                 #:image-dimensions)
   (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run
                 #:recorder-run-directory
                 #:recorder-run-id
                 #:compare-tolerance
@@ -103,6 +104,10 @@
                 #:push-event)
   (:import-from #:util/form-errors
                 #:with-form-errors)
+  (:import-from #:util/store/object-id
+                #:oid-array)
+  (:import-from #:screenshotbot/model/sharing
+                #:share)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -459,7 +464,7 @@
       </div>
     </simple-card-page>))
 
-(defun submit-share-run (run expiry-date)
+(defmethod submit-share-run ((run recorder-run) expiry-date)
   (push-event :share.run.create)
   (with-expiration-validation (expiry-date :errors errors)
     (cond
@@ -469,7 +474,31 @@
                           :expiry-date expiry-date)
          (%share-run run)))
       (t
-       (error "unimplemented happy case")))))
+       (let ((share (make-instance 'share
+                                   :object run
+                                   :creator (current-user)
+                                   :company (current-company)
+                                   :expiry-date expiry-date)))
+         (hex:safe-redirect
+          (nibble ()
+            (let ((link (hex:make-full-url
+                         hunchentoot:*request*
+                         'shared-run-page
+                         :eoid (encrypt:encrypt-mongoid (oid-array share)))))
+              (render-run-page run
+                               :alert
+                               <div class= "alert alert-info mt-3">
+                                 <p class= "mb-0" >
+                                   Public link to report: <a href=link >,(progn link)</a>
+                                 </p>
+                                 ,(unless (str:emptyp expiry-date)
+                                    <p class= "mb-0" >
+                                      This link will expire ,(timeago :timestamp (local-time:parse-timestring expiry-date)).
+                                    </p>)
+                               </div>)))))))))
+
+(defhandler (shared-run-page :uri "/runs/:eoid/public") (eoid)
+  (error "Unimplemented"))
 
 (defun create-filter-matcher (filter &key key)
   (cond
@@ -549,7 +578,7 @@
        </page-nav-dropdown>)))
 
 
-(defun render-run-page (run &key name)
+(defun render-run-page (run &key name alert)
   (can-view! run)
   (let* ((channel (recorder-run-channel run))
          (screenshots (screenshot-map:to-map (run-screenshot-map run)))
@@ -568,6 +597,9 @@
           </:time>
           <render-run-tags tags= (recorder-run-tags run) />
         </h4>
+
+        ,(when alert
+           alert)
 
         <div class= "d-flex justify-content-between mt-3 mb-3">
           <div class= "" style= "width: 20em" >
