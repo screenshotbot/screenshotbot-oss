@@ -34,7 +34,8 @@
    #:allow
    #:deny
    #:show-all
-   #:compute-default-value))
+   #:compute-default-value
+   #:defgk))
 (in-package :gatekeeper/gatekeeper)
 
 (defindex +name-index+
@@ -157,3 +158,7 @@
 
 (defun deny (name obj &key comment)
   (push-acl name :deny obj :comment comment))
+
+(defmacro defgk (name)
+  "Currently does nothing. But in the future this will be a good way of
+knowing which features are available.")
