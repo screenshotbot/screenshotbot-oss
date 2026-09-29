@@ -28,39 +28,40 @@
 (named-readtables:in-readtable markup:syntax)
 
 (markup:deftag figma-drop-down (&key script-name run screenshot)
-  (let ((id (format nil "a~a" (random 10000000000)))
-        (existing-figma (find-existing-figma-link :channel
-                                                  (recorder-run-channel run)
-                                                  :screenshot-name
-                                                  (screenshot-name screenshot))))
-    <li>
-      <a href= "#" class= "dropdown-toggle" data-bs-toggle= "dropdown"
-         data-bs-target= id
-         aria-expanded= "false" >Figma</a>
-      <ul class= "dropdown-menu" >
-        ,(unless existing-figma
-           <li>
-             <a class= "dropdown-item" href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name screenshot)  :redirect script-name))
-                > Link to Figma</a>
-           </li>)
+  (when (auth:can-viewer-view (auth:viewer-context hunchentoot:*request*) run)
+    (let ((id (format nil "a~a" (random 10000000000)))
+          (existing-figma (find-existing-figma-link :channel
+                                                    (recorder-run-channel run)
+                                                    :screenshot-name
+                                                    (screenshot-name screenshot))))
+      <li>
+        <a href= "#" class= "dropdown-toggle" data-bs-toggle= "dropdown"
+           data-bs-target= id
+           aria-expanded= "false" >Figma</a>
+        <ul class= "dropdown-menu" >
+          ,(unless existing-figma
+             <li>
+               <a class= "dropdown-item" href= (nibble () (associate-figma :channel (recorder-run-channel run) :screenshot-name (screenshot-name screenshot)  :redirect script-name))
+                  > Link to Figma</a>
+             </li>)
 
-        ,(when existing-figma
-           <li>
-             <a class= "dropdown-item d-flex align-items-center" href= (figma-link-url existing-figma) target= "_blank" >
-               <mdi name= "open_in_new" class= "me-2"/>
-               <span>View in Figma</span>
-             </a>
-           </li>)
-        ,(when existing-figma
-           <li>
-             <a class= "dropdown-item d-flex align-items-center" href= (nibble ()
-                                                       (delete-figma existing-figma :redirect script-name)) >
-               <mdi name= "delete" class= "me-2"/>
-               <span>Delete Figma</span>
-             </a>
-           </li>)        
-      </ul>
-    </li>))
+          ,(when existing-figma
+             <li>
+               <a class= "dropdown-item d-flex align-items-center" href= (figma-link-url existing-figma) target= "_blank" >
+                 <mdi name= "open_in_new" class= "me-2"/>
+                 <span>View in Figma</span>
+               </a>
+             </li>)
+          ,(when existing-figma
+             <li>
+               <a class= "dropdown-item d-flex align-items-center" href= (nibble ()
+                                                                                   (delete-figma existing-figma :redirect script-name)) >
+                 <mdi name= "delete" class= "me-2"/>
+                 <span>Delete Figma</span>
+               </a>
+             </li>)        
+        </ul>
+      </li>)))
 
 
 (defun delete-figma (existing-figma &key redirect)
