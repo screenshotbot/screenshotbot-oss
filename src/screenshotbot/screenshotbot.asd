@@ -194,6 +194,7 @@
                  (:file "ensure-company")
                  (:file "review-link")
                  (:file "commit-graph")
+                 (:file "share")
                  (:file "run-page")
                  (:file "dashboard")
                  (:file "image")

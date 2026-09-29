@@ -97,6 +97,12 @@
                 #:load-archived-run)
   (:import-from #:screenshotbot/dashboard/commit-graph
                 #:view-git-graph)
+  (:import-from #:screenshotbot/dashboard/share
+                #:with-expiration-validation)
+  (:import-from #:util/events
+                #:push-event)
+  (:import-from #:util/form-errors
+                #:with-form-errors)
   (:export
    #:*create-issue-popup*
    #:run-page
@@ -429,7 +435,41 @@
     </page-nav-dropdown>))
 
 (defun %share-run (run)
-  (error "Unimplemented"))
+  (let ((submit (nibble (expiry-date)
+                  (submit-share-run run expiry-date))))
+    <simple-card-page form-action=submit >
+      <div class= "card-header">
+        <h3>Create public link for run</h3>
+      </div>
+
+      <div>
+        <div class= "alert alert-warning">
+          Any person with access to the link will be able to access the run, and all the images associated with it. They will not be able to edit or perform any actions on the run.
+        </div>
+      </div>
+
+      <div class= "mb-3">
+        <label class= "form-label" for= "expiry-date">Expiration date <span class= "text-muted">(leave empty to never expire)</span></label>
+        <input type= "date" id= "expiry-date" name= "expiry-date" class= "form-control" />
+      </div>
+
+      <div class= "card-footer">
+        <input type= "submit" class= "btn btn-primary" value= "Create Public Link" />
+        <a href= (run-link run) class= "btn btn-outline-secondary" >Cancel</a>
+      </div>
+    </simple-card-page>))
+
+(defun submit-share-run (run expiry-date)
+  (push-event :share.run.create)
+  (with-expiration-validation (expiry-date :errors errors)
+    (cond
+      (errors
+       (with-form-errors (:errors errors
+                          :was-validated t
+                          :expiry-date expiry-date)
+         (%share-run run)))
+      (t
+       (error "unimplemented happy case")))))
 
 (defun create-filter-matcher (filter &key key)
   (cond

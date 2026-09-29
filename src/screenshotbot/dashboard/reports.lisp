@@ -80,6 +80,8 @@
                 #:paginated)
   (:import-from #:screenshotbot/dashboard/explain
                 #:explain)
+  (:import-from #:screenshotbot/dashboard/share
+                #:with-expiration-validation)
   (:export #:report-page #:report-link
            #:shared-report-page)
   (:local-nicknames (#:diff-report #:screenshotbot/diff-report)))
@@ -199,59 +201,36 @@
 
 (defun submit-share-report (report expiry-date)
   (push-event :share.create)
-  (let ((errors))
-    (flet ((check (field check message)
-             (unless check
-               (push (cons field message) errors))))
-      (unless (str:emptyp expiry-date)
-        (let ((parsed (local-time:parse-timestring expiry-date)))
-          (check :expiry-date parsed "Invalid date")
-          (when parsed
-            (or
-             (check :expiry-date
-                    (local-time:timestamp>
-                     parsed
-                     (local-time:now))
-                    "Date can't be in the past")
-             (check :expiry-date
-                    (local-time:timestamp>
-                     parsed
-                     (local-time:timestamp+ (local-time:now) 2 :day))
-                    "Choose a date at least two days in the future"))))
-        (check :expiry-date
-               (cl-ppcre:scan "\\d{4}-\\d{2}-\\d{2}"
-                expiry-date)
-               "Invalid date format, perhaps you're using an old browser? Try YYYY-MM-DD format."))
-
-      (cond
-        (errors
-         (with-form-errors (:errors errors
-                            :was-validated t
-                            :expiry-date expiry-date)
-           (share-report report)))
-        (t
-         (let ((share (make-instance 'share
-                                      :object report
-                                      :creator (current-user)
-                                      :company (current-company)
-                                      :expiry-date expiry-date)))
-           (hex:safe-redirect
-            (nibble ()
-              (let ((link (hex:make-full-url
-                           hunchentoot:*request*
-                           'shared-report-page
-                            :eoid (encrypt:encrypt-mongoid (oid-array share)))))
-               (render-report-page report
-                                   :alert
-                                   <div class= "alert alert-info mt-3">
-                                     <p class= "mb-0" >
-                                       Public link to report: <a href=link >,(progn link)</a>
-                                     </p>
-                                     ,(unless (str:emptyp expiry-date)
-                                        <p class= "mb-0" >
-                                          This link will expire ,(timeago :timestamp (local-time:parse-timestring expiry-date)).
-                                        </p>)
-                                   </div>))))))))))
+  (with-expiration-validation (expiry-date :errors errors)
+    (cond
+      (errors
+       (with-form-errors (:errors errors
+                          :was-validated t
+                          :expiry-date expiry-date)
+         (share-report report)))
+      (t
+       (let ((share (make-instance 'share
+                                   :object report
+                                   :creator (current-user)
+                                   :company (current-company)
+                                   :expiry-date expiry-date)))
+         (hex:safe-redirect
+          (nibble ()
+            (let ((link (hex:make-full-url
+                         hunchentoot:*request*
+                         'shared-report-page
+                         :eoid (encrypt:encrypt-mongoid (oid-array share)))))
+              (render-report-page report
+                                  :alert
+                                  <div class= "alert alert-info mt-3">
+                                    <p class= "mb-0" >
+                                      Public link to report: <a href=link >,(progn link)</a>
+                                    </p>
+                                    ,(unless (str:emptyp expiry-date)
+                                       <p class= "mb-0" >
+                                         This link will expire ,(timeago :timestamp (local-time:parse-timestring expiry-date)).
+                                       </p>)
+                                   </div>)))))))))
 
 (defun more-links-for-report (report)
   "More links for report. The returned list may have null-values which
