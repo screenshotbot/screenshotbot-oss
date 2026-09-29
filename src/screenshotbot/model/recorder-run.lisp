@@ -93,6 +93,8 @@
   (:import-from #:util/store/unlikely-to-change-snapshot
                 #:unlikely-to-change-mixin
                 #:*unlikely-to-change*)
+  (:import-from #:gatekeeper/gatekeeper
+                #:defgk)
   ;; classes
   (:export #:promotion-log
            #:recorder-run
@@ -157,6 +159,8 @@
    #:do-runs-for-company)
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
+
+(defgk :sharing-runs-allowed)
 
 (with-class-validation
  (defclass promotion-log (bknr.datastore:blob)

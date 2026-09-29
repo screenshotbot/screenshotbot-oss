@@ -417,7 +417,9 @@
         (debug-info (make-url '%advanced-run-page :oid (oid run)))
         (download-run (nibble ()
                         (download-run run))))
-    <page-nav-dropdown title= "Advanced">
+    <page-nav-dropdown title= "More">
+      ,(when (gk:check :sharing-runs-allowed (auth:current-company))
+         <a href= (nibble () (%share-run run)) >Share</a>)
       <a href= promotion-logs >Promotion Logs</a>
       <a href= rerun-promotions >Re-Run Promotions</a>
       <a href=debug-info >Debug Info</a>
@@ -425,6 +427,9 @@
          <a href= (format nil "/review/~a" (oid run)) >Start Review</a>)
       <a href= download-run >Download run</a>
     </page-nav-dropdown>))
+
+(defun %share-run (run)
+  (error "Unimplemented"))
 
 (defun create-filter-matcher (filter &key key)
   (cond
