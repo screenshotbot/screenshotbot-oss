@@ -502,7 +502,11 @@
   (with-share (run eoid)
     (check-type run recorder-run)
     (render-run-page run
-                     :skip-access-checks t)))
+                     :skip-access-checks t
+                     :alert
+                     <div class= "alert alert-warning mt-3">
+                       <b>Caution!</b> This is a publicly shared URL of a private run. Some actions on this page will require an authorized logged-in user. <a href= (run-link run)>Click here to view the private run.</a>
+                     </div>)))
 
 (defun create-filter-matcher (filter &key key)
   (cond
