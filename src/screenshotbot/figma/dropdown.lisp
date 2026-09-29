@@ -65,7 +65,9 @@
 
 (defun delete-figma (existing-figma &key redirect)
   (confirmation-page
-   :yes (nibble () (bknr.datastore:delete-object existing-figma)
+   :yes (nibble ()
+          (auth:can-view! existing-figma)
+          (bknr.datastore:delete-object existing-figma)
           (hex:safe-redirect redirect))
    :no redirect
    <div>

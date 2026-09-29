@@ -44,6 +44,7 @@
   "REDIRECT is where we want to redirect to after the change is made."
   (push-event :associate-figma)
   (let ((submit (nibble (url)
+                  (auth:can-view! channel)
                   (validate-input
                    url
                    :channel channel

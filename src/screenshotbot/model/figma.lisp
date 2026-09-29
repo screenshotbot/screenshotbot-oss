@@ -50,6 +50,9 @@
   (index-get +channel-screenshot-index+
              (list channel screenshot-name)))
 
+(defmethod auth:can-viewer-view (vc (self figma-link))
+  (auth:can-viewer-view vc (figma-link-channel self)))
+
 (defvar *lock* (bt:make-lock))
 
 (defun update-figma-link (&rest args &key channel screenshot-name &allow-other-keys)
