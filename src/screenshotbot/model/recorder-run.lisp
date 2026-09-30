@@ -160,7 +160,8 @@
   (:local-nicknames (#:screenshot-map #:screenshotbot/model/screenshot-map)))
 (in-package :screenshotbot/model/recorder-run)
 
-(defgk :sharing-runs-allowed)
+(defgk :sharing-runs-allowed
+  :enabledp t)
 
 (with-class-validation
  (defclass promotion-log (bknr.datastore:blob)
