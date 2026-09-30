@@ -649,18 +649,19 @@
               <a href= (format nil "/report/~a" (oid report)) >,(report-title report)</a>)
          </div>)
 
-      <div id= "run-page-results" class= "search-results" data-update= (nibble () (update-content run channel))
+      <div id= "run-page-results" class= "search-results" data-update= (nibble () (update-content run channel :skip-access-checks skip-access-checks))
            data-args= "{}" >
-        ,(run-page-contents run channel filtered-screenshots)
+        ,(run-page-contents run channel filtered-screenshots :skip-access-checks skip-access-checks)
       </div>
 
     </app-template>))
 
-(defun update-content (run channel)
+(defun update-content (run channel &key skip-access-checks)
   (let* ((query (hunchentoot:parameter "search")))
     (run-page-contents
      run channel
      (screenshot-map:to-map (run-screenshot-map run))
+     :skip-access-checks skip-access-checks
      :filter (lambda (screenshot)
                (or (null query)
                    (str:contains? query (screenshot-name screenshot)
@@ -715,14 +716,15 @@
     (t
      (length x))))
 
-(defmethod render-modal ((self screenshots-viewer))
+(defmethod render-modal ((self screenshots-viewer) &key skip-access-checks)
   (let ((get-ith-image (nibble (n)
                          (setf (hunchentoot:content-type*) "application/json")
                          (let ((screenshot (funcall
                                             (screenshots-viewer-mapper self)
                                             (safe-elt (filtered-screenshots self)
                                                       (parse-integer n)))))
-                           (auth:can-view! screenshot)
+                           (unless skip-access-checks
+                             (auth:can-view! screenshot))
                            (json:encode-json-to-string
                             `((:src . ,(image-public-url
                                         (screenshot-image screenshot)
@@ -757,12 +759,14 @@
     </div>))
 
 
-(defun run-page-contents (run channel screenshot-map &key (filter #'identity))
+(defun run-page-contents (run channel screenshot-map &key
+                                                       (filter #'identity)
+                                                       (skip-access-checks))
   (let ((screenshots-viewer (make-instance 'screenshots-viewer
                                            :screenshots screenshot-map
                                            :filter filter)))
    <div id= (make-id) data-company-name= (?. company-name (recorder-run-company run)) >
-     ,(render-modal screenshots-viewer)
+     ,(render-modal screenshots-viewer :skip-access-checks skip-access-checks)
      ,(paginated
        (lambda (pair i)
          (destructuring-bind (screenshot-key . image) pair
