@@ -14,6 +14,7 @@
                 #:user-full-name
                 #:current-company)
   (:import-from #:screenshotbot/model/sharing
+                #:share-object
                 #:share-revoked-p
                 #:expiry-date
                 #:share-creator
@@ -31,6 +32,12 @@
                 #:nibble)
   (:import-from #:bknr.datastore
                 #:with-transaction)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run)
+  (:import-from #:screenshotbot/dashboard/run-page
+                #:shared-run-page)
+  (:import-from #:screenshotbot/report-api
+                #:report)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/settings/shares)
 
@@ -60,7 +67,9 @@
       :empty-message "No shares yet. Create a new share from any report."
       :row-generator (lambda (share)
                        (let* ((url (hex:make-full-url hunchentoot:*request*
-                                                      'shared-report-page
+                                                      (etypecase (share-object share)
+                                                        (report 'shared-report-page )
+                                                        (recorder-run 'shared-run-page))
                                                       :eoid (encrypt:encrypt-mongoid (oid-array share))))
                               (expiry-date (expiry-date share))
                               (expiry-ts (unless (str:emptyp expiry-date)
