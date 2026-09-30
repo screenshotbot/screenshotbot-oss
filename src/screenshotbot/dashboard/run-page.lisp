@@ -620,9 +620,13 @@
           </div>
 
 
-        ,(when (auth:can-viewer-edit
-                (auth:viewer-context hunchentoot:*request*)
-                run)
+        ,(when (and
+                (auth:can-viewer-edit
+                 (auth:viewer-context hunchentoot:*request*)
+                 run)
+                ;; even if we're logged in, hide this menu so that it
+                ;; doesn't confuse the person who shared it.
+                (not skip-access-checks))
            <div class= "">
              <comparison-menu run=run />
              <run-advanced-menu run=run />
