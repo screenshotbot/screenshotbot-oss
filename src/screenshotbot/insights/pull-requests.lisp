@@ -152,6 +152,20 @@ can have multiple runs, one for each version that was pushed to it."
     (:rejected "Rejected")
     (:accepted "Accepted")))
 
+(defun potential-regression-caught-p (states)
+  "Given the run STATES of a PR, oldest run first, guess whether we
+caught a regression that the author then fixed: some run had screenshot
+changes that weren't signed off (:REJECTED or :CHANGED), and a later run
+of the same PR came back clean (:ACCEPTED or :NONE)."
+  (let ((flagged nil))
+    (loop for state in states
+          do (cond
+               ((member state '(:rejected :changed))
+                (setf flagged t))
+               ((and flagged
+                     (member state '(:accepted :none)))
+                (return t))))))
+
 (defun csv-cell (value)
   "Render VALUE as a single CSV cell, quoting it if required."
   (let ((value (if value (format nil "~a" value) "")))
@@ -167,13 +181,17 @@ can have multiple runs, one for each version that was pushed to it."
       (pr-to-actions company :num-days num-days)
     (let ((run-states (pr-to-run-states company :num-days num-days)))
       (format output
-              "PR URL,STATUS,REPORT URL,BUILD URL,RUN STATES~%")
+              "PR URL,STATUS,POTENTIAL REGRESSION CAUGHT,REPORT URL,BUILD URL,RUN STATES~%")
       (loop for pr being the hash-keys of actions
               using (hash-value state)
+            for states = (gethash pr run-states)
             do
                (format output "~{~a~^,~}~%"
                        (mapcar #'csv-cell
                                (list pr (string-downcase state)
+                                     (if (potential-regression-caught-p states)
+                                         "true"
+                                         "false")
                                      (util/misc:?.
                                       report-link
                                       (gethash pr failure-examples))
@@ -181,8 +199,7 @@ can have multiple runs, one for each version that was pushed to it."
                                       %run-build-url
                                       (util/misc:?. report-run (gethash pr failure-examples)))
                                      (str:join "; "
-                                               (mapcar #'state-name
-                                                       (gethash pr run-states))))))))))
+                                               (mapcar #'state-name states)))))))))
 
 (defun pr-to-actions-to-csv (company output &key (num-days 60))
   "Meant to sending over this data manually to customers"

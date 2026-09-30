@@ -9,6 +9,7 @@
         #:fiveam)
   (:import-from #:screenshotbot/insights/pull-requests
                 #:canonical-pr-url
+                #:potential-regression-caught-p
                 #:pr-to-actions
                 #:pr-to-run-states
                 #:safe-pr
@@ -120,3 +121,39 @@ GENERATE-PULL-REQUESTS-CHART's ECASE falls through on it."
          (is (str:containsp "RUN STATES" csv))
          (is (str:containsp ",No changes; Rejected; No changes; Accepted"
                             csv)))))))
+
+(test potential-regression-caught-p-needs-a-clean-run-after-a-flagged-one
+  (is-true (potential-regression-caught-p '(:rejected :accepted)))
+  (is-true (potential-regression-caught-p '(:changed :none)))
+  (is-true (potential-regression-caught-p '(:none :rejected :none :accepted)))
+  ;; The flagged run has to come first.
+  (is-false (potential-regression-caught-p '(:accepted :rejected)))
+  (is-false (potential-regression-caught-p '(:none :changed)))
+  ;; Never resolved.
+  (is-false (potential-regression-caught-p '(:rejected :changed :rejected)))
+  ;; Nothing was ever flagged.
+  (is-false (potential-regression-caught-p '(:none :none)))
+  (is-false (potential-regression-caught-p '(:accepted)))
+  (is-false (potential-regression-caught-p '())))
+
+(test potential-regression-caught-column-in-the-csv
+  (with-installation ()
+    (with-fixture state ()
+      (let* ((company (make-instance 'company))
+             (channel (make-instance 'channel :name "channel-0" :company company)))
+        (dolist (state (list :rejected :none))
+          (make-run-with-state company channel
+                               "https://github.com/tdrhq/fast-example/pull/20"
+                               state))
+        (dolist (state (list :none :rejected))
+          (make-run-with-state company channel
+                               "https://github.com/tdrhq/fast-example/pull/21"
+                               state))
+        (let ((csv (with-output-to-string (out)
+                     (write-pr-actions-csv company out :num-days 30))))
+          (is (str:containsp "PR URL,STATUS,POTENTIAL REGRESSION CAUGHT," csv))
+          ;; The flag is the third cell, right after STATUS.
+          (is (str:containsp "fast-example/pull/20,rejected,true," csv))
+          (is (str:containsp "fast-example/pull/21,rejected,false," csv))
+          (is (str:containsp ",Rejected; No changes" csv))
+          (is (str:containsp ",No changes; Rejected" csv)))))))
