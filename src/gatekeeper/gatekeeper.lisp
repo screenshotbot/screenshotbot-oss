@@ -159,7 +159,9 @@
 (defun deny (name obj &key comment)
   (push-acl name :deny obj :comment comment))
 
-(defmacro defgk (name)
+(defmacro defgk (name &key (enabledp nil))
   "Currently does nothing. But in the future this will be a good way of
 knowing which features are available."
-  nil)
+  `(progn
+     (defmethod compute-default-value ((name (eql ,name)) object)
+       ,enabledp)))

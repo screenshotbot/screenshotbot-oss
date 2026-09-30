@@ -10,6 +10,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:gatekeeper/gatekeeper
+                #:defgk
                 #:access-control
                 #:access-controls
                 #:gatekeeper)
@@ -76,3 +77,14 @@
     ;; and is overridden with :default
     (is (eql t (gk:check 'test-gk "foobar" :default nil)))
     (is (eql nil (gk:check 'test-gk "foo" :default t)))))
+
+(defgk :gk-enabled-by-default
+  :enabledp t)
+
+(defgk :gk-disabled-by-default
+  :enabledp nil)
+
+(test default-value-from-defgk
+  (with-fixture state ()
+    (is (eql t (gk:check :gk-enabled-by-default :obj)))
+    (is (eql nil (gk:check :gk-disabled-by-default :obj)))))
