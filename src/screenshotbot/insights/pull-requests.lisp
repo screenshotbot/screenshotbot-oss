@@ -86,6 +86,25 @@ how to canonicalize it for this run's forge."
     (loop for report in (fast-reports-for-run run) do
       (fn run report))))
 
+(defun next-state (state report)
+  "Fold REPORT into the state accumulated so far. Returns the new state,
+and as a second value whether REPORT is a good example to link to for
+that state."
+  (let ((example-p nil))
+    (when (eql :none state)
+      (setf state :changed)
+      (setf example-p t))
+    (when-let ((acceptable (report-acceptable report)))
+      (case (acceptable-state acceptable)
+        (:rejected
+         (setf state :rejected)
+         (setf example-p t))
+        (:accepted
+         (when (eql :changed #| should not be :none |#
+                    state)
+           (setf state :accepted)))))
+    (values state example-p)))
+
 (defun pr-to-actions (company &key (num-days *num-days*))
   (let ((actions (make-hash-table :test #'equal))
         (runs (runs-for-last-60-days company :num-days num-days))
@@ -95,22 +114,43 @@ how to canonicalize it for this run's forge."
           do (setf (gethash (safe-pr run) actions)
                    :none))
     (do-run-report (run report company :num-days num-days)
-      (when (eql :none (gethash (safe-pr run) actions))
-        (setf (gethash (safe-pr run) actions)
-              :changed)
-        (setf (gethash (safe-pr run) failure-examples) report))
-      (when-let ((acceptable (report-acceptable report)))
-        (case (acceptable-state acceptable)
-          (:rejected
-           (setf (gethash (safe-pr run) actions)
-                 :rejected)
-           (setf (gethash (safe-pr run) failure-examples) report))
-          (:accepted
-           (when (eql :changed #| should not be :none |#
-                      (gethash (safe-pr run) actions))
-             (setf (gethash (safe-pr run) actions)
-                   :accepted))))))
+      ;; Runs without a PR have nothing to attribute the report to, and
+      ;; must not end up as a NIL key in ACTIONS.
+      (when-let ((pr (safe-pr run)))
+        (multiple-value-bind (state example-p)
+            (next-state (gethash pr actions :none) report)
+          (setf (gethash pr actions) state)
+          (when example-p
+            (setf (gethash pr failure-examples) report)))))
     (values actions failure-examples)))
+
+(defun run-state (run)
+  "The state of a single RUN, computed the same way PR-TO-ACTIONS
+computes the state of a whole PR."
+  (let ((state :none))
+    (loop for report in (fast-reports-for-run run)
+          do (setf state (next-state state report)))
+    state))
+
+(defun pr-to-run-states (company &key (num-days *num-days*))
+  "Map each PR to the list of states of its runs, oldest run first. A PR
+can have multiple runs, one for each version that was pushed to it."
+  (let ((states (make-hash-table :test #'equal)))
+    (loop for run in (runs-for-last-60-days company :num-days num-days)
+          for pr = (safe-pr run)
+          if pr
+            do (push (run-state run) (gethash pr states)))
+    (loop for pr being the hash-keys of states
+          do (setf (gethash pr states)
+                   (nreverse (gethash pr states))))
+    states))
+
+(defun state-name (state)
+  (ecase state
+    (:none "No changes")
+    (:changed "Unreviewed changes")
+    (:rejected "Rejected")
+    (:accepted "Accepted")))
 
 (defun csv-cell (value)
   "Render VALUE as a single CSV cell, quoting it if required."
@@ -125,20 +165,24 @@ how to canonicalize it for this run's forge."
   "Write the per-PR data behind the Insights pull requests chart as CSV."
   (multiple-value-bind (actions failure-examples)
       (pr-to-actions company :num-days num-days)
-    (format output
-            "PR URL,STATUS,REPORT URL,BUILD URL~%")
-    (loop for pr being the hash-keys of actions
-            using (hash-value state)
-          do
-             (format output "~{~a~^,~}~%"
-                     (mapcar #'csv-cell
-                             (list pr (string-downcase state)
-                                   (util/misc:?.
-                                    report-link
-                                    (gethash pr failure-examples))
-                                   (util/misc:?.
-                                    %run-build-url
-                                    (util/misc:?. report-run (gethash pr failure-examples)))))))))
+    (let ((run-states (pr-to-run-states company :num-days num-days)))
+      (format output
+              "PR URL,STATUS,REPORT URL,BUILD URL,RUN STATES~%")
+      (loop for pr being the hash-keys of actions
+              using (hash-value state)
+            do
+               (format output "~{~a~^,~}~%"
+                       (mapcar #'csv-cell
+                               (list pr (string-downcase state)
+                                     (util/misc:?.
+                                      report-link
+                                      (gethash pr failure-examples))
+                                     (util/misc:?.
+                                      %run-build-url
+                                      (util/misc:?. report-run (gethash pr failure-examples)))
+                                     (str:join "; "
+                                               (mapcar #'state-name
+                                                       (gethash pr run-states))))))))))
 
 (defun pr-to-actions-to-csv (company output &key (num-days 60))
   "Meant to sending over this data manually to customers"

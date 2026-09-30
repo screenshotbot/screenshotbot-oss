@@ -19,6 +19,7 @@
 (defsystem :screenshotbot.insights/tests
   :serial t
   :depends-on (:screenshotbot.insights
+               :screenshotbot/testing-lib
                :util/fiveam)
   :components ((:file "test-date")
                (:file "test-pull-requests")))
