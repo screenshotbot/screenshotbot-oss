@@ -116,6 +116,15 @@
       (is (eql nil (pull-request-id run)))
       (is (eql 20 (pull-request-id run2))))))
 
+(test pull-request-id-with-bad-urls
+  (with-fixture state ()
+    (let ((run2 (make-recorder-run
+                 :pull-request "https://foo/bar/")))
+      (is (eql nil (pull-request-id run2))))
+    (let ((run2 (make-recorder-run
+                 :pull-request "https://foo/bar")))
+      (is (eql nil (pull-request-id run2))))))
+
 (test maintains-channel-runs
   (with-fixture state ()
     (let* ((channel (make-instance 'channel))

@@ -593,9 +593,10 @@ from the map without too much code duplication"
 
 (defmethod pull-request-id (run)
   (when-let ((url (pull-request-url run)))
-    (when-let ((part (last (str:split "/" url))))
-      (ignore-errors
-       (parse-integer (car part))))))
+    (multiple-value-bind (start end)
+        (cl-ppcre:scan "/(\\d+)$" url)
+      (when start
+        (parse-integer url :start (1+ start) :end end)))))
 
 (defun unpromote-run (run)
   (let ((previous-run (recorder-previous-run run))
