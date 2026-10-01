@@ -35,12 +35,21 @@
             using (hash-value val)
           collect (list key val)))
 
+(defparameter +date-map-max-runs+ 200000)
+
 (defun date-map (runs)
   "From runs create a map of (<date>, runs)"
-  (let ((map (make-hash-table :test #'equal)))
-    (dolist (run runs)
-      (pushnew run (gethash (format-date (%created-at run)) map)))
-    (%map-to-list map)))
+  (let ((runs
+          (cond
+            ((< (length runs) +date-map-max-runs+)
+             runs)
+            (t
+             (random-sample:random-sample runs +date-map-max-runs+)))))
+   (let ((map (make-hash-table :test #'equal)))
+     (dolist (run runs)
+       (pushnew run (gethash (format-date (%created-at run)) map)))
+     (%map-to-list map))))
+
 
 (defun channel-map (runs)
   "From a list of runs, generate <channel>,runs"
