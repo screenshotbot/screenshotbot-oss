@@ -40,6 +40,7 @@
                 #:report-link))
 (in-package :screenshotbot/insights/pull-requests)
 
+
 (defun canonical-pr-url (run)
   "The pull request URL on the run is whatever the CI reported, so it
 can look like git@github.com:foo/bar.git/pull/42. Rebuild it the same
