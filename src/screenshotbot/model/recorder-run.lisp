@@ -11,6 +11,7 @@
         #:screenshotbot/model/view)
   (:nicknames #:%r)
   (:import-from #:bknr.datastore
+                #:in-transaction-p
                 #:deftransaction
                 #:class-instances
                 #:persistent-class
@@ -524,6 +525,7 @@ from the map without too much code duplication"
                       (funcall (if removep #'fset:less #'fset:with) old-set self))))))))
 
 (defmethod %update-run-id-map ((run recorder-run) &key (removep nil))
+  (assert (in-transaction-p))
   (when-let ((company (recorder-run-company run))
              (run-id (handler-case
                          (recorder-run-id run)
@@ -618,7 +620,10 @@ from the map without too much code duplication"
   (when-let ((channel (recorder-run-channel run)))
     (unless (bknr.datastore::object-destroyed-p channel)
       (%update-commit-map run :removep t)))
-  (%update-run-id-map run :removep t))
+  (tx-update-run-id-map run :removep t))
+
+(deftransaction tx-update-run-id-map (run &key removep)
+  (%update-run-id-map run :removep removep))
 
 (defmethod auth:can-view ((run bknr-or-archived-run-mixin) user)
   (auth:can-view-with-normal-viewer-context
@@ -809,7 +814,7 @@ compare against the actual merge base.")))
   (screenshotbot/model/company:company (unchanged-run-channel self)))
 
 (defmethod (setf recorder-run-company) :before ((val null) (self recorder-run))
-  (%update-run-id-map self :removep t))
+  (tx-update-run-id-map self :removep t))
 
 (defmethod recorder-run-repo-url ((self unchanged-run))
   (github-repo (unchanged-run-channel self)))
