@@ -187,7 +187,7 @@ rm -f $ARCHIVE
 
 
 (defhandler (nil :uri "/screenshotbot-cli-versions") ()
-  "Used by `mise` to figure out all the versions of the CLI"
+  "Used by `mise` to figure out all the versions of the CLI. Order matters: https://mise.jdx.dev/tool-plugin-development.html#available-hook"
   (let ((lines (mapcar #'str:trim
                        (str:lines
                         (uiop:run-program
@@ -195,10 +195,11 @@ rm -f $ARCHIVE
                          :output 'string
                          :error-output t)))))
     (json:encode-json-to-string
-     (sort
-      (loop for line in lines
-            for ver = (elt (reverse (str:split "/" line)) 1)
-            unless (or (equal ver "NIL")
-                       (str:containsp "-" ver))
-              collect ver)
-      #'uiop:version<))))
+     (reverse
+      (sort
+       (loop for line in lines
+             for ver = (elt (reverse (str:split "/" line)) 1)
+             unless (or (equal ver "NIL")
+                        (str:containsp "-" ver))
+               collect ver)
+       #'uiop:version<)))))
