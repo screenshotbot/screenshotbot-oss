@@ -12,7 +12,7 @@
 
 (in-package :cl-user)
 
-(ql:quickload :screenshotbot.sdk)
+(ql:quickload :screenshotbot.sdk/debugger)
 (ql:quickload :core.cli/deliver)
 
 (defvar *default-output-file* "build/bin/recorder-debug")
@@ -27,7 +27,9 @@ command line."
    *default-output-file*))
 
 (core/cli/deliver:deliver-end-user-cli
- :restart-fn 'screenshotbot/sdk/main:main
+ ;; Unlike the shipping CLI, this one starts the LispWorks remote
+ ;; debugger if $SCREENSHOTBOT_DEBUG_HOST is set.
+ :restart-fn 'screenshotbot/sdk/debugger:main
  :deliver-script *load-truename*
  :output-file (output-file)
  :level 0

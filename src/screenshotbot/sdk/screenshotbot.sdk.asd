@@ -108,6 +108,15 @@
   :components ((:file "help")
                (:file "main")))
 
+;; Only used by the debug CLI, see deliver-debug-sdk.lisp.
+(defsystem :screenshotbot.sdk/debugger
+  :serial t
+  :depends-on (:screenshotbot.sdk
+               ;; A delivered image can't REQUIRE modules, so we need
+               ;; this at build time.
+               (:feature :lispworks (:require "remote-debugger-client")))
+  :components ((:file "debugger")))
+
 (defsystem :screenshotbot.sdk/common-flags
   :serial t
   :depends-on (#:com.google.flag)
