@@ -70,7 +70,8 @@
     (compile-and-load-template-file path)))
 
 (defun deliver-main (output-file template-builder-fn
-                     &key restart-fn universal (level 5))
+                     &key restart-fn universal (level 5)
+                       (keep-debug-mode (/= 0 level)))
   (when (find-package :cl+ssl)
     (error "CL+SSL is present in this image, this can lead to problems when delivering this
 on Mac. (e.g., the image will try to load libcrypto etc."))
@@ -119,7 +120,7 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
    output-file
    level
    :keep-function-name t
-   :keep-debug-mode (/= 0 level)
+   :keep-debug-mode keep-debug-mode
    #+mswindows :console #+mswindows :init
    #+mswindows :startup-bitmap-file #+mswindows nil
    :keep-clos :meta-object-slots
@@ -140,6 +141,7 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
                                (universal #+darwin t)
                                output-file
                                (level 5)
+                               (keep-debug-mode (/= 0 level))
                                template-builder-fn)
   (setf (fdefinition 'sentry-client::lw-find-dspec-location)
         #'fake-lw-find-dpsec-location)
@@ -150,6 +152,7 @@ on Mac. (e.g., the image will try to load libcrypto etc."))
   (flet ((call-next ()
            (deliver-main output-file template-builder-fn
                          :level level
+                         :keep-debug-mode keep-debug-mode
                          :restart-fn restart-fn
                          :universal universal)))
     (cond
