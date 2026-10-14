@@ -134,7 +134,7 @@
   ())
 
 (defun relay-state-for-id (id)
-  (when id
+  (when (str:non-empty-string-p id)
    (let ((result (%relay-state-for-id id)))
      (cond
        (result
