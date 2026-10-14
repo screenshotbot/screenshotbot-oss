@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.18.16 - 2026-01-14
+
+- There should be no significant changes in this release, this was
+  just making sure we're updating dependencies. I think this might
+  also include an upgrade of the Linux build machines to Debian 13
+
 ## 2.18.15 - 2026-06-19
 
 ### Changes

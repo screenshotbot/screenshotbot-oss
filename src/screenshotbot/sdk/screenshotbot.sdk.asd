@@ -7,7 +7,7 @@
 
 (defsystem :screenshotbot.sdk/library
   :serial t
-  :version "2.18.15"
+  :version "2.18.16"
   :depends-on (:com.google.flag
                :pkg
                :quri
