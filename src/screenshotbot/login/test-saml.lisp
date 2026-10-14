@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/login/saml
+                #:find-saml-auth-provider-for-response
                 #:clear-relay-states
                 #:relay-state-expired
                 #:relay-state-for-id
@@ -124,3 +125,29 @@
                                            :metadata-xml *xml*)))
               (id (relay-state-id relay-state)))
          (clear-relay-states))))))
+
+(defun make-fake-saml-response (issuer)
+  (base64:string-to-base64-string
+   (format nil "<samlp:Response xmlns:samlp='urn:oasis:names:tc:SAML:2.0:protocol' xmlns:saml='urn:oasis:names:tc:SAML:2.0:assertion' ID='_resp1' Version='2.0' IssueInstant='2026-10-14T00:00:00Z'><saml:Issuer>~a</saml:Issuer><samlp:Status><samlp:StatusCode Value='urn:oasis:names:tc:SAML:2.0:status:Success'/></samlp:Status></samlp:Response>"
+           issuer)))
+
+(test find-saml-auth-provider-for-response
+  (with-fixture state ()
+    (let ((other (make-instance 'saml-auth-provider
+                                :company company
+                                :metadata-xml (str:replace-all
+                                               "http://localhost:8080/realms/master'"
+                                               "http://example.com/other'"
+                                               *xml*)))
+          (provider (make-instance 'saml-auth-provider
+                                   :company company
+                                   :metadata-xml *xml*)))
+      (declare (ignore other))
+      (is (eql provider
+               (find-saml-auth-provider-for-response
+                (make-fake-saml-response "http://localhost:8080/realms/master")
+                "https://example.com/sso/saml/callback")))
+      (is (eql nil
+               (find-saml-auth-provider-for-response
+                (make-fake-saml-response "http://example.com/unknown")
+                "https://example.com/sso/saml/callback"))))))

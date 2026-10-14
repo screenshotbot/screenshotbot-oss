@@ -228,7 +228,8 @@
   (saml-response-get-error "getError")
   (saml-response-get-attributes "getAttributes")
   (saml-response-get-xml "getSAMLResponseXml")
-  (saml-response-get-name-id "getNameId"))
+  (saml-response-get-name-id "getNameId")
+  (saml-response-get-response-issuer "getResponseIssuer"))
 
 (defun current-request-uri ()
   (quri:render-uri
@@ -239,17 +240,40 @@
     :host (first (str:split ":" (hunchentoot:host)))
     :path (hunchentoot:request-uri*))))
 
+(defun find-saml-auth-provider-for-response (saml-response request-uri)
+  "Find the provider whose IdP entity ID matches the Issuer of
+SAML-RESPONSE. The Issuer is not trusted at this point, it only picks
+which provider's certificate we validate the response against."
+  (loop for provider in (bknr.datastore:class-instances 'saml-auth-provider)
+        for match = (handler-case
+                        (let* ((settings (create-settings-builder-for-xml
+                                          (saml-company provider)
+                                          (metadata-xml provider)))
+                               (resp (make-saml-response settings
+                                                         request-uri
+                                                         saml-response)))
+                          (equal (saml-response-get-response-issuer resp)
+                                 (get-idp-entity-id settings)))
+                      (error (e)
+                        (log:warn "Skipping SAML provider ~a: ~a" provider e)
+                        nil))
+        if match
+          return provider))
+
 (defhandler (nil :uri "/sso/saml/callback") ()
   (handler-case
       (let* ((saml-response (hunchentoot:post-parameter "SAMLResponse"))
              (relay-state-id (hunchentoot:post-parameter "RelayState"))
              (relay-state (or
                            (relay-state-for-id relay-state-id)
-                           ;; Assume default provider. TODO: for
-                           ;; self-service we might need to do something
-                           ;; better, perhaps a dedicated ACS url.
-                           (let ((default (default-saml-auth-provider)))
-                             (make-relay-state default))))
+                           ;; IdP-initiated login: guess the provider
+                           ;; from the response's Issuer.
+                           (make-relay-state
+                            (or
+                             (find-saml-auth-provider-for-response
+                              saml-response
+                              (current-request-uri))
+                             (error "Could not find a SAML provider for this response")))))
              (request-uri (current-request-uri)))
         (let ((resp (make-saml-response (relay-state-settings relay-state)
                                         request-uri
