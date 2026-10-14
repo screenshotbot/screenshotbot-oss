@@ -199,7 +199,9 @@ rm -f $ARCHIVE
       (sort
        (loop for line in lines
              for ver = (elt (reverse (str:split "/" line)) 1)
-             unless (or (equal ver "NIL")
-                        (str:containsp "-" ver))
+             ;; Skips "NIL", pre-release names, and the unversioned
+             ;; `debug` directory that DEPLOY/SDK:DEPLOY-DEBUG-SDK
+             ;; pushes to.
+             when (uiop:parse-version ver)
                collect ver)
        #'uiop:version<)))))
