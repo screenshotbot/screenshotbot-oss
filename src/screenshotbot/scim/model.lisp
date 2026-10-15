@@ -83,6 +83,7 @@ username, it might be an email.")
 
 (defmethod initialize-instance :after ((self scim-user-v2) &key user company
                                                           user-name
+                                                          full-name
                                                           activep)
   (unless user
     ;; We're creating a new user
@@ -90,6 +91,8 @@ username, it might be an email.")
                  *installation*
                  :email user-name)))
       (assert user)
+      (when (str:non-empty-string-p full-name)
+        (setf (auth:user-full-name user) full-name))
       (roles:ensure-has-role company user 'roles:disabled-user) 
       (setf (scim-user-user self) user)
       (setf (scim-user-activep self) activep))))

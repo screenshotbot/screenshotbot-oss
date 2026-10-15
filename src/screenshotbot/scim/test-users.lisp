@@ -51,6 +51,9 @@
   (:import-from #:screenshotbot/api/model
                 #:encode-json)
   (:import-from #:screenshotbot/scim/dto
+                #:dto-full-name
+                #:name-formatted
+                #:external-user-name
                 #:activep
                 #:external-user-id
                 #:external-email
@@ -425,3 +428,84 @@ non-enterprise version."
 
 
 "))))
+
+
+(defun full-name-of (email)
+  (auth:user-full-name (user-with-email email)))
+
+(defun put-json (&key name display-name)
+  (format nil "{
+  \"schemas\": [\"urn:ietf:params:scim:schemas:core:2.0:User\"],
+  ~@[\"name\": ~a,~]
+  ~@[\"displayName\": \"~a\",~]
+  \"active\": true,
+  \"emails\": [{\"value\": \"barbara.jensen@example.com\"}],
+  \"userName\": \"barbara.jensen@example.com\"
+}" name display-name))
+
+(test dto-full-name
+  (flet ((full-name (json)
+           (dto-full-name (screenshotbot/api/model:decode-json json 'external-user))))
+    (is (equal "Display"
+               (full-name (put-json :name "{\"formatted\": \"Formatted\", \"givenName\": \"Given\"}"
+                                    :display-name "Display"))))
+    (is (equal "Formatted"
+               (full-name (put-json :name "{\"formatted\": \"Formatted\", \"givenName\": \"Given\"}"))))
+    (is (equal "Given Family"
+               (full-name (put-json :name "{\"givenName\": \"Given\", \"familyName\": \"Family\"}"))))
+    (is (equal "Given"
+               (full-name (put-json :name "{\"givenName\": \"Given\"}"))))
+    (is (eql nil (full-name (put-json))))
+    (is (eql nil (full-name (put-json :name "{}" :display-name ""))))))
+
+(test scim-post-stores-full-name
+  (with-fixture state ()
+    (scim-post company example-post)
+    (is (equal "Ms. Barbara J Jensen III"
+               (full-name-of "barbara.jensen@example.com")))))
+
+(test scim-get-returns-full-name
+  (with-fixture state ()
+    (scim-post company example-post)
+    (is (equal "Ms. Barbara J Jensen III"
+               (name-formatted
+                (external-user-name
+                 (scim-get company (only-id! company))))))))
+
+(test scim-put-updates-full-name
+  (with-fixture state ()
+    (scim-post company example-post)
+    (scim-put company (only-id! company)
+              (put-json :name "{\"givenName\": \"Barbara\", \"familyName\": \"Smith\"}"))
+    (is (equal "Barbara Smith"
+               (full-name-of "barbara.jensen@example.com")))
+    (scim-put company (only-id! company)
+              (put-json :display-name "Babs Smith"))
+    (is (equal "Babs Smith"
+               (full-name-of "barbara.jensen@example.com")))))
+
+(test scim-put-without-name-keeps-full-name
+  (with-fixture state ()
+    (scim-post company example-post)
+    (scim-put company (only-id! company) (put-json))
+    (is (equal "Ms. Barbara J Jensen III"
+               (full-name-of "barbara.jensen@example.com")))))
+
+(test scim-patch-updates-full-name
+  (with-fixture state ()
+    (scim-post company example-post)
+    (scim-patch company (only-id! company)
+                "{\"Operations\": [{\"op\": \"replace\", \"path\": \"displayName\", \"value\": \"Babs\"}]}")
+    (is (equal "Babs" (full-name-of "barbara.jensen@example.com")))
+    (scim-patch company (only-id! company)
+                "{\"Operations\": [{\"op\": \"replace\", \"path\": \"name.formatted\", \"value\": \"Barbara J\"}]}")
+    (is (equal "Barbara J" (full-name-of "barbara.jensen@example.com")))))
+
+(test scim-patch-family-name-is-accepted-but-ignored
+  (with-fixture state ()
+    (scim-post company example-post)
+    (finishes
+      (scim-patch company (only-id! company)
+                  "{\"Operations\": [{\"op\": \"replace\", \"path\": \"name.familyName\", \"value\": \"Smith\"}]}"))
+    (is (equal "Ms. Barbara J Jensen III"
+               (full-name-of "barbara.jensen@example.com")))))

@@ -10,6 +10,7 @@
                 #:ext-json-serializable-class)
   (:import-from #:screenshotbot/scim/model
                 #:user-to-dto
+                #:scim-user-user
                 #:scim-user-user-name
                 #:scim-user-activep
                 #:scim-user-external-id
@@ -25,13 +26,16 @@
 (defclass external-name ()
   ((formatted :json-type :string
               :json-key "formatted"
-              :reader name-formatted)
+              :initarg :formatted
+              :accessor name-formatted)
    (given :json-type :string
           :json-key "givenName"
-          :reader name-given)
+          :initarg :given
+          :accessor name-given)
    (family-name :json-type :string
                 :json-key "familyName"
-                :reader name-family-name))
+                :initarg :family-name
+                :accessor name-family-name))
   (:metaclass ext-json-serializable-class))
 
 (defclass external-email ()
@@ -60,7 +64,11 @@
    (name :json-type external-name
          :initarg :name
          :json-key "name"
-         :reader external-user-name)
+         :accessor external-user-name)
+   (display-name :json-type :string
+                 :initarg :display-name
+                 :json-key "displayName"
+                 :accessor external-user-display-name)
    (id :json-type :string
        :initarg :id
        :json-key "id"
@@ -79,6 +87,27 @@
            :json-key "emails"
            :reader external-user-emails))
   (:metaclass ext-json-serializable-class))
+
+(defun ensure-external-user-name (dto)
+  (unless (slot-boundp dto 'name)
+    (setf (external-user-name dto) (make-instance 'external-name)))
+  (external-user-name dto))
+
+(defun dto-full-name (dto)
+  "The user's full name from the SCIM DTO, or NIL if there isn't one.
+Prefers displayName, then name.formatted, then givenName + familyName."
+  (flet ((value (obj slot)
+           (when (and obj (slot-boundp obj slot))
+             (slot-value obj slot))))
+    (let ((name (value dto 'name)))
+      (find-if #'str:non-empty-string-p
+               (list
+                (value dto 'display-name)
+                (value name 'formatted)
+                (str:join " "
+                          (remove-if-not #'str:non-empty-string-p
+                                         (list (value name 'given)
+                                               (value name 'family-name)))))))))
 
 (defmethod initialize-instance :after ((self external-user) &key external-id &allow-other-keys)
   (declare (optimize (debug 3) (speed 0)))
@@ -128,20 +157,24 @@
     (slot-makunbound self 'scim-type)))
 
 (defmethod user-to-dto ((user scim-user-v2))
-  (make-instance 'external-user
-                 :id (oid user)
-                 :external-id (ignore-errors
-                               (scim-user-external-id user))
-                 :activep (scim-user-activep user)
-                 :user-name (scim-user-user-name user)
-                 :emails
-                 (loop for email in (scim-user-emails user)
-                       for count from 0
-                       collect
-                          (make-instance 'external-email
-                                         :type "work"
-                                         :value email
-                                         :primary (eql 0 count)))))
-
-
-
+  (apply
+   #'make-instance 'external-user
+   :id (oid user)
+   :external-id (ignore-errors
+                 (scim-user-external-id user))
+   :activep (scim-user-activep user)
+   :user-name (scim-user-user-name user)
+   :emails
+   (loop for email in (scim-user-emails user)
+         for count from 0
+         collect
+         (make-instance 'external-email
+                        :type "work"
+                        :value email
+                        :primary (eql 0 count)))
+   ;; Only name.formatted, not displayName: a PATCH of displayName
+   ;; should take precedence over what we return here.
+   (let ((full-name (auth:user-full-name (scim-user-user user))))
+     (when (str:non-empty-string-p full-name)
+       (list :name (make-instance 'external-name
+                                  :formatted full-name))))))

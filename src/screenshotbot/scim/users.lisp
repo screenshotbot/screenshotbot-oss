@@ -26,6 +26,10 @@
   (:import-from #:util/misc
                 #:not-null!)
   (:import-from #:screenshotbot/scim/dto
+                #:dto-full-name
+                #:ensure-external-user-name
+                #:name-formatted
+                #:external-user-display-name
                 #:activep
                 #:external-user-id
                 #:user-to-dto
@@ -227,6 +231,7 @@
                    :activep (external-user-activep dto)
                    :external-id (ignore-errors
                                  (external-user-external-id dto))
+                   :full-name (dto-full-name dto)
                    :emails (dto-emails dto))))
          (setf (hunchentoot:header-out :location)
                (hex:make-full-url *request*
@@ -325,7 +330,14 @@
     (setf (scim-user-external-id existing)
           (ignore-errors (external-user-external-id dto)))
 
+    (update-full-name dto internal-user)
     (update-activep company dto internal-user))
+
+(defun update-full-name (dto internal-user)
+  (let ((full-name (dto-full-name dto)))
+    (when (and full-name
+               (not (equal full-name (auth:user-full-name internal-user))))
+      (setf (auth:user-full-name internal-user) full-name))))
 
 (defun update-activep (company dto internal-user)
   ;; The standard allows PUT to not have "active" provided at all, in
@@ -367,8 +379,17 @@
   (let ((value (assoc-value po :value))
         (path (assoc-value po :path)))
     (cond
-     ((string-equal "name.givenName" path)
-      ;; eh, ignore, just keep the test happy for now
+     ((string-equal "displayName" path)
+      (setf (external-user-display-name user) value))
+     ((string-equal "name.formatted" path)
+      (setf (name-formatted (ensure-external-user-name user)) value))
+     ((or (string-equal "name.givenName" path)
+          (string-equal "name.familyName" path))
+      ;; We only store a single full name, and the DTO we patch
+      ;; carries it as name.formatted, so a lone givenName or
+      ;; familyName can't be combined into a full name. Use
+      ;; displayName or name.formatted instead. (Okta sends name
+      ;; changes as a PUT, which does handle these.)
       (values))
      ((string-equal "active" path)
       (setf (external-user-activep user) (parse-boolean value)))
