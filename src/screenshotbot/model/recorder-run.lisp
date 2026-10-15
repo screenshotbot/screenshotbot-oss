@@ -834,7 +834,6 @@ compare against the actual merge base.")))
 (defmethod delete-run (run)
   "Not exactly deleting, but currently just detaching it from the
 company as a way of deleting."
-  (push-event :delete-run :run (oid run) :company (?. oid (recorder-run-company run)))
   (setf (recorder-run-company run) nil))
 
 (def-store-migration ("Ensure :was-promoted-p is bound" :Version 25)
@@ -997,3 +996,10 @@ only run on a REPL."
 
 (defun (setf recorder-run-directory) (value company)
   (setf (externalized-slot-value company 'relative-directory) value))
+
+(deftransaction tx-bulk-delete-runs (runs)
+  (mapc #'delete-run runs))
+
+(defun bulk-delete-runs (runs)
+  (with-batches (runs runs :batch-size 100)
+    (tx-bulk-delete-runs runs)))

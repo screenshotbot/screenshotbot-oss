@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
+                #:bulk-delete-runs
                 #:recorder-run-directory
                 #:recorder-run-company
                 #:tx-populate-run-id
@@ -209,6 +210,17 @@
       (assert-that (fset:convert 'list (runs-for-company company))
                    (contains run))
       (delete-run run)
+      (assert-that (fset:convert 'list (runs-for-company company))
+                   (contains))
+      (finishes
+        (delete-run run)))))
+
+(test bulk-delete-runs-happy-path
+  (with-fixture state ()
+    (let ((run (make-recorder-run :company company)))
+      (assert-that (fset:convert 'list (runs-for-company company))
+                   (contains run))
+      (bulk-delete-runs (list run))
       (assert-that (fset:convert 'list (runs-for-company company))
                    (contains))
       (finishes
