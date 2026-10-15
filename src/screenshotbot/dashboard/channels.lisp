@@ -46,8 +46,8 @@
                 #:current-company
                 #:company-channels)
   (:import-from #:screenshotbot/model/recorder-run
+                #:bulk-delete-runs
                 #:runs-for-channel
-                #:delete-run
                 #:recorder-run-company
                 #:active-run)
   (:import-from #:util/request
@@ -487,13 +487,13 @@
          (setf (company-reports company)
                (remove channel (company-reports company)
                        :key #'report-channel)))
-       (fset:do-set (run (runs-for-channel channel))
-         (delete-run run))
-       (with-transaction ()
-         (setf (company-channels company)
-               (remove channel (company-channels company))))
-       (with-transaction ()
-         (setf (company channel) nil))))))
+       (bulk-delete-runs
+        (fset:convert
+         'list
+         (runs-for-channel channel)))
+       (setf (company-channels company)
+             (remove channel (company-channels company)))
+       (setf (company channel) nil)))))
 
 
 (defun guess-channel-args (channel)
