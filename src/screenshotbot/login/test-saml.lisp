@@ -8,6 +8,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/login/saml
+                #:valid-relay-state-p
                 #:find-saml-auth-provider-for-response
                 #:clear-relay-states
                 #:relay-state-expired
@@ -151,3 +152,9 @@
                (find-saml-auth-provider-for-response
                 (make-fake-saml-response "http://example.com/unknown")
                 "https://example.com/sso/saml/callback"))))))
+
+(test valid-relay-state-p
+  (is-true (valid-relay-state-p "234343_34334"))
+  ;; One of our customers configured it this way:
+  (is-false (valid-relay-state-p "https://foo.screenshotbot.io"))
+  (is-false (valid-relay-state-p "sdfds234342_34234234sdfsfs")))

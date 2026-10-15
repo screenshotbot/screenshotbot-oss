@@ -133,17 +133,26 @@
 (define-condition relay-state-expired (error)
   ())
 
+(defun valid-relay-state-p (id)
+  (and (str:non-empty-string-p id)
+       (cl-ppcre:scan-to-strings
+        "^\\d*_\\d*$" id)))
+
 (defun relay-state-for-id (id)
-  (when (str:non-empty-string-p id)
-   (let ((result (%relay-state-for-id id)))
-     (cond
-       (result
-        ;; clear from index
-        (setf (relay-state-id result)
-              nil)
-        result)
-       (t
-        (error 'relay-state-expired))))))
+  (cond
+    ((valid-relay-state-p id)
+     (let ((result (%relay-state-for-id id)))
+       (cond
+         (result
+          ;; clear from index
+          (setf (relay-state-id result)
+                nil)
+          result)
+         (t
+          (error 'relay-state-expired)))))
+    (t
+     (log:info "Invalid relay state: '~a'" id) ;; could be blank too
+     nil)))
 
 (defclass relay-state (base-indexed-object)
   ((id :initarg :id
