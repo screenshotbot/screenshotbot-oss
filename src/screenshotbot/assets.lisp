@@ -55,13 +55,26 @@
 
 (define-css acceptor "/assets/css/default.css" :screenshotbot.css-assets)
 
+(defvar *debug-owners* (make-hash-table :test #'equal)
+  "?owner=tdrhq, we might want that to serve a debug version of the CLI")
+
 (defun generate-.sh (name)
-  (let ((domain (or
-                 (installation-cdn (installation))
-                 ;; A hack for staging:
-                 (installation-domain (installation)))))
+  (let* ((owner (ignore-errors
+                 ;; hunchentoot:*request* will be unbound in tests
+                 (hunchentoot:parameter "owner")))
+         (debugp (gethash owner *debug-owners*))
+         (domain (or
+                  (unless debugp
+                    ;; debug versions never go via CDN!
+                    (installation-cdn (installation)))
+                  ;; A hack for staging:
+                  (installation-domain (installation)))))
     (flet ((make-link (platform)
-             (format nil "~a/artifact/${VERSION}~a-~a" domain name platform))
+             (cond
+               (debugp
+                (format nil "~a/artifact/releases/debug/~a-~a" domain name platform))
+               (t
+                (format nil "~a/artifact/${VERSION}~a-~a" domain name platform))))
            (fetch (link)
              (format nil "$CURL --progress-bar ~a --output $INSTALLER"
                      link)))
