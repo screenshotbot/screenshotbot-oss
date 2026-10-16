@@ -638,6 +638,7 @@
                :util.threading
                :util.misc
                :util/request
+               :util/random-port
                :util/lru-cache
                :util/json-mop
                :hunchentoot-extensions

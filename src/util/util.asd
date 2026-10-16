@@ -103,6 +103,8 @@
   :serial t
   :defsystem-depends-on (:trivial-features)
   :depends-on (:uiop
+               :alexandria
+               :log4cl
                #-lispworks
                :util/fake-fli
                :util/posix)
@@ -111,7 +113,10 @@
 (defsystem :util/timeago
   :serial t
   :depends-on (:markup
-               :local-time)
+               :named-readtables
+               :alexandria
+               :local-time
+               :util.misc)
   :components ((:file "timeago")))
 
 (defsystem :util/html2text
@@ -123,24 +128,32 @@
 #+lispworks
 (defsystem :util/memory
     :serial t
-  :depends-on (:util/posix)
+  :depends-on (:util/posix
+               :alexandria
+               :str
+               :flexi-streams)
   :components ((:file "memory")))
 
 (defsystem :util/logrotate
   :serial t
-  :depends-on ()
+  :depends-on (:alexandria)
   :components ((:file "logrotate")))
 
 
 (defsystem :util/atomics
   :serial t
-  :depends-on (:atomics)
+  :depends-on (:atomics
+               :alexandria)
   :components ((:file "atomics")))
 
 #+lispworks
 (defsystem :util/remote-debugging
   :serial t
-  :depends-on ((:require "remote-debugger-client"))
+  :depends-on ((:require "remote-debugger-client")
+               :alexandria
+               :ironclad
+               :flexi-streams
+               :log4cl)
   :components ((:file "remote-debugging")))
 
 
@@ -154,7 +167,9 @@
 (defsystem :util/form-state
   :serial t
   :depends-on (:closer-mop
-               :alexandria)
+               :alexandria
+               :str
+               :hunchentoot)
   :components ((:file "form-state")))
 
 
@@ -168,7 +183,9 @@
 
 (defsystem :util/bknr-slynk
   :serial t
-  :depends-on (:slynk)
+  :depends-on (:slynk
+               :bknr.datastore
+               :alexandria)
   :components ((:file "bknr-slynk")))
 
 (defsystem :util/fiveam
@@ -202,7 +219,8 @@
 (defsystem :util/sizeof
   :serial t
   :depends-on (#-lispworks
-               :util/fake-fli)
+               :util/fake-fli
+               :tmpdir)
   :components ((:file "sizeof")))
 
 
@@ -260,12 +278,18 @@
 (defsystem :util/native-module
   :depends-on (:util/fake-fli
                :log4cl
+               :alexandria
+               :bordeaux-threads
+               :cl-fad
                :util.misc)
   :components ((:file "native-module")))
 
 (defsystem :util/fake-fli
   :depends-on (:cffi
-               :str)
+               :str
+               :alexandria
+               :trivial-garbage
+               :log4cl)
   :serial t
   :components (#-lispworksc (:file "fake-fli")))
 
@@ -298,7 +322,8 @@
   :depends-on (:log4cl
                :easy-macros
                :alexandria
-               :bordeaux-threads)
+               :bordeaux-threads
+               :local-time)
   :components ((:file "logger")))
 
 (defsystem :util/json-mop
@@ -418,7 +443,8 @@
 
 (defsystem :util/gcloud
   :serial t
-  :depends-on (:cl-mongo-id)
+  :depends-on (:cl-mongo-id
+               :str)
   :components ((:file "gcloud")))
 
 #+lispworks
@@ -430,7 +456,10 @@
 (defsystem :util/symbol-detector
   :serial t
   :depends-on (:markup
-               :named-readtables)
+               :named-readtables
+               :str
+               :alexandria
+               :log4cl)
   :components ((:file "symbol-detector")))
 
 (defsystem :util/http-ping
@@ -453,7 +482,14 @@
 (defsystem :util/recaptcha
   :serial t
   :depends-on (:util/request
-               :auto-restart)
+               :auto-restart
+               ;; for mquery
+               :util
+               :markup
+               :named-readtables
+               :cl-json
+               :str
+               :alexandria)
   :components ((:file "recaptcha")))
 
 (defsystem :util/benchmark

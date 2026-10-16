@@ -6,13 +6,15 @@
 
 (defsystem "server/interrupts"
   :depends-on (:alexandria
-               :bordeaux-threads)
+               :bordeaux-threads
+               :log4cl)
   :serial t
   :components ((:file "interrupts")))
 
 (defsystem "server/util"
   :depends-on (:bordeaux-threads
-               :easy-macros)
+               :easy-macros
+               :str)
   :components ((:file "util" :if-feature :lispworks))
   :description "This system gets reloaded before we reload any complex code, which let's us put reloading logic in here. It also means we must keep the dependencies minimal")
 
@@ -46,13 +48,28 @@
                  (:file "setup")))
 
 (defsystem #:server/config
-  :depends-on ()
+  :depends-on (#:core.installation)
   :components ((:file "config")))
 
 (defsystem #:server/cluster
   :depends-on (#:server/config
                #:core.config
-               #:clingon)
+               #:clingon
+               #:alexandria
+               #:str
+               #:fset
+               #:serapeum
+               #:cl-json
+               #:cl-fad
+               #:log4cl
+               #:unix-sockets
+               #:util.misc
+               #:util.store
+               #:util/request
+               #:bknr.datastore
+               ;; Only the cluster/ module uses this, and it has the
+               ;; same feature guard.
+               (:feature (:and :lispworks :linux) #:bknr.cluster))
   :serial t
   :components ((:file "eval" :if-feature :lispworks)
                (:module "cluster"

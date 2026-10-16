@@ -9,9 +9,7 @@
   (:import-from #:bknr.datastore
                 #:store-object)
   (:import-from #:slynk
-                #:read-from-minibuffer-in-emacs
-                #:do-checklist
-                #:all-slots-for-inspector)
+                #:read-from-minibuffer-in-emacs)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :util/bknr-slynk)
 

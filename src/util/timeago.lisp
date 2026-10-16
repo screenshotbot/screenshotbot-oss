@@ -27,7 +27,7 @@
                 timestamp)
                (t
                 (local-time:timestamp-to-universal timestamp)))))
-   (util:or-setf
+   (util/misc:or-setf
     (gethash key *ts-format-cache*)
     (format nil
             (format nil "~a"
