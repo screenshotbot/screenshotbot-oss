@@ -9,6 +9,7 @@
         #:fiveam
         #:screenshotbot/sdk/env)
   (:import-from #:screenshotbot/sdk/env
+                #:base-sha1
                 #:pull-request-base-branch
                 #:read-java-property
                 #:teamcity-env-reader
@@ -36,6 +37,9 @@
 (in-package :screenshotbot/sdk/test-env)
 
 (util/fiveam:def-suite)
+
+(defvar *fixture-dir*
+  (asdf:system-relative-pathname :screenshotbot.sdk "fixture/"))
 
 (defun test-happy-fns (env-reader)
   (is (member (type-of env-reader)
@@ -174,6 +178,13 @@
                                               ("GITHUB_REF" . "refs/pull/22/merge")))))
       (is (equal "gh-readonly-queue/main/pr-123-abc" (work-branch reader))))))
 
+(test github-reads-base-sha1
+  (cl-mock:with-mocks ()
+    (let ((reader (make-instance 'github-actions-env-reader
+                                 :overrides `(("GITHUB_EVENT_PATH" . ,(path:catfile *fixture-dir* "sample-github-pr-event.json"))))))
+      (is
+       (equal "74180a3cc6d1e623d2d9ea61c50e2c9c04533321" (base-sha1 reader))))))
+
 (test remove-.git
   (is (equal "foo" (remove-.git "foo")))
   (is (equal "foo" (remove-.git "foo.git")))
@@ -237,8 +248,9 @@
     (is (equal nil (repo-url reader)))))
 
 (test read-java-property
-  (let ((input (asdf:system-relative-pathname :screenshotbot.sdk
-                                              "fixture/teamcity/teamcity.config.parameters")))
+  (let ((input (path:catfile
+                *fixture-dir*
+                "teamcity/teamcity.config.parameters")))
     (is (equal "/home/buildagent"
                (read-java-property input "teamcity.agent.jvm.user.home")))
     (is (equal "https://github.com/tdrhq/fast-example.git"
@@ -302,4 +314,5 @@
     (is (equal "https://app.harness.io/builds/12345" (build-url reader)))
     (is (equal "https://github.com/org/repo" (repo-url reader)))
     (is (equal "https://github.com/org/repo/pulls/42" (pull-request-url reader)))))
+
 

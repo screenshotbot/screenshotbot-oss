@@ -27,7 +27,8 @@
    #:repo-url
    #:guess-channel-name
    #:work-branch
-   #:pull-request-base-branch))
+   #:pull-request-base-branch
+   #:base-sha1))
 (in-package :screenshotbot/sdk/env)
 
 (define-condition unsupported-variable (condition)
@@ -42,8 +43,14 @@
   (:documentation "This isn't being used, and can be removed if required. Currently we
 get this from the Git repository directly."))
 
+(defgeneric base-sha1 (env)
+  (:documentation "Some CI providers the base SHA1, if so, return it, else NIL")
+  (:method (env)
+    nil))
+
 (defclass env-reader (base-env-reader)
   ())
+
 
 (defmethod getenv ((self base-env-reader) name)
   (if (slot-boundp self 'overrides)
@@ -388,6 +395,17 @@ information is available, so we can't have complex logic rely on it."))
               sha)))))
       (t
        sha))))
+
+(defmethod base-sha1 ((self github-actions-env-reader))
+  (when-let ((event-file (getenv self "GITHUB_EVENT_PATH")))
+    (with-open-file (stream event-file :direction :input
+                                       :external-format :utf-8)
+      (let ((json (json:decode-json stream)))
+        (assoc-value
+         (assoc-value
+          (assoc-value json :pull--request)
+          :base)
+         :sha)))))
 
 (defmethod github-server-url ((self github-actions-env-reader))
   (getenv self "GITHUB_SERVER_URL"))
