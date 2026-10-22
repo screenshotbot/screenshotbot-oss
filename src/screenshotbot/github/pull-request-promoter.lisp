@@ -139,9 +139,6 @@
           ;; For ease of testing merge queue behavior:
           (str:starts-with-p "sbfake-gh-readonly-queue-" branch)))))
 
-;; TODO: delete
-(defmethod maybe-promote ((promoter pull-request-promoter) run)
-  (call-next-method))
 
 (auto-restart:with-auto-restart (:retries 5)
   (defmethod push-remote-check ((promoter pull-request-promoter)
@@ -234,7 +231,3 @@ generate a GitHub markdown summary."
                         summary
                         ))
 
-(defmethod maybe-send-tasks ((promoter pull-request-promoter)
-                             run)
-  "TODO: delete"
-  (values))
