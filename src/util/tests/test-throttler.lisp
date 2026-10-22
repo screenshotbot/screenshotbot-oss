@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/throttler
+                #:wait-for-throttler
+                #:next-token-time
                 #:close-to-throttling-limit
                 #:keyed-throttler
                 #:%tokens
@@ -148,3 +150,34 @@
                                      (incf ctr))
                          :now 1102
                          :key "foo"))))
+
+(test next-token-time
+  (let ((throttler (make-instance 'throttler
+                                  :now 100
+                                  :tokens 60
+                                  :period 3600)))
+    (setf (%tokens throttler) 0.5)
+    (is (eql 30.0 (next-token-time throttler))))
+
+  (let ((throttler (make-instance 'throttler
+                                  :now 100
+                                  :tokens 60
+                                  :period 3600)))
+    (setf (%tokens throttler) 1.2)
+    (is (eql 0 (next-token-time throttler)))))
+
+(test wait-for-throttler-happy-path
+  (let ((throttler (make-instance 'throttler
+                                  :tokens 3600
+                                  :period 10)))
+    (loop for i from 1 to 4000
+          do (wait-for-throttler throttler))))
+
+(test wait-for-throttler-happy-path-with-key
+  (let ((throttler (make-instance 'keyed-throttler
+                                  :tokens 3600
+                                  :period 10)))
+    (loop for i from 1 to 4000
+          do
+             (wait-for-throttler throttler :key 1)
+          (wait-for-throttler throttler :key 2))))

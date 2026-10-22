@@ -72,18 +72,21 @@ If the request is throttled, then an error is signaled."))
 (defmethod throttle! ((self throttler) &key key (now (get-universal-time)))
   (declare (ignore key))
   (bt:with-lock-held ((lock self))
-    (incf (%tokens self)
-          (* (- now (%last-updated self)) (/ (max-tokens self) (period self))))
-    (setf (%last-updated self) now)
-    (when (< (%tokens self) 1)
-      (error 'throttled-error))
-    (when (> (%tokens self) (max-tokens self))
-      (setf (%tokens self) (max-tokens self)))
-    (when (< (%tokens self) (floor (max-tokens self) 2))
-      (warn 'close-to-throttling-limit :name (name self)))
-    (decf (%tokens self))))
+    (%throttle-without-lock self :now now)))
 
-(defmethod throttler-for-key ((self keyed-throttler) key &key now)
+(defmethod %throttle-without-lock ((self throttler) &key now)
+  (incf (%tokens self)
+        (* (- now (%last-updated self)) (/ (max-tokens self) (period self))))
+  (setf (%last-updated self) now)
+  (when (< (%tokens self) 1)
+    (error 'throttled-error))
+  (when (> (%tokens self) (max-tokens self))
+    (setf (%tokens self) (max-tokens self)))
+  (when (< (%tokens self) (floor (max-tokens self) 2))
+    (warn 'close-to-throttling-limit :name (name self)))
+  (decf (%tokens self)))
+
+(defmethod throttler-for-key ((self keyed-throttler) key &key (now (error "must provide :now for throttler-for-key")))
   (with-slots (throttler-map) self
     (let ((existing (fset:@ throttler-map key)))
       (cond
@@ -134,3 +137,43 @@ If the request is throttled, then an error is signaled."))
          (ignore-errors
           (hunchentoot:real-remote-addr))
          "empty")))
+
+(defmethod wait-for-throttler ((self throttler) &key key)
+  "Unlike throttle!, if we can't get the throttle, we wait until it's
+available. Do not use throttle! and wait-for-throttler on the same
+throttler, otherwise we might block the throttle! requests."
+  (declare (ignore key))
+  (bt:with-lock-held ((lock self))
+    (loop for i from 0 to 10 ;; it should happen immediately though
+          do
+             (handler-case
+                 (return-from wait-for-throttler
+                   (%throttle-without-lock
+                    self :now (get-universal-time)))
+               (throttled-error ()
+                 ;; We're holding the lock. So we can calculate exactly when
+                 ;; the next token will be available. The next
+                 (let ((next-token-time
+                         ;; We have to sleep at least 1s, since
+                         ;; (get-universal-time) will otherwise be the
+                         ;; same
+                         (max 1.0 (next-token-time self))))
+                   (log:debug "Waiting ~as for the next token" next-token-time)
+                   (sleep next-token-time))))
+          finally
+             (error "Could not get the throttler, this is a bug that should not have happened"))))
+
+
+(defmethod next-token-time ((self throttler))
+  (cond
+    ((>= (%tokens self) 1)
+     0)
+    (t
+     (* (- 1 (%tokens self))
+        (/ (* 1.0 (period self))
+           (max-tokens self))))))
+
+(defmethod wait-for-throttler ((self keyed-throttler) &key key)
+  (wait-for-throttler
+   (throttler-for-key self key :now (get-universal-time))))
+
