@@ -20,7 +20,8 @@
                 #:github-app-private-key)
   (:export
    #:github-request
-   #:github-create-jwt-token)
+   #:github-create-jwt-token
+   #:github-forbidden)
   (:local-nicknames (#:plugin #:screenshotbot/github/plugin)))
 (in-package :screenshotbot/github/jwt-token)
 
@@ -76,6 +77,9 @@
                (format output "Got bad github error code: ~a (~S)"
                        code message)))))
 
+(define-condition github-forbidden (github-api-error)
+  ())
+
 (auto-restart:with-auto-restart (:retries 3)
   (defun github-request (url
                          &key parameters installation-token
@@ -104,7 +108,9 @@
                       (json:encode-json-to-string parameters)
                       parameters))
       (unless (or (eql res 200) (eql res 201))
-        (error 'github-api-error
+        (error (case res
+                 (403 'github-forbidden)
+                 (t 'github-api-error))
                :code res
                :message s
                :url url))
