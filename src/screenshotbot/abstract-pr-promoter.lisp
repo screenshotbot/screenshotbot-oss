@@ -339,15 +339,20 @@ API. We're eventually going to replace it with this."
 
 (defgeneric make-promoter-for-acceptable (acceptable))
 
-(defmethod (setf acceptable-state) :after (state (self abstract-pr-acceptable)
-                                           &key user)
+(defmethod update-remote ((self abstract-pr-acceptable))
+  "TODO: in the future, move this to a background thread"
   (push-remote-check
    (make-promoter-for-acceptable self)
    (report-run (acceptable-report self))
    (make-check-for-report
     (acceptable-report self)
-    :status state
-    :user user)))
+    :status (acceptable-state self)
+    :user (acceptable-reviewer self))))
+
+(defmethod (setf acceptable-state) :after (state (self abstract-pr-acceptable)
+                                           &key user)
+  (declare (ignore user))
+  (update-remote self))
 
 (defmethod actual-sha ((run abstract-run))
   (or
