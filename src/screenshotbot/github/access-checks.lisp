@@ -59,11 +59,11 @@
   (bt:with-lock-held ((throttler-lock throttler))
     (loop while (local-time:timestamp> (last-ts throttler)
                                        (local-time:timestamp- (local-time:now)
-                                                              (* 8 1000 1000)
+                                                              (* 800 1000 1000)
                                                               :nsec))
           do (progn
                (log:debug "Waiting for throttling lock")
-               (sleep 0.1)))
+               (sleep 0.2)))
     (setf (last-ts throttler) (local-time:now)))
   (funcall fn))
 
