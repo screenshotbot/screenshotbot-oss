@@ -76,6 +76,8 @@
   (:import-from #:screenshotbot/github/github-app-settings
                 #:github-app-settings-form)
   (:import-from #:screenshotbot/github/jwt-token
+                #:github-api-error-message
+                #:github-forbidden
                 #:github-api-error)
   (:export
    #:verified-repo-p))
@@ -186,29 +188,34 @@ independetly)")
                                    github-app
                                    (repo-id self) :force t)))
       (log:info "using installation-id: ~a" installation-id)
-      (multiple-value-bind (can-edit-p message)
-          (repo-collaborator-p (format nil "https://github.com/~a" (repo-id self))
-                               (installer-login self)
-                               :installation-token
-                               (github-get-access-token-for-installation
-                                installation-id
-                                :github-app github-app)
-                               :company (company self))
-        (cond
-          (can-edit-p
-           (log:info "Can edit the repository ~a" (repo-id self))
-           (with-transaction ()
-             (setf (verified-p self) t
-                   (verification-failure-message self) nil)))
-          ((not (verified-p self))
-           (with-transaction ()
-             (setf (verification-failure-message self) message)))
-          (t
-           ;; We can't re-verify, but the repository has been verified
-           ;; in the past so we don't change anything. This might happen
-           ;; because the GitHub user has been booted off the org, but
-           ;; that's fine.
-           (values)))))))
+      (let ((installation-token (handler-case
+                                    (github-get-access-token-for-installation
+                                     installation-id
+                                     :github-app github-app)
+                                  (github-forbidden (e)
+                                    (setf (verification-failure-message self)
+                                          (github-api-error-message e))
+                                    (return-from maybe-verify-repo nil)))))
+       (multiple-value-bind (can-edit-p message)
+           (repo-collaborator-p (format nil "https://github.com/~a" (repo-id self))
+                                (installer-login self)
+                                :installation-token installation-token
+                                :company (company self))
+         (cond
+           (can-edit-p
+            (log:info "Can edit the repository ~a" (repo-id self))
+            (with-transaction ()
+              (setf (verified-p self) t
+                    (verification-failure-message self) nil)))
+           ((not (verified-p self))
+            (with-transaction ()
+              (setf (verification-failure-message self) message)))
+           (t
+            ;; We can't re-verify, but the repository has been verified
+            ;; in the past so we don't change anything. This might happen
+            ;; because the GitHub user has been booted off the org, but
+            ;; that's fine.
+            (values))))))))
 
 (defun verified-repos (company)
   "Returns all tracked repos, but importantly, not all the repos here

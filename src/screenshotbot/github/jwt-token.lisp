@@ -21,7 +21,8 @@
   (:export
    #:github-request
    #:github-create-jwt-token
-   #:github-forbidden)
+   #:github-forbidden
+   #:github-api-error-message)
   (:local-nicknames (#:plugin #:screenshotbot/github/plugin)))
 (in-package :screenshotbot/github/jwt-token)
 
@@ -67,7 +68,8 @@
   ((code :initarg :code
          :reader github-api-error-code)
    (message :initarg :message
-            :reader message)
+            :reader message
+            :reader github-api-error-message)
    (url :initarg :url
         :initform nil
         :reader github-api-error-url
