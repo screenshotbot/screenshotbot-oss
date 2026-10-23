@@ -145,6 +145,8 @@
                 #:find-existing-figma-link)
   (:import-from #:screenshotbot/figma/dropdown
                 #:figma-drop-down)
+  (:import-from #:util/events
+                #:with-tracing)
   (:export
    #:find-commit-path-to-ancestor
    #:render-acceptable
@@ -172,18 +174,19 @@
             (id action redirect csrf)
   (assert (equal csrf (auth:csrf-token)))
   (with-login ()
-   (let ((acceptable (bknr.datastore:store-object-with-id (parse-integer id))))
-     (can-edit! acceptable)
-     (let ((state (cond
-                    ((string-equal "accept" action)
-                     :accepted)
-                    ((string-equal "reject" action)
-                     :rejected)
-                    (t
-                     (error "Unknown acceptable review action: ~a" action)))))
-       (setf (acceptable-state acceptable :user (current-user))
-             state)
-       (hex:safe-redirect redirect)))))
+    (let ((acceptable (bknr.datastore:store-object-with-id (parse-integer id))))
+      (can-edit! acceptable)
+      (let ((state (cond
+                     ((string-equal "accept" action)
+                      :accepted)
+                     ((string-equal "reject" action)
+                      :rejected)
+                     (t
+                      (error "Unknown acceptable review action: ~a" action)))))
+        (with-tracing (:review-while-waiting-for-browser)
+          (setf (acceptable-state acceptable :user (current-user))
+                state))
+        (hex:safe-redirect redirect)))))
 
 (deftag render-acceptable (&key acceptable)
   (let ((review-url (hex:make-url 'acceptable-review-url :id (bknr.datastore:store-object-id
