@@ -49,6 +49,8 @@
                 #:installation-domain)
   (:import-from #:screenshotbot/installation
                 #:installation)
+  (:import-from #:util/events
+                #:push-counter-event)
   (:local-nicknames (#:batch #:screenshotbot/model/batch)))
 (in-package :screenshotbot/batch-promoter)
 
@@ -59,6 +61,7 @@
                                             batch
                                             run
                                             check)
+   (push-counter-event :batch-updated)
    (bt:with-lock-held ((batch:lock batch))
      (let ((item (or
                   (find-batch-item batch :channel (recorder-run-channel run))
@@ -93,6 +96,7 @@
     (let ((check (compute-check-if-invalidated
                   batch user)))
       (when check
+        (push-counter-event :batch-actually-updated)
         (push-remote-check
          promoter
          batch
