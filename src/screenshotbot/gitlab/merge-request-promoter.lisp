@@ -109,20 +109,6 @@
   ((base-sha :initarg :base-sha
              :accessor base-sha)))
 
-(defun get-merge-request (run)
-  (let ((mr-id (gitlab-merge-request-iid run)))
-    (when mr-id
-      (let ((project-path (project-path (recorder-run-repo-url run)))
-            (mr-id (safe-get-mr-id run)))
-        (when mr-id
-          (let ((res (json:decode-json-from-string
-                      (gitlab-request (recorder-run-company run)
-                                      (format nil "/projects/~a/merge_requests/~a"
-                                              (urlencode:urlencode project-path)
-                                              mr-id)))))
-            (make-instance 'merge-request
-                           :base-sha (assoc-value (assoc-value res :diff--refs) :base--sha ))))))))
-
 (defmethod promoter-pull-id ((promoter merge-request-promoter) run)
   (gitlab-merge-request-iid run))
 

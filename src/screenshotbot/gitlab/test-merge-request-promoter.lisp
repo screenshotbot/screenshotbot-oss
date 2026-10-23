@@ -13,7 +13,6 @@
                 #:make-gitlab-args
                 #:base-sha
                 #:gitlab-request
-                #:get-merge-request
                 #:gitlab-acceptable
                 #:post-build-status
                 #:merge-request-promoter)
@@ -149,19 +148,6 @@
   (with-fixture state ()
     (let* ((promoter (make-instance 'merge-request-promoter)))
       (is (equal 7 (promoter-pull-id promoter run))))))
-
-
-(test get-merge-request
-  (with-fixture state ()
-    #+nil
-    (cl-mock:if-called 'gitlab-request
-                       (lambda (company url)
-                         (error "unimpl")))
-    (cl-mock:answer
-        (gitlab-request company
-                        "/projects/tdrhq%2Ffast-example/merge_requests/7")
-      "{\"diff_refs\": {\"base_sha\":\"foo\"}}")
-    (is (equal "foo" (base-sha (get-merge-request run))))))
 
 
 (test push-remote-check-with-only-webhook-payload
