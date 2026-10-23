@@ -20,6 +20,7 @@
   (:import-from #:screenshotbot/report-api
                 #:report)
   (:import-from #:screenshotbot/api/report
+                #:*pool*
                 #:%report-accept)
   (:import-from #:util/store/object-id
                 #:oid)
@@ -31,6 +32,8 @@
   (:import-from #:fiveam-matchers/core
                 #:has-typep
                 #:assert-that)
+  (:import-from #:util/threading
+                #:wait-for-pool)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/test-report)
 
@@ -44,7 +47,7 @@
 
 (def-fixture state ()
   (with-installation (:installation (make-instance 'multi-org-test-installation))
-   (with-test-store ()
+   (with-test-store (:globally t)
      (with-test-user (:logged-in-p t
                       :company company)
        (let* ((channel (make-instance 'channel :company company))
@@ -62,6 +65,7 @@
   (with-fixture state ()
     (assert-that (%report-accept :oid (oid report))
                  (has-typep 'dto:report))
+    (wait-for-pool *pool*)
     (is (eql :accepted (acceptable-state acceptable)))))
 
 (test cannot-access-other-reports

@@ -14,8 +14,15 @@
                 #:when-let)
   (:import-from #:screenshotbot/model/report
                 #:report-to-dto
-                #:acceptable-state))
+                #:acceptable-state)
+  (:import-from #:lparallel
+                #:future)
+  (:import-from #:util/threading
+                #:make-thread
+                #:max-pool))
 (in-package :screenshotbot/api/report)
+
+(defvar *pool* (make-instance 'max-pool :max 60))
 
 (defapi (%report-accept :uri "/api/report/:oid/review/accept"
                         :method :post
@@ -24,7 +31,10 @@
   (let ((report (util:find-by-oid oid)))
     (auth:can-view! report)
     (when-let ((acceptable (report-acceptable report)))
-      (setf (acceptable-state acceptable) :accepted))
+      (make-thread
+       (lambda ()
+         (setf (acceptable-state acceptable) :accepted))
+       :pool *pool*))
     (report-to-dto report)))
 
 
