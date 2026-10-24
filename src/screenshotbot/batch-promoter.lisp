@@ -96,6 +96,11 @@
     (let ((check (compute-check-if-invalidated
                   batch user)))
       (when check
+
+        ;; TODO: Add a throttler here with wait-for-throttler, we
+        ;; don't want to waste all our GitHub requests on a single
+        ;; large batch that's coming in slowly.
+
         (push-counter-event :batch-actually-updated)
         (push-remote-check
          promoter
