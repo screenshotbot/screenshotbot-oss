@@ -254,6 +254,10 @@ threads.")
          :reader lock))
   (:documentation "A thread pool that has a maximum number of parallel threads running."))
 
+(defclass synchronous-executor ()
+  ()
+  (:documentation "Run everything synchronously and immediately, useful for tests"))
+
 (defmethod wait-for-pool ((self max-pool) &key (timeout 30))
   "Mostly for testing purposes, wait until the pool is inactive"
   (let ((end-time (+ timeout (get-universal-time))))
@@ -263,6 +267,10 @@ threads.")
              (when (> (get-universal-time) end-time)
                (error "Pool didn't end in time"))
              (sleep 0.05))))
+
+(defmethod wait-for-pool ((self synchronous-executor) &key timeout)
+  (declare (ignore timeout))
+  (values))
 
 (defmethod maybe-process-queue ((self max-pool))
   (bt:with-lock-held ((lock self))
@@ -294,6 +302,11 @@ thread, not a thread itself."
             (fset:with-last (queue self) job)))
     (maybe-process-queue self)
     promise))
+
+(defmethod make-thread-impl ((self synchronous-executor) fn &key name)
+  (declare (ignore name))
+  (let ((promise (lparallel:promise)))
+    (lparallel:fulfill promise (funcall fn))))
 
 (defvar *timer-lock* (bt:make-lock))
 (defvar *timer-cv* (bt:make-condition-variable))

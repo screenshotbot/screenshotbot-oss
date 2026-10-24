@@ -92,6 +92,8 @@
   (:import-from #:util/logger
                 #:format-log)
   (:import-from #:util/threading
+                #:max-pool
+                #:make-thread
                 #:scheduled-future)
   (:import-from #:screenshotbot/model/finalized-commit
                 #:commit-finalized-p)
@@ -349,10 +351,17 @@ API. We're eventually going to replace it with this."
     :status (acceptable-state self)
     :user (acceptable-reviewer self))))
 
+(defvar *push-pool*
+  (make-instance 'max-pool :max 100)
+  "A thread pool used just for pushing the acceptable states to the remote.")
+
 (defmethod (setf acceptable-state) :after (state (self abstract-pr-acceptable)
                                            &key user)
   (declare (ignore user))
-  (update-remote self))
+  (make-thread
+   (lambda ()
+     (update-remote self))
+   :pool *push-pool*))
 
 (defmethod actual-sha ((run abstract-run))
   (or
