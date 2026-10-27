@@ -22,6 +22,7 @@
                (:file "random-port")
                (:file "acceptor-with-plugins")
                (:file "clos-dispatcher")
+               (:file "base-taskmaster")
                (:file "better-easy-handler")
                (:file "postdata")
                (:file "async")

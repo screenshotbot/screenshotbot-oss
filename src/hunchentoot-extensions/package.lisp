@@ -11,6 +11,7 @@
   (:import-from #:util/threading
                 #:*extras*)
   (:export #:base-acceptor
+           #:base-taskmaster
            #:better-easy-handler
            #:acceptor-funcall-handler
            #:redirected

@@ -29,7 +29,9 @@ different class so it can be used with multi-acceptor too."))
 
 (defclass base-acceptor (secure-acceptor hunchentoot:easy-acceptor)
   ((db-config :initarg :db-config
-              :accessor acceptor-db-config)))
+              :accessor acceptor-db-config))
+  (:default-initargs
+   :taskmaster (make-instance 'base-taskmaster)))
 
 (defvar *logger* (log4cl:make-logger))
 

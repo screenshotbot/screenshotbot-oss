@@ -85,7 +85,7 @@
                                hunchentoot:easy-acceptor)
   ())
 
-(defclass my-taskmaster (hunchentoot:one-thread-per-connection-taskmaster)
+(defclass my-taskmaster (hex:base-taskmaster)
   ())
 
 (defclass my-acceptor (#+lispworks acceptor-with-existing-socket
