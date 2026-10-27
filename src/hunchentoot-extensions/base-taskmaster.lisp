@@ -8,4 +8,7 @@
 
 (defclass base-taskmaster (hunchentoot:one-thread-per-connection-taskmaster)
   ()
+  (:default-initargs
+   :max-thread-count 300
+   :max-accept-count 320)
   (:documentation "The default taskmaster for base-acceptor."))
