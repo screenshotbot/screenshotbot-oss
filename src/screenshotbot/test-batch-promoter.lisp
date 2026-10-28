@@ -245,3 +245,5 @@
                    :status :success)
     (let ((check (compute-check batch :user :my-user)))
       (is (equal "No screenshots changed" (check-title check))))))
+
+

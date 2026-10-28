@@ -98,6 +98,9 @@
                 #:collecting)
   (:import-from #:screenshotbot/billing-meter
                 #:incr-billing-meter)
+  (:import-from #:screenshotbot/model/channel
+                #:runs-for-commit
+                #:channels-for-company)
   (:export
    #:%recorder-run-post
    #:run-response-id
@@ -605,19 +608,18 @@ promotion thread starts. Used by the API and by Replay"
   "Find all the runs that match the given requirements. Currently, only
 COMMIT is supported."
   (or
-   ;; The sorting is only to make it deterministic for tests
-   (mapcar
-    #'run-to-dto
-    (sort
-     (when commit
-       (collecting
-         (let ((run-id-map (run-id-to-run-map (auth:current-company))))
-           (fset:do-map (run-id run run-id-map)
-             (declare (ignore run-id))
-             (when (equal (recorder-run-commit run) commit)
-               (collect run))))))
-     #'>
-     :key #'%created-at))
+   (loop for run in 
+                 (sort    ;; The sorting is only to make it deterministic for tests
+                  (copy-list
+                   (when commit
+                     (loop for channel in (channels-for-company (auth:current-company))
+                           appending
+                           (runs-for-commit channel commit))))
+                  #'>
+                  :key #'%created-at)
+         do (auth:can-view! run)
+         collect
+         (run-to-dto run))
    #()))
 
 

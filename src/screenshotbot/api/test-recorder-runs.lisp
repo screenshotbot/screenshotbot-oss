@@ -854,7 +854,7 @@ storing release-branch-p, we'll update this test."
                     :compare-pixel-tolerance 0))))
 
 (test fetch-runs-for-commit
-  (with-fixture state ()
+  (with-fixture state (:api-key-roles :disable)
     (let ((run1 (make-recorder-run :company company
                                    :channel (find-or-create-channel company "foo")
                                    :commit-hash "deadbeef"
@@ -869,7 +869,7 @@ storing release-branch-p, we'll update this test."
        (has-length 0))
       (let* ((other-company (make-instance 'company))
              (run2 (make-recorder-run :company other-company
-                                      :channel (find-or-create-channel company "foo")
+                                      :channel (find-or-create-channel other-company "foo")
                                       :commit-hash "deadbeef"
                                       :screenshots nil)))
         (assert-that
