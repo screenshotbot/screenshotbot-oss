@@ -87,9 +87,17 @@ we parse this ourselves."
          ;; alongside the secret, so AUTHENTICATE-API-REQUEST will pull the
          ;; key out of it for us.
          (funcall fn nil bearer-token))
+        ((or
+          (hunchentoot:parameter "api-secret-key")
+          (hunchentoot:parameter "api-key"))
+         (warn "API key passed via request parameters")
+         (error 'api-error
+                :message 
+                "Passing API keys via request parameters is no longer supported, please use HTTP Basic Authorization instead"))
         (t
-         (funcall fn (hunchentoot:parameter "api-key")
-                  (hunchentoot:parameter "api-secret-key")))))))
+         (warn "API call made without authentication")
+         (error 'api-error
+                :message "This endpoint needs authentication via HTTP Basic Auth."))))))
 
 (defmethod authenticate-api-request ((request auth:authenticated-request))
   "Like auth:authenticate-request, but for API handling, and modifies the request"

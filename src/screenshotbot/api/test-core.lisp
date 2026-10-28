@@ -76,9 +76,9 @@
     (answer (hunchentoot:parameter "api-key")  "foo")
     (answer (hunchentoot:parameter "api-secret-key") "bar")
     (answer (hunchentoot:header-in* :authorization) "")
-    (with-api-key (key secret)
-      (is (equal "foo" key))
-      (is (equal "bar" secret)))))
+    (signals api-error
+     (with-api-key (key secret)
+       (values)))))
 
 (test with-api-key-for-authorization
   (with-mocks ()
