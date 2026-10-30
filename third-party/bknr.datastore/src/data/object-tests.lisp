@@ -666,17 +666,41 @@
 
 (defvar *fail-snapshot-p* nil)
 
+(defun file-size (pathname)
+  (with-open-file (stream pathname :element-type '(unsigned-byte 8))
+    (file-length stream)))
+
+(defun truncate-file (pathname length)
+  (let ((bytes (make-array length :element-type '(unsigned-byte 8))))
+    (with-open-file (stream pathname :element-type '(unsigned-byte 8))
+      (read-sequence bytes stream))
+    (with-open-file (stream pathname :direction :output
+                                     :element-type '(unsigned-byte 8)
+                                     :if-exists :supersede)
+      (write-sequence bytes stream))))
+
 (defmethod bknr.datastore::snapshot-subsystem-async :around (store (subsystem store-object-subsystem))
   (let ((thunk (call-next-method)))
     (cond
       (*fail-snapshot-p*
-       (lambda ()
-         ;; Fail after the snapshot file is written, like a dead
-         ;; stdout at the end of the snapshot does.
-         (funcall thunk)
-         (error 'test-snapshot-failure)))
+       (let* ((pathname (bknr.datastore::store-subsystem-snapshot-pathname store subsystem))
+              (length (file-size pathname)))
+         (lambda ()
+           (funcall thunk)
+           ;; Cut the snapshot off before its object records, like
+           ;; the dead stdout in #48 did, then fail.
+           (truncate-file pathname length)
+           (error 'test-snapshot-failure))))
       (t
        thunk))))
+
+(defun snapshots-outside-current ()
+  (remove "current"
+          (directory (merge-pathnames (make-pathname :directory '(:relative :wild)
+                                                     :name "store-object-subsystem-snapshot")
+                                      (bknr.datastore::store-directory *store*)))
+          :key (lambda (pathname) (car (last (pathname-directory pathname))))
+          :test #'string=))
 
 (defdstest failed-snapshot-restores-previous-snapshot ()
   (let* ((one (make-instance 'store-object))
@@ -688,6 +712,12 @@
       ;; partial current/.
       (signals test-snapshot-failure
         (snapshot)))
+    ;; The cut-off snapshot is kept, next to current/ rather than in it.
+    (let ((failed (snapshots-outside-current)))
+      (is (eql 1 (length failed)))
+      (is (< (file-size (first failed))
+             (file-size (bknr.datastore::store-subsystem-snapshot-pathname
+                         *store* (store-object-subsystem))))))
     (restore)
     (is (equal (sort ids #'<)
                (sort (mapcar #'store-object-id (all-store-objects)) #'<)))))
