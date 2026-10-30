@@ -662,6 +662,36 @@
      (signals error
        (snapshot)))))
 
+(define-condition test-snapshot-failure (error) ())
+
+(defvar *fail-snapshot-p* nil)
+
+(defmethod bknr.datastore::snapshot-subsystem-async :around (store (subsystem store-object-subsystem))
+  (let ((thunk (call-next-method)))
+    (cond
+      (*fail-snapshot-p*
+       (lambda ()
+         ;; Fail after the snapshot file is written, like a dead
+         ;; stdout at the end of the snapshot does.
+         (funcall thunk)
+         (error 'test-snapshot-failure)))
+      (t
+       thunk))))
+
+(defdstest failed-snapshot-restores-previous-snapshot ()
+  (let* ((one (make-instance 'store-object))
+         (ids (list (store-object-id one))))
+    (snapshot)
+    (push (store-object-id (make-instance 'store-object)) ids)
+    (let ((*fail-snapshot-p* t))
+      ;; Not a file-error from renaming the backup back over the
+      ;; partial current/.
+      (signals test-snapshot-failure
+        (snapshot)))
+    (restore)
+    (is (equal (sort ids #'<)
+               (sort (mapcar #'store-object-id (all-store-objects)) #'<)))))
+
 (defdstest object-changed-callback ()
   (let ((changed (make-hash-table)))
     (let ((one (make-instance 'object-with-init #| just a random class picked here |#)))
