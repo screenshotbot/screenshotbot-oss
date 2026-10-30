@@ -670,29 +670,20 @@
   (with-open-file (stream pathname :element-type '(unsigned-byte 8))
     (file-length stream)))
 
-(defun truncate-file (pathname length)
-  (let ((bytes (make-array length :element-type '(unsigned-byte 8))))
-    (with-open-file (stream pathname :element-type '(unsigned-byte 8))
-      (read-sequence bytes stream))
-    (with-open-file (stream pathname :direction :output
-                                     :element-type '(unsigned-byte 8)
-                                     :if-exists :supersede)
-      (write-sequence bytes stream))))
-
 (defmethod bknr.datastore::snapshot-subsystem-async :around (store (subsystem store-object-subsystem))
   (let ((thunk (call-next-method)))
-    (cond
-      (*fail-snapshot-p*
-       (let* ((pathname (bknr.datastore::store-subsystem-snapshot-pathname store subsystem))
-              (length (file-size pathname)))
-         (lambda ()
-           (funcall thunk)
-           ;; Cut the snapshot off before its object records, like
-           ;; the dead stdout in #48 did, then fail.
-           (truncate-file pathname length)
-           (error 'test-snapshot-failure))))
-      (t
-       thunk))))
+    (if *fail-snapshot-p*
+        (let* ((pathname (bknr.datastore::store-subsystem-snapshot-pathname store subsystem))
+               (length (file-size pathname)))
+          (lambda ()
+            (funcall thunk)
+            ;; Cut the snapshot off before its object records, like
+            ;; the dead stdout in #48 did, then fail.
+            (alexandria:write-byte-vector-into-file
+             (subseq (alexandria:read-file-into-byte-vector pathname) 0 length)
+             pathname :if-exists :supersede)
+            (error 'test-snapshot-failure)))
+        thunk)))
 
 (defun snapshots-outside-current ()
   (remove "current"
