@@ -662,6 +662,57 @@
      (signals error
        (snapshot)))))
 
+(define-condition test-snapshot-failure (error) ())
+
+(defvar *fail-snapshot-p* nil)
+
+(defun file-size (pathname)
+  (with-open-file (stream pathname :element-type '(unsigned-byte 8))
+    (file-length stream)))
+
+(defmethod bknr.datastore::snapshot-subsystem-async :around (store (subsystem store-object-subsystem))
+  (let ((thunk (call-next-method)))
+    (if *fail-snapshot-p*
+        (let* ((pathname (bknr.datastore::store-subsystem-snapshot-pathname store subsystem))
+               (length (file-size pathname)))
+          (lambda ()
+            (funcall thunk)
+            ;; Cut the snapshot off before its object records, like
+            ;; the dead stdout in #48 did, then fail.
+            (alexandria:write-byte-vector-into-file
+             (subseq (alexandria:read-file-into-byte-vector pathname) 0 length)
+             pathname :if-exists :supersede)
+            (error 'test-snapshot-failure)))
+        thunk)))
+
+(defun snapshots-outside-current ()
+  (remove "current"
+          (directory (merge-pathnames (make-pathname :directory '(:relative :wild)
+                                                     :name "store-object-subsystem-snapshot")
+                                      (bknr.datastore::store-directory *store*)))
+          :key (lambda (pathname) (car (last (pathname-directory pathname))))
+          :test #'string=))
+
+(defdstest failed-snapshot-restores-previous-snapshot ()
+  (let* ((one (make-instance 'store-object))
+         (ids (list (store-object-id one))))
+    (snapshot)
+    (push (store-object-id (make-instance 'store-object)) ids)
+    (let ((*fail-snapshot-p* t))
+      ;; Not a file-error from renaming the backup back over the
+      ;; partial current/.
+      (signals test-snapshot-failure
+        (snapshot)))
+    ;; The cut-off snapshot is kept, next to current/ rather than in it.
+    (let ((failed (snapshots-outside-current)))
+      (is (eql 1 (length failed)))
+      (is (< (file-size (first failed))
+             (file-size (bknr.datastore::store-subsystem-snapshot-pathname
+                         *store* (store-object-subsystem))))))
+    (restore)
+    (is (equal (sort ids #'<)
+               (sort (mapcar #'store-object-id (all-store-objects)) #'<)))))
+
 (defdstest object-changed-callback ()
   (let ((changed (make-hash-table)))
     (let ((one (make-instance 'object-with-init #| just a random class picked here |#)))
