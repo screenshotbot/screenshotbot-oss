@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.18.17 - 2026-11-02
+
+### Changes
+
+- Report crashes via the Screenshotbot server (POST /api/crash) instead
+  of directly to Sentry. For servers older than API version 22, we still
+  report directly to Sentry.
+- Report crashes in the background, and wait for the reports before
+  exiting.
+- Implement base-sha1 for github-actions
+
 ## 2.18.16 - 2026-01-14
 
 - There should be no significant changes in this release, this was
