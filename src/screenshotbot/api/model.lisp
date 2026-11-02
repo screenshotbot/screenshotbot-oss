@@ -98,7 +98,7 @@
 (in-package :screenshotbot/api/model)
 
 ;; Please update CHANGELOG.md
-(defparameter *api-version* 21)
+(defparameter *api-version* 22)
 
 (defclass version ()
   ((version :initarg :version
