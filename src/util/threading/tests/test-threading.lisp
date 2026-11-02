@@ -354,3 +354,11 @@
        (lambda ())))
     (wait-for-zero-threads)
     (is (eql 0 *thread-count*))))
+
+(test wait-for-pool-waits-for-the-queue
+  "A thread has finished, and hasn't yet picked up the next item"
+  (let ((pool (make-instance 'max-pool :max 1)))
+    (setf (util/threading::queue pool)
+          (fset:with-last (util/threading::queue pool) :next-job))
+    (signals error
+      (util/threading::wait-for-pool pool :timeout 1))))

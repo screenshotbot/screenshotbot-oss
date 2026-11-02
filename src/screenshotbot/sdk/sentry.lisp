@@ -7,6 +7,10 @@
 (defpackage :screenshotbot/sdk/sentry
   (:use #:cl)
   (:import-from #:util/threading
+                #:*log-sentry-p*
+                #:make-thread
+                #:max-pool
+                #:wait-for-pool
                 #:with-tags
                 #:maybe-log-sentry
                 #:*warning-count*
@@ -30,7 +34,8 @@
                 #:api-hostname)
   (:import-from #:sentry-client
                 #:client-capture-exception
-                #:encode-exception-event)
+                #:encode-exception-event
+                #:post-sentry-request)
   (:import-from #:util/request
                 #:http-request)
   (:import-from #:util/reused-ssl
@@ -86,6 +91,37 @@ the version, so we only look at the version if we already have it."
                    (cached-remote-version *crash-api-context*))))
     (and version (< version 22))))
 
+(defvar *crash-pool* (make-instance 'max-pool :max 5)
+  "The threads for reporting crashes.")
+
+(defun report-in-background (fn)
+  (make-thread
+   (lambda ()
+     ;; If reporting signals a warning (e.g. the server closed the
+     ;; connection), then reporting that would keep feeding itself.
+     (let ((*log-sentry-p* nil))
+       (handler-case
+           (funcall fn)
+         (error (e)
+           (log:debug "Could not report crash: ~a" e)))))
+   :pool *crash-pool*
+   :name "crash-report"))
+
+(defun flush-crash-reports (&key (timeout 30))
+  "Wait for the crash reports in progress. The timeout limits how much
+an unavailable server can delay the CLI from exiting."
+  (handler-case
+      (wait-for-pool *crash-pool* :timeout timeout)
+    (error (e)
+      (log:debug "Gave up waiting for crash reports: ~a" e))))
+
+;; LispWorks stops the other threads when quitting, so this has to
+;; happen before we quit. An UNWIND-PROTECT would be too late.
+#+lispworks
+(lw:defadvice (uiop:quit flush-crash-reports :before) (&rest args)
+  (declare (ignore args))
+  (flush-crash-reports))
+
 #-screenshotbot-oss
 (defclass api-crash-client (sentry:delivered-client)
   ()
@@ -99,9 +135,17 @@ Sentry. If the server doesn't support that, reports directly to Sentry."))
   ;; warning gets reported the same way as a crash, so a failure here
   ;; must not break the CLI.
   (handler-case
-      (if (crash-api-unavailable-p)
-          (call-next-method)
-          (post-crash (encode-exception-event condition self :tags tags :extras extras)))
+      ;; The event has the stacktrace, so it has to be encoded on this
+      ;; thread.
+      (let ((event (encode-exception-event condition self :tags tags :extras extras))
+            (api-context *crash-api-context*)
+            (directp (crash-api-unavailable-p)))
+        (report-in-background
+         (lambda ()
+           (if directp
+               (post-sentry-request event self)
+               (let ((*crash-api-context* api-context))
+                 (post-crash event))))))
     (error (e)
       (log:debug "Could not report crash: ~a" e))))
 

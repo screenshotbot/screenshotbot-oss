@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/sdk/sentry
+                #:*crash-pool*
+                #:flush-crash-reports
                 #:post-crash
                 #:with-sentry)
   (:import-from #:screenshotbot/sdk/api-context
@@ -20,6 +22,7 @@
                 #:if-called
                 #:with-mocks)
   (:import-from #:util/threading
+                #:max-pool
                 #:*tags*
                 #:*extras*))
 (in-package :screenshotbot/sdk/test-sentry)
@@ -49,21 +52,36 @@
       (loop for fn in *tags*
             do (funcall fn (make-condition 'my-error))))))
 
-(def-fixture crash-state (&key (http-request-fn nil) (ignore-sentry nil))
+(def-fixture crash-state (&key (http-request-fn nil)
+                               (before-request (lambda ()))
+                               (blockedp nil)
+                               (ignore-sentry nil))
   (with-mocks ()
     (let ((requests nil)
-          (direct-events nil))
+          (direct-events nil)
+          (release (lparallel:promise))
+          (started (lparallel:promise))
+          (*crash-pool* (make-instance 'max-pool :max 5)))
+      (declare (ignorable release started))
       (answer (uiop:getenv "TDRHQ_IGNORE_SENTRY") ignore-sentry)
       (if-called 'http-request
                  (or http-request-fn
                      (lambda (url &rest args)
+                       (when blockedp
+                         ;; Requests wait here until we release them.
+                         (lparallel:fulfill started t)
+                         (lparallel:force release))
+                       (funcall before-request)
                        (push (list* url args) requests)
                        "{}")))
       (if-called 'sentry-client::post-sentry-request
                  (lambda (data &optional client)
                    (declare (ignore client))
                    (push data direct-events)))
-      (&body))))
+      (unwind-protect
+           (&body)
+        (lparallel:fulfill release t)
+        (flush-crash-reports)))))
 
 (defun make-context (&optional remote-version)
   (make-instance 'api-context
@@ -105,9 +123,13 @@
                       :dsn "https://foo:bar@sentry.io/1")
        (make-condition 'my-error))))
 
+  (defun capture-and-flush (context)
+    (capture-with-context context)
+    (flush-crash-reports))
+
   (test without-an-api-context-goes-via-the-api
     (with-fixture crash-state ()
-      (capture-with-context nil)
+      (capture-and-flush nil)
       (destructuring-bind ((url &key content &allow-other-keys))
           requests
         (is (equal "https://api.screenshotbot.io/api/crash" url))
@@ -116,7 +138,7 @@
 
   (test server-with-support-goes-via-the-api
     (with-fixture crash-state ()
-      (capture-with-context (make-context 22))
+      (capture-and-flush (make-context 22))
       (destructuring-bind ((url &key &allow-other-keys))
           requests
         (is (equal "https://example.com/api/crash" url)))
@@ -124,14 +146,14 @@
 
   (test older-server-goes-directly-to-sentry
     (with-fixture crash-state ()
-      (capture-with-context (make-context 21))
+      (capture-and-flush (make-context 21))
       (is (eql nil requests))
       (is (eql 1 (length direct-events)))
       (is (str:containsp "MY-ERROR" (car direct-events)))))
 
   (test unknown-version-goes-via-the-api-without-fetching-it
     (with-fixture crash-state ()
-      (capture-with-context (make-context nil))
+      (capture-and-flush (make-context nil))
       (destructuring-bind ((url &key &allow-other-keys))
           requests
         (is (equal "https://example.com/api/crash" url)))
@@ -142,13 +164,79 @@
                                                   (declare (ignore url args))
                                                   (error "connection refused")))
       (finishes
-        (capture-with-context (make-context 22)))))
+        (capture-and-flush (make-context 22)))))
 
   (test failures-going-directly-do-not-propagate
-    (with-mocks ()
-      (if-called 'sentry-client::post-sentry-request
-                 (lambda (data &optional client)
-                   (declare (ignore data client))
-                   (error "connection refused")))
+    (with-fixture crash-state ()
+      (with-mocks ()
+        (if-called 'sentry-client::post-sentry-request
+                   (lambda (data &optional client)
+                     (declare (ignore data client))
+                     (error "connection refused")))
+        (finishes
+          (capture-and-flush (make-context 21))))))
+
+  (test does-not-block-the-thread-that-crashed
+    (with-fixture crash-state (:blockedp t)
+      (capture-with-context (make-context 22))
+      (lparallel:force started)
+      (is (eql nil requests))))
+
+  (test flush-waits-for-reports-in-progress
+    (with-fixture crash-state (:blockedp t)
+      (capture-with-context (make-context 22))
+      (lparallel:force started)
+      (let ((flushedp nil)
+            (pool *crash-pool*))
+        (let ((thread (bt:make-thread
+                       (lambda ()
+                         (let ((*crash-pool* pool))
+                           (flush-crash-reports))
+                         (setf flushedp t)))))
+          (sleep 0.3)
+          (is (eql nil flushedp))
+          (is (eql nil requests))
+          (lparallel:fulfill release t)
+          (bt:join-thread thread)
+          (is (eql t flushedp))
+          (is (eql 1 (length requests)))))))
+
+  (test flush-waits-for-reports-still-in-the-queue
+    (with-fixture crash-state (:before-request (lambda () (sleep 0.05)))
+      (let ((*crash-pool* (make-instance 'max-pool :max 1)))
+        (dotimes (i 8)
+          (capture-with-context (make-context 22)))
+        (flush-crash-reports)
+        (is (eql 8 (length requests))))))
+
+  (test flush-gives-up-on-a-report-that-hangs
+    (with-fixture crash-state (:blockedp t)
+      (capture-with-context (make-context 22))
+      (lparallel:force started)
       (finishes
-        (capture-with-context (make-context 21))))))
+        (flush-crash-reports :timeout 1))
+      (is (eql nil requests))))
+
+  (test the-report-has-the-stacktrace-of-the-crashing-thread
+    (with-fixture crash-state ()
+      (capture-and-flush (make-context 22))
+      (destructuring-bind ((url &key content &allow-other-keys))
+          requests
+        (declare (ignore url))
+        (is (str:containsp "CAPTURE-WITH-CONTEXT" content)))))
+
+  (test warning-while-reporting-does-not-get-reported
+    (with-fixture crash-state (:before-request
+                               (lambda ()
+                                 (warn "Server is making us close the stream")))
+      (capture-and-flush (make-context 22))
+      (is (eql 1 (length requests)))))
+
+  (test keeps-the-api-context-of-the-crashing-thread
+    (with-fixture crash-state ()
+      (let ((*crash-api-context* (make-context 22)))
+        (capture-with-context *crash-api-context*))
+      (flush-crash-reports)
+      (destructuring-bind ((url &key &allow-other-keys))
+          requests
+        (is (equal "https://example.com/api/crash" url))))))

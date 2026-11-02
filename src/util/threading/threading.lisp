@@ -259,10 +259,12 @@ threads.")
   (:documentation "Run everything synchronously and immediately, useful for tests"))
 
 (defmethod wait-for-pool ((self max-pool) &key (timeout 30))
-  "Mostly for testing purposes, wait until the pool is inactive"
+  "Wait until the pool is inactive, including anything that's still queued."
   (let ((end-time (+ timeout (get-universal-time))))
     (loop until (bt:with-lock-held ((lock self))
-                  (= 0 (slot-value self 'thread-count)))
+                  (and
+                   (= 0 (slot-value self 'thread-count))
+                   (fset:empty? (queue self))))
           do
              (when (> (get-universal-time) end-time)
                (error "Pool didn't end in time"))
