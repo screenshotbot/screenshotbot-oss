@@ -1,7 +1,7 @@
 
 Version
 
-* 22: Added POST /api/crash, which forwards a Sentry event to Sentry. This does not need an API key.
+* 22: Added POST /api/crash, which forwards a Sentry event to Sentry. The API key is optional, requests without a valid one are throttled by IP address.
 * Version unchanged
   - Added "directory" field to the run object
 * 21: /api/commit-graph/check-wants now accepts POST (for large SHA lists). See T2237.
