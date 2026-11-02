@@ -15,6 +15,7 @@
   (:import-from #:screenshotbot/sdk/hostname
                 #:api-hostname)
   (:import-from #:screenshotbot/sdk/api-context
+                #:*crash-api-context*
                 #:json-api-context
                 #:api-context)
   (:import-from #:alexandria
@@ -64,8 +65,9 @@
   (let ((api-context (apply #'make-api-context
                             (loop for key in '(:api-key :api-secret :hostname)
                                   append `(,key ,(getopt cmd key))))))
-    (with-reused-ssl ((engine api-context))
-     (funcall fn api-context))))
+    (let ((*crash-api-context* api-context))
+      (with-reused-ssl ((engine api-context))
+        (funcall fn api-context)))))
 
 
 

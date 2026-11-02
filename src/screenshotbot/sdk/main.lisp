@@ -31,6 +31,7 @@
   (:import-from #:screenshotbot/sdk/finalized-commit
                 #:finalize-commit)
   (:import-from #:screenshotbot/sdk/api-context
+                #:*crash-api-context*
                 #:read-config-hostname
                 #:api-feature-enabled-p
                 #:remote-version
@@ -59,6 +60,7 @@
   (:import-from #:screenshotbot/sdk/cli-common
                 #:root/command)
   (:import-from #:screenshotbot/sdk/sentry
+                #:initialize-crash-client
                 #:with-sentry)
   (:import-from #:util/request
                 #:engine)
@@ -105,7 +107,8 @@ SCREENSHOTBOT_API_HOSTNAME environment variable.")
 
 (def-easy-macro with-defaults (&binding api-context &fn fn)
   (sdk:parse-org-defaults)
-  (let ((api-context (make-api-context)))
+  (let* ((api-context (make-api-context))
+         (*crash-api-context* api-context))
     (with-extras (("cli-session-id" (api-context:session-id api-context)))
       (with-reused-ssl ((engine api-context))
         (let ((version (remote-version api-context)))
@@ -267,10 +270,7 @@ SCREENSHOTBOT_API_HOSTNAME environment variable.")
 (defun main (&rest args)
   (uiop:setup-command-line-arguments)
 
-  #-screenshotbot-oss
-  (sentry-client:initialize-sentry-client
-   "https://b0c00f1b8a0e499fbdba1de5013fc97b:0632f4ab8db64d55accd4b81c93e7b79@sentry.io/1460546"
-   :client-class 'sentry:delivered-client)
+  (initialize-crash-client)
 
   (with-sentry ()
     (apply '%main args))

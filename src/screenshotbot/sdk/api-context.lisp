@@ -26,6 +26,8 @@
                 #:assoc-value)
   (:export
    #:api-context
+   #:*crash-api-context*
+   #:cached-remote-version
    #:key
    #:secret
    #:hostname
@@ -40,6 +42,9 @@
 
 (defgeneric fetch-version (api-context)
   (:documentation "Actually fetch the api version, without any caching. Don't call this directly, instead call REMOTE-VERSION on the api-context."))
+
+(defvar *crash-api-context* nil
+  "The API context to use for reporting crashes, if we have one yet.")
 
 (defclass base-api-context ()
   ((remote-version :initform nil
@@ -56,6 +61,11 @@
                :reader session-id)))
 
 (defmethod api-context-prepared-p ((self base-api-context))
+  (slot-value self 'remote-version))
+
+(defmethod cached-remote-version ((self base-api-context))
+  "The remote version if we already know it. Unlike REMOTE-VERSION, this
+never makes a request."
   (slot-value self 'remote-version))
 
 (defmethod fetch-remote-information ((self base-api-context))
