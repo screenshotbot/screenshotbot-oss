@@ -16,10 +16,12 @@
 
 (defparameter *global-request-throttler*
   (make-instance 'ip-throttler
+                 :name "global-request-throttler"
                  :tokens 3600))
 
 (defvar *image-request-throttler*
   (make-instance 'ip-throttler
+                 :name "image-request-throttler"
                  :tokens 72000))
 
 (defun image-script-p (script-name)

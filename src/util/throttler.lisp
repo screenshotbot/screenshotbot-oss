@@ -61,6 +61,9 @@ If the request is throttled, then an error is signaled."))
            :reader period
            :initform 3600
            :documentation "interval in seconds, defaults to an hour")
+   (name :initform "unnamed-throttler"
+         :initarg :name
+         :reader name)
    (throttler-map :accessor throttler-map
                   :initform (fset:empty-map))))
 
@@ -100,6 +103,7 @@ If the request is throttled, then an error is signaled."))
             old key (make-instance 'throttler
                                    :tokens (max-tokens self)
                                    :period (period self)
+                                   :name (name self)
                                    :now now))))
          (fset:@ throttler-map key))))))
 

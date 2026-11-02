@@ -8,6 +8,8 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:util/throttler
+                #:name
+                #:throttler-for-key
                 #:wait-for-throttler
                 #:next-token-time
                 #:close-to-throttling-limit
@@ -150,6 +152,12 @@
                                      (incf ctr))
                          :now 1102
                          :key "foo"))))
+
+(test keyed-throttler-passes-name-to-underlying-throttlers
+  (let ((throttler (make-instance 'keyed-throttler :tokens 10
+                                                   :name "foo-throttler")))
+    (is (equal "foo-throttler"
+               (name (throttler-for-key throttler "foo" :now 1000))))))
 
 (test next-token-time
   (let ((throttler (make-instance 'throttler
