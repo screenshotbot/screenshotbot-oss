@@ -554,7 +554,8 @@
                              (:file "test-review-link")
                              (:file "test-webhook")))
                (:module "gitlab"
-                :components ((:file "test-settings")
+                :components ((:file "test-repo")
+                             (:file "test-settings")
                              (:file "test-review-link")
                              (:file "test-merge-request-promoter")))
                (:module "azure"

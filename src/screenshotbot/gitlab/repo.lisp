@@ -46,16 +46,48 @@
 (defmethod project-path ((repo-url string))
   (str:substring 1 nil (elt (multiple-value-list (quri:parse-uri repo-url)) 4)))
 
-(defmethod public-repo-p ((repo gitlab-repo))
+(defvar *public-repo-p-cache* (make-hash-table :test #'equal)
+  "Map from project-path to (PUBLICP . CHECKED-AT).")
+
+(defvar *public-repo-p-lock* (bt:make-lock "gitlab-public-repo-p"))
+
+(defparameter *public-repo-p-ttl* 600
+  "How long, in seconds, we trust a cached public-repo-p result. Every run
+in a batch finalizes at about the same time, and without the cache each
+of them makes its own unauthenticated GitLab request, which gets us
+rate-limited.")
+
+(defun %fetch-public-repo-p (repo)
   (restart-case
     (handler-case
         (let ((api (format nil "~a/projects/~a" *gitlab-url*
                            (urlencode:urlencode (project-path repo)))))
-          (dex:get api))
+          (dex:get api)
+          t)
       (dexador.error:http-request-not-found ()
         nil))
     (retry-public-repo-p ()
-      (public-repo-p repo))))
+      (%fetch-public-repo-p repo))))
+
+(defun cached-public-repo-p (repo &key (now (get-universal-time)))
+  ;; Holding the lock across the request is intentional: concurrent
+  ;; callers for the same repo wait for the first one's answer instead
+  ;; of all hitting GitLab.
+  (bt:with-lock-held (*public-repo-p-lock*)
+    (let* ((key (project-path repo))
+           (cached (gethash key *public-repo-p-cache*)))
+      (cond
+        ((and cached
+              (< (- now (cdr cached)) *public-repo-p-ttl*))
+         (car cached))
+        (t
+         (let ((publicp (%fetch-public-repo-p repo)))
+           (setf (gethash key *public-repo-p-cache*)
+                 (cons publicp now))
+           publicp))))))
+
+(defmethod public-repo-p ((repo gitlab-repo))
+  (cached-public-repo-p repo))
 
 (defmethod commit-link ((repo gitlab-repo)
                         hash)
