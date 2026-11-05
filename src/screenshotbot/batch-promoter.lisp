@@ -51,10 +51,20 @@
                 #:installation)
   (:import-from #:util/events
                 #:push-counter-event)
+  (:import-from #:util/throttler
+                #:wait-for-throttler
+                #:keyed-throttler)
   (:local-nicknames (#:batch #:screenshotbot/model/batch)))
 (in-package :screenshotbot/batch-promoter)
 
 (named-readtables:in-readtable markup:syntax)
+
+(defvar *batch-throttler*
+  (make-instance 'keyed-throttler
+                 :tokens 4
+                 :period 10)
+  "For a given batch, this is the rate at which we push. This prevents a
+single batch from taking over our push capacity.")
 
 (auto-restart:with-auto-restart ()
  (defmethod push-remote-check-via-batching (promoter
@@ -96,11 +106,7 @@
     (let ((check (compute-check-if-invalidated
                   batch user)))
       (when check
-
-        ;; TODO: Add a throttler here with wait-for-throttler, we
-        ;; don't want to waste all our GitHub requests on a single
-        ;; large batch that's coming in slowly.
-
+        (wait-for-throttler *batch-throttler* :key batch)
         (push-counter-event :batch-actually-updated)
         (push-remote-check
          promoter

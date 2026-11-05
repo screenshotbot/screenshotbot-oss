@@ -31,6 +31,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/batch-promoter
+                #:*batch-throttler*
                 #:build-check-summary
                 #:compute-check-if-invalidated
                 #:compute-check
@@ -46,7 +47,9 @@
                 #:has-item
                 #:contains)
   (:import-from #:fiveam-matchers/has-length
-                #:has-length))
+                #:has-length)
+  (:import-from #:util/throttler
+                #:keyed-throttler))
 (in-package :screenshotbot/test-batch-promoter)
 
 (util/fiveam:def-suite)
@@ -61,21 +64,24 @@
   (push check (checks self)))
 
 (def-fixture state ()
-  (with-installation ()
-   (with-test-store ()
-     (let* ((company (make-instance 'company))
-            (channel (make-instance 'channel
-                                    :company company
-                                    :name "channel-1"))
-            (batch (make-instance 'batch
-                                  :company company
-                                  :commit "abcd"
-                                  :name "my-batch"))
-            (run (make-recorder-run
-                  :channel channel
-                  :batch batch))
-            (promoter (make-instance 'test-promoter)))
-       (&body)))))
+  (let ((*batch-throttler*
+          (make-instance 'keyed-throttler
+                         :tokens 100000)))
+    (with-installation ()
+      (with-test-store ()
+        (let* ((company (make-instance 'company))
+               (channel (make-instance 'channel
+                                       :company company
+                                       :name "channel-1"))
+               (batch (make-instance 'batch
+                                     :company company
+                                     :commit "abcd"
+                                     :name "my-batch"))
+               (run (make-recorder-run
+                     :channel channel
+                     :batch batch))
+               (promoter (make-instance 'test-promoter)))
+          (&body))))))
 
 (test simple-batching-test
   (with-fixture state ()
