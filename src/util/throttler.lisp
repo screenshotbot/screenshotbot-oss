@@ -77,7 +77,7 @@ If the request is throttled, then an error is signaled."))
   (bt:with-lock-held ((lock self))
     (%throttle-without-lock self :now now)))
 
-(defmethod %throttle-without-lock ((self throttler) &key now)
+(defmethod %throttle-without-lock ((self throttler) &key now (warnp t))
   (incf (%tokens self)
         (* (- now (%last-updated self)) (/ (max-tokens self) (period self))))
   (setf (%last-updated self) now)
@@ -85,7 +85,8 @@ If the request is throttled, then an error is signaled."))
     (error 'throttled-error))
   (when (> (%tokens self) (max-tokens self))
     (setf (%tokens self) (max-tokens self)))
-  (when (< (%tokens self) (floor (max-tokens self) 2))
+  (when (and warnp
+             (< (%tokens self) (floor (max-tokens self) 2)))
     (warn 'close-to-throttling-limit :name (name self)))
   (decf (%tokens self)))
 
@@ -153,7 +154,9 @@ throttler, otherwise we might block the throttle! requests."
              (handler-case
                  (return-from wait-for-throttler
                    (%throttle-without-lock
-                    self :now (get-universal-time)))
+                    self
+                    :now (get-universal-time)
+                    :warnp nil))
                (throttled-error ()
                  ;; We're holding the lock. So we can calculate exactly when
                  ;; the next token will be available. The next
