@@ -34,6 +34,11 @@
                 #:saml-test-result-error
                 #:saml-test-result-tested-by
                 #:relay-state-settings
+                #:activation-blocker
+                #:activate-saml-provider
+                #:deactivate-saml-provider
+                #:defaultp
+                #:saml-test-result
                 #:entity-id
                 #:saml-public-cert)
   (:import-from #:util/store/store
@@ -45,6 +50,9 @@
                 #:company)
   (:import-from #:core/installation/installation
                 #:*installation*)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:multi-org-feature)
   (:import-from #:fiveam-matchers/core
                 #:assert-that
                 #:has-typep)
@@ -274,3 +282,98 @@
         (finish-test-login relay-state :email "foo@example.com"))
       (is (equal "foo@example.com"
                  (saml-test-result-email (last-saml-test-result provider)))))))
+
+(defclass multi-org-installation (multi-org-feature
+                                  installation)
+  ())
+
+(def-fixture activation ()
+  (with-fake-request ()
+    (auth:with-sessions ()
+      (let* ((company (get-singleton-company *installation*))
+             (admin (make-user :email "admin@example.com"))
+             (provider (make-instance 'saml-auth-provider
+                                      :company company
+                                      :metadata-xml *xml*)))
+        (setf (roles:user-role company admin) 'roles:admin)
+        (flet ((record-test (&key (email "admin@example.com")
+                               error-message
+                               (tested-by admin)
+                               (ts (get-universal-time)))
+                 (make-instance 'saml-test-result
+                                :provider provider
+                                :tested-by tested-by
+                                :email (unless error-message email)
+                                :error-message error-message
+                                :ts ts)))
+          (declare (ignorable #'record-test))
+          (&body))))))
+
+(test activation-requires-a-test
+  (with-fixture state ()
+    (with-fixture activation ()
+      (is (equal "Test this provider before activating it"
+                 (activation-blocker provider admin)))
+      (record-test :error-message "bad audience")
+      (is (equal "The last test failed"
+                 (activation-blocker provider admin))))))
+
+(test activation-requires-own-recent-test-as-admin
+  (with-fixture state ()
+    (with-fixture activation ()
+      (let ((other-admin (make-user :email "other@example.com")))
+        (setf (roles:user-role company other-admin) 'roles:admin)
+        (record-test :tested-by other-admin)
+        (is (equal "Test this provider yourself before activating it"
+                   (activation-blocker provider admin))))
+      (record-test :ts (- (get-universal-time) (* 2 3600)))
+      (is (str:containsp "more than an hour old"
+                         (activation-blocker provider admin)))
+      ;; The IdP signed in as someone who isn't an admin
+      (make-user :email "member@example.com")
+      (record-test :email "member@example.com")
+      (is (str:containsp "isn't an admin"
+                         (activation-blocker provider admin)))
+      ;; ... or as someone who doesn't exist yet
+      (record-test :email "new@example.com")
+      (is (str:containsp "isn't an admin"
+                         (activation-blocker provider admin)))
+      (record-test)
+      (is (eql nil (activation-blocker provider admin))))))
+
+(test activate-replaces-the-default
+  (with-fixture state ()
+    (with-fixture activation ()
+      (let ((old (make-instance 'saml-auth-provider
+                                :company company
+                                :defaultp t)))
+        (record-test)
+        (activate-saml-provider provider admin)
+        (is (eql provider (default-saml-auth-provider)))
+        (is-true (defaultp provider))
+        (is-false (defaultp old))
+        (is (equal "This provider is already active"
+                   (activation-blocker provider admin)))
+        (deactivate-saml-provider provider)
+        (is (eql nil (default-saml-auth-provider)))))))
+
+(test activate-refuses-when-blocked
+  (with-fixture state ()
+    (with-fixture activation ()
+      (let ((old (make-instance 'saml-auth-provider
+                                :company company
+                                :defaultp t)))
+        (signals simple-error
+          (activate-saml-provider provider admin))
+        (is (eql old (default-saml-auth-provider)))))))
+
+(test activation-is-only-for-single-company-installs
+  (with-test-store ()
+    (let ((*installation* (make-instance 'multi-org-installation)))
+      (let* ((company (make-instance 'company))
+             (admin (make-user :email "admin@example.com"))
+             (provider (make-instance 'saml-auth-provider
+                                      :company company)))
+        (setf (roles:user-role company admin) 'roles:admin)
+        (is (str:containsp "single-company"
+                           (activation-blocker provider admin)))))))

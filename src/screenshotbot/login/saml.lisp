@@ -26,14 +26,17 @@
                 #:fset-set-index
                 #:fset-unique-index)
   (:import-from #:bknr.datastore
+                #:with-transaction
                 #:store-object
                 #:persistent-class)
   (:import-from #:screenshotbot/model/company
+                #:company-admin-p
                 #:get-singleton-company
                 #:company)
   (:import-from #:screenshotbot/installation
                 #:multi-org-feature)
   (:import-from #:screenshotbot/model/user
+                #:user-with-email
                 #:single-company-user)
   (:import-from #:core/installation/installation
                 #:*installation*
@@ -57,7 +60,11 @@
    #:saml-test-result-email
    #:saml-test-result-error
    #:saml-test-result-ts
-   #:saml-test-result-tested-by))
+   #:saml-test-result-tested-by
+   #:defaultp
+   #:activation-blocker
+   #:activate-saml-provider
+   #:deactivate-saml-provider))
 (in-package :screenshotbot/login/saml)
 
 (named-readtables:in-readtable markup:syntax)
@@ -238,7 +245,8 @@ activating admin."))
               :initarg :defaultp
               :index +default-provider-index+
               :index-reader %find-by-defaultp
-              :reader defaultp)
+              :reader defaultp
+              :writer (setf %defaultp))
    (%company :initform nil
              :initarg :company
              :index +company-index+
@@ -254,6 +262,63 @@ activating admin."))
 
 (defun default-saml-auth-provider ()
   (%find-by-defaultp t))
+
+(defparameter *activation-test-window* (* 60 60)
+  "How recent the test must be when activating a provider.")
+
+(defun activation-blocker (provider user)
+  "NIL if USER may make PROVIDER the default login for this installation,
+otherwise a message explaining why not.
+
+Activating replaces the login for everyone, so we require a recent
+successful test by USER, and that the test signed in as an admin: if it
+didn't, nobody would be able to administer the installation after
+activating."
+  (let ((result (last-saml-test-result provider)))
+    (cond
+      ((typep *installation* 'multi-org-feature)
+       ;; DEFAULTP applies to the whole installation, it would make
+       ;; this company's IdP everyone's login.
+       "Activating SAML is only supported on single-company installations")
+      ((not (eql (saml-company provider)
+                 (get-singleton-company *installation*)))
+       "This provider doesn't belong to this installation's company")
+      ((defaultp provider)
+       "This provider is already active")
+      ((null result)
+       "Test this provider before activating it")
+      ((saml-test-result-error result)
+       "The last test failed")
+      ((not (eql user (saml-test-result-tested-by result)))
+       "Test this provider yourself before activating it")
+      ((< (saml-test-result-ts result)
+          (- (get-universal-time) *activation-test-window*))
+       "The last test is more than an hour old, test it again")
+      ((not (let ((tested-user (user-with-email (saml-test-result-email result))))
+              (and tested-user
+                   (company-admin-p (saml-company provider) tested-user))))
+       (format nil "The last test signed in as ~a, who isn't an admin. Activating would leave nobody who can administer this installation."
+               (saml-test-result-email result)))
+      (t
+       nil))))
+
+(defun activate-saml-provider (provider user)
+  "Make PROVIDER the default login for this installation, replacing the
+current default if there is one."
+  (bt:with-lock-held (*lock*)
+    (let ((blocker (activation-blocker provider user)))
+      (when blocker
+        (error "Can't activate SAML provider: ~a" blocker)))
+    (let ((old (default-saml-auth-provider)))
+      (with-transaction ()
+        ;; Clear the old one first, %DEFAULTP has a unique index.
+        (when old
+          (setf (%defaultp old) nil))
+        (setf (%defaultp provider) t)))))
+
+(defun deactivate-saml-provider (provider)
+  (with-transaction ()
+    (setf (%defaultp provider) nil)))
 
 (defmethod saml-entity-id ((self saml-auth-provider))
   (handler-case

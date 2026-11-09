@@ -22,7 +22,11 @@
                 #:test-signin-link
                 #:last-saml-test-result
                 #:saml-test-result-email
-                #:saml-test-result-error)
+                #:saml-test-result-error
+                #:defaultp
+                #:activation-blocker
+                #:activate-saml-provider
+                #:deactivate-saml-provider)
   (:import-from #:screenshotbot/login/common
                 #:with-login)
   (:import-from #:nibble
@@ -66,6 +70,7 @@ in as any email address."
           <th>Type</th>
           <th>IdP Entity ID</th>
           <th>Last test</th>
+          <th>Status</th>
           <th>Actions</th>
         </thead>
         ,@(loop for saml in (fset:convert 'list (saml-auth-providers-for-company (auth:current-company)))
@@ -75,8 +80,10 @@ in as any email address."
                   <td>SAML</td>
                   <td><tt>,(saml-entity-id saml)</tt></td>
                   <td><test-result result= (last-saml-test-result saml) /></td>
+                  <td><activation-status saml=saml /></td>
                   <td>
                     <a href= (nibble () (start-test-login saml)) class= "btn btn-sm btn-primary" >Test</a>
+                    <activation-button saml=saml />
                     <a href= "#" class= "btn btn-sm btn-secondary" >Edit</a>
                     <a href= "#" class= "btn btn-sm btn-danger" >Delete</a>
                   </td>
@@ -93,10 +100,45 @@ in as any email address."
     (t
      <span class= "text-success">Signed in as ,(saml-test-result-email result)</span>)))
 
+(markup:deftag activation-status (&key saml)
+  (cond
+    ((defaultp saml)
+     <span class= "badge bg-success">Active</span>)
+    (t
+     <span class= "text-muted">
+       ,(or (activation-blocker saml (auth:current-user))
+            "Ready to activate")
+     </span>)))
+
+(markup:deftag activation-button (&key saml)
+  (cond
+    ((defaultp saml)
+     ;; TODO: a proper confirmation page, explaining what happens to
+     ;; users who don't have another way to log in.
+     <a href= (nibble () (%deactivate saml)) class= "btn btn-sm btn-warning"
+        onclick= "return confirm('Deactivate SAML? Users will no longer be able to sign in with it.')" >Deactivate</a>)
+    ((activation-blocker saml (auth:current-user))
+     <button class= "btn btn-sm btn-success" disabled= "disabled" >Activate</button>)
+    (t
+     <a href= (nibble () (%activate saml)) class= "btn btn-sm btn-success" >Activate</a>)))
+
+(defun check-provider! (saml)
+  (assert (eql (auth:current-company) (saml-company saml)))
+  (check-admin!))
+
+(defun %activate (saml)
+  (check-provider! saml)
+  (activate-saml-provider saml (auth:current-user))
+  (go-back))
+
+(defun %deactivate (saml)
+  (check-provider! saml)
+  (deactivate-saml-provider saml)
+  (go-back))
+
 (defun start-test-login (saml)
   (let ((user (auth:current-user)))
-    (assert (eql (auth:current-company) (saml-company saml)))
-    (check-admin!)
+    (check-provider! saml)
     ;; TODO: if the IdP metadata can't be loaded, this signals
     ;; INVALID-METADATA-URL and the admin gets a 500. Record it as a
     ;; failed test instead.
