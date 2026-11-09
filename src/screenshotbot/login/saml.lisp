@@ -29,7 +29,10 @@
                 #:store-object
                 #:persistent-class)
   (:import-from #:screenshotbot/model/company
+                #:get-singleton-company
                 #:company)
+  (:import-from #:screenshotbot/installation
+                #:multi-org-feature)
   (:import-from #:screenshotbot/model/user
                 #:single-company-user)
   (:import-from #:core/installation/installation
@@ -504,16 +507,26 @@ which provider's certificate we validate the response against."
     (check-type saml saml-auth-provider)
     (hex:safe-redirect (signin-link saml (or redirect "/runs")))))
 
+(defun render-sp-metadata (company)
+  (check-type company company)
+  (setf (hunchentoot:content-type*) "application/xml")
+  (get-sp-metadata
+   (create-settings-builder-for-xml company nil)))
+
 (defhandler (sp-metadata :uri "/saml/entity/:oid/metadata") (oid)
   "The IdP fetches this without a session, so the company must come from
 the OID, not from the current session."
-  (setf (hunchentoot:content-type*) "application/xml")
-  (let ((company (util:find-by-oid oid)))
-    (check-type company company)
-    (let ((settings (create-settings-builder-for-xml
-                     company
-                     nil)))
-      (get-sp-metadata settings))))
+  (render-sp-metadata (util:find-by-oid oid)))
+
+(defhandler (singleton-sp-metadata :uri "/saml/metadata") ()
+  "The metadata for installations with a single company (e.g. enterprise
+installs). This is also the SP entity ID, see ENTITY-ID."
+  (cond
+    ((typep *installation* 'multi-org-feature)
+     (setf (hunchentoot:return-code*) hunchentoot:+http-not-found+)
+     (hunchentoot:abort-request-handler))
+    (t
+     (render-sp-metadata (get-singleton-company *installation*)))))
 
 (defmethod oauth-signin-link ((self saml-auth-provider) redirect)
   (signin-link self (or redirect "/runs")))

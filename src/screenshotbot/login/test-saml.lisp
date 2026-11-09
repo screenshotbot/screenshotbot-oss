@@ -25,11 +25,16 @@
                 #:create-settings-builder-for-xml
                 #:parse-xml
                 #:sp-metadata
+                #:singleton-sp-metadata
+                #:entity-id
                 #:saml-public-cert)
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/company
+                #:get-singleton-company
                 #:company)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:import-from #:fiveam-matchers/core
                 #:assert-that
                 #:has-typep)
@@ -184,3 +189,16 @@
           (is (not (str:containsp
                     (cert-body (saml-public-cert (find-or-create-saml-cert other-company)))
                     xml))))))))
+
+(test singleton-sp-metadata
+  (with-fixture state ()
+    (with-fake-request ()
+      (let ((xml (singleton-sp-metadata)))
+        (is (str:containsp
+             (cert-body (saml-public-cert
+                         (find-or-create-saml-cert
+                          (get-singleton-company *installation*))))
+             xml))
+        (is (str:containsp
+             (format nil "entityID=\"~a\"" (entity-id))
+             xml))))))
