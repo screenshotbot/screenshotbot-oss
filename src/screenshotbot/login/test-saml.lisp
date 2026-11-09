@@ -23,7 +23,9 @@
                 #:authn-request-get-encoded-authn-request
                 #:make-authn-request
                 #:create-settings-builder-for-xml
-                #:parse-xml)
+                #:parse-xml
+                #:sp-metadata
+                #:saml-public-cert)
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:screenshotbot/model/company
@@ -36,7 +38,9 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:util/store/object-id
+                #:oid))
 (in-package :screenshotbot/login/test-saml)
 
 
@@ -158,3 +162,25 @@
   ;; One of our customers configured it this way:
   (is-false (valid-relay-state-p "https://foo.screenshotbot.io"))
   (is-false (valid-relay-state-p "sdfds234342_34234234sdfsfs")))
+
+(defun cert-body (pem)
+  "The base64 body of a PEM certificate, as it appears in the metadata XML"
+  (str:join ""
+            (remove-if (lambda (line)
+                         (or (str:emptyp line)
+                             (str:starts-with-p "-----" line)))
+                       (str:lines pem))))
+
+(test sp-metadata-uses-company-from-oid
+  (with-fixture state ()
+    (let ((other-company (make-instance 'company)))
+      (find-or-create-saml-cert other-company)
+      (with-fake-request ()
+        ;; No logged in user: this is how the IdP fetches it
+        (let ((xml (sp-metadata :oid (oid company))))
+          (is (str:containsp
+               (cert-body (saml-public-cert (find-or-create-saml-cert company)))
+               xml))
+          (is (not (str:containsp
+                    (cert-body (saml-public-cert (find-or-create-saml-cert other-company)))
+                    xml))))))))

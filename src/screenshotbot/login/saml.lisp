@@ -504,12 +504,14 @@ which provider's certificate we validate the response against."
     (check-type saml saml-auth-provider)
     (hex:safe-redirect (signin-link saml (or redirect "/runs")))))
 
-(defhandler (nil :uri "/saml/entity/:oid/metadata") (oid)
+(defhandler (sp-metadata :uri "/saml/entity/:oid/metadata") (oid)
+  "The IdP fetches this without a session, so the company must come from
+the OID, not from the current session."
   (setf (hunchentoot:content-type*) "application/xml")
   (let ((company (util:find-by-oid oid)))
     (check-type company company)
     (let ((settings (create-settings-builder-for-xml
-                     (auth:current-company)
+                     company
                      nil)))
       (get-sp-metadata settings))))
 
