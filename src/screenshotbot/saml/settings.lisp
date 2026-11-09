@@ -30,7 +30,9 @@
   (:import-from #:util/misc
                 #:not-null!)
   (:import-from #:util/store/object-id
-                #:oid))
+                #:oid)
+  (:import-from #:screenshotbot/model/company
+                #:company-admin-p))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -38,10 +40,17 @@
 (defun check-enabled! ()
   (assert (gk:check :self-service-saml (auth:current-company))))
 
+(defun check-admin! ()
+  "Only admins may see or change SAML settings: a SAML provider can log
+in as any email address."
+  (unless (company-admin-p (auth:current-company) (auth:current-user))
+    (error "You must be an admin to configure SSO")))
+
 (defhandler (nil :uri "/sso") ()
   "List all the SAML configs"
   (check-enabled!)
   (with-login ()
+    (check-admin!)
     <app-template>
       <taskie-page-title title= "Configure Single-Sign-on">
         <a href= (nibble () (%new-sso)) class= "btn btn-primary mb-2" >Create</a>
@@ -106,6 +115,7 @@
     </simple-card-page>))
 
 (defun submit-sso-form (&rest args &key name idp-metadata)
+  (check-admin!)
   (with-error-builder (:errors errors
                        :check check
                        :form-builder (sso-form)
