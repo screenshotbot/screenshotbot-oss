@@ -313,6 +313,7 @@
                  (:file "aws-cognito")
                  (:file "require-invite-sso-mixin")
                  (:file "email-auth-provider")
+                 (:file "recovery-token")
                  (:file "template")))
    (:module "company"
     :serial t
@@ -463,6 +464,7 @@
                 :components ((:file "test-github-oauth")
                              (:file "test-forgot-password")
                              (:file "test-saml" :if-feature (:and :lispworks :linux))
+                             (:file "test-recovery-token")
                              (:file "test-google-oauth")
                              (:file "test-populate")
                              (:file "test-verify-email")
