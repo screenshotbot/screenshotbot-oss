@@ -36,60 +36,73 @@
   (:import-from #:util/form-errors
                 #:with-error-builder
                 #:with-form-errors)
-  (:import-from #:util/misc
-                #:not-null!)
   (:import-from #:util/store/object-id
+                #:find-by-oid
                 #:oid)
   (:import-from #:screenshotbot/model/company
+                #:company
                 #:company-admin-p))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
 
-(defun check-enabled! ()
-  (assert (gk:check :self-service-saml (auth:current-company))))
+(defun check-enabled! (company)
+  (assert (gk:check :self-service-saml company)))
 
-(defun check-admin! ()
+(defun check-admin! (company)
   "Only admins may see or change SAML settings: a SAML provider can log
 in as any email address."
-  (unless (company-admin-p (auth:current-company) (auth:current-user))
+  (unless (company-admin-p company (auth:current-user))
     (error "You must be an admin to configure SSO")))
 
-(defhandler (nil :uri "/sso") ()
-  "List all the SAML configs"
-  (check-enabled!)
-  (with-login ()
-    (check-admin!)
-    <app-template>
-      <taskie-page-title title= "Configure Single-Sign-on">
-        <a href= (nibble () (%new-sso)) class= "btn btn-primary mb-2" >Create</a>
-      </taskie-page-title>
+(defun sso-page-url (company)
+  (hex:make-url "/company/:oid/sso" :oid (oid company)))
 
-      <table class= "table border mt-3">
-        <thead>
-          <th>Type</th>
-          <th>IdP Entity ID</th>
-          <th>Last test</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </thead>
-        ,@(loop for saml in (fset:convert 'list (saml-auth-providers-for-company (auth:current-company)))
-                collect
-                (util:copying (saml)
-                <tr class= "align-middle" >
-                  <td>SAML</td>
-                  <td><tt>,(saml-entity-id saml)</tt></td>
-                  <td><test-result result= (last-saml-test-result saml) /></td>
-                  <td><activation-status saml=saml /></td>
-                  <td>
-                    <a href= (nibble () (start-test-login saml)) class= "btn btn-sm btn-primary" >Test</a>
-                    <activation-button saml=saml />
-                    <a href= "#" class= "btn btn-sm btn-secondary" >Edit</a>
-                    <a href= "#" class= "btn btn-sm btn-danger" >Delete</a>
-                  </td>
-                </tr>))
-      </table>
-    </app-template>))
+(defhandler (nil :uri "/sso") ()
+  (with-login ()
+    (hex:safe-redirect (sso-page-url (auth:current-company)))))
+
+(defhandler (company-sso-page :uri "/company/:oid/sso") (oid)
+  "List all the SAML configs for the company"
+  (with-login ()
+    (let ((company (find-by-oid oid)))
+      (check-type company company)
+      (auth:can-view! company)
+      (check-enabled! company)
+      (check-admin! company)
+      (sso-page company))))
+
+(defun sso-page (company)
+  <app-template>
+    <taskie-page-title title= "Configure Single-Sign-on">
+      <a href= (nibble () (sso-form company)) class= "btn btn-primary mb-2" >Create</a>
+    </taskie-page-title>
+
+    <table class= "table border mt-3">
+      <thead>
+        <th>Type</th>
+        <th>IdP Entity ID</th>
+        <th>Last test</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </thead>
+      ,@(loop for saml in (fset:convert 'list (saml-auth-providers-for-company company))
+              collect
+              (util:copying (saml)
+              <tr class= "align-middle" >
+                <td>SAML</td>
+                <td><tt>,(saml-entity-id saml)</tt></td>
+                <td><test-result result= (last-saml-test-result saml) /></td>
+                <td><activation-status saml=saml /></td>
+                <td>
+                  <a href= (nibble () (start-test-login saml)) class= "btn btn-sm btn-primary" >Test</a>
+                  <activation-button saml=saml />
+                  <a href= "#" class= "btn btn-sm btn-secondary" >Edit</a>
+                  <a href= "#" class= "btn btn-sm btn-danger" >Delete</a>
+                </td>
+              </tr>))
+    </table>
+  </app-template>)
 
 (markup:deftag test-result (&key result)
   (cond
@@ -123,30 +136,37 @@ in as any email address."
      <a href= (nibble () (%activate saml)) class= "btn btn-sm btn-success" >Activate</a>)))
 
 (defun check-provider! (saml)
-  (assert (eql (auth:current-company) (saml-company saml)))
-  (check-admin!))
+  "Nibbles re-check access, since admin rights could have changed since
+the page was rendered."
+  (let ((company (saml-company saml)))
+    (check-enabled! company)
+    (check-admin! company)))
+
+(defun go-back (company)
+  (hex:safe-redirect (sso-page-url company)))
 
 (defun %activate (saml)
   (check-provider! saml)
   (activate-saml-provider saml (auth:current-user))
-  (go-back))
+  (go-back (saml-company saml)))
 
 (defun %deactivate (saml)
   (check-provider! saml)
   (deactivate-saml-provider saml)
-  (go-back))
+  (go-back (saml-company saml)))
 
 (defun start-test-login (saml)
-  (let ((user (auth:current-user)))
-    (check-provider! saml)
-    ;; TODO: if the IdP metadata can't be loaded, this signals
-    ;; INVALID-METADATA-URL and the admin gets a 500. Record it as a
-    ;; failed test instead.
-    (hex:safe-redirect (test-signin-link saml user "/sso"))))
+  (check-provider! saml)
+  ;; TODO: if the IdP metadata can't be loaded, this signals
+  ;; INVALID-METADATA-URL and the admin gets a 500. Record it as a
+  ;; failed test instead.
+  (hex:safe-redirect (test-signin-link saml
+                                       (auth:current-user)
+                                       (sso-page-url (saml-company saml)))))
 
-(defun sso-form (&key xml-instead)
+(defun sso-form (company)
   (let ((action (nibble (name idp-metadata)
-                  (submit-sso-form :name name :idp-metadata idp-metadata))))
+                  (submit-sso-form company :name name :idp-metadata idp-metadata))))
     <simple-card-page form-action=action >
       <div class= "card-header">
         <h4 class= "card-title">
@@ -167,7 +187,7 @@ in as any email address."
         <div class= "text-muted">
           Copy this into your Identity Provider
         </div>      
-        <input type= "text" id= "sp-metadata" disabled= "disabled" class= "form-control"  value= (hex:make-full-url hunchentoot:*request* "/saml/entity/:oid/metadata" :oid (oid (auth:current-company))) />
+        <input type= "text" id= "sp-metadata" disabled= "disabled" class= "form-control"  value= (hex:make-full-url hunchentoot:*request* "/saml/entity/:oid/metadata" :oid (oid company)) />
       </div>
 
       <div class= "mb-2" >
@@ -183,13 +203,14 @@ in as any email address."
       </div>
     </simple-card-page>))
 
-(defun submit-sso-form (&rest args &key name idp-metadata)
-  (check-admin!)
+(defun submit-sso-form (company &rest args &key name idp-metadata)
+  (check-enabled! company)
+  (check-admin! company)
   (with-error-builder (:errors errors
                        :check check
-                       :form-builder (sso-form)
+                       :form-builder (sso-form company)
                        :form-args (:name name :idp-metadata idp-metadata)
-                       :success (apply #'%create-saml args))
+                       :success (apply #'%create-saml company args))
     (check :name
            (str:non-blank-string-p name)
            "Name must not be empty")
@@ -205,20 +226,10 @@ in as any email address."
      (ignore-errors (fetch-metadata-xml idp-metadata))
      "Could not fetch metadata URL, if this is behind an internal network please contact support@screenshotbot.io to help set it up")))
 
-(defun go-back ()
-  (hex:safe-redirect "/sso"))
-
 (auto-restart:with-auto-restart ()
- (defun %create-saml (&key name idp-metadata)
+ (defun %create-saml (company &key name idp-metadata)
    (make-instance 'saml-auth-provider
-                  :company (not-null! (auth:current-company))
+                  :company company
                   :idp-metadata-url idp-metadata
                   :name name)
-   (go-back)))
-
-(defun %new-sso ()
-  (sso-form))
-
-
-
-
+   (go-back company)))

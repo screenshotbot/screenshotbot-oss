@@ -471,6 +471,9 @@
                              (:file "test-login")
                              (:file "test-signup")
                              (:file "test-common")))
+               (:module "saml"
+                :if-feature (:and :lispworks :linux)
+                :components ((:file "test-settings")))
                (:module "scim"
                 :components ((:file "test-dto")
                              (:file "test-filter")
