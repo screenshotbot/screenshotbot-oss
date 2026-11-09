@@ -15,9 +15,14 @@
                 #:taskie-list)
   (:import-from #:screenshotbot/login/saml
                 #:saml-auth-provider
+                #:saml-company
                 #:fetch-metadata-xml
                 #:saml-entity-id
-                #:saml-auth-providers-for-company)
+                #:saml-auth-providers-for-company
+                #:test-signin-link
+                #:last-saml-test-result
+                #:saml-test-result-email
+                #:saml-test-result-error)
   (:import-from #:screenshotbot/login/common
                 #:with-login)
   (:import-from #:nibble
@@ -60,20 +65,42 @@ in as any email address."
         <thead>
           <th>Type</th>
           <th>IdP Entity ID</th>
+          <th>Last test</th>
           <th>Actions</th>
         </thead>
         ,@(loop for saml in (fset:convert 'list (saml-auth-providers-for-company (auth:current-company)))
                 collect
+                (util:copying (saml)
                 <tr class= "align-middle" >
                   <td>SAML</td>
                   <td><tt>,(saml-entity-id saml)</tt></td>
+                  <td><test-result result= (last-saml-test-result saml) /></td>
                   <td>
+                    <a href= (nibble () (start-test-login saml)) class= "btn btn-sm btn-primary" >Test</a>
                     <a href= "#" class= "btn btn-sm btn-secondary" >Edit</a>
                     <a href= "#" class= "btn btn-sm btn-danger" >Delete</a>
                   </td>
-                </tr>)
+                </tr>))
       </table>
     </app-template>))
+
+(markup:deftag test-result (&key result)
+  (cond
+    ((null result)
+     <span class= "text-muted">Never tested</span>)
+    ((saml-test-result-error result)
+     <span class= "text-danger">Failed: ,(saml-test-result-error result)</span>)
+    (t
+     <span class= "text-success">Signed in as ,(saml-test-result-email result)</span>)))
+
+(defun start-test-login (saml)
+  (let ((user (auth:current-user)))
+    (assert (eql (auth:current-company) (saml-company saml)))
+    (check-admin!)
+    ;; TODO: if the IdP metadata can't be loaded, this signals
+    ;; INVALID-METADATA-URL and the admin gets a 500. Record it as a
+    ;; failed test instead.
+    (hex:safe-redirect (test-signin-link saml user "/sso"))))
 
 (defun sso-form (&key xml-instead)
   (let ((action (nibble (name idp-metadata)

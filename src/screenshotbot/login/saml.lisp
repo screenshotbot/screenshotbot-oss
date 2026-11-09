@@ -51,7 +51,13 @@
   (:import-from #:util/cron
                 #:def-cron)
   (:export
-   #:saml-auth-provider))
+   #:saml-auth-provider
+   #:test-signin-link
+   #:last-saml-test-result
+   #:saml-test-result-email
+   #:saml-test-result-error
+   #:saml-test-result-ts
+   #:saml-test-result-tested-by))
 (in-package :screenshotbot/login/saml)
 
 (named-readtables:in-readtable markup:syntax)
@@ -173,9 +179,49 @@
    (redirect :initarg :redirect
              :initform nil
              :reader redirect)
+   (tested-by :initarg :tested-by
+              :initform nil
+              :reader relay-state-tested-by
+              :documentation "If non-NIL, this is a test login started by this user. A test
+login only records a SAML-TEST-RESULT, it does not log anyone in.")
    (created-at :initform (get-universal-time)
                :reader created-at))
   (:metaclass indexed-class))
+
+(defindex +test-result-provider-index+
+  'fset-set-index
+  :slot-name '%provider)
+
+(defclass saml-test-result (store-object)
+  ((%provider :initarg :provider
+              :index +test-result-provider-index+
+              :index-reader saml-test-results-for-provider)
+   (tested-by :initarg :tested-by
+              :reader saml-test-result-tested-by)
+   (email :initarg :email
+          :initform nil
+          :reader saml-test-result-email
+          :documentation "The NameID from a successful test")
+   (error-message :initarg :error-message
+                  :initform nil
+                  :reader saml-test-result-error
+                  :documentation "Why the response failed to validate, NIL on success")
+   (ts :initarg :ts
+       :initform (get-universal-time)
+       :reader saml-test-result-ts))
+  (:metaclass persistent-class)
+  (:documentation "The outcome of a test login against a SAML provider, used to make
+sure a provider works before it's activated.
+
+TODO: delete these along with the provider, once providers can be deleted.
+TODO: activating a provider should require a successful test by the
+activating admin."))
+
+(defun last-saml-test-result (provider)
+  ;; Not by TS: that's in seconds, so two tests in the same second
+  ;; would be ambiguous. Object IDs increase with creation order.
+  (let ((results (fset:convert 'list (saml-test-results-for-provider provider))))
+    (first (sort results #'> :key #'bknr.datastore:store-object-id))))
 
 (defindex +default-provider-index+
   'fset-unique-index
@@ -287,16 +333,11 @@ which provider's certificate we validate the response against."
                               (current-request-uri))
                              (error "Could not find a SAML provider for this response")))))
              (request-uri (current-request-uri)))
-        (let ((resp (make-saml-response (relay-state-settings relay-state)
-                                        request-uri
-                                        saml-response )))
-          (let ((is-valid (saml-response-is-valid resp)))
-            (unless is-valid
-              (error "SamlResponse failed to validate: ~a [~a]"
-                     (saml-response-get-error resp)
-                     is-valid)))
-
-          (process-validated-callback resp relay-state)))
+        (handle-saml-response
+         (make-saml-response (relay-state-settings relay-state)
+                             request-uri
+                             saml-response)
+         relay-state))
     (relay-state-expired ()
       <html>
         <p>This SAML session has expired, probably because of a rogue refresh. <a href= "/">Try again.</a></p>
@@ -305,6 +346,38 @@ which provider's certificate we validate the response against."
 (lw-ji:define-java-callers "java.util.List"
   (list-get "get"))
 
+
+(defun handle-saml-response (resp relay-state)
+  (let ((is-valid (saml-response-is-valid resp)))
+    (cond
+      ((relay-state-tested-by relay-state)
+       (finish-test-login
+        relay-state
+        :email (when is-valid
+                 (saml-response-get-name-id resp))
+        :error-message (unless is-valid
+                         (or (saml-response-get-error resp)
+                             "Unknown error"))))
+      ((not is-valid)
+       (error "SamlResponse failed to validate: ~a [~a]"
+              (saml-response-get-error resp)
+              is-valid))
+      (t
+       (process-validated-callback resp relay-state)))))
+
+(defun finish-test-login (relay-state &key email error-message)
+  "Record the result of a test login. This must not touch the session:
+the POST from the IdP doesn't carry the session cookie (SameSite=Lax),
+so creating a session here would log the admin out."
+  (make-instance 'saml-test-result
+                 :provider (saml-auth-provider relay-state)
+                 :tested-by (relay-state-tested-by relay-state)
+                 :email email
+                 :error-message error-message)
+  (hex:safe-redirect
+   (or
+    (redirect relay-state)
+    "/")))
 
 (defun process-validated-callback (saml-response relay-state)
   (let* ((attributes (saml-response-get-attributes saml-response))
@@ -473,8 +546,17 @@ which provider's certificate we validate the response against."
 
 
 (defmethod signin-link ((self saml-auth-provider) redirect)
+  (%signin-link self :redirect redirect))
+
+(defun test-signin-link (self tested-by redirect)
+  "Like SIGNIN-LINK, but the callback only records a SAML-TEST-RESULT
+and then redirects to REDIRECT, without logging anyone in."
+  (check-type tested-by store-object)
+  (%signin-link self :redirect redirect :tested-by tested-by))
+
+(defun %signin-link (self &rest relay-state-args)
   (multiple-value-bind (relay-state settings url)
-      (make-relay-state self :redirect redirect)
+      (apply #'make-relay-state self relay-state-args)
    (let* ((arg (authn-request-get-encoded-authn-request
                 (make-authn-request settings)))
           (sig-alg (settings-get-signature-algorithm settings))

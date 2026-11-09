@@ -26,10 +26,20 @@
                 #:parse-xml
                 #:sp-metadata
                 #:singleton-sp-metadata
+                #:handle-saml-response
+                #:finish-test-login
+                #:make-saml-response
+                #:last-saml-test-result
+                #:saml-test-result-email
+                #:saml-test-result-error
+                #:saml-test-result-tested-by
+                #:relay-state-settings
                 #:entity-id
                 #:saml-public-cert)
   (:import-from #:util/store/store
                 #:with-test-store)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
   (:import-from #:screenshotbot/model/company
                 #:get-singleton-company
                 #:company)
@@ -202,3 +212,65 @@
         (is (str:containsp
              (format nil "entityID=\"~a\"" (entity-id))
              xml))))))
+
+(def-fixture test-login ()
+  (with-fake-request ()
+    (auth:with-sessions ()
+      (let* ((admin (make-user :email "admin@example.com"))
+             (provider (make-instance 'saml-auth-provider
+                                      :company company
+                                      :metadata-xml *xml*))
+             (relay-state (make-relay-state provider
+                                            :tested-by admin
+                                            :redirect "/sso")))
+        (&body)))))
+
+(test failed-test-login-is-recorded
+  (with-fixture state ()
+    (with-fixture test-login ()
+      (signals hex:redirected
+        (handle-saml-response
+         (make-saml-response (relay-state-settings relay-state)
+                             "https://example.com/sso/saml/callback"
+                             (make-fake-saml-response "http://localhost:8080/realms/master"))
+         relay-state))
+      (let ((result (last-saml-test-result provider)))
+        (is (eql admin (saml-test-result-tested-by result)))
+        (is (eql nil (saml-test-result-email result)))
+        (is (str:non-empty-string-p (saml-test-result-error result)))))))
+
+(test invalid-response-without-test-still-errors
+  (with-fixture state ()
+    (with-fixture test-login ()
+      (let ((relay-state (make-relay-state provider)))
+        (signals simple-error
+          (handle-saml-response
+           (make-saml-response (relay-state-settings relay-state)
+                               "https://example.com/sso/saml/callback"
+                               (make-fake-saml-response "http://localhost:8080/realms/master"))
+           relay-state)))
+      (is (eql nil (last-saml-test-result provider))))))
+
+(test successful-test-login-does-not-log-in
+  (with-fixture state ()
+    (with-fixture test-login ()
+      (let ((session (auth:current-session)))
+        (signals hex:redirected
+          (finish-test-login relay-state :email "foo@example.com"))
+        (is (eql session (auth:current-session)))
+        (is (eql nil (auth:current-user))))
+      (is (eql nil (auth:find-user *installation* :email "foo@example.com")))
+      (is (equal "foo@example.com"
+                 (saml-test-result-email (last-saml-test-result provider))))
+      (is (eql nil (saml-test-result-error (last-saml-test-result provider)))))))
+
+(test last-saml-test-result-is-the-latest
+  (with-fixture state ()
+    (with-fixture test-login ()
+      (signals hex:redirected
+        (finish-test-login relay-state :error-message "bad"))
+      ;; Same second as the previous result
+      (signals hex:redirected
+        (finish-test-login relay-state :email "foo@example.com"))
+      (is (equal "foo@example.com"
+                 (saml-test-result-email (last-saml-test-result provider)))))))
