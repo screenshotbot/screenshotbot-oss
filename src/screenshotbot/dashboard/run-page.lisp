@@ -21,6 +21,8 @@
         #:screenshotbot/model/image
         #:screenshotbot/model/channel
         #:screenshotbot/model/company)
+  (:import-from #:screenshotbot/dashboard/channel-search-bar
+                #:channel-search-bar)
   (:import-from #:screenshotbot/server
                 #:with-login
                 #:make-thread
@@ -601,27 +603,14 @@
          (filtered-screenshots (apply-map-filter screenshots filter)))
     <app-template body-class= "dashboard" title= (format nil "Screenshotbot: Run from ~a" (channel-name channel)) >
       <div class= "page-title-box">
-        <h4 class= "page-title" >Run from
-          <:time class= "timeago" datetime= (created-at run)>
-            ,(created-at run)
-          </:time>
-          <render-run-tags tags= (recorder-run-tags run) />
-        </h4>
-
         ,(when alert
            alert)
 
         <div class= "d-flex justify-content-between mt-3 mb-3">
-          <div class= "" style= "width: 20em" >
-            <div class= "input-group">
-              <span class= "input-group-text" >
-                <mdi name= "search" />
-              </span>
-              <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
-                     placeholder= "Search..."
-                     data-target= "#run-page-results" />
-            </div>
-          </div>
+          <channel-search-bar channel=channel
+                              target= "#run-page-results" >
+            <render-run-tags tags= (recorder-run-tags run) />
+          </channel-search-bar>
 
 
         ,(when (and

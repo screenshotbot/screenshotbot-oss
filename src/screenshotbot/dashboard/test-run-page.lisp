@@ -44,6 +44,8 @@
   (:import-from #:fiveam-matchers/core
                 #:is-not
                 #:assert-that)
+  (:import-from #:fiveam-matchers/strings
+                #:contains-string)
   (:import-from #:fiveam-matchers/lists
                 #:has-item
                 #:contains)
@@ -153,6 +155,12 @@
     (finishes
      (run-page :id (oid run)))))
 
+
+(test run-page-shows-channel-name
+  (with-fixture state ()
+    (assert-that
+     (markup:write-html (render-run-page run))
+     (contains-string "<h4 class=\"channel-search-bar-name text-truncate\" title=\"bleh\">"))))
 
 (test run-delete-page
   (with-fixture state ()
