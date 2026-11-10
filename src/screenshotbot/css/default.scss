@@ -975,8 +975,52 @@ a {
 
 .compare-header {
 
+    .compare-channel-name {
+        max-width: 20em;
+        margin-bottom: 0;
+        margin-right: 1rem;
+        align-self: center;
+    }
+
     .report-search-wrapper {
+        display: flex;
+        align-items: center;
         width: 20em;
+        margin-right: auto;
+
+        .input-group {
+            flex-wrap: nowrap;
+        }
+
+        .report-search-toggle {
+            cursor: pointer;
+        }
+
+        input.search {
+            transition: max-width 0.25s ease, padding 0.25s ease,
+                        border-width 0.25s ease, opacity 0.2s ease;
+            max-width: 20em;
+        }
+
+        &.collapsed {
+            width: auto;
+
+            // Bootstrap's input-group squares the right corners of
+            // anything that isn't the last child, with a more specific
+            // selector than we can reasonably match.
+            .report-search-toggle {
+                border-top-right-radius: $input-border-radius !important;
+                border-bottom-right-radius: $input-border-radius !important;
+            }
+
+            input.search {
+                max-width: 0;
+                padding-left: 0;
+                padding-right: 0;
+                border-width: 0;
+                opacity: 0;
+            }
+        }
     }
 
     .nav-item {
@@ -989,7 +1033,6 @@ a {
         justify-content: none;
 
         .report-search-wrapper {
-            display: block;
             margin-bottom: 0.5rem;
             width: 100%;
         }

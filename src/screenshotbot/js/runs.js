@@ -45,6 +45,28 @@ setupLiveOnAttach(".search", function () {
 });
 
 
+setupLiveOnAttach(".report-search-toggle", function () {
+    $(this).on("mousedown", function (e) {
+        // Keep focus in the input, otherwise the blur collapses it
+        // just before the click expands it again.
+        e.preventDefault();
+    });
+    $(this).on("click", function () {
+        $(this).closest(".report-search-wrapper").find("input.search").trigger("focus");
+    });
+});
+
+setupLiveOnAttach(".report-search-wrapper input.search", function () {
+    $(this).on("focus", function () {
+        $(this).closest(".report-search-wrapper").removeClass("collapsed");
+    });
+    $(this).on("blur", function () {
+        if ($(this).val() == "") {
+            $(this).closest(".report-search-wrapper").addClass("collapsed");
+        }
+    });
+});
+
 setupLiveOnAttach("ul.report-selector > li > a", function () {
     var currentState = history.state;
     var type = $(this).data("type");

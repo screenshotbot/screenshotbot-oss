@@ -951,6 +951,13 @@ native change in prod."
     ,@body
   </a>)
 
+(deftag compare-channel-heading (&key channel)
+  "Shows which channel a report or comparison belongs to."
+  (let ((name (or (channel-name channel) "Unnamed channel")))
+    <h4 class= "compare-channel-name text-truncate" title=name >
+      ,(shortened-channel-name name :length 40)
+    </h4>))
+
 (deftag render-compare-header (&key more acceptable report run
                                default-type
                                changes-groups
@@ -960,16 +967,19 @@ native change in prod."
     <div class= "content">
       <div class= "d-flex  flex-wrap justify-content-between compare-header" >
 
-        <div class= "report-search-wrapper"  >
+        <compare-channel-heading channel= (recorder-run-channel run) />
+
+        <div class= "report-search-wrapper collapsed"  >
           <div class= "input-group">
-            <span class= "input-group-text report-search" >
+            <button type= "button" class= "input-group-text report-search report-search-toggle"
+                    title= "Search" aria-label= "Search" >
               <mdi name= "search" />
-            </span>
+            </button>
             <input class= "form-control search d-inline-block" type= "text" autocomplete= "off"
                    placeholder= "Search..."
                    data-target= ".report-result" />
-            <render-run-tags tags= (recorder-run-tags run) />
           </div>
+          <render-run-tags tags= (recorder-run-tags run) />
         </div>
 
         <div class= "options" >

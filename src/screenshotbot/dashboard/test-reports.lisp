@@ -125,6 +125,14 @@
      (contains-string "1 changes"))))
 
 
+(test report-page-shows-channel-name ()
+  (with-fixture report-page ()
+    (let ((html (markup:write-html
+                 (report-page :id (oid report)))))
+      (assert-that html
+                   (contains-string "<title>bleh: 1 changes</title>")
+                   (contains-string "compare-channel-name")))))
+
 (def-easy-macro get-redirect (&fn fn)
   (catch 'hunchentoot::handler-done
     (funcall fn))

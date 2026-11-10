@@ -143,12 +143,21 @@
 (defun report-diff-report (report)
   (make-diff-report (report-run report) (report-previous-run report)))
 
+(defun report-page-title (report)
+  (let ((channel-name (when-let ((run (report-run report)))
+                        (channel-name (recorder-run-channel run)))))
+    (cond
+      ((str:emptyp channel-name)
+       (report-title report))
+      (t
+       (format nil "~a: ~a" channel-name (report-title report))))))
+
 (defun render-report-page (report &key alert skip-access-checks)
   (check-type report report)
   (unless skip-access-checks
     (can-view! report))
 
-  <app-template body-class= "dashboard" title= (report-title report) content=nil >
+  <app-template body-class= "dashboard" title= (report-page-title report) content=nil >
 
     <div class= "content">
       ,(when (and nil (can-public-view report))
