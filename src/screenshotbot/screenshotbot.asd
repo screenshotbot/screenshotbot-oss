@@ -195,6 +195,7 @@
                  (:file "review-link")
                  (:file "commit-graph")
                  (:file "share")
+                 (:file "channel-search-bar")
                  (:file "run-page")
                  (:file "dashboard")
                  (:file "image")

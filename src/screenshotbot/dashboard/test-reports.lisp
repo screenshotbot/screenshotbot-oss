@@ -131,7 +131,7 @@
                  (report-page :id (oid report)))))
       (assert-that html
                    (contains-string "<title>bleh: 1 changes</title>")
-                   (contains-string "compare-channel-name")))))
+                   (contains-string "channel-search-bar-name")))))
 
 (def-easy-macro get-redirect (&fn fn)
   (catch 'hunchentoot::handler-done
