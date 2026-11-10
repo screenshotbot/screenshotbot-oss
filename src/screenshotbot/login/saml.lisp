@@ -30,13 +30,11 @@
                 #:store-object
                 #:persistent-class)
   (:import-from #:screenshotbot/model/company
-                #:company-admin-p
                 #:get-singleton-company
                 #:company)
   (:import-from #:screenshotbot/installation
                 #:multi-org-feature)
   (:import-from #:screenshotbot/model/user
-                #:user-with-email
                 #:single-company-user)
   (:import-from #:core/installation/installation
                 #:*installation*
@@ -309,9 +307,11 @@ a test. Create a new provider and activate it instead."
 otherwise a message explaining why not.
 
 Activating replaces the login for everyone, so we require a recent
-successful test by USER, and that the test signed in as an admin: if it
-didn't, nobody would be able to administer the installation after
-activating."
+successful test by USER.
+
+We don't require the test to sign in as a company admin, though without
+one nobody can administer the installation after activating. A
+recovery token gets back to the SSO page in that case."
   (let ((result (last-saml-test-result provider)))
     (cond
       ((typep *installation* 'multi-org-feature)
@@ -337,11 +337,6 @@ activating."
             (<= (saml-test-result-ts result)
                 (saml-edited-at provider)))
        "The provider changed since the last test, test it again")
-      ((not (let ((tested-user (user-with-email (saml-test-result-email result))))
-              (and tested-user
-                   (company-admin-p (saml-company provider) tested-user))))
-       (format nil "The last test signed in as ~a, who isn't an admin. Activating would leave nobody who can administer this installation."
-               (saml-test-result-email result)))
       (t
        nil))))
 

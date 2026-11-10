@@ -326,7 +326,7 @@
       (is (equal "The last test failed"
                  (activation-blocker provider admin))))))
 
-(test activation-requires-own-recent-test-as-admin
+(test activation-requires-own-recent-test
   (with-fixture state ()
     (with-fixture activation ()
       (let ((other-admin (make-user :email "other@example.com")))
@@ -337,15 +337,13 @@
       (record-test :ts (- (get-universal-time) (* 2 3600)))
       (is (str:containsp "more than an hour old"
                          (activation-blocker provider admin)))
-      ;; The IdP signed in as someone who isn't an admin
+      ;; It doesn't matter who the IdP signed in as: a non-admin, or
+      ;; someone who doesn't exist yet
       (make-user :email "member@example.com")
       (record-test :email "member@example.com")
-      (is (str:containsp "isn't an admin"
-                         (activation-blocker provider admin)))
-      ;; ... or as someone who doesn't exist yet
+      (is (eql nil (activation-blocker provider admin)))
       (record-test :email "new@example.com")
-      (is (str:containsp "isn't an admin"
-                         (activation-blocker provider admin)))
+      (is (eql nil (activation-blocker provider admin)))
       (record-test)
       (is (eql nil (activation-blocker provider admin))))))
 
