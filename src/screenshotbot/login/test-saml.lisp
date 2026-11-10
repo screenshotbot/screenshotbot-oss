@@ -56,6 +56,7 @@
                 #:get-singleton-company
                 #:company)
   (:import-from #:core/installation/installation
+                #:installation-domain
                 #:*installation*)
   (:import-from #:screenshotbot/installation
                 #:installation
@@ -488,3 +489,12 @@
                    "no error")
                (simple-error (e)
                  (princ-to-string e)))))))))
+
+(test entity-id-does-not-change
+  ;; Customers have this as their IdP's Audience URI. If this test
+  ;; fails, you're about to break their logins. See ENTITY-ID.
+  (with-fixture state ()
+    (is (equal "/saml/metadata"
+               (quri:uri-path (quri:uri (entity-id)))))
+    (is (equal (quri:uri-host (quri:uri (installation-domain *installation*)))
+               (quri:uri-host (quri:uri (entity-id)))))))

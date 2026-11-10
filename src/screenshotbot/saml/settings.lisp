@@ -30,7 +30,13 @@
                 #:edit-saml-provider
                 #:delete-saml-provider
                 #:saml-idp-metadata-url
-                #:saml-name)
+                #:saml-name
+                #:entity-id
+                #:callback-url)
+  (:import-from #:screenshotbot/installation
+                #:multi-org-feature)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:import-from #:screenshotbot/login/common
                 #:with-login)
   (:import-from #:nibble
@@ -304,6 +310,47 @@ principal."
                                        (check-provider! saml)
                                        (sso-page-url (saml-company saml)))))
 
+(markup:deftag copyable-value (&key label value)
+  ;; No NAME, so this isn't submitted with the form.
+  <div class= "mb-2">
+    <label class= "form-label">,(progn label)</label>
+    <div class= "input-group">
+      <input type= "text" class= "form-control font-monospace" readonly= "readonly" value=value />
+      <button type= "button" class= "btn btn-outline-secondary"
+              onclick= "navigator.clipboard.writeText(this.parentElement.querySelector('input').value)" >Copy</button>
+    </div>
+  </div>)
+
+(defun sp-metadata-url (company)
+  "The URL IdPs can import our metadata from."
+  (cond
+    ((typep *installation* 'multi-org-feature)
+     (hex:make-full-url hunchentoot:*request* "/saml/entity/:oid/metadata" :oid (oid company)))
+    (t
+     ;; Same as the entity ID, see SINGLETON-SP-METADATA
+     (entity-id))))
+
+(markup:deftag sp-settings (&key company)
+  "What the customer configures in their IdP. These come from the same
+functions the login flow uses, so they can't drift apart."
+  <div class= "mb-3">
+    <h5>Settings for your Identity Provider</h5>
+    <div class= "text-muted mb-2">
+      Configure your IdP with these. If your IdP can import SAML metadata from a URL, you can use the metadata URL instead.
+    </div>
+    <copyable-value label= "Single sign-on URL (ACS URL, also the Recipient and Destination)"
+                    value= (callback-url) />
+    <copyable-value label= "Audience URI (SP Entity ID)"
+                    value= (entity-id) />
+    <copyable-value label= "SP metadata URL"
+                    value= (sp-metadata-url company) />
+    <ul class= "text-muted">
+      <li>Name ID format: EmailAddress</li>
+      <li>Application username: Email</li>
+      <li>Response and assertion: signed, RSA-SHA256</li>
+    </ul>
+  </div>)
+
 (defun edit-sso-form (saml)
   (check-provider! saml)
   (sso-form (saml-company saml) :saml saml))
@@ -329,13 +376,7 @@ principal."
                value= (when saml (saml-name saml)) />
       </div>
       
-      <div class= "mb-2" >
-        <label for= "sp-metadata" class= "form-label">Service Provider EntityID / Metadata URL</label>
-        <div class= "text-muted">
-          Copy this into your Identity Provider
-        </div>      
-        <input type= "text" id= "sp-metadata" disabled= "disabled" class= "form-control"  value= (hex:make-full-url hunchentoot:*request* "/saml/entity/:oid/metadata" :oid (oid company)) />
-      </div>
+      <sp-settings company=company />
 
       <div class= "mb-2" >
         <label for= "idp-metadata" class= "form-label">Identity Provider Metadata URL</label>

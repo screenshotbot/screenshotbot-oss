@@ -28,13 +28,19 @@
                 #:with-installation)
   (:import-from #:util/testing
                 #:with-fake-request)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:import-from #:screenshotbot/saml/settings
                 #:submit-sso-form
                 #:edit-sso-form
                 #:%delete
                 #:confirm-delete
-                #:confirm-deactivate)
+                #:confirm-deactivate
+                #:sso-form
+                #:sp-metadata-url)
   (:import-from #:screenshotbot/login/saml
+                #:entity-id
+                #:callback-url
                 #:saml-auth-provider
                 #:saml-name
                 #:saml-idp-metadata-url
@@ -308,3 +314,23 @@ page or a redirect."
         (confirm-delete saml company))
       (signals error
         (confirm-deactivate saml)))))
+
+(test form-shows-the-idp-settings
+  (with-fixture state ()
+    (let ((html (markup:write-html (sso-form company))))
+      (is (str:containsp (entity-id) html))
+      (is (str:containsp (callback-url) html))
+      ;; The per-company metadata URL is not our entity ID, and on a
+      ;; single-company install we don't show it at all
+      (is (not (str:containsp "/saml/entity/" html))))))
+
+(defclass multi-org-installation (screenshotbot/installation:multi-org-feature
+                                  screenshotbot/installation:installation)
+  ())
+
+(test sp-metadata-url-on-multi-org
+  (with-fixture state ()
+    (is (equal (entity-id) (sp-metadata-url company)))
+    (let ((*installation* (make-instance 'multi-org-installation)))
+      (is (str:containsp (format nil "/saml/entity/~a/metadata" (oid company))
+                         (sp-metadata-url company))))))

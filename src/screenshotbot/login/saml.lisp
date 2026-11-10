@@ -55,6 +55,8 @@
                 #:def-cron)
   (:export
    #:saml-auth-provider
+   #:entity-id
+   #:callback-url
    #:test-signin-link
    #:last-saml-test-result
    #:saml-test-result-email
@@ -591,6 +593,13 @@ so creating a session here would log the admin out."
    "onelogin.saml2.idp.single_sign_on_service.url"))
 
 (defun entity-id ()
+  "Our SP entity ID, which IdPs use as the Audience URI.
+
+Don't change this: customers type it into their IdP by hand (e.g. Okta's
+\"Audience URI\"), and at least one customer is already configured
+with <domain>/saml/metadata. Changing it would break their
+logins with an audience mismatch. It's also served as our metadata on
+single-company installations, see SINGLETON-SP-METADATA."
   (let ((uri (quri:uri
               (installation-domain
                *installation*))))
@@ -599,6 +608,7 @@ so creating a session here would log the admin out."
     (quri:render-uri uri)))
 
 (defun callback-url ()
+  "The Assertion Consumer Service URL (Okta's \"Single sign-on URL\")."
   (quri:render-uri
    (quri:make-uri
     :path "/sso/saml/callback"
