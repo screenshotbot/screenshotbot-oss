@@ -41,7 +41,13 @@
                 #:oid)
   (:import-from #:screenshotbot/model/company
                 #:company
-                #:company-admin-p))
+                #:company-admin-p)
+  (:import-from #:screenshotbot/login/recovery-token
+                #:recovery-token
+                #:find-recovery-token
+                #:recovery-token-company
+                #:recovery-token-expires-at
+                #:recovery-token-expired-p))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -49,11 +55,45 @@
 (defun check-enabled! (company)
   (assert (gk:check :self-service-saml company)))
 
-(defun check-admin! (company)
-  "Only admins may see or change SAML settings: a SAML provider can log
-in as any email address."
-  (unless (company-admin-p company (auth:current-user))
-    (error "You must be an admin to configure SSO")))
+(defparameter *recovery-session-duration* 3600
+  "How long a session can use a recovery token after redeeming it. The
+token itself may be valid for longer, in which case it can be redeemed
+again.")
+
+(defun session-recovery-token (company)
+  "The recovery token redeemed in this session, if it's for COMPANY and
+neither the token nor this session's use of it has expired. Returns the
+time the session's access ends as a second value.
+
+This is the only place that reads it, so it can't give access to
+anything but this page."
+  (destructuring-bind (&optional token deadline)
+      (auth:session-value :recovery-token)
+    ;; Check the deadline ourselves: SESSION-VALUE doesn't enforce
+    ;; :EXPIRES-IN when reading.
+    (when (and (typep token 'recovery-token)
+               (eql company (recovery-token-company token))
+               (not (recovery-token-expired-p token))
+               (integerp deadline)
+               (< (get-universal-time) deadline))
+      (values token deadline))))
+
+(defun sso-principal (company)
+  "Who is making changes on COMPANY's SSO page: a company admin, or a
+recovery token. NIL if neither."
+  (let ((user (auth:current-user)))
+    (cond
+      ((and user (company-admin-p company user))
+       user)
+      (t
+       (session-recovery-token company)))))
+
+(defun check-principal! (company)
+  "Only admins (or a recovery token) may see or change SAML settings: a
+SAML provider can log in as any email address."
+  (check-enabled! company)
+  (or (sso-principal company)
+      (error "You must be an admin to configure SSO")))
 
 (defun sso-page-url (company)
   (hex:make-url "/company/:oid/sso" :oid (oid company)))
@@ -64,19 +104,85 @@ in as any email address."
 
 (defhandler (company-sso-page :uri "/company/:oid/sso") (oid)
   "List all the SAML configs for the company"
-  (with-login ()
-    (let ((company (find-by-oid oid)))
-      (check-type company company)
-      (auth:can-view! company)
-      (check-enabled! company)
-      (check-admin! company)
-      (sso-page company))))
+  (let ((company (find-by-oid oid)))
+    (check-type company company)
+    (cond
+      ((session-recovery-token company)
+       (check-principal! company)
+       (sso-page company))
+      (t
+       (with-login ()
+         (auth:can-view! company)
+         (check-principal! company)
+         (sso-page company))))))
+
+(defhandler (recovery-page :uri "/recovery") ()
+  (recovery-form))
+
+(defun recovery-form (&key error-message)
+  ;; The token is POSTed, so it doesn't end up in access logs.
+  (let ((action (nibble (token)
+                  (redeem-recovery-token token))))
+    <simple-card-page form-action=action >
+      <div class= "card-header">
+        <h4 class= "card-title">Recover SSO access</h4>
+      </div>
+      ,(when error-message
+         <div class= "alert alert-danger">,(progn error-message)</div>)
+      <div class= "mb-2">
+        <label for= "token" class= "form-label">Recovery token</label>
+        <div class= "text-muted">
+          Paste the token you got from Screenshotbot support. It only gives access to your SSO settings.
+        </div>
+        <input type= "password" id= "token" name= "token" class= "form-control" autocomplete= "off" />
+      </div>
+      <div class= "card-footer">
+        <input type= "submit" class= "btn btn-primary" value= "Continue" />
+      </div>
+    </simple-card-page>))
+
+(defun redeem-recovery-token (token)
+  (let ((recovery-token (find-recovery-token token)))
+    (cond
+      ((null recovery-token)
+       (recovery-form :error-message "This token is invalid or has expired."))
+      (t
+       (log:warn "Recovery token ~a redeemed for ~a"
+                 (bknr.datastore:store-object-id recovery-token)
+                 (recovery-token-company recovery-token))
+       ;; New session, like logging in does (see MAYBE-RESET-SESSION),
+       ;; so a session planted in the browser before this doesn't
+       ;; get access.
+       (unless (eql recovery-token (first (auth:session-value :recovery-token)))
+         (auth:reset-session))
+       ;; This deliberately doesn't log anyone in: the token is only
+       ;; ever read by SESSION-RECOVERY-TOKEN.
+       (let ((deadline (min (+ (get-universal-time) *recovery-session-duration*)
+                            (recovery-token-expires-at recovery-token))))
+         (setf (auth:session-value
+                :recovery-token
+                :expires-in (- deadline (get-universal-time)))
+               (list recovery-token deadline)))
+       (hex:safe-redirect (sso-page-url (recovery-token-company recovery-token)))))))
+
+(markup:deftag recovery-token-banner (&key company)
+  (multiple-value-bind (token deadline)
+      (session-recovery-token company)
+    (when token
+      <div class= "alert alert-warning">
+        You're using a recovery token. It only gives access to this page, until
+        ,(local-time:format-rfc1123-timestring
+          nil
+          (local-time:universal-to-timestamp deadline)).
+      </div>)))
 
 (defun sso-page (company)
   <app-template>
     <taskie-page-title title= "Configure Single-Sign-on">
       <a href= (nibble () (sso-form company)) class= "btn btn-primary mb-2" >Create</a>
     </taskie-page-title>
+
+    <recovery-token-banner company=company />
 
     <table class= "table border mt-3">
       <thead>
@@ -119,7 +225,7 @@ in as any email address."
      <span class= "badge bg-success">Active</span>)
     (t
      <span class= "text-muted">
-       ,(or (activation-blocker saml (auth:current-user))
+       ,(or (activation-blocker saml (sso-principal (saml-company saml)))
             "Ready to activate")
      </span>)))
 
@@ -130,24 +236,22 @@ in as any email address."
      ;; users who don't have another way to log in.
      <a href= (nibble () (%deactivate saml)) class= "btn btn-sm btn-warning"
         onclick= "return confirm('Deactivate SAML? Users will no longer be able to sign in with it.')" >Deactivate</a>)
-    ((activation-blocker saml (auth:current-user))
+    ((activation-blocker saml (sso-principal (saml-company saml)))
      <button class= "btn btn-sm btn-success" disabled= "disabled" >Activate</button>)
     (t
      <a href= (nibble () (%activate saml)) class= "btn btn-sm btn-success" >Activate</a>)))
 
 (defun check-provider! (saml)
-  "Nibbles re-check access, since admin rights could have changed since
-the page was rendered."
-  (let ((company (saml-company saml)))
-    (check-enabled! company)
-    (check-admin! company)))
+  "Nibbles re-check access, since admin rights could have changed (or the
+recovery token expired) since the page was rendered. Returns the
+principal."
+  (check-principal! (saml-company saml)))
 
 (defun go-back (company)
   (hex:safe-redirect (sso-page-url company)))
 
 (defun %activate (saml)
-  (check-provider! saml)
-  (activate-saml-provider saml (auth:current-user))
+  (activate-saml-provider saml (check-provider! saml))
   (go-back (saml-company saml)))
 
 (defun %deactivate (saml)
@@ -156,12 +260,11 @@ the page was rendered."
   (go-back (saml-company saml)))
 
 (defun start-test-login (saml)
-  (check-provider! saml)
   ;; TODO: if the IdP metadata can't be loaded, this signals
   ;; INVALID-METADATA-URL and the admin gets a 500. Record it as a
   ;; failed test instead.
   (hex:safe-redirect (test-signin-link saml
-                                       (auth:current-user)
+                                       (check-provider! saml)
                                        (sso-page-url (saml-company saml)))))
 
 (defun sso-form (company)
@@ -204,8 +307,7 @@ the page was rendered."
     </simple-card-page>))
 
 (defun submit-sso-form (company &rest args &key name idp-metadata)
-  (check-enabled! company)
-  (check-admin! company)
+  (check-principal! company)
   (with-error-builder (:errors errors
                        :check check
                        :form-builder (sso-form company)
