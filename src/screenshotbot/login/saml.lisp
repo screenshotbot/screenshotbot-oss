@@ -64,7 +64,10 @@
    #:defaultp
    #:activation-blocker
    #:activate-saml-provider
-   #:deactivate-saml-provider))
+   #:deactivate-saml-provider
+   #:edit-saml-provider
+   #:saml-idp-metadata-url
+   #:saml-name))
 (in-package :screenshotbot/login/saml)
 
 (named-readtables:in-readtable markup:syntax)
@@ -237,7 +240,8 @@ activating admin."))
 (defclass saml-auth-provider (auth-provider
                               object-with-oid)
   ((idp-metadata-url :initarg :idp-metadata-url
-                     :reader idp-metadata-url)
+                     :reader idp-metadata-url
+                     :writer (setf %idp-metadata-url))
    (metadata-xml :initform nil
                  :initarg :metadata-xml
                  :accessor %metadata-xml)
@@ -254,11 +258,42 @@ activating admin."))
              :reader saml-company)
    (name :initarg :name
          :initform "generic-saml"
-         :reader saml-name)
+         :reader saml-name
+         :writer (setf %saml-name))
    (expiration-seconds :initarg :expiration-seconds
                        :reader expiration-seconds
-                       :initform (* 20 3600)))
+                       :initform (* 20 3600))
+   (%edited-at :initform nil
+               :writer (setf %edited-at)
+               :documentation "When the IdP config last changed. Tests from before this
+don't count. Use SAML-EDITED-AT, this isn't bound on older providers."))
   (:metaclass persistent-class))
+
+(defmethod saml-idp-metadata-url ((self saml-auth-provider))
+  "NIL for providers created with only METADATA-XML (e.g. at the REPL)."
+  (when (slot-boundp self 'idp-metadata-url)
+    (idp-metadata-url self)))
+
+(defmethod saml-edited-at ((self saml-auth-provider))
+  (when (slot-boundp self '%edited-at)
+    (slot-value self '%edited-at)))
+
+(defun edit-saml-provider (provider &key name idp-metadata-url)
+  "Change PROVIDER's NAME and IdP metadata URL. Changing the URL of the
+active provider isn't allowed: it would change everyone's login without
+a test. Create a new provider and activate it instead."
+  (bt:with-lock-held (*lock*)
+    (let ((url-changed-p (not (equal idp-metadata-url
+                                     (saml-idp-metadata-url provider)))))
+      (when (and url-changed-p (defaultp provider))
+        (error "Can't change the IdP of the active SAML provider"))
+      (with-transaction ()
+        (setf (%saml-name provider) name)
+        (when url-changed-p
+          (setf (%idp-metadata-url provider) idp-metadata-url)
+          ;; Otherwise we'd keep using the old IdP's metadata.
+          (setf (%metadata-xml provider) nil)
+          (setf (%edited-at provider) (get-universal-time)))))))
 
 (defun default-saml-auth-provider ()
   (%find-by-defaultp t))
@@ -294,6 +329,11 @@ activating."
       ((< (saml-test-result-ts result)
           (- (get-universal-time) *activation-test-window*))
        "The last test is more than an hour old, test it again")
+      ((and (saml-edited-at provider)
+            ;; <=: in the same second we can't tell which came first
+            (<= (saml-test-result-ts result)
+                (saml-edited-at provider)))
+       "The provider changed since the last test, test it again")
       ((not (let ((tested-user (user-with-email (saml-test-result-email result))))
               (and tested-user
                    (company-admin-p (saml-company provider) tested-user))))

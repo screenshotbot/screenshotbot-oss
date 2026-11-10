@@ -27,7 +27,15 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:util/testing
-                #:with-fake-request))
+                #:with-fake-request)
+  (:import-from #:screenshotbot/saml/settings
+                #:submit-sso-form
+                #:edit-sso-form)
+  (:import-from #:screenshotbot/login/saml
+                #:saml-auth-provider
+                #:saml-name
+                #:saml-idp-metadata-url
+                #:fetch-metadata-xml))
 (in-package :screenshotbot/saml/test-settings)
 
 (util/fiveam:def-suite)
@@ -183,3 +191,66 @@ page or a redirect."
         (redeem-recovery-token token))
       (is (<= (nth-value 1 (session-recovery-token company))
               (+ (get-universal-time) 600))))))
+
+(def-fixture edit ()
+  (cl-mock:with-mocks ()
+    (cl-mock:if-called 'fetch-metadata-xml
+                       (lambda (url)
+                         (declare (ignore url))
+                         "<xml />"))
+    (let ((saml (make-instance 'saml-auth-provider
+                               :company company
+                               :name "Okta"
+                               :idp-metadata-url "https://old.example.com/metadata")))
+      (&body))))
+
+(test edit-form-is-prefilled
+  (with-fixture state ()
+    (with-fixture edit ()
+      (let ((html (markup:write-html (edit-sso-form saml))))
+        (is (str:containsp "Edit SAML connection" html))
+        (is (str:containsp "https://old.example.com/metadata" html))
+        (is (str:containsp "Okta" html))))))
+
+(test submitting-the-edit-form
+  (with-fixture state ()
+    (with-fixture edit ()
+      (signals hex:redirected
+        (submit-sso-form company :saml saml
+                                 :name "Entra"
+                                 :idp-metadata "https://new.example.com/metadata"))
+      (is (equal "Entra" (saml-name saml)))
+      (is (equal "https://new.example.com/metadata" (saml-idp-metadata-url saml))))))
+
+(test cant-change-the-idp-of-the-active-provider-in-the-form
+  (with-fixture state ()
+    (with-fixture edit ()
+      (setf (slot-value saml 'screenshotbot/login/saml::%defaultp) t)
+      (let ((html (markup:write-html
+                   (submit-sso-form company :saml saml
+                                            :name "Okta"
+                                            :idp-metadata "https://new.example.com/metadata"))))
+        (is (str:containsp "invalid-feedback" html)))
+      (is (equal "https://old.example.com/metadata" (saml-idp-metadata-url saml))))))
+
+(test cant-edit-another-companys-provider
+  (with-fixture state ()
+    (with-fixture edit ()
+      (let ((other (make-instance 'company)))
+        (gk:allow :self-service-saml other)
+        (signals error
+          (submit-sso-form other :saml saml
+                                 :name "x"
+                                 :idp-metadata "https://new.example.com/metadata"))
+        (is (equal "Okta" (saml-name saml)))))))
+
+(test non-admin-cant-edit
+  (with-fixture state (:role 'roles:standard-member)
+    (with-fixture edit ()
+      (signals error
+        (edit-sso-form saml))
+      (signals error
+        (submit-sso-form company :saml saml
+                                 :name "x"
+                                 :idp-metadata "https://new.example.com/metadata"))
+      (is (equal "Okta" (saml-name saml))))))

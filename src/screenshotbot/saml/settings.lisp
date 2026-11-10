@@ -26,7 +26,10 @@
                 #:defaultp
                 #:activation-blocker
                 #:activate-saml-provider
-                #:deactivate-saml-provider)
+                #:deactivate-saml-provider
+                #:edit-saml-provider
+                #:saml-idp-metadata-url
+                #:saml-name)
   (:import-from #:screenshotbot/login/common
                 #:with-login)
   (:import-from #:nibble
@@ -203,7 +206,7 @@ SAML provider can log in as any email address."
                 <td>
                   <a href= (nibble () (start-test-login saml)) class= "btn btn-sm btn-primary" >Test</a>
                   <activation-button saml=saml />
-                  <a href= "#" class= "btn btn-sm btn-secondary" >Edit</a>
+                  <a href= (nibble () (edit-sso-form saml)) class= "btn btn-sm btn-secondary" >Edit</a>
                   <a href= "#" class= "btn btn-sm btn-danger" >Delete</a>
                 </td>
               </tr>))
@@ -267,13 +270,19 @@ principal."
                                        (check-provider! saml)
                                        (sso-page-url (saml-company saml)))))
 
-(defun sso-form (company)
+(defun edit-sso-form (saml)
+  (check-provider! saml)
+  (sso-form (saml-company saml) :saml saml))
+
+(defun sso-form (company &key saml)
+  "The form to create a provider, or to edit SAML if it's given."
   (let ((action (nibble (name idp-metadata)
-                  (submit-sso-form company :name name :idp-metadata idp-metadata))))
+                  (submit-sso-form company :saml saml :name name :idp-metadata idp-metadata)))
+        (url-locked-p (and saml (defaultp saml))))
     <simple-card-page form-action=action >
       <div class= "card-header">
         <h4 class= "card-title">
-          New SAML connection
+          ,(if saml "Edit SAML connection" "New SAML connection")
         </h4>
       </div>
 
@@ -282,7 +291,8 @@ principal."
         <div class= "text-muted">
           This will only be used to distinguish between different authentication methods
         </div>
-        <input type= "text" id= "name" name= "name" class= "form-control"  />
+        <input type= "text" id= "name" name= "name" class= "form-control"
+               value= (when saml (saml-name saml)) />
       </div>
       
       <div class= "mb-2" >
@@ -295,24 +305,44 @@ principal."
 
       <div class= "mb-2" >
         <label for= "idp-metadata" class= "form-label">Identity Provider Metadata URL</label>
-        <input type= "text" name= "idp-metadata" id= "idp-metadata" class= "form-control"   placeholder= "https://idp.example.com/saml/metadata" />
+        ,(when url-locked-p
+           <div class= "text-muted">
+             This connection is active, so its IdP can't be changed. To switch IdPs, create a new connection, test it and activate it.
+           </div>)
+        <input type= "text" name= "idp-metadata" id= "idp-metadata" class= "form-control"   placeholder= "https://idp.example.com/saml/metadata"
+               value= (when saml (saml-idp-metadata-url saml))
+               readonly= (when url-locked-p "readonly") />
       </div>
       
       <div class= "card-footer">
         <p class= "text-muted">
-          You will have an opportunity to test the connection after you create it
+          ,(if saml
+               "If you change the IdP, you'll need to test the connection again before activating it"
+               "You will have an opportunity to test the connection after you create it")
         </p>
-        <input type= "submit" class= "btn btn-primary" value= "Create" />
+        <input type= "submit" class= "btn btn-primary" value= (if saml "Save" "Create") />
       </div>
     </simple-card-page>))
 
-(defun submit-sso-form (company &rest args &key name idp-metadata)
+(defun submit-sso-form (company &key saml name idp-metadata)
   (check-principal! company)
+  (when saml
+    (assert (eql company (saml-company saml))))
   (with-error-builder (:errors errors
                        :check check
-                       :form-builder (sso-form company)
+                       :form-builder (sso-form company :saml saml)
                        :form-args (:name name :idp-metadata idp-metadata)
-                       :success (apply #'%create-saml company args))
+                       :success (cond
+                                  (saml
+                                   (edit-saml-provider saml :name name :idp-metadata-url idp-metadata)
+                                   (go-back company))
+                                  (t
+                                   (%create-saml company :name name :idp-metadata idp-metadata))))
+    (check :idp-metadata
+           (not (and saml
+                     (defaultp saml)
+                     (not (equal idp-metadata (saml-idp-metadata-url saml)))))
+           "This connection is active, so its IdP can't be changed")
     (check :name
            (str:non-blank-string-p name)
            "Name must not be empty")

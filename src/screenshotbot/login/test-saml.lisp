@@ -35,6 +35,10 @@
                 #:saml-test-result-tested-by
                 #:relay-state-settings
                 #:activation-blocker
+                #:edit-saml-provider
+                #:saml-edited-at
+                #:saml-idp-metadata-url
+                #:saml-name
                 #:activate-saml-provider
                 #:deactivate-saml-provider
                 #:defaultp
@@ -377,3 +381,68 @@
         (setf (roles:user-role company admin) 'roles:admin)
         (is (str:containsp "single-company"
                            (activation-blocker provider admin)))))))
+
+(test edit-changes-the-provider
+  (with-fixture state ()
+    (let ((provider (make-instance 'saml-auth-provider
+                                   :company company
+                                   :name "Old"
+                                   :idp-metadata-url "https://old.example.com/metadata"
+                                   :metadata-xml *xml*)))
+      (edit-saml-provider provider :name "New"
+                                   :idp-metadata-url "https://old.example.com/metadata")
+      (is (equal "New" (saml-name provider)))
+      ;; Only the name changed, so tests still count
+      (is (eql nil (saml-edited-at provider)))
+      (is (equal *xml* (screenshotbot/login/saml::%metadata-xml provider)))
+      (edit-saml-provider provider :name "New"
+                                   :idp-metadata-url "https://new.example.com/metadata")
+      (is (equal "https://new.example.com/metadata" (saml-idp-metadata-url provider)))
+      ;; We must not keep using the old IdP's metadata
+      (is (eql nil (screenshotbot/login/saml::%metadata-xml provider)))
+      (is (integerp (saml-edited-at provider))))))
+
+(test cant-change-the-idp-of-the-active-provider
+  (with-fixture state ()
+    (let ((provider (make-instance 'saml-auth-provider
+                                   :company company
+                                   :name "Old"
+                                   :idp-metadata-url "https://old.example.com/metadata"
+                                   :defaultp t)))
+      (signals simple-error
+        (edit-saml-provider provider :name "Old"
+                                     :idp-metadata-url "https://new.example.com/metadata"))
+      (is (equal "https://old.example.com/metadata" (saml-idp-metadata-url provider)))
+      ;; Renaming is fine
+      (edit-saml-provider provider :name "New"
+                                   :idp-metadata-url "https://old.example.com/metadata")
+      (is (equal "New" (saml-name provider))))))
+
+(test editing-the-idp-invalidates-tests
+  (with-fixture state ()
+    (with-fixture activation ()
+      (record-test :ts (- (get-universal-time) 10))
+      (is (eql nil (activation-blocker provider admin)))
+      (edit-saml-provider provider :name "x" :idp-metadata-url "https://new.example.com/metadata")
+      (is (equal "The provider changed since the last test, test it again"
+                 (activation-blocker provider admin)))
+      ;; A test in the same second as the edit doesn't count either
+      (record-test)
+      (is (equal "The provider changed since the last test, test it again"
+                 (activation-blocker provider admin))))))
+
+(test edited-at-on-older-providers
+  (with-fixture state ()
+    (let ((provider (make-instance 'saml-auth-provider :company company)))
+      (slot-makunbound provider 'screenshotbot/login/saml::%edited-at)
+      (is (eql nil (saml-edited-at provider))))))
+
+(test editing-a-provider-without-a-url
+  (with-fixture state ()
+    ;; Created at the REPL, with only the XML
+    (let ((provider (make-instance 'saml-auth-provider
+                                   :company company
+                                   :metadata-xml *xml*)))
+      (is (eql nil (saml-idp-metadata-url provider)))
+      (edit-saml-provider provider :name "x" :idp-metadata-url "https://new.example.com/metadata")
+      (is (equal "https://new.example.com/metadata" (saml-idp-metadata-url provider))))))
