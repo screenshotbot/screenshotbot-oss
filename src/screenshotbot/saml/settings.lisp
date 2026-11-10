@@ -28,6 +28,7 @@
                 #:activate-saml-provider
                 #:deactivate-saml-provider
                 #:edit-saml-provider
+                #:delete-saml-provider
                 #:saml-idp-metadata-url
                 #:saml-name)
   (:import-from #:screenshotbot/login/common
@@ -35,6 +36,7 @@
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:core/ui/simple-card-page
+                #:confirmation-page
                 #:simple-card-page)
   (:import-from #:util/form-errors
                 #:with-error-builder
@@ -207,7 +209,7 @@ SAML provider can log in as any email address."
                   <a href= (nibble () (start-test-login saml)) class= "btn btn-sm btn-primary" >Test</a>
                   <activation-button saml=saml />
                   <a href= (nibble () (edit-sso-form saml)) class= "btn btn-sm btn-secondary" >Edit</a>
-                  <a href= "#" class= "btn btn-sm btn-danger" >Delete</a>
+                  <delete-button saml=saml />
                 </td>
               </tr>))
     </table>
@@ -235,14 +237,46 @@ SAML provider can log in as any email address."
 (markup:deftag activation-button (&key saml)
   (cond
     ((defaultp saml)
-     ;; TODO: a proper confirmation page, explaining what happens to
-     ;; users who don't have another way to log in.
-     <a href= (nibble () (%deactivate saml)) class= "btn btn-sm btn-warning"
-        onclick= "return confirm('Deactivate SAML? Users will no longer be able to sign in with it.')" >Deactivate</a>)
+     <a href= (nibble () (confirm-deactivate saml)) class= "btn btn-sm btn-warning" >Deactivate</a>)
     ((activation-blocker saml (sso-principal (saml-company saml)))
      <button class= "btn btn-sm btn-success" disabled= "disabled" >Activate</button>)
     (t
      <a href= (nibble () (%activate saml)) class= "btn btn-sm btn-success" >Activate</a>)))
+
+(markup:deftag delete-button (&key saml)
+  (cond
+    ((defaultp saml)
+     <button class= "btn btn-sm btn-danger" disabled= "disabled"
+             title= "Deactivate this connection before deleting it" >Delete</button>)
+    (t
+     <a href= (let ((company (saml-company saml)))
+                (nibble () (confirm-delete saml company)))
+        class= "btn btn-sm btn-danger" >Delete</a>)))
+
+(defun confirm-delete (saml company)
+  (check-principal! company)
+  (confirmation-page
+   :yes (nibble () (%delete saml company))
+   :no (sso-page-url company)
+   :danger t
+   <p>Delete the SAML connection <b>,(saml-name saml)</b>? Its test results will be deleted too.</p>))
+
+(defun confirm-deactivate (saml)
+  (check-provider! saml)
+  (confirmation-page
+   :yes (nibble () (%deactivate saml))
+   :no (sso-page-url (saml-company saml))
+   :danger t
+   <p>Deactivate the SAML connection <b>,(saml-name saml)</b>? Users will no longer be able to sign in with it, and anyone who doesn't have another way to sign in will be locked out.</p>))
+
+(defun %delete (saml company)
+  "COMPANY is captured when the page renders, since SAML might already be
+deleted (e.g. a double click)."
+  (check-principal! company)
+  (unless (bknr.indices:object-destroyed-p saml)
+    (assert (eql company (saml-company saml)))
+    (delete-saml-provider saml))
+  (go-back company))
 
 (defun check-provider! (saml)
   "Nibbles re-check access, since admin rights could have changed (or the

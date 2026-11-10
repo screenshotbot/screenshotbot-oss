@@ -30,7 +30,10 @@
                 #:with-fake-request)
   (:import-from #:screenshotbot/saml/settings
                 #:submit-sso-form
-                #:edit-sso-form)
+                #:edit-sso-form
+                #:%delete
+                #:confirm-delete
+                #:confirm-deactivate)
   (:import-from #:screenshotbot/login/saml
                 #:saml-auth-provider
                 #:saml-name
@@ -254,3 +257,54 @@ page or a redirect."
                                  :name "x"
                                  :idp-metadata "https://new.example.com/metadata"))
       (is (equal "Okta" (saml-name saml))))))
+
+(test delete-from-the-page
+  (with-fixture state ()
+    (with-fixture edit ()
+      (signals hex:redirected
+        (%delete saml company))
+      (is-true (bknr.indices:object-destroyed-p saml))
+      ;; A second click is fine
+      (signals hex:redirected
+        (%delete saml company)))))
+
+(test non-admin-cant-delete
+  (with-fixture state (:role 'roles:standard-member)
+    (with-fixture edit ()
+      (signals error
+        (%delete saml company))
+      (is-false (bknr.indices:object-destroyed-p saml)))))
+
+(test cant-delete-through-another-company
+  (with-fixture state ()
+    (with-fixture edit ()
+      (let ((other (make-instance 'company)))
+        (gk:allow :self-service-saml other)
+        (setf (roles:user-role other user) 'roles:admin)
+        (signals error
+          (%delete saml other))
+        (is-false (bknr.indices:object-destroyed-p saml))))))
+
+(test delete-asks-for-confirmation
+  (with-fixture state ()
+    (with-fixture edit ()
+      (let ((html (markup:write-html (confirm-delete saml company))))
+        (is (str:containsp "Delete the SAML connection" html))
+        (is (str:containsp "Okta" html)))
+      (is-false (bknr.indices:object-destroyed-p saml)))))
+
+(test deactivate-asks-for-confirmation
+  (with-fixture state ()
+    (with-fixture edit ()
+      (setf (slot-value saml 'screenshotbot/login/saml::%defaultp) t)
+      (let ((html (markup:write-html (confirm-deactivate saml))))
+        (is (str:containsp "locked out" html)))
+      (is-true (screenshotbot/login/saml:defaultp saml)))))
+
+(test non-admin-cant-see-the-confirmations
+  (with-fixture state (:role 'roles:standard-member)
+    (with-fixture edit ()
+      (signals error
+        (confirm-delete saml company))
+      (signals error
+        (confirm-deactivate saml)))))

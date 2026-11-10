@@ -66,6 +66,7 @@
    #:activate-saml-provider
    #:deactivate-saml-provider
    #:edit-saml-provider
+   #:delete-saml-provider
    #:saml-idp-metadata-url
    #:saml-name))
 (in-package :screenshotbot/login/saml)
@@ -223,7 +224,7 @@ login only records a SAML-TEST-RESULT, it does not log anyone in.")
   (:documentation "The outcome of a test login against a SAML provider, used to make
 sure a provider works before it's activated.
 
-TODO: delete these along with the provider, once providers can be deleted.
+These are deleted along with the provider, see DELETE-SAML-PROVIDER.
 TODO: activating a provider should require a successful test by the
 activating admin."))
 
@@ -360,6 +361,17 @@ current default if there is one."
   (with-transaction ()
     (setf (%defaultp provider) nil)))
 
+(defun delete-saml-provider (provider)
+  "Delete PROVIDER and its test results. The active provider can't be
+deleted, since that would lock everyone out: deactivate it, or activate
+another provider, first."
+  (bt:with-lock-held (*lock*)
+    (when (defaultp provider)
+      (error "Can't delete the active SAML provider"))
+    (fset:do-set (result (saml-test-results-for-provider provider))
+      (bknr.datastore:delete-object result))
+    (bknr.datastore:delete-object provider)))
+
 (defmethod saml-entity-id ((self saml-auth-provider))
   (handler-case
       (get-idp-entity-id
@@ -453,6 +465,9 @@ which provider's certificate we validate the response against."
 
 
 (defun handle-saml-response (resp relay-state)
+  (when (bknr.indices:object-destroyed-p (saml-auth-provider relay-state))
+    ;; The provider was deleted after this login started.
+    (error "This SAML connection was deleted"))
   (let ((is-valid (saml-response-is-valid resp)))
     (cond
       ((relay-state-tested-by relay-state)

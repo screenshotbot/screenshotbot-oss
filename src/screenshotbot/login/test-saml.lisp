@@ -36,6 +36,9 @@
                 #:relay-state-settings
                 #:activation-blocker
                 #:edit-saml-provider
+                #:delete-saml-provider
+                #:saml-auth-providers-for-company
+                #:saml-test-results-for-provider
                 #:saml-edited-at
                 #:saml-idp-metadata-url
                 #:saml-name
@@ -446,3 +449,42 @@
       (is (eql nil (saml-idp-metadata-url provider)))
       (edit-saml-provider provider :name "x" :idp-metadata-url "https://new.example.com/metadata")
       (is (equal "https://new.example.com/metadata" (saml-idp-metadata-url provider))))))
+
+(test delete-removes-the-provider-and-its-test-results
+  (with-fixture state ()
+    (with-fixture activation ()
+      (record-test)
+      (record-test :error-message "bad")
+      (delete-saml-provider provider)
+      (is-true (bknr.indices:object-destroyed-p provider))
+      (is (fset:empty? (saml-auth-providers-for-company company)))
+      (is (fset:empty? (saml-test-results-for-provider provider)))
+      (is (eql nil (bknr.datastore:store-objects-with-class
+                    'screenshotbot/login/saml::saml-test-result))))))
+
+(test cant-delete-the-active-provider
+  (with-fixture state ()
+    (let ((provider (make-instance 'saml-auth-provider
+                                   :company company
+                                   :defaultp t)))
+      (signals simple-error
+        (delete-saml-provider provider))
+      (is (eql provider (default-saml-auth-provider))))))
+
+(test login-for-a-deleted-provider-fails
+  (with-fixture state ()
+    (with-fixture test-login ()
+      (let ((relay-state (make-relay-state provider)))
+        (delete-saml-provider provider)
+        (is (str:containsp
+             "was deleted"
+             (handler-case
+                 (progn
+                   (handle-saml-response
+                    (make-saml-response (relay-state-settings relay-state)
+                                        "https://example.com/sso/saml/callback"
+                                        (make-fake-saml-response "http://localhost:8080/realms/master"))
+                    relay-state)
+                   "no error")
+               (simple-error (e)
+                 (princ-to-string e)))))))))
