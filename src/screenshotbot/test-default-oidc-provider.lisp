@@ -285,7 +285,7 @@
     (is (equal "The last test failed"
                (oidc-activation-blocker provider admin)))))
 
-(test activation-requires-own-recent-test-as-admin
+(test activation-requires-own-recent-test
   (with-fixture activation ()
     (let ((other-admin (make-user :email "other@example.com")))
       (setf (roles:user-role company other-admin) 'roles:admin)
@@ -295,16 +295,17 @@
     (record-test :ts (- (get-universal-time) (* 2 3600)))
     (is (str:containsp "more than an hour old"
                        (oidc-activation-blocker provider admin)))
-    ;; The IdP signed in as someone who isn't an admin
+    (record-test)
+    (is (eql nil (oidc-activation-blocker provider admin)))))
+
+(test activation-doesnt-require-the-test-to-sign-in-as-an-admin
+  (with-fixture activation ()
+    ;; If nobody can administer the installation after activating, an
+    ;; admin can be restored with a recovery token.
     (make-user :email "member@example.com")
     (record-test :email "member@example.com")
-    (is (str:containsp "isn't an admin"
-                       (oidc-activation-blocker provider admin)))
-    ;; ... or as someone who doesn't exist yet
+    (is (eql nil (oidc-activation-blocker provider admin)))
     (record-test :email "new@example.com")
-    (is (str:containsp "isn't an admin"
-                       (oidc-activation-blocker provider admin)))
-    (record-test)
     (is (eql nil (oidc-activation-blocker provider admin)))))
 
 (test editing-invalidates-tests

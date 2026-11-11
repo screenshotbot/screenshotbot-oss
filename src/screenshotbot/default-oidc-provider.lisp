@@ -22,10 +22,7 @@
   (:import-from #:screenshotbot/installation
                 #:multi-org-feature)
   (:import-from #:screenshotbot/model/company
-                #:company-admin-p
                 #:get-singleton-company)
-  (:import-from #:screenshotbot/model/user
-                #:user-with-email)
   (:import-from #:core/installation/installation
                 #:*installation*)
   (:import-from #:util/store/fset-index
@@ -249,9 +246,9 @@ recorded and the browser is sent to REDIRECT."
 otherwise a message explaining why not.
 
 Activating replaces the login for everyone, so we require a recent
-successful test by USER, and that the test signed in as an admin: if it
-didn't, nobody would be able to administer the installation after
-activating."
+successful test by USER. We don't require the test to sign in as an
+admin: if nobody can administer the installation after activating, an
+admin can be restored with a recovery token."
   (let ((result (last-oidc-test-result provider)))
     (cond
       ((typep *installation* 'multi-org-feature)
@@ -277,10 +274,5 @@ activating."
             (<= (oidc-test-result-ts result)
                 (oidc-edited-at provider)))
        "The provider changed since the last test, test it again")
-      ((not (let ((tested-user (user-with-email (oidc-test-result-email result))))
-              (and tested-user
-                   (company-admin-p (company provider) tested-user))))
-       (format nil "The last test signed in as ~a, who isn't an admin. Activating would leave nobody who can administer this installation."
-               (oidc-test-result-email result)))
       (t
        nil))))
