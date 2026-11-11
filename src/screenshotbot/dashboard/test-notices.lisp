@@ -70,4 +70,20 @@
         "two-notices"
         (dashboard-template))))))
 
-
+(test user-notice-list-skips-nil-invites
+  (with-installation (:installation (make-instance 'multi-org-test-installation))
+   (with-test-store ()
+     (with-test-user (:user user
+                      :company company
+                      :logged-in-p t)
+       (with-transaction ()
+         (setf (unaccepted-invites user)
+               (list
+                (make-instance 'invite
+                               :code "first-invite"
+                               :used-p nil
+                               :company company)
+                nil)))
+       (finishes
+         (markup:write-html
+          (user-notice-list :user user)))))))

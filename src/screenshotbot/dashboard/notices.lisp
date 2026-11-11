@@ -40,8 +40,10 @@
 (deftag user-notice-list (&key (user (current-user)))
   <div id= "user-notice-list" >
     <!-- user notice list-->
-    ,@ (loop for invite in (unaccepted-invites user) collect
-                                                     (render-invite invite))
+    ,@ (loop for invite in (unaccepted-invites user)
+             ;; A deleted invite can be restored from a snapshot as NIL
+             if invite
+               collect (render-invite invite))
     ,@ (loop for notice in (user-notices user) collect
                                                (render-notice notice))
   </div>)
