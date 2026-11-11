@@ -436,6 +436,7 @@
                (:file "test-settings-api")
                (:file "test-config")
                (:file "test-installation")
+               (:file "test-default-oidc-provider")
                (:file "test-assets")
                (:file "test-template")
                (:file "test-audit-log")
