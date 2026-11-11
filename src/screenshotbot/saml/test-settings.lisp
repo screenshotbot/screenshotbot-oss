@@ -30,6 +30,8 @@
                 #:with-fake-request)
   (:import-from #:core/installation/installation
                 #:*installation*)
+  (:import-from #:screenshotbot/left-side-bar
+                #:left-side-bar)
   (:import-from #:auth/viewer-context
                 #:anonymous-viewer-context
                 #:normal-viewer-context
@@ -242,6 +244,18 @@ page or a redirect."
         (setf (auth:request-user hunchentoot:*request*) :someone)
         (setf (auth:viewer-context hunchentoot:*request*) vc)
         (is (eql vc (authenticate)))))))
+
+(test recovery-menu-only-has-the-sso-page
+  (with-fixture anonymous ()
+    (let ((token (nth-value 1 (make-recovery-token company))))
+      (signals hex:redirected
+        (redeem-recovery-token token))
+      (authenticate)
+      (let ((html (markup:write-html
+                   (left-side-bar :script-name (sso-page-url company)))))
+        (is (str:containsp (sso-page-url company) html))
+        (is (not (str:containsp "Recent Runs" html)))
+        (is (not (str:containsp "API Keys" html)))))))
 
 (def-fixture edit ()
   (cl-mock:with-mocks ()

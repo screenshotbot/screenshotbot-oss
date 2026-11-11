@@ -60,7 +60,12 @@
                 #:recovery-token-expires-at
                 #:recovery-token-expired-p)
   (:import-from #:auth/viewer-context
-                #:recovery-viewer-context))
+                #:viewer-context-company
+                #:recovery-viewer-context)
+  (:import-from #:screenshotbot/left-side-bar
+                #:render-menu-items)
+  (:import-from #:core/ui/left-side-bar
+                #:left-nav-item))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -124,6 +129,23 @@ SAML provider can log in as any email address."
 
 (defun sso-page-url (company)
   (hex:make-url "/company/:oid/sso" :oid (oid company)))
+
+(defmethod render-menu-items (installation
+                              (vc recovery-viewer-context)
+                              &key script-name &allow-other-keys)
+  "A recovery token only gives access to the SSO page, so that's all the
+menu has."
+  <markup:merge-tag>
+    <ul class="nav nav-pills flex-column mb-auto ps-3 pe-3">
+      <left-nav-item href= (sso-page-url (viewer-context-company vc))
+                     image-class= "lock"
+                     script-name=script-name >
+        SSO
+      </left-nav-item>
+    </ul>
+
+    <hr class= "mb-0" />
+  </markup:merge-tag>)
 
 (defhandler (nil :uri "/sso") ()
   (with-login ()
