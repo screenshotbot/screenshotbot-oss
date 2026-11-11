@@ -263,7 +263,7 @@ user as used in Screenshotbot)"
 
 
 (defmethod logout-link ((self oidc-provider))
-  "See https://docs.aws.amazon.com/cognito/latest/developerguide/logout-endpoint.html.
-
-In particular this means that /cognito/logout-confirmation must be in your 'Allowed sign-out URLs'"
-  nil)
+  "Signs out of Screenshotbot only, without ending the session at the
+IdP. Subclasses (e.g. AWS-COGNITO) can override this to do an RP
+initiated logout."
+  "/account/logged-out")

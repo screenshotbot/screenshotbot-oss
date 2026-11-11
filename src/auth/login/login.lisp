@@ -286,8 +286,20 @@
   (setf (current-user) nil)
   (hex:safe-redirect "/"))
 
+;; Where we land after signing out with an OIDC provider. We can't
+;; redirect to / since that would immediately redirect to the OIDC
+;; provider and sign us back in. We redirect again so that refreshing
+;; the page doesn't trigger another log out.
+(hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/account/logged-out") ()
+  (setf (current-user) nil)
+  (hex:safe-redirect
+   (nibble ()
+     <html>
+       You've been logged out. <a href= "/">Go back.</a>
+     </html>)))
+
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/account/oauth-signout-callback") ()
-  (hard-signout))
+  (hex:safe-redirect "/account/logged-out"))
 
 (defun signout-from-oidc (auth-provider)
   (let ((endpoint (end-session-endpoint auth-provider)))
@@ -299,7 +311,7 @@
           (quri:uri endpoint)
           :query `(("post_logout_redirect_uri" . ,(hex:make-full-url hunchentoot:*request* "/account/oauth-signout-callback")))))))
       (t
-       (hard-signout)))))
+       (hex:safe-redirect "/account/logged-out")))))
 
 (hex:def-clos-dispatch ((self auth:auth-acceptor-mixin) "/signout") ()
   (let ((impersonation (make-impersonation)))
