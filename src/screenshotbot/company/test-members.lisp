@@ -20,6 +20,7 @@
                 #:old-role
                 #:can-change-user-role-p
                 #:team-page
+                #:%delete-invite
                 #:%set-user-role)
   (:import-from #:screenshotbot/testing
                 #:with-installation)
@@ -34,7 +35,13 @@
   (:import-from #:auth/viewer-context
                 #:recovery-viewer-context)
   (:import-from #:screenshotbot/audit-log
-                #:activity-log-actor))
+                #:activity-log-actor)
+  (:import-from #:screenshotbot/model/invite
+                #:invite)
+  (:import-from #:screenshotbot/user-api
+                #:unaccepted-invites)
+  (:import-from #:bknr.datastore
+                #:object-destroyed-p))
 (in-package :screenshotbot/company/test-members)
 
 
@@ -103,3 +110,20 @@
     (let ((html (markup:write-html (team-page))))
       (is (str:containsp "Edit role" html))
       (is (not (str:containsp "Pending Invites" html))))))
+
+(test delete-invite-removes-it-from-unaccepted-invites
+  (with-fixture state ()
+    (let* ((invite (make-instance 'invite
+                                  :code "deleted-invite"
+                                  :used-p nil
+                                  :company company))
+           (other-invite (make-instance 'invite
+                                        :code "other-invite"
+                                        :used-p nil
+                                        :company company))
+           (other-user (make-user)))
+      (setf (unaccepted-invites user) (list invite other-invite))
+      (%delete-invite invite)
+      (is-true (object-destroyed-p invite))
+      (is (equal (list other-invite) (unaccepted-invites user)))
+      (is (equal nil (unaccepted-invites other-user))))))

@@ -14,20 +14,22 @@
                 #:current-user
                 #:user-email
                 #:user-full-name
+                #:unaccepted-invites
                 #:current-company)
   (:import-from #:screenshotbot/model/company
                 #:company
                 #:company-admin-p
                 #:company-owner)
   (:import-from #:screenshotbot/model/user
+                #:user
                 #:users-for-company)
   (:import-from #:nibble
                 #:nibble)
   (:import-from #:screenshotbot/model/invite
                 #:invite-email)
   (:import-from #:bknr.datastore
-                #:persistent-class
-                #:with-transaction)
+                #:deftransaction
+                #:persistent-class)
   (:import-from #:core/ui/simple-card-page
                 #:simple-card-page
                 #:confirmation-page)
@@ -201,13 +203,20 @@ recovery token from a recovery session. NIL if neither."
     </p>
   </simple-card-page>)
 
+(deftransaction %delete-invite (invite)
+  "Delete INVITE, and remove it from any user it was sent to so that
+the user isn't left with a reference to a deleted invite."
+  (dolist (user (bknr.datastore:class-instances 'user))
+    (when (member invite (unaccepted-invites user))
+      (a:deletef (unaccepted-invites user) invite)))
+  (bknr.datastore:delete-object invite))
+
 (defun delete-invite (invite company)
   (cond
     ((user-can-invite-p company (auth:current-user))
      (confirmation-page
       :yes (nibble ()
-             (with-transaction ()
-               (bknr.datastore:delete-object invite))
+             (%delete-invite invite)
              (hex:safe-redirect "/team"))
       :no "/team"
       <span>Delete invitation to ,(invite-email invite)?</span>))
