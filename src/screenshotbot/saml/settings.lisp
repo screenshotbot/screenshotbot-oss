@@ -108,7 +108,8 @@ as a RECOVERY-VIEWER-CONTEXT for the token's company."
       (when token
         (setf (auth:viewer-context request)
               (make-instance 'recovery-viewer-context
-                             :company (recovery-token-company token)))))))
+                             :company (recovery-token-company token)
+                             :recovery-token token))))))
 
 (defun sso-principal (company)
   "Who is making changes on COMPANY's SSO page: a company admin, or a
@@ -133,10 +134,15 @@ SAML provider can log in as any email address."
 (defmethod render-menu-items (installation
                               (vc recovery-viewer-context)
                               &key script-name &allow-other-keys)
-  "A recovery token only gives access to the SSO page, so that's all the
-menu has."
+  "A recovery token only gives access to the Team and SSO pages, so
+that's all the menu has."
   <markup:merge-tag>
     <ul class="nav nav-pills flex-column mb-auto ps-3 pe-3">
+      <left-nav-item href= "/team" image-class= "group"
+                     script-name=script-name >
+        Team
+      </left-nav-item>
+
       <left-nav-item href= (sso-page-url (viewer-context-company vc))
                      image-class= "lock"
                      script-name=script-name >
@@ -181,7 +187,7 @@ menu has."
       <div class= "mb-2">
         <label for= "token" class= "form-label">Recovery token</label>
         <div class= "text-muted">
-          Paste the token you got from Screenshotbot support. It only gives access to your SSO settings.
+          Paste the token you got from Screenshotbot support. It only gives access to your SSO settings and your team's roles.
         </div>
         <input type= "password" id= "token" name= "token" class= "form-control" autocomplete= "off" />
       </div>
@@ -219,7 +225,7 @@ menu has."
       (session-recovery-token company)
     (when token
       <div class= "alert alert-warning">
-        You're using a recovery token. It only gives access to this page, until
+        You're using a recovery token. It only gives access to the SSO and Team pages, until
         ,(local-time:format-rfc1123-timestring
           nil
           (local-time:universal-to-timestamp deadline)).

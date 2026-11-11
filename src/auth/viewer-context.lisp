@@ -16,6 +16,7 @@
    #:viewer-context-api-key
    #:sso-viewer-context
    #:recovery-viewer-context
+   #:viewer-context-recovery-token
    #:viewer-context-company))
 (in-package :auth/viewer-context)
 
@@ -49,7 +50,10 @@ super-admin priviledges by default."))
 
 (defclass recovery-viewer-context (abstract-viewer-context)
   ((company :initarg :company
-            :reader viewer-context-company))
+            :reader viewer-context-company)
+   (recovery-token :initarg :recovery-token
+                   :reader viewer-context-recovery-token
+                   :documentation "The recovery token that was redeemed, e.g. for audit logs."))
   (:documentation "A session that redeemed a recovery token for COMPANY, e.g. because
 its SSO is broken. Nobody is logged in, so there's no user."))
 

@@ -245,7 +245,7 @@ page or a redirect."
         (setf (auth:viewer-context hunchentoot:*request*) vc)
         (is (eql vc (authenticate)))))))
 
-(test recovery-menu-only-has-the-sso-page
+(test recovery-menu-only-has-the-team-and-sso-pages
   (with-fixture anonymous ()
     (let ((token (nth-value 1 (make-recovery-token company))))
       (signals hex:redirected
@@ -254,6 +254,7 @@ page or a redirect."
       (let ((html (markup:write-html
                    (left-side-bar :script-name (sso-page-url company)))))
         (is (str:containsp (sso-page-url company) html))
+        (is (str:containsp "href=\"/team\"" html))
         (is (not (str:containsp "Recent Runs" html)))
         (is (not (str:containsp "API Keys" html)))))))
 

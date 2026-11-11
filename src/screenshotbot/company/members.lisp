@@ -61,6 +61,10 @@
                 #:not-null!)
   (:import-from #:auth/model/roles
                 #:on-user-added)
+  (:import-from #:auth/viewer-context
+                #:viewer-context-company
+                #:viewer-context-recovery-token
+                #:recovery-viewer-context)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/company/members)
 
@@ -92,11 +96,32 @@
     </button>
   </form>)
 
+(defun company-recovery-viewer-context (company)
+  "The request's RECOVERY-VIEWER-CONTEXT, if it's for COMPANY."
+  (let ((vc (auth:viewer-context hunchentoot:*request*)))
+    (when (and (typep vc 'recovery-viewer-context)
+               (eql company (viewer-context-company vc)))
+      vc)))
+
+(defun role-editor (company)
+  "Who is changing roles on COMPANY's team page: a company admin, or the
+recovery token from a recovery session. NIL if neither."
+  (let ((user (auth:current-user)))
+    (cond
+      (user
+       (when (roles:has-role-p company user 'roles:admin)
+         user))
+      (t
+       (let ((vc (company-recovery-viewer-context company)))
+         (when vc
+           (viewer-context-recovery-token vc)))))))
+
 (defun can-change-user-role-p (company user)
-  (and
-   (not (eql user (auth:current-user)))
-   (roles:has-role-p company (auth:current-user) 'roles:admin)
-   (not (roles:has-role-p company user 'roles:owner))))
+  (let ((editor (role-editor company)))
+    (and
+     editor
+     (not (eql user editor))
+     (not (roles:has-role-p company user 'roles:owner)))))
 
 (defvar *allowed-roles*
   (list
@@ -221,11 +246,13 @@
                        (render-invite-row invite company)))
   </markup:merge-tag>)
 
-(markup:deftag %members-page ()
-  (let ((company (current-company)))
-
+(markup:deftag %members-page (&key (company (current-company)))
      <markup:merge-tag>
-       ,(when (invite-enabled-p company)
+       ,(when (and
+               ;; Inviting needs a user to invite as, which a recovery
+               ;; session doesn't have.
+               (auth:current-user)
+               (invite-enabled-p company))
           (invites-section company))
 
        ,(taskie-page-title :title "Team" :class "pt-3")
@@ -244,18 +271,25 @@
          :row-generator (lambda (user)
                           (render-user-row user company)))
 
-     </markup:merge-tag>
-))
+     </markup:merge-tag>)
 
 (defun members-page ()
   (settings-template
    (%members-page)))
 
-(defhandler (nil :uri "/team") ()
-  (with-login ()
-    <app-template title= "Screenshotbot: Team" >
-      ,(%members-page)
-    </app-template>))
+(defhandler (team-page :uri "/team") ()
+  (let ((vc (auth:viewer-context hunchentoot:*request*)))
+    (cond
+      ((and (typep vc 'recovery-viewer-context)
+            (not (auth:current-user)))
+       <app-template title= "Screenshotbot: Team" >
+         <%members-page company= (viewer-context-company vc) />
+       </app-template>)
+      (t
+       (with-login ()
+         <app-template title= "Screenshotbot: Team" >
+           ,(%members-page)
+         </app-template>)))))
 
 (defhandler (nil :uri "/settings/members") ()
   (hex:safe-redirect "/team"))
@@ -279,7 +313,8 @@
   (let ((old-role (type-of (roles:user-role company user))))
     (when (not (eql old-role role))
       (make-instance 'role-changed-audit-log
-                     :actor (not-null! (auth:current-user))
+                     :actor (not-null! (or (auth:current-user)
+                                           (role-editor company)))
                      :user user
                      :company company
                      :old-role old-role
