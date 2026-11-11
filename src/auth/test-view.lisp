@@ -16,6 +16,7 @@
   (:import-from #:auth/viewer-context
                 #:api-viewer-context
                 #:anonymous-viewer-context
+                #:recovery-viewer-context
                 #:normal-viewer-context)
   (:import-from #:auth/request
                 #:abstract-authenticated-request)
@@ -149,3 +150,12 @@
                :run-1))
     (assert-that events
                  (has-length 1))))
+
+(defmethod auth:can-public-view ((obj (eql :public)))
+  t)
+
+(test recovery-viewer-context-only-sees-public-objects
+  (with-fixture state ()
+    (let ((vc (make-instance 'recovery-viewer-context :company :company)))
+      (is-false (auth:can-viewer-view vc :private))
+      (is-true (auth:can-viewer-view vc :public)))))

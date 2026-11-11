@@ -30,6 +30,11 @@
                 #:with-fake-request)
   (:import-from #:core/installation/installation
                 #:*installation*)
+  (:import-from #:auth/viewer-context
+                #:anonymous-viewer-context
+                #:normal-viewer-context
+                #:recovery-viewer-context
+                #:viewer-context-company)
   (:import-from #:screenshotbot/saml/settings
                 #:submit-sso-form
                 #:edit-sso-form
@@ -200,6 +205,43 @@ page or a redirect."
         (redeem-recovery-token token))
       (is (<= (nth-value 1 (session-recovery-token company))
               (+ (get-universal-time) 600))))))
+
+(defun authenticate ()
+  (auth:authenticate-request hunchentoot:*request*)
+  (auth:viewer-context hunchentoot:*request*))
+
+(test redeeming-a-token-gives-a-recovery-viewer-context
+  (with-fixture anonymous ()
+    (is (typep (authenticate) 'anonymous-viewer-context))
+    (let ((token (nth-value 1 (make-recovery-token company))))
+      (signals hex:redirected
+        (redeem-recovery-token token))
+      (let ((vc (authenticate)))
+        (is (typep vc 'recovery-viewer-context))
+        (is (eql company (viewer-context-company vc)))
+        (is (eql nil (auth:current-user)))))))
+
+(test expired-recovery-session-is-anonymous
+  (with-fixture anonymous ()
+    (let ((token (nth-value 1 (make-recovery-token company))))
+      (signals hex:redirected
+        (redeem-recovery-token token))
+      (destructuring-bind (recovery-token deadline)
+          (auth:session-value :recovery-token)
+        (declare (ignore deadline))
+        (setf (auth:session-value :recovery-token)
+              (list recovery-token (- (get-universal-time) 1))))
+      (is (typep (authenticate) 'anonymous-viewer-context)))))
+
+(test logged-in-user-keeps-their-viewer-context
+  (with-fixture anonymous ()
+    (let ((token (nth-value 1 (make-recovery-token company))))
+      (signals hex:redirected
+        (redeem-recovery-token token))
+      (let ((vc (make-instance 'normal-viewer-context :user :someone)))
+        (setf (auth:request-user hunchentoot:*request*) :someone)
+        (setf (auth:viewer-context hunchentoot:*request*) vc)
+        (is (eql vc (authenticate)))))))
 
 (def-fixture edit ()
   (cl-mock:with-mocks ()

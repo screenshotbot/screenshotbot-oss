@@ -58,7 +58,9 @@
                 #:find-recovery-token
                 #:recovery-token-company
                 #:recovery-token-expires-at
-                #:recovery-token-expired-p))
+                #:recovery-token-expired-p)
+  (:import-from #:auth/viewer-context
+                #:recovery-viewer-context))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -71,23 +73,37 @@
 token itself may be valid for longer, in which case it can be redeemed
 again.")
 
-(defun session-recovery-token (company)
-  "The recovery token redeemed in this session, if it's for COMPANY and
-neither the token nor this session's use of it has expired. Returns the
-time the session's access ends as a second value.
-
-This is the only place that reads it, so it can't give access to
-anything but this page."
+(defun current-recovery-token ()
+  "The recovery token redeemed in this session, if neither the token nor
+this session's use of it has expired. Returns the time the session's
+access ends as a second value."
   (destructuring-bind (&optional token deadline)
       (auth:session-value :recovery-token)
     ;; Check the deadline ourselves: SESSION-VALUE doesn't enforce
     ;; :EXPIRES-IN when reading.
-    (when (and (typep token 'recovery-token)
-               (eql company (recovery-token-company token))
+    (when (and token
+               (typep token 'recovery-token)
                (not (recovery-token-expired-p token))
                (integerp deadline)
                (< (get-universal-time) deadline))
       (values token deadline))))
+
+(defun session-recovery-token (company)
+  "Like CURRENT-RECOVERY-TOKEN, but only if the token is for COMPANY."
+  (multiple-value-bind (token deadline) (current-recovery-token)
+    (when (and token
+               (eql company (recovery-token-company token)))
+      (values token deadline))))
+
+(defmethod auth:authenticate-request :after ((request auth:authenticated-request))
+  "If nobody is logged in, but the session redeemed a recovery token, view
+as a RECOVERY-VIEWER-CONTEXT for the token's company."
+  (unless (auth:request-user request)
+    (let ((token (current-recovery-token)))
+      (when token
+        (setf (auth:viewer-context request)
+              (make-instance 'recovery-viewer-context
+                             :company (recovery-token-company token)))))))
 
 (defun sso-principal (company)
   "Who is making changes on COMPANY's SSO page: a company admin, or a

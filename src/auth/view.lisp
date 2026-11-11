@@ -11,6 +11,7 @@
                 #:viewer-context-api-key
                 #:api-viewer-context
                 #:anonymous-viewer-context
+                #:recovery-viewer-context
                 #:logged-in-viewer-context
                 #:viewer-context-user
                 #:normal-viewer-context)
@@ -57,6 +58,9 @@
   nil)
 
 (defmethod can-viewer-view ((vc anonymous-viewer-context) obj)
+  (can-public-view obj))
+
+(defmethod can-viewer-view ((vc recovery-viewer-context) obj)
   (can-public-view obj))
 
 (defmethod can-viewer-view ((vc logged-in-viewer-context) obj)
