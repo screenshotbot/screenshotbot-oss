@@ -69,8 +69,11 @@ be an admin of RECOVERY-TOKEN-COMPANY), and add it to the audit log."))
     (flexi-streams:string-to-octets token :external-format :utf-8))))
 
 (defun generate-token ()
+  ;; 33 bytes, a multiple of 3, so the base64 has no padding. With :URI
+  ;; T the padding is a trailing ".", which looks like the end of a
+  ;; sentence when we send the token to someone.
   (base64:usb8-array-to-base64-string
-   (secure-random:bytes 32 secure-random:*generator*)
+   (secure-random:bytes 33 secure-random:*generator*)
    :uri t))
 
 (defun make-recovery-token (company &key (expires-in *default-expires-in*) note)

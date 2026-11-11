@@ -14,6 +14,7 @@
                 #:recovery-token-note
                 #:recovery-token-expired-p
                 #:recovery-tokens-for-company
+                #:generate-token
                 #:hash-token)
   (:import-from #:screenshotbot/model/company
                 #:company)
@@ -76,3 +77,9 @@
       (make-recovery-token company :expires-in 0))
     (signals error
       (make-recovery-token company :expires-in nil))))
+
+(test token-has-no-padding
+  (loop repeat 20
+        do (let ((token (generate-token)))
+             (is (eql 44 (length token)))
+             (is (cl-ppcre:scan "^[A-Za-z0-9_-]+$" token)))))
