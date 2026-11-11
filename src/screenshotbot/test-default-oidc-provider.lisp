@@ -370,3 +370,63 @@
         (setf (roles:user-role company admin) 'roles:admin)
         (is (str:containsp "single-company"
                            (oidc-activation-blocker provider admin)))))))
+
+(defun make-site-admin (&key allowed)
+  "Make a site admin with staff@example.com, and set whether site admins
+can use SSO on this installation."
+  (cl-mock:if-called 'screenshotbot/installation:site-admins-can-use-sso-p
+                     (lambda (installation)
+                       (declare (ignore installation))
+                       allowed))
+  (let ((staff (make-user :email "staff@example.com")))
+    (setf (screenshotbot/model/user:adminp staff) t)
+    staff))
+
+(defparameter *staff-user-info* '((:sub . "sub-1")
+                                  (:email . "staff@example.com")))
+
+(test site-admin-cant-sign-in-with-a-stored-provider-if-not-allowed
+  (with-fixture test-login (:user-info *staff-user-info*)
+    (make-site-admin :allowed nil)
+    (signals hex:redirected
+      (oidc-callback (make-oidc-provider provider) "the-code" "/done"))
+    (is (eql nil (auth:current-user)))
+    ;; We didn't link the IdP to the site admin
+    (is (eql nil (bknr.datastore:class-instances 'screenshotbot/login/oidc:oidc-user)))))
+
+(test site-admin-can-sign-in-with-a-stored-provider-if-allowed
+  (with-fixture test-login (:user-info *staff-user-info*)
+    (let ((staff (make-site-admin :allowed t)))
+      (signals hex:redirected
+        (oidc-callback (make-oidc-provider provider) "the-code" "/done"))
+      (is (eql staff (auth:current-user))))))
+
+(test other-users-can-sign-in-when-site-admins-cant
+  (with-fixture test-login (:user-info '((:sub . "sub-1")
+                                         (:email . "member@example.com")))
+    (make-site-admin :allowed nil)
+    (signals hex:redirected
+      (oidc-callback (make-oidc-provider provider) "the-code" "/done"))
+    (is (equal "member@example.com" (auth:user-email (auth:current-user))))))
+
+(test site-admin-check-uses-the-linked-user
+  ;; The IdP already maps this subject to the site admin, but now
+  ;; claims a different email.
+  (with-fixture test-login (:user-info '((:sub . "sub-1")
+                                         (:email . "someone-else@example.com")))
+    (let ((staff (make-site-admin :allowed nil)))
+      (make-instance 'screenshotbot/login/oidc:oidc-user
+                     :user-id "sub-1"
+                     :identifier 'default-oidc-provider
+                     :user staff)
+      (signals hex:redirected
+        (oidc-callback (make-oidc-provider provider) "the-code" "/done"))
+      (is (eql nil (auth:current-user))))))
+
+(test test-login-as-a-site-admin-is-a-failed-test
+  (with-fixture test-login (:user-info *staff-user-info*)
+    (make-site-admin :allowed nil)
+    (signals hex:redirected
+      (oidc-callback auth "the-code" "/done"))
+    (is (str:containsp "Site admins"
+                       (oidc-test-result-error (last-oidc-test-result provider))))))

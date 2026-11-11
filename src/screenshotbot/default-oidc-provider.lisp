@@ -10,8 +10,12 @@
                 #:store-object
                 #:persistent-class)
   (:import-from #:screenshotbot/login/oidc
+                #:find-existing-oidc-user
+                #:oauth-user-user
                 #:oidc-provider)
   (:import-from #:oidc/oidc
+                #:authentication-error
+                #:authentication-error-message
                 #:oidc-callback
                 #:after-authentication
                 #:make-oidc-auth-link)
@@ -20,7 +24,10 @@
   (:import-from #:util/store/store
                 #:defindex)
   (:import-from #:screenshotbot/installation
+                #:site-admins-can-use-sso-p
                 #:multi-org-feature)
+  (:import-from #:screenshotbot/model/user
+                #:adminp)
   (:import-from #:screenshotbot/model/company
                 #:get-singleton-company)
   (:import-from #:core/installation/installation
@@ -139,7 +146,28 @@ instead."
 (defun deactivate-default-oidc-provider (provider)
   (setf (%activep provider) nil))
 
-(defun make-oidc-provider (stored-provider &rest initargs &key (class 'oidc-provider)
+(defclass stored-oidc-provider (oidc-provider)
+  ()
+  (:documentation "The OIDC-PROVIDER for a DEFAULT-OIDC-PROVIDER. Unlike the one from the
+installation config, a company admin configured it, so we don't trust
+it with site admins, see SITE-ADMINS-CAN-USE-SSO-P."))
+
+(defmethod after-authentication :before ((auth stored-oidc-provider) &key user-id email
+                                         &allow-other-keys)
+  ;; The user we'd sign in as, see PREPARE-OIDC-USER. Check before
+  ;; that, so we don't link this IdP to the site admin's user.
+  (let ((user (or
+               (let ((oidc-user (find-existing-oidc-user auth user-id)))
+                 (when oidc-user
+                   (oauth-user-user oidc-user)))
+               (auth:find-user *installation* :email email))))
+    (when (and user
+               (adminp user)
+               (not (site-admins-can-use-sso-p *installation*)))
+      (error 'authentication-error
+             :message "Site admins can't sign in with this identity provider"))))
+
+(defun make-oidc-provider (stored-provider &rest initargs &key (class 'stored-oidc-provider)
                                                               &allow-other-keys)
   "Create an oidc-provider from a default-oidc-provider instance. CLASS and
 the other INITARGS are passed to MAKE-INSTANCE."
@@ -186,7 +214,7 @@ make sure a provider works before it's activated."))
   (let ((results (fset:convert 'list (oidc-test-results-for-provider provider))))
     (first (sort results #'> :key #'bknr.datastore:store-object-id))))
 
-(defclass test-oidc-provider (oidc-provider)
+(defclass test-oidc-provider (stored-oidc-provider)
   ((stored-provider :initarg :stored-provider
                     :reader stored-provider)
    (tested-by :initarg :tested-by
@@ -219,6 +247,14 @@ method redirects to REDIRECT."
            (call-next-method)
          (error (e)
            (record-error (princ-to-string e))))))))
+
+(defmethod after-authentication :around ((auth test-oidc-provider) &key &allow-other-keys)
+  ;; OIDC-CALLBACK would show an error page for these, record them as
+  ;; a failed test instead.
+  (handler-case
+      (call-next-method)
+    (authentication-error (e)
+      (record-test-result auth :error-message (authentication-error-message e)))))
 
 (defmethod after-authentication ((auth test-oidc-provider) &key email &allow-other-keys)
   (cond

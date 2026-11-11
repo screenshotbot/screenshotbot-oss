@@ -496,3 +496,58 @@
                (quri:uri-path (quri:uri (entity-id)))))
     (is (equal (quri:uri-host (quri:uri (installation-domain *installation*)))
                (quri:uri-host (quri:uri (entity-id)))))))
+
+(def-fixture site-admin-login (&key (site-admins-can-use-sso-p t)
+                                    (email "staff@example.com"))
+  (with-fake-request ()
+    (auth:with-sessions ()
+      (cl-mock:with-mocks ()
+        (cl-mock:if-called 'screenshotbot/installation:site-admins-can-use-sso-p
+                           (lambda (installation)
+                             (declare (ignore installation))
+                             site-admins-can-use-sso-p))
+        (cl-mock:if-called 'screenshotbot/login/saml::saml-response-get-attributes
+                           (lambda (resp) (declare (ignore resp)) nil))
+        (cl-mock:if-called 'screenshotbot/login/saml::saml-response-get-name-id
+                           (lambda (resp) (declare (ignore resp)) email))
+        (cl-mock:if-called 'screenshotbot/login/saml::get-idp-entity-id
+                           (lambda (settings) (declare (ignore settings)) "entity-id"))
+        (let* ((staff (make-user :email "staff@example.com"))
+               (provider (make-instance 'saml-auth-provider
+                                        :company company
+                                        :metadata-xml *xml*))
+               (relay-state (make-relay-state provider)))
+          (setf (screenshotbot/model/user:adminp staff) t)
+          (&body))))))
+
+(defun saml-login (relay-state)
+  "Log in with a (mocked) validated SAML response. Returns the response
+HTML, or NIL if we redirected."
+  (handler-case
+      (markup:write-html
+       (screenshotbot/login/saml::process-validated-callback :resp relay-state))
+    (hex:redirected ()
+      nil)))
+
+(test site-admin-cant-sign-in-with-saml-if-not-allowed
+  (with-fixture state ()
+    (with-fixture site-admin-login (:site-admins-can-use-sso-p nil)
+      (is (str:containsp "sign in with SAML on this installation"
+                         (saml-login relay-state)))
+      (is (eql nil (auth:current-user)))
+      ;; We didn't add the site admin to the company
+      (is (eql nil (roles:user-role company staff))))))
+
+(test site-admin-can-sign-in-with-saml-if-allowed
+  (with-fixture state ()
+    (with-fixture site-admin-login (:site-admins-can-use-sso-p t)
+      (is (eql nil (saml-login relay-state)))
+      (is (eql staff (auth:current-user))))))
+
+(test other-users-can-sign-in-with-saml-when-site-admins-cant
+  (with-fixture state ()
+    (with-fixture site-admin-login (:site-admins-can-use-sso-p nil
+                                    :email "member@example.com")
+      (is (eql nil (saml-login relay-state)))
+      (is (equal "member@example.com"
+                 (auth:user-email (auth:current-user)))))))

@@ -28,6 +28,7 @@
                 #:validate
                 #:config)
   (:export
+   #:site-admins-can-use-sso-p
    #:installation
    #:installation-domain
    #:plugin
@@ -131,6 +132,16 @@ every user will have only one company that they are an owner of."))
      ,@body))
 
 (defgeneric default-logged-in-page (installation))
+
+(defgeneric site-admins-can-use-sso-p (installation)
+  (:method (installation)
+    t)
+  (:documentation "Whether a site admin (see ADMINP) may sign in with SSO that a company
+admin configured, i.e. SAML or a stored OIDC provider. Such an IdP can
+claim any email, so on installations where we have a separate admin
+login, this would let a company admin sign in as one of our site
+admins. On self-hosted installations, the site admin may well be one of
+the company's own users, so it's allowed."))
 
 (defmethod default-oidc-provider :around ((self installation))
   (or

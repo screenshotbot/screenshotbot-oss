@@ -16,6 +16,8 @@
   (:import-from #:oidc/oauth
                 #:make-oauth-url)
   (:export #:oidc
+           #:authentication-error
+           #:authentication-error-message
            #:issuer
            #:discover
            #:authorization-endpoint

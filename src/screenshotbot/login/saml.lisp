@@ -33,8 +33,10 @@
                 #:get-singleton-company
                 #:company)
   (:import-from #:screenshotbot/installation
+                #:site-admins-can-use-sso-p
                 #:multi-org-feature)
   (:import-from #:screenshotbot/model/user
+                #:adminp
                 #:single-company-user)
   (:import-from #:core/installation/installation
                 #:*installation*
@@ -502,6 +504,11 @@ so creating a session here would log the admin out."
          (email (saml-response-get-name-id saml-response))
          (saml (saml-auth-provider relay-state)))
     (declare (ignore attributes entity-id))
+    (when (site-admin-sso-forbidden-p email)
+      (return-from process-validated-callback
+        <html>
+          <p>Site admins can't sign in with SAML on this installation. <a href= "/">Go back.</a></p>
+        </html>))
     (let ((user (find-user-for-sso (saml-company saml) email )))
       ;; TODO: this is not enough. We need to restrict the login to
       ;; only this company.
@@ -519,6 +526,14 @@ so creating a session here would log the admin out."
         (redirect relay-state)
         "/runs")))))
 
+
+(defun site-admin-sso-forbidden-p (email)
+  "Check before FIND-USER-FOR-SSO, so we don't touch the site admin's
+user. See SITE-ADMINS-CAN-USE-SSO-P."
+  (let ((user (auth:find-user *installation* :email email)))
+    (and user
+         (adminp user)
+         (not (site-admins-can-use-sso-p *installation*)))))
 
 (defclass saml-user (single-company-user)
   ()
