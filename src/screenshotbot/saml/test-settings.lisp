@@ -493,3 +493,38 @@ page or a redirect."
                           :client-id "client-id"
                           :client-secret "client-secret"))
       (is (eql nil (oidc-providers))))))
+
+(defun make-oidc-provider (company &key (issuer "https://idp.example.com"))
+  (make-instance 'default-oidc-provider
+                 :company company
+                 :issuer issuer
+                 :client-id "client-id"
+                 :client-secret "client-secret"
+                 :scope "openid email profile"))
+
+(test page-lists-oidc-providers
+  (with-fixture state ()
+    (make-oidc-provider company :issuer "https://one.example.com")
+    (make-oidc-provider company :issuer "https://two.example.com")
+    (let ((html (markup:write-html
+                 (company-sso-page :oid (oid company)))))
+      (is (str:containsp "https://one.example.com" html))
+      (is (str:containsp "https://two.example.com" html))
+      (is (str:containsp "Inactive" html))
+      (is (not (str:containsp "client-secret" html))))))
+
+(test page-shows-the-active-oidc-provider
+  (with-fixture state ()
+    (let ((provider (make-oidc-provider company)))
+      (screenshotbot/default-oidc-provider:activate-default-oidc-provider provider)
+      (let ((html (markup:write-html
+                   (company-sso-page :oid (oid company)))))
+        (is (str:containsp "Active" html))
+        (is (not (str:containsp "Inactive" html)))))))
+
+(test page-doesnt-list-another-companys-oidc-providers
+  (with-fixture state ()
+    (make-oidc-provider (make-instance 'company) :issuer "https://other.example.com")
+    (let ((html (markup:write-html
+                 (company-sso-page :oid (oid company)))))
+      (is (not (str:containsp "https://other.example.com" html))))))

@@ -67,7 +67,10 @@
   (:import-from #:core/ui/left-side-bar
                 #:left-nav-item)
   (:import-from #:screenshotbot/default-oidc-provider
-                #:default-oidc-provider)
+                #:default-oidc-provider
+                #:oidc-providers-for-company
+                #:issuer
+                #:activep)
   (:import-from #:oidc/oidc
                 #:oidc
                 #:discover))
@@ -248,7 +251,7 @@ that's all the menu has."
     <table class= "table border mt-3">
       <thead>
         <th>Type</th>
-        <th>IdP Entity ID</th>
+        <th>IdP Entity ID or Issuer</th>
         <th>Last test</th>
         <th>Status</th>
         <th>Actions</th>
@@ -268,6 +271,19 @@ that's all the menu has."
                   <delete-button saml=saml />
                 </td>
               </tr>))
+      ,@(loop for oidc in (fset:convert 'list (oidc-providers-for-company company))
+              collect
+              <tr class= "align-middle" >
+                <td>OIDC</td>
+                <td><tt>,(issuer oidc)</tt></td>
+                <td><span class= "text-muted">Never tested</span></td>
+                <td>
+                  ,(if (activep oidc)
+                       <span class= "badge bg-success">Active</span>
+                       <span class= "text-muted">Inactive</span>)
+                </td>
+                <td></td>
+              </tr>)
     </table>
   </app-template>)
 

@@ -17,9 +17,12 @@
   (:import-from #:util/store/store
                 #:defindex)
   (:import-from #:util/store/fset-index
+                #:fset-set-index
                 #:fset-unique-index)
   (:export
    #:default-oidc-provider
+   #:oidc-providers-for-company
+   #:issuer
    #:make-oidc-provider
    #:active-default-oidc-provider
    #:activep
@@ -32,6 +35,10 @@
 (defindex +active-index+
   'fset-unique-index
   :slot-name '%activep)
+
+(defindex +company-index+
+  'fset-set-index
+  :slot-name '%company)
 
 (defclass default-oidc-provider (object-with-oid)
   ((%scope :initarg :scope
@@ -46,6 +53,8 @@
    (%issuer :initarg :issuer
             :reader issuer)
    (%company :initarg :company
+             :index +company-index+
+             :index-reader oidc-providers-for-company
              :reader company)
    (%activep :initarg :activep
              :initform nil
