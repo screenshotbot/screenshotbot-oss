@@ -51,7 +51,16 @@
                 #:saml-auth-provider
                 #:saml-name
                 #:saml-idp-metadata-url
-                #:fetch-metadata-xml))
+                #:fetch-metadata-xml)
+  (:import-from #:screenshotbot/saml/settings
+                #:oidc-form
+                #:submit-oidc-form)
+  (:import-from #:screenshotbot/default-oidc-provider
+                #:default-oidc-provider
+                #:activep
+                #:active-default-oidc-provider)
+  (:import-from #:oidc/oidc
+                #:discover))
 (in-package :screenshotbot/saml/test-settings)
 
 (util/fiveam:def-suite)
@@ -392,3 +401,95 @@ page or a redirect."
     (let ((*installation* (make-instance 'multi-org-installation)))
       (is (str:containsp (format nil "/saml/entity/~a/metadata" (oid company))
                          (sp-metadata-url company))))))
+
+(def-fixture oidc (&key (discover (lambda (oidc)
+                                     (declare (ignore oidc))
+                                     '((:issuer . "https://idp.example.com")))))
+  (cl-mock:with-mocks ()
+    (cl-mock:if-called 'discover discover)
+    (&body)))
+
+(defun oidc-providers ()
+  (bknr.datastore:class-instances 'default-oidc-provider))
+
+(test page-has-a-create-oidc-button
+  (with-fixture state ()
+    (let ((html (markup:write-html
+                 (company-sso-page :oid (oid company)))))
+      (is (str:containsp "Create OIDC" html)))))
+
+(test oidc-form-renders
+  (with-fixture state ()
+    (with-fixture oidc ()
+      (let ((html (markup:write-html (oidc-form company))))
+        (is (str:containsp "New OIDC connection" html))
+        (is (str:containsp "/account/oauth-callback" html))))))
+
+(test creating-an-oidc-provider
+  (with-fixture state ()
+    (with-fixture oidc ()
+      (signals hex:redirected
+        (submit-oidc-form company
+                          :issuer "https://idp.example.com"
+                          :client-id "client-id"
+                          :client-secret "client-secret"))
+      (let ((provider (first (oidc-providers))))
+        (is (eql company (screenshotbot/default-oidc-provider::company provider)))
+        (is (equal "https://idp.example.com"
+                   (screenshotbot/default-oidc-provider::issuer provider)))
+        (is (equal "client-secret"
+                   (screenshotbot/default-oidc-provider::client-secret provider)))
+        (is (equal "openid email profile"
+                   (screenshotbot/default-oidc-provider::scope provider)))
+        ;; Creating it must not change anyone's login
+        (is-false (activep provider))
+        (is (eql nil (active-default-oidc-provider)))))))
+
+(test oidc-form-validation
+  (with-fixture state ()
+    (with-fixture oidc ()
+      (dolist (args '((:issuer "" :client-id "a" :client-secret "b")
+                      (:issuer "http://idp.example.com" :client-id "a" :client-secret "b")
+                      (:issuer "https://idp.example.com" :client-id "" :client-secret "b")
+                      (:issuer "https://idp.example.com" :client-id "a" :client-secret "")))
+        (multiple-value-bind (html errors)
+            (apply #'submit-oidc-form company args)
+          (declare (ignore html))
+          (is-true errors)))
+      (is (eql nil (oidc-providers))))))
+
+(test oidc-form-checks-discovery
+  (with-fixture state ()
+    (with-fixture oidc (:discover (lambda (oidc)
+                                    (declare (ignore oidc))
+                                    (error "can't connect")))
+      (multiple-value-bind (html errors)
+          (submit-oidc-form company
+                            :issuer "https://idp.example.com"
+                            :client-id "client-id"
+                            :client-secret "client-secret")
+        (declare (ignore html))
+        (is (assoc :issuer errors)))
+      (is (eql nil (oidc-providers))))))
+
+(test oidc-errors-dont-send-the-secret-back
+  (with-fixture state ()
+    (with-fixture oidc ()
+      (let ((html (markup:write-html
+                   (submit-oidc-form company
+                                     :issuer ""
+                                     :client-id "client-id"
+                                     :client-secret "very-secret"))))
+        (is (not (str:containsp "very-secret" html)))))))
+
+(test non-admin-cant-create-oidc
+  (with-fixture state (:role 'roles:standard-member)
+    (with-fixture oidc ()
+      (signals error
+        (oidc-form company))
+      (signals error
+        (submit-oidc-form company
+                          :issuer "https://idp.example.com"
+                          :client-id "client-id"
+                          :client-secret "client-secret"))
+      (is (eql nil (oidc-providers))))))

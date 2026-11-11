@@ -65,7 +65,12 @@
   (:import-from #:screenshotbot/left-side-bar
                 #:render-menu-items)
   (:import-from #:core/ui/left-side-bar
-                #:left-nav-item))
+                #:left-nav-item)
+  (:import-from #:screenshotbot/default-oidc-provider
+                #:default-oidc-provider)
+  (:import-from #:oidc/oidc
+                #:oidc
+                #:discover))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -236,7 +241,8 @@ that's all the menu has."
 (defun sso-page (company)
   <app-template>
     <taskie-page-title title= "Configure Single-Sign-on">
-      <a href= (nibble () (sso-form company)) class= "btn btn-primary mb-2" >Create</a>
+      <a href= (nibble () (sso-form company)) class= "btn btn-primary mb-2" >Create SAML</a>
+      <a href= (nibble () (oidc-form company)) class= "btn btn-primary mb-2" >Create OIDC</a>
     </taskie-page-title>
 
     <table class= "table border mt-3">
@@ -484,3 +490,93 @@ functions the login flow uses, so they can't drift apart."
                   :idp-metadata-url idp-metadata
                   :name name)
    (go-back company)))
+
+(defparameter *oidc-scope* "openid email profile")
+
+(defun oidc-redirect-uri ()
+  "The redirect URI the IdP must allow. This is what MAKE-OAUTH-URL uses,
+since the providers we create don't have an RP-BASE-URL."
+  (hex:make-full-url hunchentoot:*request* "/account/oauth-callback"))
+
+(defun oidc-form (company)
+  (check-principal! company)
+  (let ((action (nibble (issuer client-id client-secret)
+                  (submit-oidc-form company
+                                    :issuer issuer
+                                    :client-id client-id
+                                    :client-secret client-secret))))
+    <simple-card-page form-action=action >
+      <div class= "card-header">
+        <h4 class= "card-title">New OIDC connection</h4>
+      </div>
+
+      <div class= "mb-3">
+        <h5>Settings for your Identity Provider</h5>
+        <copyable-value label= "Sign-in redirect URI" value= (oidc-redirect-uri) />
+        <ul class= "text-muted">
+          <li>Grant type: Authorization Code</li>
+          <li>Scopes: ,(progn *oidc-scope*)</li>
+        </ul>
+      </div>
+
+      <div class= "mb-2" >
+        <label for= "issuer" class= "form-label">Issuer URL</label>
+        <input type= "text" id= "issuer" name= "issuer" class= "form-control"
+               placeholder= "https://idp.example.com" />
+      </div>
+
+      <div class= "mb-2" >
+        <label for= "client-id" class= "form-label">Client ID</label>
+        <input type= "text" id= "client-id" name= "client-id" class= "form-control" />
+      </div>
+
+      <div class= "mb-2" >
+        <label for= "client-secret" class= "form-label">Client Secret</label>
+        <input type= "password" id= "client-secret" name= "client-secret" class= "form-control" />
+      </div>
+
+      <div class= "card-footer">
+        <p class= "text-muted">
+          The connection won't be used for signing in until it's activated
+        </p>
+        <input type= "submit" class= "btn btn-primary" value= "Create" />
+      </div>
+    </simple-card-page>))
+
+(defun submit-oidc-form (company &key issuer client-id client-secret)
+  (check-principal! company)
+  (with-error-builder (:errors errors
+                       :check check
+                       :form-builder (oidc-form company)
+                       ;; Don't send the secret back to the browser
+                       :form-args (:issuer issuer :client-id client-id)
+                       :success (%create-oidc company
+                                              :issuer issuer
+                                              :client-id client-id
+                                              :client-secret client-secret))
+    (check :issuer
+           (str:non-blank-string-p issuer)
+           "Issuer URL must be provided")
+    (check :issuer
+           (equal "https" (ignore-errors (quri:uri-scheme (quri:uri issuer))))
+           "Issuer URL must be an https:// URL")
+    (check :client-id
+           (str:non-blank-string-p client-id)
+           "Client ID must be provided")
+    (check :client-secret
+           (str:non-blank-string-p client-secret)
+           "Client Secret must be provided")
+    (when (null errors)
+      (check :issuer
+             (ignore-errors
+              (discover (make-instance 'oidc :issuer issuer)))
+             "Could not fetch the OpenID configuration for this issuer, if this is behind an internal network please contact support@screenshotbot.io to help set it up"))))
+
+(defun %create-oidc (company &key issuer client-id client-secret)
+  (make-instance 'default-oidc-provider
+                 :company company
+                 :issuer issuer
+                 :client-id client-id
+                 :client-secret client-secret
+                 :scope *oidc-scope*)
+  (go-back company))

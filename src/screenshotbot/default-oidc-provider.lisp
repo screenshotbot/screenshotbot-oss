@@ -19,6 +19,7 @@
   (:import-from #:util/store/fset-index
                 #:fset-unique-index)
   (:export
+   #:default-oidc-provider
    #:make-oidc-provider
    #:active-default-oidc-provider
    #:activep
