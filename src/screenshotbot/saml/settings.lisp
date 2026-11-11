@@ -70,7 +70,12 @@
                 #:default-oidc-provider
                 #:oidc-providers-for-company
                 #:issuer
-                #:activep)
+                #:oidc-provider-company
+                #:activep
+                #:oidc-test-signin-link
+                #:last-oidc-test-result
+                #:oidc-test-result-email
+                #:oidc-test-result-error)
   (:import-from #:oidc/oidc
                 #:oidc
                 #:discover))
@@ -273,17 +278,20 @@ that's all the menu has."
               </tr>))
       ,@(loop for oidc in (fset:convert 'list (oidc-providers-for-company company))
               collect
+              (util:copying (oidc)
               <tr class= "align-middle" >
                 <td>OIDC</td>
                 <td><tt>,(issuer oidc)</tt></td>
-                <td><span class= "text-muted">Never tested</span></td>
+                <td><oidc-test-result result= (last-oidc-test-result oidc) /></td>
                 <td>
                   ,(if (activep oidc)
                        <span class= "badge bg-success">Active</span>
                        <span class= "text-muted">Inactive</span>)
                 </td>
-                <td></td>
-              </tr>)
+                <td>
+                  <a href= (nibble () (start-oidc-test-login oidc)) class= "btn btn-sm btn-primary" >Test</a>
+                </td>
+              </tr>))
     </table>
   </app-template>)
 
@@ -295,6 +303,15 @@ that's all the menu has."
      <span class= "text-danger">Failed: ,(saml-test-result-error result)</span>)
     (t
      <span class= "text-success">Signed in as ,(saml-test-result-email result)</span>)))
+
+(markup:deftag oidc-test-result (&key result)
+  (cond
+    ((null result)
+     <span class= "text-muted">Never tested</span>)
+    ((oidc-test-result-error result)
+     <span class= "text-danger">Failed: ,(oidc-test-result-error result)</span>)
+    (t
+     <span class= "text-success">Signed in as ,(oidc-test-result-email result)</span>)))
 
 (markup:deftag activation-status (&key saml)
   (cond
@@ -375,6 +392,12 @@ principal."
   (hex:safe-redirect (test-signin-link saml
                                        (check-provider! saml)
                                        (sso-page-url (saml-company saml)))))
+
+(defun start-oidc-test-login (oidc)
+  (let ((company (oidc-provider-company oidc)))
+    (hex:safe-redirect (oidc-test-signin-link oidc
+                                              (check-principal! company)
+                                              (sso-page-url company)))))
 
 (markup:deftag copyable-value (&key label value)
   ;; No NAME, so this isn't submitted with the form.

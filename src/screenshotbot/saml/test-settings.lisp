@@ -54,7 +54,8 @@
                 #:fetch-metadata-xml)
   (:import-from #:screenshotbot/saml/settings
                 #:oidc-form
-                #:submit-oidc-form)
+                #:submit-oidc-form
+                #:start-oidc-test-login)
   (:import-from #:screenshotbot/default-oidc-provider
                 #:default-oidc-provider
                 #:activep
@@ -528,3 +529,57 @@ page or a redirect."
     (let ((html (markup:write-html
                  (company-sso-page :oid (oid company)))))
       (is (not (str:containsp "https://other.example.com" html))))))
+
+(defun make-oidc-test-result (provider user &key email error-message)
+  (make-instance 'screenshotbot/default-oidc-provider::oidc-test-result
+                 :provider provider
+                 :tested-by user
+                 :email email
+                 :error-message error-message))
+
+(test oidc-rows-have-a-test-button
+  (with-fixture state ()
+    (make-oidc-provider company)
+    (let ((html (markup:write-html
+                 (company-sso-page :oid (oid company)))))
+      (is (str:containsp ">Test</a>" html))
+      (is (str:containsp "Never tested" html)))))
+
+(test oidc-rows-show-the-last-test-result
+  (with-fixture state ()
+    (let ((provider (make-oidc-provider company)))
+      (make-oidc-test-result provider user :error-message "access_denied: nope")
+      (make-oidc-test-result provider user :email "admin@example.com")
+      (let ((html (markup:write-html
+                   (company-sso-page :oid (oid company)))))
+        (is (str:containsp "Signed in as admin@example.com" html))
+        (is (not (str:containsp "access_denied" html)))))))
+
+(test oidc-rows-show-a-failed-test
+  (with-fixture state ()
+    (let ((provider (make-oidc-provider company)))
+      (make-oidc-test-result provider user :error-message "access_denied: nope")
+      (let ((html (markup:write-html
+                   (company-sso-page :oid (oid company)))))
+        (is (str:containsp "Failed: access_denied: nope" html))))))
+
+(test starting-an-oidc-test-login
+  (with-fixture state ()
+    (with-fixture oidc (:discover (lambda (oidc)
+                                    (declare (ignore oidc))
+                                    '((:authorization--endpoint . "https://idp.example.com/authorize"))))
+      (let ((provider (make-oidc-provider company)))
+        (handler-case
+            (progn
+              (start-oidc-test-login provider)
+              (fail "expected a redirect"))
+          (hex:redirected (e)
+            (is (str:starts-with-p "https://idp.example.com/authorize?"
+                                   (slot-value e 'hex::url)))))))))
+
+(test non-admin-cant-start-an-oidc-test-login
+  (with-fixture state (:role 'roles:standard-member)
+    (with-fixture oidc ()
+      (let ((provider (make-oidc-provider company)))
+        (signals error
+          (start-oidc-test-login provider))))))
