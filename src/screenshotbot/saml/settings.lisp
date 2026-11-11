@@ -131,6 +131,17 @@ SAML provider can log in as any email address."
 (defun sso-page-url (company)
   (hex:make-url "/company/:oid/sso" :oid (oid company)))
 
+(markup:deftag recovery-token-banner (&key company)
+  (multiple-value-bind (token deadline)
+      (session-recovery-token company)
+    (when token
+      <div class= "alert alert-warning small mx-3">
+        You're using a recovery token. It only gives access to the SSO and Team pages, until
+        ,(local-time:format-rfc1123-timestring
+          nil
+          (local-time:universal-to-timestamp deadline)).
+      </div>)))
+
 (defmethod render-menu-items (installation
                               (vc recovery-viewer-context)
                               &key script-name &allow-other-keys)
@@ -149,6 +160,8 @@ that's all the menu has."
         SSO
       </left-nav-item>
     </ul>
+
+    <recovery-token-banner company= (viewer-context-company vc) />
 
     <hr class= "mb-0" />
   </markup:merge-tag>)
@@ -220,24 +233,11 @@ that's all the menu has."
                (list recovery-token deadline)))
        (hex:safe-redirect (sso-page-url (recovery-token-company recovery-token)))))))
 
-(markup:deftag recovery-token-banner (&key company)
-  (multiple-value-bind (token deadline)
-      (session-recovery-token company)
-    (when token
-      <div class= "alert alert-warning">
-        You're using a recovery token. It only gives access to the SSO and Team pages, until
-        ,(local-time:format-rfc1123-timestring
-          nil
-          (local-time:universal-to-timestamp deadline)).
-      </div>)))
-
 (defun sso-page (company)
   <app-template>
     <taskie-page-title title= "Configure Single-Sign-on">
       <a href= (nibble () (sso-form company)) class= "btn btn-primary mb-2" >Create</a>
     </taskie-page-title>
-
-    <recovery-token-banner company=company />
 
     <table class= "table border mt-3">
       <thead>

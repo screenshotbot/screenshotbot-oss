@@ -123,7 +123,7 @@ page or a redirect."
       (signals hex:redirected
         (redeem-recovery-token token))
       (is (eql nil (auth:current-user)))
-      (is (str:containsp "using a recovery token" (render-sso-page company)))
+      (is (not (eql nil (render-sso-page company))))
       (is (typep (sso-principal company)
                  'screenshotbot/login/recovery-token:recovery-token)))))
 
@@ -255,6 +255,7 @@ page or a redirect."
                    (left-side-bar :script-name (sso-page-url company)))))
         (is (str:containsp (sso-page-url company) html))
         (is (str:containsp "href=\"/team\"" html))
+        (is (str:containsp "using a recovery token" html))
         (is (not (str:containsp "Recent Runs" html)))
         (is (not (str:containsp "API Keys" html)))))))
 
