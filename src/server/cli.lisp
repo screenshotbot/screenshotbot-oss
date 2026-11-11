@@ -317,6 +317,10 @@ the server will respond"
                           (when (find-package :screenshotbot/pro/company-cli)
                             (uiop:call-function
                              "screenshotbot/pro/company-cli:company/command"))
+                          #-screenshotbot-oss
+                          (when (find-package :screenshotbot/pro/recovery-token-cli)
+                            (uiop:call-function
+                             "screenshotbot/pro/recovery-token-cli:recovery-token/command"))
                           (save-passphrases/command)
                           (benchmarks/command)
                           (run/command :enable-store enable-store
