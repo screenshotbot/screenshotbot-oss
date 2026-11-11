@@ -56,7 +56,9 @@
                 #:oidc-form
                 #:submit-oidc-form
                 #:start-oidc-test-login
-                #:edit-oidc-form)
+                #:edit-oidc-form
+                #:%activate-oidc
+                #:%activate)
   (:import-from #:screenshotbot/default-oidc-provider
                 #:default-oidc-provider
                 #:activep
@@ -513,13 +515,13 @@ page or a redirect."
                  (company-sso-page :oid (oid company)))))
       (is (str:containsp "https://one.example.com" html))
       (is (str:containsp "https://two.example.com" html))
-      (is (str:containsp "Inactive" html))
+      (is (str:containsp "Test this provider before activating it" html))
       (is (not (str:containsp "client-secret" html))))))
 
 (test page-shows-the-active-oidc-provider
   (with-fixture state ()
     (let ((provider (make-oidc-provider company)))
-      (screenshotbot/default-oidc-provider:activate-default-oidc-provider provider)
+      (screenshotbot/default-oidc-provider::%activate-default-oidc-provider provider)
       (let ((html (markup:write-html
                    (company-sso-page :oid (oid company)))))
         (is (str:containsp "Active" html))
@@ -635,7 +637,7 @@ page or a redirect."
   (with-fixture state ()
     (with-fixture oidc ()
       (let ((provider (make-oidc-provider company :issuer "https://old.example.com")))
-        (screenshotbot/default-oidc-provider:activate-default-oidc-provider provider)
+        (screenshotbot/default-oidc-provider::%activate-default-oidc-provider provider)
         (let ((html (markup:write-html
                      (company-sso-page :oid (oid company)))))
           (is (str:containsp "it can&#39;t be changed" html)))
@@ -688,3 +690,74 @@ page or a redirect."
         (is (str:containsp "invalid-feedback" html))
         (is (not (str:containsp "stored-secret" html)))
         (is (not (str:containsp "typed-secret" html)))))))
+
+(defun make-passing-oidc-test (provider user)
+  (setf (auth:user-email user) "admin@example.com")
+  (make-oidc-test-result provider user :email "admin@example.com"))
+
+(test oidc-activate-button-is-disabled-without-a-test
+  (with-fixture state ()
+    (make-oidc-provider company)
+    (let ((html (markup:write-html
+                 (company-sso-page :oid (oid company)))))
+      (is (str:containsp "Test this provider before activating it" html))
+      (is (str:containsp "disabled=\"disabled\">Activate" html)))))
+
+(test oidc-activate-button-after-a-passing-test
+  (with-fixture state ()
+    (let ((provider (make-oidc-provider company)))
+      (make-passing-oidc-test provider user)
+      (let ((html (markup:write-html
+                   (company-sso-page :oid (oid company)))))
+        (is (str:containsp "Ready to activate" html))
+        (is (not (str:containsp "disabled=\"disabled\">Activate" html)))))))
+
+(test activating-an-oidc-provider
+  (with-fixture state ()
+    (let ((provider (make-oidc-provider company)))
+      (make-passing-oidc-test provider user)
+      (signals hex:redirected
+        (%activate-oidc provider))
+      (is (eql provider (active-default-oidc-provider))))))
+
+(test activating-oidc-deactivates-saml
+  (with-fixture state ()
+    (with-fixture edit ()
+      (setf (slot-value saml 'screenshotbot/login/saml::%defaultp) t)
+      (let ((provider (make-oidc-provider company)))
+        (make-passing-oidc-test provider user)
+        (signals hex:redirected
+          (%activate-oidc provider))
+        (is (eql provider (active-default-oidc-provider)))
+        (is (eql nil (screenshotbot/login/saml::default-saml-auth-provider)))))))
+
+(test activating-saml-deactivates-oidc
+  (with-fixture state ()
+    (with-fixture edit ()
+      (let ((provider (make-oidc-provider company)))
+        (screenshotbot/default-oidc-provider::%activate-default-oidc-provider provider)
+        (setf (auth:user-email user) "admin@example.com")
+        (make-instance 'screenshotbot/login/saml::saml-test-result
+                       :provider saml
+                       :tested-by user
+                       :email "admin@example.com")
+        (signals hex:redirected
+          (%activate saml))
+        (is (eql saml (screenshotbot/login/saml::default-saml-auth-provider)))
+        (is (eql nil (active-default-oidc-provider)))
+        (is-false (activep provider))))))
+
+(test cant-activate-oidc-without-a-test
+  (with-fixture state ()
+    (let ((provider (make-oidc-provider company)))
+      (signals error
+        (%activate-oidc provider))
+      (is (eql nil (active-default-oidc-provider))))))
+
+(test non-admin-cant-activate-oidc
+  (with-fixture state (:role 'roles:standard-member)
+    (let ((provider (make-oidc-provider company)))
+      (make-passing-oidc-test provider user)
+      (signals error
+        (%activate-oidc provider))
+      (is (eql nil (active-default-oidc-provider))))))

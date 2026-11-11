@@ -29,6 +29,7 @@
                 #:deactivate-saml-provider
                 #:edit-saml-provider
                 #:delete-saml-provider
+                #:default-saml-auth-provider
                 #:saml-idp-metadata-url
                 #:saml-name
                 #:entity-id
@@ -74,6 +75,10 @@
                 #:client-id
                 #:edit-default-oidc-provider
                 #:activep
+                #:active-default-oidc-provider
+                #:activate-default-oidc-provider
+                #:deactivate-default-oidc-provider
+                #:oidc-activation-blocker
                 #:oidc-test-signin-link
                 #:last-oidc-test-result
                 #:oidc-test-result-email
@@ -285,13 +290,10 @@ that's all the menu has."
                 <td>OIDC</td>
                 <td><tt>,(issuer oidc)</tt></td>
                 <td><oidc-test-result result= (last-oidc-test-result oidc) /></td>
-                <td>
-                  ,(if (activep oidc)
-                       <span class= "badge bg-success">Active</span>
-                       <span class= "text-muted">Inactive</span>)
-                </td>
+                <td><oidc-activation-status oidc=oidc /></td>
                 <td>
                   <a href= (nibble () (start-oidc-test-login oidc)) class= "btn btn-sm btn-primary" >Test</a>
+                  <oidc-activation-button oidc=oidc />
                   ,(if (activep oidc)
                        <button class= "btn btn-sm btn-secondary" disabled= "disabled"
                                title= "This connection is active, so it can't be changed" >Edit</button>
@@ -328,6 +330,25 @@ that's all the menu has."
        ,(or (activation-blocker saml (sso-principal (saml-company saml)))
             "Ready to activate")
      </span>)))
+
+(markup:deftag oidc-activation-status (&key oidc)
+  (cond
+    ((activep oidc)
+     <span class= "badge bg-success">Active</span>)
+    (t
+     <span class= "text-muted">
+       ,(or (oidc-activation-blocker oidc (sso-principal (oidc-provider-company oidc)))
+            "Ready to activate")
+     </span>)))
+
+(markup:deftag oidc-activation-button (&key oidc)
+  (cond
+    ((activep oidc)
+     nil)
+    ((oidc-activation-blocker oidc (sso-principal (oidc-provider-company oidc)))
+     <button class= "btn btn-sm btn-success" disabled= "disabled" >Activate</button>)
+    (t
+     <a href= (nibble () (%activate-oidc oidc)) class= "btn btn-sm btn-success" >Activate</a>)))
 
 (markup:deftag activation-button (&key saml)
   (cond
@@ -384,7 +405,20 @@ principal."
 
 (defun %activate (saml)
   (activate-saml-provider saml (check-provider! saml))
+  ;; The active OIDC provider would take precedence over SAML, see
+  ;; DEFAULT-OIDC-PROVIDER on BASE-INSTALLATION.
+  (alexandria:when-let ((oidc (active-default-oidc-provider)))
+    (deactivate-default-oidc-provider oidc))
   (go-back (saml-company saml)))
+
+(defun %activate-oidc (oidc)
+  (let ((company (oidc-provider-company oidc)))
+    (activate-default-oidc-provider oidc (check-principal! company))
+    ;; Only one SSO provider should be active, otherwise it's unclear
+    ;; which one is used to sign in.
+    (alexandria:when-let ((saml (default-saml-auth-provider)))
+      (deactivate-saml-provider saml))
+    (go-back company)))
 
 (defun %deactivate (saml)
   (check-provider! saml)

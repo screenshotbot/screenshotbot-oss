@@ -7,7 +7,6 @@
 (defpackage :screenshotbot/default-oidc-provider
   (:use #:cl)
   (:import-from #:bknr.datastore
-                #:with-transaction
                 #:store-object
                 #:persistent-class)
   (:import-from #:screenshotbot/login/oidc
@@ -20,6 +19,15 @@
                 #:object-with-oid)
   (:import-from #:util/store/store
                 #:defindex)
+  (:import-from #:screenshotbot/installation
+                #:multi-org-feature)
+  (:import-from #:screenshotbot/model/company
+                #:company-admin-p
+                #:get-singleton-company)
+  (:import-from #:screenshotbot/model/user
+                #:user-with-email)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:import-from #:util/store/fset-index
                 #:fset-set-index
                 #:fset-unique-index)
@@ -36,6 +44,7 @@
    #:activep
    #:activate-default-oidc-provider
    #:deactivate-default-oidc-provider
+   #:oidc-activation-blocker
    #:oidc-test-signin-link
    #:last-oidc-test-result
    #:oidc-test-result-email
@@ -93,16 +102,24 @@ don't count."))
 (defun active-default-oidc-provider ()
   (%find-by-activep t))
 
-(defun activate-default-oidc-provider (provider)
+(defun activate-default-oidc-provider (provider user)
   "Make PROVIDER the login for this installation, replacing the currently
-active provider if there is one."
+active provider if there is one. USER is who's activating it, see
+OIDC-ACTIVATION-BLOCKER."
   (bt:with-lock-held (*lock*)
-    (let ((old (active-default-oidc-provider)))
-      (with-transaction ()
-        ;; Clear the old one first, %ACTIVEP has a unique index.
-        (when old
-          (setf (%activep old) nil))
-        (setf (%activep provider) t)))))
+    (let ((blocker (oidc-activation-blocker provider user)))
+      (when blocker
+        (error "Can't activate OIDC provider: ~a" blocker)))
+    (%activate-default-oidc-provider provider)))
+
+(defun %activate-default-oidc-provider (provider)
+  "Like ACTIVATE-DEFAULT-OIDC-PROVIDER, but without any checks. Call it
+with *LOCK* held."
+  (let ((old (active-default-oidc-provider)))
+    ;; Clear the old one first, %ACTIVEP has a unique index.
+    (when old
+      (setf (%activep old) nil))
+    (setf (%activep provider) t)))
 
 (defun edit-default-oidc-provider (provider &key issuer client-id client-secret)
   "Change PROVIDER's IdP config. A NIL CLIENT-SECRET keeps the current
@@ -117,15 +134,13 @@ instead."
       (when changedp
         (when (activep provider)
           (error "Can't change the active OIDC provider"))
-        (with-transaction ()
-          (setf (%issuer provider) issuer)
-          (setf (%client-id provider) client-id)
-          (setf (%client-secret provider) client-secret)
-          (setf (%edited-at provider) (get-universal-time)))))))
+        (setf (%issuer provider) issuer)
+        (setf (%client-id provider) client-id)
+        (setf (%client-secret provider) client-secret)
+        (setf (%edited-at provider) (get-universal-time))))))
 
 (defun deactivate-default-oidc-provider (provider)
-  (with-transaction ()
-    (setf (%activep provider) nil)))
+  (setf (%activep provider) nil))
 
 (defun make-oidc-provider (stored-provider &rest initargs &key (class 'oidc-provider)
                                                               &allow-other-keys)
@@ -225,3 +240,47 @@ recorded and the browser is sent to REDIRECT."
                        :stored-provider provider
                        :tested-by tested-by)
    redirect))
+
+(defparameter *activation-test-window* (* 60 60)
+  "How recent the test must be when activating a provider.")
+
+(defun oidc-activation-blocker (provider user)
+  "NIL if USER may make PROVIDER the login for this installation,
+otherwise a message explaining why not.
+
+Activating replaces the login for everyone, so we require a recent
+successful test by USER, and that the test signed in as an admin: if it
+didn't, nobody would be able to administer the installation after
+activating."
+  (let ((result (last-oidc-test-result provider)))
+    (cond
+      ((typep *installation* 'multi-org-feature)
+       ;; There's only one active provider for the whole installation,
+       ;; it would make this company's IdP everyone's login.
+       "Activating OIDC is only supported on single-company installations")
+      ((not (eql (company provider)
+                 (get-singleton-company *installation*)))
+       "This provider doesn't belong to this installation's company")
+      ((activep provider)
+       "This provider is already active")
+      ((null result)
+       "Test this provider before activating it")
+      ((oidc-test-result-error result)
+       "The last test failed")
+      ((not (eql user (oidc-test-result-tested-by result)))
+       "Test this provider yourself before activating it")
+      ((< (oidc-test-result-ts result)
+          (- (get-universal-time) *activation-test-window*))
+       "The last test is more than an hour old, test it again")
+      ((and (oidc-edited-at provider)
+            ;; <=: in the same second we can't tell which came first
+            (<= (oidc-test-result-ts result)
+                (oidc-edited-at provider)))
+       "The provider changed since the last test, test it again")
+      ((not (let ((tested-user (user-with-email (oidc-test-result-email result))))
+              (and tested-user
+                   (company-admin-p (company provider) tested-user))))
+       (format nil "The last test signed in as ~a, who isn't an admin. Activating would leave nobody who can administer this installation."
+               (oidc-test-result-email result)))
+      (t
+       nil))))

@@ -11,7 +11,10 @@
                 #:default-oidc-provider
                 #:active-default-oidc-provider
                 #:activep
+                #:%activate-default-oidc-provider
                 #:activate-default-oidc-provider
+                #:oidc-activation-blocker
+                #:oidc-test-result
                 #:deactivate-default-oidc-provider
                 #:oidc-providers-for-company
                 #:make-oidc-provider
@@ -34,6 +37,15 @@
                 #:with-test-user)
   (:import-from #:util/testing
                 #:with-fake-request)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
+  (:import-from #:screenshotbot/model/company
+                #:get-singleton-company)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:multi-org-feature)
+  (:import-from #:core/installation/installation
+                #:*installation*)
   (:import-from #:util/store/store
                 #:with-test-store)
   (:import-from #:util/store/object-id
@@ -68,7 +80,7 @@
 (test activate-and-deactivate
   (with-fixture state ()
     (let ((provider (make-provider)))
-      (activate-default-oidc-provider provider)
+      (%activate-default-oidc-provider provider)
       (is-true (activep provider))
       (is (eql provider (active-default-oidc-provider)))
       (deactivate-default-oidc-provider provider)
@@ -79,8 +91,8 @@
   (with-fixture state ()
     (let ((one (make-provider))
           (two (make-provider)))
-      (activate-default-oidc-provider one)
-      (activate-default-oidc-provider two)
+      (%activate-default-oidc-provider one)
+      (%activate-default-oidc-provider two)
       (is-false (activep one))
       (is-true (activep two))
       (is (eql two (active-default-oidc-provider))))))
@@ -88,8 +100,8 @@
 (test activating-the-active-provider-again
   (with-fixture state ()
     (let ((provider (make-provider)))
-      (activate-default-oidc-provider provider)
-      (activate-default-oidc-provider provider)
+      (%activate-default-oidc-provider provider)
+      (%activate-default-oidc-provider provider)
       (is (eql provider (active-default-oidc-provider))))))
 
 (test providers-for-company
@@ -227,7 +239,7 @@
 (test cant-change-the-active-provider
   (with-fixture state ()
     (let ((provider (make-provider)))
-      (activate-default-oidc-provider provider)
+      (%activate-default-oidc-provider provider)
       (signals error
         (edit-default-oidc-provider provider
                                     :issuer "https://new.example.com/"
@@ -240,3 +252,120 @@
                                     :client-secret "new-secret"))
       (is (equal "https://example.com/" (issuer provider)))
       (is (equal "client-secret" (client-secret provider))))))
+
+(def-fixture activation ()
+  (with-test-store ()
+    (with-installation ()
+      (let* ((company (get-singleton-company *installation*))
+             (admin (make-user :email "admin@example.com"))
+             (provider (make-instance 'default-oidc-provider
+                                      :company company
+                                      :issuer "https://example.com/"
+                                      :client-id "client-id"
+                                      :client-secret "client-secret")))
+        (setf (roles:user-role company admin) 'roles:admin)
+        (flet ((record-test (&key (email "admin@example.com")
+                               error-message
+                               (tested-by admin)
+                               (ts (get-universal-time)))
+                 (make-instance 'oidc-test-result
+                                :provider provider
+                                :tested-by tested-by
+                                :email (unless error-message email)
+                                :error-message error-message
+                                :ts ts)))
+          (declare (ignorable #'record-test))
+          (&body))))))
+
+(test activation-requires-a-test
+  (with-fixture activation ()
+    (is (equal "Test this provider before activating it"
+               (oidc-activation-blocker provider admin)))
+    (record-test :error-message "access_denied")
+    (is (equal "The last test failed"
+               (oidc-activation-blocker provider admin)))))
+
+(test activation-requires-own-recent-test-as-admin
+  (with-fixture activation ()
+    (let ((other-admin (make-user :email "other@example.com")))
+      (setf (roles:user-role company other-admin) 'roles:admin)
+      (record-test :tested-by other-admin)
+      (is (equal "Test this provider yourself before activating it"
+                 (oidc-activation-blocker provider admin))))
+    (record-test :ts (- (get-universal-time) (* 2 3600)))
+    (is (str:containsp "more than an hour old"
+                       (oidc-activation-blocker provider admin)))
+    ;; The IdP signed in as someone who isn't an admin
+    (make-user :email "member@example.com")
+    (record-test :email "member@example.com")
+    (is (str:containsp "isn't an admin"
+                       (oidc-activation-blocker provider admin)))
+    ;; ... or as someone who doesn't exist yet
+    (record-test :email "new@example.com")
+    (is (str:containsp "isn't an admin"
+                       (oidc-activation-blocker provider admin)))
+    (record-test)
+    (is (eql nil (oidc-activation-blocker provider admin)))))
+
+(test editing-invalidates-tests
+  (with-fixture activation ()
+    (record-test :ts (- (get-universal-time) 10))
+    (is (eql nil (oidc-activation-blocker provider admin)))
+    (edit-default-oidc-provider provider
+                                :issuer "https://new.example.com/"
+                                :client-id "client-id"
+                                :client-secret nil)
+    (is (equal "The provider changed since the last test, test it again"
+               (oidc-activation-blocker provider admin)))
+    ;; A test in the same second as the edit doesn't count either
+    (record-test)
+    (is (equal "The provider changed since the last test, test it again"
+               (oidc-activation-blocker provider admin)))))
+
+(test activate-replaces-the-active-provider
+  (with-fixture activation ()
+    (let ((old (make-instance 'default-oidc-provider
+                              :company company
+                              :issuer "https://old.example.com/")))
+      (%activate-default-oidc-provider old)
+      (record-test)
+      (activate-default-oidc-provider provider admin)
+      (is (eql provider (active-default-oidc-provider)))
+      (is-false (activep old))
+      (is (equal "This provider is already active"
+                 (oidc-activation-blocker provider admin))))))
+
+(test activate-refuses-when-blocked
+  (with-fixture activation ()
+    (let ((old (make-instance 'default-oidc-provider
+                              :company company
+                              :issuer "https://old.example.com/")))
+      (%activate-default-oidc-provider old)
+      (signals simple-error
+        (activate-default-oidc-provider provider admin))
+      (is (eql old (active-default-oidc-provider)))
+      (is-false (activep provider)))))
+
+(test activation-is-only-for-the-singleton-company
+  (with-fixture activation ()
+    (let ((provider (make-instance 'default-oidc-provider
+                                   :company (make-instance 'screenshotbot/model/company:company)
+                                   :issuer "https://example.com/")))
+      (is (equal "This provider doesn't belong to this installation's company"
+                 (oidc-activation-blocker provider admin))))))
+
+(defclass multi-org-installation (multi-org-feature
+                                  installation)
+  ())
+
+(test activation-is-only-for-single-company-installs
+  (with-test-store ()
+    (let ((*installation* (make-instance 'multi-org-installation)))
+      (let* ((company (make-instance 'screenshotbot/model/company:company))
+             (admin (make-user :email "admin@example.com"))
+             (provider (make-instance 'default-oidc-provider
+                                      :company company
+                                      :issuer "https://example.com/")))
+        (setf (roles:user-role company admin) 'roles:admin)
+        (is (str:containsp "single-company"
+                           (oidc-activation-blocker provider admin)))))))

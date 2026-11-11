@@ -114,7 +114,6 @@
    (:file "async")
    (:file "installation")
    (:file "billing-meter")
-   (:file "default-oidc-provider")
    (:file "throttler")
    (:file "raft-redirect")
    (:file "server" :depends-on ("analytics" "raft-redirect"))
@@ -177,6 +176,7 @@
                  (:file "test-object")
                  (:file "note")
                  (:file "company-graph")))
+   (:file "default-oidc-provider")
    (:module "thresholds"
     :components ((:file "dsl")))
    (:file "audit-log")
