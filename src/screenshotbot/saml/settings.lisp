@@ -71,6 +71,8 @@
                 #:oidc-providers-for-company
                 #:issuer
                 #:oidc-provider-company
+                #:client-id
+                #:edit-default-oidc-provider
                 #:activep
                 #:oidc-test-signin-link
                 #:last-oidc-test-result
@@ -290,6 +292,10 @@ that's all the menu has."
                 </td>
                 <td>
                   <a href= (nibble () (start-oidc-test-login oidc)) class= "btn btn-sm btn-primary" >Test</a>
+                  ,(if (activep oidc)
+                       <button class= "btn btn-sm btn-secondary" disabled= "disabled"
+                               title= "This connection is active, so it can't be changed" >Edit</button>
+                       <a href= (nibble () (edit-oidc-form oidc)) class= "btn btn-sm btn-secondary" >Edit</a>)
                 </td>
               </tr>))
     </table>
@@ -537,16 +543,23 @@ functions the login flow uses, so they can't drift apart."
 since the providers we create don't have an RP-BASE-URL."
   (hex:make-full-url hunchentoot:*request* "/account/oauth-callback"))
 
-(defun oidc-form (company)
+(defun edit-oidc-form (oidc)
+  (oidc-form (oidc-provider-company oidc) :oidc oidc))
+
+(defun oidc-form (company &key oidc)
+  "The form to create an OIDC provider, or to edit OIDC if it's given."
   (check-principal! company)
   (let ((action (nibble (issuer client-id client-secret)
                   (submit-oidc-form company
+                                    :oidc oidc
                                     :issuer issuer
                                     :client-id client-id
                                     :client-secret client-secret))))
     <simple-card-page form-action=action >
       <div class= "card-header">
-        <h4 class= "card-title">New OIDC connection</h4>
+        <h4 class= "card-title">
+          ,(if oidc "Edit OIDC connection" "New OIDC connection")
+        </h4>
       </div>
 
       <div class= "mb-3">
@@ -561,38 +574,61 @@ since the providers we create don't have an RP-BASE-URL."
       <div class= "mb-2" >
         <label for= "issuer" class= "form-label">Issuer URL</label>
         <input type= "text" id= "issuer" name= "issuer" class= "form-control"
-               placeholder= "https://idp.example.com" />
+               placeholder= "https://idp.example.com"
+               value= (when oidc (issuer oidc)) />
       </div>
 
       <div class= "mb-2" >
         <label for= "client-id" class= "form-label">Client ID</label>
-        <input type= "text" id= "client-id" name= "client-id" class= "form-control" />
+        <input type= "text" id= "client-id" name= "client-id" class= "form-control"
+               value= (when oidc (client-id oidc)) />
       </div>
 
       <div class= "mb-2" >
         <label for= "client-secret" class= "form-label">Client Secret</label>
+        ,(when oidc
+           <div class= "text-muted">
+             Leave this blank to keep the current secret
+           </div>)
         <input type= "password" id= "client-secret" name= "client-secret" class= "form-control" />
       </div>
 
       <div class= "card-footer">
         <p class= "text-muted">
-          The connection won't be used for signing in until it's activated
+          ,(if oidc
+               "If you change anything, you'll need to test the connection again before activating it"
+               "The connection won't be used for signing in until it's activated")
         </p>
-        <input type= "submit" class= "btn btn-primary" value= "Create" />
+        <input type= "submit" class= "btn btn-primary" value= (if oidc "Save" "Create") />
       </div>
     </simple-card-page>))
 
-(defun submit-oidc-form (company &key issuer client-id client-secret)
+(defun submit-oidc-form (company &key oidc issuer client-id client-secret)
   (check-principal! company)
+  (when oidc
+    (assert (eql company (oidc-provider-company oidc))))
   (with-error-builder (:errors errors
                        :check check
-                       :form-builder (oidc-form company)
+                       :form-builder (oidc-form company :oidc oidc)
                        ;; Don't send the secret back to the browser
                        :form-args (:issuer issuer :client-id client-id)
-                       :success (%create-oidc company
-                                              :issuer issuer
-                                              :client-id client-id
-                                              :client-secret client-secret))
+                       :success (cond
+                                  (oidc
+                                   (edit-default-oidc-provider
+                                    oidc
+                                    :issuer issuer
+                                    :client-id client-id
+                                    :client-secret (when (str:non-blank-string-p client-secret)
+                                                     client-secret))
+                                   (go-back company))
+                                  (t
+                                   (%create-oidc company
+                                                 :issuer issuer
+                                                 :client-id client-id
+                                                 :client-secret client-secret))))
+    (check :issuer
+           (not (and oidc (activep oidc)))
+           "This connection is active, so it can't be changed")
     (check :issuer
            (str:non-blank-string-p issuer)
            "Issuer URL must be provided")
@@ -603,7 +639,8 @@ since the providers we create don't have an RP-BASE-URL."
            (str:non-blank-string-p client-id)
            "Client ID must be provided")
     (check :client-secret
-           (str:non-blank-string-p client-secret)
+           (or oidc
+               (str:non-blank-string-p client-secret))
            "Client Secret must be provided")
     (when (null errors)
       (check :issuer

@@ -20,7 +20,12 @@
                 #:oidc-test-result-email
                 #:oidc-test-result-error
                 #:oidc-test-result-tested-by
-                #:oidc-test-signin-link)
+                #:oidc-test-signin-link
+                #:edit-default-oidc-provider
+                #:oidc-edited-at
+                #:issuer
+                #:client-id
+                #:client-secret)
   (:import-from #:oidc/oidc
                 #:oidc-callback
                 #:discover)
@@ -187,3 +192,51 @@
   (with-fixture test-login ()
     (is (str:starts-with-p "https://idp.example.com/authorize?"
                            (oidc-test-signin-link provider user "/done")))))
+
+(test editing-a-provider
+  (with-fixture state ()
+    (let ((provider (make-provider)))
+      (is (eql nil (oidc-edited-at provider)))
+      (edit-default-oidc-provider provider
+                                  :issuer "https://new.example.com/"
+                                  :client-id "new-client-id"
+                                  :client-secret "new-secret")
+      (is (equal "https://new.example.com/" (issuer provider)))
+      (is (equal "new-client-id" (client-id provider)))
+      (is (equal "new-secret" (client-secret provider)))
+      (is-true (oidc-edited-at provider)))))
+
+(test editing-without-a-secret-keeps-the-secret
+  (with-fixture state ()
+    (let ((provider (make-provider)))
+      (edit-default-oidc-provider provider
+                                  :issuer "https://new.example.com/"
+                                  :client-id "client-id"
+                                  :client-secret nil)
+      (is (equal "client-secret" (client-secret provider))))))
+
+(test editing-without-changes-isnt-an-edit
+  (with-fixture state ()
+    (let ((provider (make-provider)))
+      (edit-default-oidc-provider provider
+                                  :issuer "https://example.com/"
+                                  :client-id "client-id"
+                                  :client-secret nil)
+      (is (eql nil (oidc-edited-at provider))))))
+
+(test cant-change-the-active-provider
+  (with-fixture state ()
+    (let ((provider (make-provider)))
+      (activate-default-oidc-provider provider)
+      (signals error
+        (edit-default-oidc-provider provider
+                                    :issuer "https://new.example.com/"
+                                    :client-id "client-id"
+                                    :client-secret nil))
+      (signals error
+        (edit-default-oidc-provider provider
+                                    :issuer "https://example.com/"
+                                    :client-id "client-id"
+                                    :client-secret "new-secret"))
+      (is (equal "https://example.com/" (issuer provider)))
+      (is (equal "client-secret" (client-secret provider))))))

@@ -55,7 +55,8 @@
   (:import-from #:screenshotbot/saml/settings
                 #:oidc-form
                 #:submit-oidc-form
-                #:start-oidc-test-login)
+                #:start-oidc-test-login
+                #:edit-oidc-form)
   (:import-from #:screenshotbot/default-oidc-provider
                 #:default-oidc-provider
                 #:activep
@@ -495,12 +496,13 @@ page or a redirect."
                           :client-secret "client-secret"))
       (is (eql nil (oidc-providers))))))
 
-(defun make-oidc-provider (company &key (issuer "https://idp.example.com"))
+(defun make-oidc-provider (company &key (issuer "https://idp.example.com")
+                                         (client-secret "client-secret"))
   (make-instance 'default-oidc-provider
                  :company company
                  :issuer issuer
                  :client-id "client-id"
-                 :client-secret "client-secret"
+                 :client-secret client-secret
                  :scope "openid email profile"))
 
 (test page-lists-oidc-providers
@@ -583,3 +585,106 @@ page or a redirect."
       (let ((provider (make-oidc-provider company)))
         (signals error
           (start-oidc-test-login provider))))))
+
+(test oidc-edit-form-is-prefilled
+  (with-fixture state ()
+    (with-fixture oidc ()
+      (let* ((provider (make-oidc-provider company :issuer "https://old.example.com"
+                                                   :client-secret "very-secret"))
+             (html (markup:write-html (edit-oidc-form provider))))
+        (is (str:containsp "Edit OIDC connection" html))
+        (is (str:containsp "https://old.example.com" html))
+        (is (str:containsp "value=\"client-id\"" html))
+        ;; The secret is never sent to the browser
+        (is (not (str:containsp "very-secret" html)))))))
+
+(test submitting-the-oidc-edit-form
+  (with-fixture state ()
+    (with-fixture oidc ()
+      (let ((provider (make-oidc-provider company)))
+        (signals hex:redirected
+          (submit-oidc-form company :oidc provider
+                                    :issuer "https://new.example.com"
+                                    :client-id "new-client-id"
+                                    :client-secret ""))
+        (is (equal "https://new.example.com"
+                   (screenshotbot/default-oidc-provider::issuer provider)))
+        (is (equal "new-client-id"
+                   (screenshotbot/default-oidc-provider::client-id provider)))
+        ;; Blank keeps the old secret
+        (is (equal "client-secret"
+                   (screenshotbot/default-oidc-provider::client-secret provider)))
+        ;; Editing doesn't create a new provider
+        (is (equal (list provider) (oidc-providers)))))))
+
+(test oidc-edit-form-validation
+  (with-fixture state ()
+    (with-fixture oidc ()
+      (let ((provider (make-oidc-provider company :issuer "https://old.example.com")))
+        (multiple-value-bind (html errors)
+            (submit-oidc-form company :oidc provider
+                                      :issuer "http://new.example.com"
+                                      :client-id "client-id"
+                                      :client-secret "")
+          (declare (ignore html))
+          (is (assoc :issuer errors)))
+        (is (equal "https://old.example.com"
+                   (screenshotbot/default-oidc-provider::issuer provider)))))))
+
+(test cant-edit-the-active-oidc-provider
+  (with-fixture state ()
+    (with-fixture oidc ()
+      (let ((provider (make-oidc-provider company :issuer "https://old.example.com")))
+        (screenshotbot/default-oidc-provider:activate-default-oidc-provider provider)
+        (let ((html (markup:write-html
+                     (company-sso-page :oid (oid company)))))
+          (is (str:containsp "it can&#39;t be changed" html)))
+        (let ((html (markup:write-html
+                     (submit-oidc-form company :oidc provider
+                                               :issuer "https://new.example.com"
+                                               :client-id "client-id"
+                                               :client-secret ""))))
+          (is (str:containsp "invalid-feedback\">This connection is active" html)))
+        (is (equal "https://old.example.com"
+                   (screenshotbot/default-oidc-provider::issuer provider)))))))
+
+(test cant-edit-another-companys-oidc-provider
+  (with-fixture state ()
+    (with-fixture oidc ()
+      (let* ((other (make-instance 'company))
+             (provider (make-oidc-provider company :issuer "https://old.example.com")))
+        (gk:allow :self-service-saml other)
+        (signals error
+          (submit-oidc-form other :oidc provider
+                                  :issuer "https://new.example.com"
+                                  :client-id "client-id"
+                                  :client-secret ""))
+        (is (equal "https://old.example.com"
+                   (screenshotbot/default-oidc-provider::issuer provider)))))))
+
+(test non-admin-cant-edit-oidc
+  (with-fixture state (:role 'roles:standard-member)
+    (with-fixture oidc ()
+      (let ((provider (make-oidc-provider company :issuer "https://old.example.com")))
+        (signals error
+          (edit-oidc-form provider))
+        (signals error
+          (submit-oidc-form company :oidc provider
+                                    :issuer "https://new.example.com"
+                                    :client-id "client-id"
+                                    :client-secret ""))
+        (is (equal "https://old.example.com"
+                   (screenshotbot/default-oidc-provider::issuer provider)))))))
+
+(test oidc-edit-errors-dont-send-the-secret-back
+  (with-fixture state ()
+    (with-fixture oidc ()
+      (let* ((provider (make-oidc-provider company :client-secret "stored-secret"))
+             (html (markup:write-html
+                    (submit-oidc-form company :oidc provider
+                                              :issuer ""
+                                              :client-id "client-id"
+                                              :client-secret "typed-secret"))))
+        (is (str:containsp "invalid-feedback" html))
+        (is (not (str:containsp "stored-secret" html)))
+        (is (not (str:containsp "typed-secret" html)))))))

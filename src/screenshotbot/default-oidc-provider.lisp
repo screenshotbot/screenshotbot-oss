@@ -28,6 +28,9 @@
    #:oidc-providers-for-company
    #:issuer
    #:oidc-provider-company
+   #:client-id
+   #:oidc-edited-at
+   #:edit-default-oidc-provider
    #:make-oidc-provider
    #:active-default-oidc-provider
    #:activep
@@ -55,14 +58,17 @@
   ((%scope :initarg :scope
           :reader scope)
    (%client-id :initarg :client-id
-               :reader client-id)
+               :reader client-id
+               :writer (setf %client-id))
    (%client-secret :initarg :client-secret
-                   :reader client-secret)
+                   :reader client-secret
+                   :writer (setf %client-secret))
    (%expiration :initarg :expiration-seconds
                 :initform (* 20 3600)
                 :reader expiration)
    (%issuer :initarg :issuer
-            :reader issuer)
+            :reader issuer
+            :writer (setf %issuer))
    (%company :initarg :company
              :index +company-index+
              :index-reader oidc-providers-for-company
@@ -75,7 +81,13 @@
              :reader activep
              :writer (setf %activep)
              :documentation "Whether this is the login for the installation. At most one
-provider can be active, see ACTIVATE-DEFAULT-OIDC-PROVIDER."))
+provider can be active, see ACTIVATE-DEFAULT-OIDC-PROVIDER.")
+   (%edited-at :initarg :edited-at
+               :initform nil
+               :reader oidc-edited-at
+               :writer (setf %edited-at)
+               :documentation "When the IdP config last changed. Tests from before this
+don't count."))
   (:metaclass persistent-class))
 
 (defun active-default-oidc-provider ()
@@ -91,6 +103,25 @@ active provider if there is one."
         (when old
           (setf (%activep old) nil))
         (setf (%activep provider) t)))))
+
+(defun edit-default-oidc-provider (provider &key issuer client-id client-secret)
+  "Change PROVIDER's IdP config. A NIL CLIENT-SECRET keeps the current
+secret. Changing the active provider isn't allowed: it would change
+everyone's login without a test. Create a new provider and activate it
+instead."
+  (bt:with-lock-held (*lock*)
+    (let* ((client-secret (or client-secret (client-secret provider)))
+           (changedp (not (and (equal issuer (issuer provider))
+                               (equal client-id (client-id provider))
+                               (equal client-secret (client-secret provider))))))
+      (when changedp
+        (when (activep provider)
+          (error "Can't change the active OIDC provider"))
+        (with-transaction ()
+          (setf (%issuer provider) issuer)
+          (setf (%client-id provider) client-id)
+          (setf (%client-secret provider) client-secret)
+          (setf (%edited-at provider) (get-universal-time)))))))
 
 (defun deactivate-default-oidc-provider (provider)
   (with-transaction ()
