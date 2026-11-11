@@ -30,7 +30,9 @@
                 #:logout-link)
   (:import-from #:core/ui/left-side-bar
                 #:left-side-bar-container
-                #:left-nav-item))
+                #:left-nav-item)
+  (:import-from #:auth/viewer-context
+                #:anonymous-viewer-context))
 (in-package :screenshotbot/left-side-bar)
 
 (named-readtables:in-readtable markup:syntax)
@@ -62,13 +64,23 @@
   (declare (ignore user))
   nil)
 
-(deftag left-side-bar (&key user company script-name)
+(defun current-viewer-context ()
+  (cond
+    ((boundp 'hunchentoot:*request*)
+     (auth:viewer-context hunchentoot:*request*))
+    (t
+     ;; e.g. rendering the template in tests
+     (make-instance 'anonymous-viewer-context))))
+
+(deftag left-side-bar (&key user company script-name
+                       (viewer-context (current-viewer-context)))
   (declare (optimize (speed 0) (debug 3)))
   <left-side-bar-container
     logo-small-src="/assets/images/logo-small-dark-scaled.webp"
     logo-src="/assets/images/logo-dark.svg"
     logo-alt="Screenshotbot logo" >
-    ,(render-menu-items (installation) :user user :company company :script-name script-name)
+    ,(render-menu-items (installation) viewer-context
+                        :user user :company company :script-name script-name)
     ,(render-user-menu (installation) :user user :company company)
   </left-side-bar-container>)
 
@@ -84,7 +96,8 @@
   #-screenshotbot-oss
   "/documentation")
 
-(defmethod render-menu-items (installation &key user company script-name)
+(defmethod render-menu-items (installation viewer-context &key user company script-name)
+  (declare (ignore viewer-context))
   <markup:merge-tag>
     <ul class="nav nav-pills flex-column ps-3 pe-3">
       <left-nav-item href= "/runs" image-class= "play_arrow"
