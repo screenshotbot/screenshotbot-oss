@@ -27,6 +27,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:util/testing
+                #:screenshot-static-page
                 #:with-fake-request)
   (:import-from #:core/installation/installation
                 #:*installation*)
@@ -915,3 +916,52 @@ page or a redirect."
       (signals error
         (%delete-oidc provider other))
       (is-false (bknr.indices:object-destroyed-p provider)))))
+
+(def-fixture screenshot-providers ()
+  "A default SAML connection, a SAML connection whose test failed, and
+an OIDC connection that was never tested."
+  (cl-mock:with-mocks ()
+    (cl-mock:if-called 'screenshotbot/login/saml::saml-entity-id
+                       (lambda (saml)
+                         (format nil "https://~(~a~).example.com/entity" (saml-name saml))))
+    (let ((okta (make-instance 'saml-auth-provider
+                               :company company
+                               :name "Okta"
+                               :defaultp t
+                               :idp-metadata-url "https://okta.example.com/metadata"))
+          (entra (make-instance 'saml-auth-provider
+                                :company company
+                                :name "Entra"
+                                :idp-metadata-url "https://entra.example.com/metadata")))
+      (make-instance 'screenshotbot/login/saml::saml-test-result
+                     :provider okta
+                     :tested-by user
+                     :email "admin@example.com")
+      (make-instance 'screenshotbot/login/saml::saml-test-result
+                     :provider entra
+                     :tested-by user
+                     :error-message "The response was received at the wrong URL")
+      (make-oidc-provider company :issuer "https://auth.example.com")
+      (&body))))
+
+(test screenshot-settings-page
+  (with-fixture state ()
+    (with-fixture screenshot-providers ()
+      (screenshot-static-page
+       :screenshotbot
+       "sso-settings-page"
+       (sso-settings-page)))))
+
+(test screenshot-settings-page-without-providers
+  (with-fixture state ()
+    (screenshot-static-page
+     :screenshotbot
+     "sso-settings-page-without-providers"
+     (sso-settings-page))))
+
+(test screenshot-settings-page-for-non-admins
+  (with-fixture state (:role 'roles:standard-member)
+    (screenshot-static-page
+     :screenshotbot
+     "sso-settings-page-for-non-admins"
+     (sso-settings-page))))
