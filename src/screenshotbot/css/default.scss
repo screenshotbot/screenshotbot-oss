@@ -1354,10 +1354,16 @@ screenshot-image-badge {
 
 .change-image-row {
     display: flex;
-    align-items: center;
+    // Keep the tops of the images aligned, so that the same part of
+    // both images is at the same height when they're different sizes.
+    align-items: flex-start;
     gap: 1em 0.5em;
     max-width: 100%;
     min-width: 0;
+
+    .arrow-forward {
+        align-self: center;
+    }
 }
 
 .image-container {
