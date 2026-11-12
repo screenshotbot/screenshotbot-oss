@@ -286,27 +286,66 @@
     ,@children
   </span>)
 
-(markup:deftag image-container (children)
+(markup:deftag image-container (children &key style)
   "A wrapper for images, that allows us to place widgets around the image."
-  <div class= "d-inline-block image-container">
+  <div class= "d-inline-block image-container" style=style >
     <div class= "position-relative">
         ,@children
       </div>
   </div>)
+
+(defun same-density-style (dims max-height)
+  "Flex style for an image container so that all the images in a
+change-image-row are scaled down by the same factor, i.e. they are
+shown at the same density. Flex items shrink in proportion to their
+flex-basis, and the basis is capped so that the tallest image fits
+in 80vh."
+  (let ((width (dimension-width dims)))
+    (format nil "flex: 0 1 min(~apx, calc(80vh * ~,6f)); min-width: 0;"
+            width
+            (/ width max-height))))
 
 (deftag change-image-row (&key before-image
                           after-image
                           before-dims
                           after-dims
                           figma-link)
+  (let* ((same-density-p (and before-dims after-dims))
+         (max-height (when same-density-p
+                       (max 1
+                            (dimension-height before-dims)
+                            (dimension-height after-dims))))
+         (img-class (when same-density-p
+                      "same-density")))
+    (flet ((container-style (dims)
+             (when same-density-p
+               (same-density-style dims max-height))))
+      (change-image-row-impl
+       :before-image before-image
+       :after-image after-image
+       :before-dims before-dims
+       :after-dims after-dims
+       :before-style (container-style before-dims)
+       :after-style (container-style after-dims)
+       :img-class img-class
+       :figma-link figma-link))))
+
+(defun change-image-row-impl (&key before-image
+                                after-image
+                                before-dims
+                                after-dims
+                                before-style
+                                after-style
+                                img-class
+                                figma-link)
   <div class="change-image-row">
 
-    <image-container>
+    <image-container style=before-style >
       <picture-with-img
         image=before-image
         dimensions=before-dims
         alt= "before image"
-        class= "change-image-left" />
+        class= (format nil "change-image-left ~a" (or img-class "")) />
       <image-badge class= "bg-secondary non-hover-badge" >
         Previous
       </image-badge>
@@ -320,12 +359,12 @@
       <mdi name= "arrow_forward" />
     </div>
 
-    <image-container>
+    <image-container style=after-style >
       <picture-with-img
         image=after-image
         dimensions=after-dims
         alt="after image"
-        class= "change-image-right" />
+        class= (format nil "change-image-right ~a" (or img-class "")) />
       <image-badge class= "bg-success" >
         Updated
       </image-badge>

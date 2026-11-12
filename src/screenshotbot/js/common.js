@@ -86,68 +86,106 @@ function prepareReportJs () {
     setupLiveOnAttach(".change-image-left", function () {
         //console.log("Setting up mouseover", this);
         var img = $(this);
-        var oldSrc = $(this).attr("src");
+        var container = img.closest("div");
         var newImg = $(this).closest(".change-image-row")
             .find(".change-image-right");
-        var newSrc = newImg.attr("src");
 
-        function findSourceTag(img) {
-            return $(img).closest("picture").find("source[type='image/webp'");
+        // On hover we show the updated image on top of the previous
+        // image, at the same density as the previous image. The
+        // overlay is clipped to the previous image's box, so if the
+        // updated image is larger only part of it is shown.
+        var overlay = null;
+
+        function getOverlay() {
+            if (overlay) {
+                return overlay;
+            }
+
+            overlay = newImg.closest("picture").clone();
+            var overlayImg = overlay.find("img");
+            overlayImg
+                .removeClass("change-image-right same-density")
+                .addClass("change-image-hover-overlay")
+                .attr("alt", "after image (hover)")
+                .attr("loading", "eager");
+
+            var oldWidth = parseInt(img.attr("width"));
+            var newWidth = parseInt(newImg.attr("width"));
+            if (oldWidth > 0 && newWidth > 0) {
+                // The overlay has no border of its own, and 100% is
+                // the content width of the clip box, i.e. the
+                // previous image's width without its border.
+                overlayImg.css(
+                    "width",
+                    "calc(100% * " + (newWidth / oldWidth) + ")");
+            }
+
+            overlay = $("<div class='change-image-hover-overlay-clip d-none'></div>")
+                .append(overlay);
+            img.closest("picture").after(overlay);
+            return overlay;
         }
-
-        var oldWebpSrcset = findSourceTag(this).attr("srcset");
-        var newWebpSrcset = findSourceTag(newImg).attr("srcset");
 
         var isTouching = false;
         var isMousing = false;
 
         function setImg() {
             let isUpdated = (isTouching || isMousing);
-            let [src, webpSrcset] =
-                isUpdated
-                ? [newSrc, newWebpSrcset]
-                : [oldSrc, oldWebpSrcset];
-            if (src === undefined) {
-                throw 'No src available';
-            }
-
-            if (webpSrcset ==- undefined) {
-                throw 'No webp srcset available';
-            }
 
             if (!$.fx.off) {
-                $(img).attr("src", src);
-                findSourceTag(img).attr("srcset", webpSrcset);
+                maybeShowOverlay(isUpdated);
             }
 
-            toggleVisibilityForTwoChildren($(img).closest("div"),
+            toggleVisibilityForTwoChildren(container,
                                            ".non-hover-badge",
                                            ".hover-badge",
                                            isUpdated);
         }
 
-        $(this).mouseover(function () {
+        function maybeShowOverlay(show) {
+            if (show) {
+                // Computed on every hover, since the image size
+                // depends on the window size.
+                getOverlay()
+                    .css({
+                        top: img.position().top + parseFloat(img.css("margin-top")),
+                        width: img.outerWidth(),
+                        height: img.outerHeight(),
+                    })
+                    .removeClass("d-none");
+                // Keep the space taken by the previous image, so the
+                // layout doesn't shift.
+                img.css("visibility", "hidden");
+            } else if (overlay) {
+                overlay.addClass("d-none");
+                img.css("visibility", "");
+            }
+        }
+
+        // We listen on the container rather than the image, since the
+        // image is hidden while the overlay is shown.
+        container.on("mouseenter", function () {
             isMousing = true;
             setImg();
         });
 
-        $(this).mouseout(function () {
+        container.on("mouseleave", function () {
             isMousing = false;
             setImg();
         });
 
-        $(this).contextmenu(function () {
+        container.on("contextmenu", function () {
             isMousing = false;
             setImg();
         });
 
-        $(this).on("touchstart", function (){
+        container.on("touchstart", function (){
             isTouching = true;
             setImg();
             return false;
         });
 
-        $(this).on("touchend", function () {
+        container.on("touchend", function () {
             isTouching = false;
 
             // This is a lie, because on mobile, we still want the

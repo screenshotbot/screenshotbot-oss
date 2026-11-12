@@ -1364,6 +1364,39 @@ screenshot-image-badge {
     max-width: 100%;
 }
 
+// Both images in a change-image-row are scaled by the same factor,
+// via the flex-basis on their .image-container (see
+// change-image-row), so each image just fills its container.
+.change-image.same-density {
+    width: 100%;
+    max-width: none;
+    max-height: none;
+    height: auto;
+}
+
+// The updated image shown over the previous image on hover, at the
+// same density. It's clipped to the previous image's box, so if it's
+// larger, only the top-left part of it is shown.
+.change-image-hover-overlay-clip {
+    position: absolute;
+    left: 0;
+    z-index: 5;
+    overflow: hidden;
+    // Same as .screenshot-image, since the previous image (and its
+    // background) is hidden while the overlay is shown.
+    background-image: url("/assets/images/img-background.png");
+    border: 1px solid lightgrey;
+}
+
+.change-image-hover-overlay {
+    margin-top: 0;
+    border: none;
+    background-image: none;
+    max-width: none;
+    max-height: none;
+    height: auto;
+}
+
 .leftside-menu {
     hr {
         visibility: hidden;

@@ -15,10 +15,12 @@
                 #:random-non-alpha-px
                 #:image-comparison-job
                 #:prepare-image-comparison
-                #:random-zoom-to-on-result)
+                #:random-zoom-to-on-result
+                #:same-density-style)
   (:import-from #:screenshotbot/model/image-comparison
                 #:transient-image-comparison)
   (:import-from #:screenshotbot/model/image
+                #:dimension
                 #:make-image
                 #:image
                 #:local-image)
@@ -565,3 +567,11 @@
    (with-fixture single-change ()
      (finishes
        (info-modal one nil)))))
+
+(test same-density-style
+  (is (equal "flex: 0 1 min(400px, calc(80vh * 1.333333)); min-width: 0;"
+             (same-density-style (make-instance 'dimension :width 400 :height 300)
+                                 300)))
+  (is (equal "flex: 0 1 min(300px, calc(80vh * 1.000000)); min-width: 0;"
+             (same-density-style (make-instance 'dimension :width 300 :height 200)
+                                 300))))
