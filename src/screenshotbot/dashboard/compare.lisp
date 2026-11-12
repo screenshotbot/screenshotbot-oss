@@ -47,8 +47,6 @@
   (:import-from #:core/ui/paginated
                 #:paginated)
   (:import-from #:bknr.datastore
-                #:store-object)
-  (:import-from #:bknr.datastore
                 #:persistent-class)
   (:import-from #:bknr.indices
                 #:hash-index)
@@ -103,8 +101,6 @@
   (:import-from #:screenshotbot/model/image-comparison
                 #:image-comparison-before
                 #:find-image-comparison-on-images)
-  (:import-from #:bknr.datastore
-                #:store-object)
   (:import-from #:screenshotbot/model/view
                 #:can-edit
                 #:can-edit!)
@@ -413,11 +409,6 @@
        (let ((masks (screenshot-masks (after-image self))))
         (json:encode-json-to-string
          `((:identical . ,(identical-p image-comparison))
-           ;; for debugging: e.g. if we need to delete the comparison
-           (:store-object-id
-            .
-            ,(when (typep image-comparison 'store-object)
-               (bknr.datastore:store-object-id image-comparison)))
            (:zoom-to . ,(nibble-url (nibble (:name :zoom) (random-zoom-to-on-result
                                                            image-comparison masks))))
            (:metrics . ,(nibble-url (nibble (:name :metrics)
