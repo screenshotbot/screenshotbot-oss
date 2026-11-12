@@ -90,7 +90,9 @@
                 #:oidc-test-result-error)
   (:import-from #:oidc/oidc
                 #:oidc
-                #:discover))
+                #:discover)
+  (:import-from #:screenshotbot/saml/login-all
+                #:login-all-url))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -384,7 +386,7 @@ recovery page for a recovery token, otherwise Settings."
               "Ready to set as default")
        </div>
        <div class= "small text-muted">
-         Not the default, but users can still sign in with it from your IdP.
+         Not the default, but users can still sign in with it from your IdP or from <a href= (login-all-url) >all sign-in options</a>.
        </div>
      </markup:merge-tag>)))
 
@@ -393,10 +395,15 @@ recovery page for a recovery token, otherwise Settings."
     ((activep oidc)
      <span class= "badge bg-success">Default</span>)
     (t
-     <span class= "text-muted">
-       ,(or (oidc-activation-blocker oidc (sso-principal (oidc-provider-company oidc)))
-            "Ready to set as default")
-     </span>)))
+     <markup:merge-tag>
+       <div class= "text-muted">
+         ,(or (oidc-activation-blocker oidc (sso-principal (oidc-provider-company oidc)))
+              "Ready to set as default")
+       </div>
+       <div class= "small text-muted">
+         Not the default, but users can still sign in with it from <a href= (login-all-url) >all sign-in options</a>.
+       </div>
+     </markup:merge-tag>)))
 
 (markup:deftag oidc-activation-button (&key oidc)
   (cond
@@ -715,7 +722,7 @@ since the providers we create don't have an RP-BASE-URL."
         <p class= "text-muted">
           ,(if oidc
                "If you change anything, you'll need to test the connection again before setting it as the default"
-               "The connection won't be used for signing in until it's set as the default")
+               "Until it's set as the default, users can only sign in with it from all sign-in options")
         </p>
         <input type= "submit" class= "btn btn-primary" value= (if oidc "Save" "Create") />
       </div>

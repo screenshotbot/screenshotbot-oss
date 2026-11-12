@@ -351,7 +351,8 @@
    (:module "saml"
     :serial t
     :if-feature (:and :lispworks :linux)
-    :components ((:file "settings")))
+    :components ((:file "login-all")
+                 (:file "settings")))
    (:module "scim"
     :serial t
     :components ((:file "model")
@@ -476,7 +477,8 @@
                              (:file "test-common")))
                (:module "saml"
                 :if-feature (:and :lispworks :linux)
-                :components ((:file "test-settings")))
+                :components ((:file "test-settings")
+                             (:file "test-login-all")))
                (:module "scim"
                 :components ((:file "test-dto")
                              (:file "test-filter")

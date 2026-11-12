@@ -415,12 +415,13 @@ page or a redirect."
       (let ((html (markup:write-html (activation-status :saml saml))))
         (is (not (str:containsp "Not the default" html)))))))
 
-(test non-default-oidc-doesnt-say-not-the-default
+(test non-default-oidc-says-it-still-accepts-sign-ins
   (with-fixture state ()
     (make-oidc-provider company)
     (let ((html (markup:write-html
                  (company-sso-page :oid (oid company)))))
-      (is (not (str:containsp "Not the default" html))))))
+      (is (str:containsp "Not the default" html))
+      (is (str:containsp "/account/login/all" html)))))
 
 (test non-admin-cant-see-the-confirmations
   (with-fixture state (:role 'roles:standard-member)
