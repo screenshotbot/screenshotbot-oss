@@ -301,7 +301,6 @@
     :serial t
     :components ((:file "model")
                  (:file "fake")
-                 (:file "settings")
                  (:file "redirect")))
    (:module "login"
     :serial t

@@ -10,6 +10,10 @@
                 #:defhandler)
   (:import-from #:screenshotbot/template
                 #:app-template)
+  (:import-from #:screenshotbot/settings-api
+                #:defsettings
+                #:should-show-settings-p
+                #:settings-template)
   (:import-from #:core/ui/taskie
                 #:taskie-page-title
                 #:taskie-list)
@@ -186,9 +190,22 @@ that's all the menu has."
     <hr class= "mb-0" />
   </markup:merge-tag>)
 
+(defun settings-sso-page-url ()
+  "The SSO page in Settings, for logged in admins of the current company."
+  "/settings/sso")
+
+(defun sso-return-url (company)
+  "Where to go back to after an action on COMPANY's SSO page: the
+recovery page for a recovery token, otherwise Settings."
+  (cond
+    ((typep (sso-principal company) 'recovery-token)
+     (sso-page-url company))
+    (t
+     (settings-sso-page-url))))
+
 (defhandler (nil :uri "/sso") ()
   (with-login ()
-    (hex:safe-redirect (sso-page-url (auth:current-company)))))
+    (hex:safe-redirect (settings-sso-page-url))))
 
 (defhandler (company-sso-page :uri "/company/:oid/sso") (oid)
   "List all the SAML configs for the company"
@@ -255,6 +272,39 @@ that's all the menu has."
 
 (defun sso-page (company)
   <app-template>
+    <sso-providers company=company />
+  </app-template>)
+
+(defun sso-settings-page ()
+  (let ((company (auth:current-company)))
+    (check-enabled! company)
+    <settings-template>
+      ,(cond
+         ((sso-principal company)
+          <sso-providers company=company />)
+         (t
+          <markup:merge-tag>
+            <h3>Single sign-on</h3>
+            <div class= "alert alert-info mt-3">
+              Only admins can configure single sign-on. Please ask an admin of your organization if you need to change it.
+            </div>
+          </markup:merge-tag>))
+    </settings-template>))
+
+(defsettings sso
+  :name "sso"
+  :title "Single sign-on"
+  :section :organization
+  :handler 'sso-settings-page)
+
+(defmethod should-show-settings-p (installation (name (eql 'sso)))
+  "Everyone sees it, non-admins get a banner instead of the settings."
+  (let ((company (auth:current-company)))
+    (and company
+         (gk:check :self-service-saml company))))
+
+(markup:deftag sso-providers (&key company)
+  <markup:merge-tag>
     <taskie-page-title title= "Configure Single-Sign-on">
       <a href= (nibble () (sso-form company)) class= "btn btn-primary mb-2" >Create SAML</a>
       <a href= (nibble () (oidc-form company)) class= "btn btn-primary mb-2" >Create OIDC</a>
@@ -301,7 +351,7 @@ that's all the menu has."
                 </td>
               </tr>))
     </table>
-  </app-template>)
+  </markup:merge-tag>)
 
 (markup:deftag test-result (&key result)
   (cond
@@ -373,7 +423,7 @@ that's all the menu has."
   (check-principal! company)
   (confirmation-page
    :yes (nibble () (%delete saml company))
-   :no (sso-page-url company)
+   :no (sso-return-url company)
    :danger t
    <p>Delete the SAML connection <b>,(saml-name saml)</b>? Its test results will be deleted too.</p>))
 
@@ -381,7 +431,7 @@ that's all the menu has."
   (check-provider! saml)
   (confirmation-page
    :yes (nibble () (%deactivate saml))
-   :no (sso-page-url (saml-company saml))
+   :no (sso-return-url (saml-company saml))
    :danger t
    <p>Deactivate the SAML connection <b>,(saml-name saml)</b>? Users will no longer be able to sign in with it, and anyone who doesn't have another way to sign in will be locked out.</p>))
 
@@ -401,7 +451,7 @@ principal."
   (check-principal! (saml-company saml)))
 
 (defun go-back (company)
-  (hex:safe-redirect (sso-page-url company)))
+  (hex:safe-redirect (sso-return-url company)))
 
 (defun %activate (saml)
   (activate-saml-provider saml (check-provider! saml))
@@ -431,13 +481,13 @@ principal."
   ;; failed test instead.
   (hex:safe-redirect (test-signin-link saml
                                        (check-provider! saml)
-                                       (sso-page-url (saml-company saml)))))
+                                       (sso-return-url (saml-company saml)))))
 
 (defun start-oidc-test-login (oidc)
   (let ((company (oidc-provider-company oidc)))
     (hex:safe-redirect (oidc-test-signin-link oidc
                                               (check-principal! company)
-                                              (sso-page-url company)))))
+                                              (sso-return-url company)))))
 
 (markup:deftag copyable-value (&key label value)
   ;; No NAME, so this isn't submitted with the form.

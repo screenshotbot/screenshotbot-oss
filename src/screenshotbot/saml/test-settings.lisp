@@ -58,7 +58,13 @@
                 #:start-oidc-test-login
                 #:edit-oidc-form
                 #:%activate-oidc
-                #:%activate)
+                #:%activate
+                #:sso-settings-page
+                #:sso-return-url)
+  (:import-from #:screenshotbot/settings-api
+                #:all-settings
+                #:settings-name
+                #:should-show-settings-p)
   (:import-from #:screenshotbot/default-oidc-provider
                 #:default-oidc-provider
                 #:activep
@@ -761,3 +767,57 @@ page or a redirect."
       (signals error
         (%activate-oidc provider))
       (is (eql nil (active-default-oidc-provider))))))
+
+(test settings-page-shows-the-providers
+  (with-fixture state ()
+    (make-oidc-provider company :issuer "https://one.example.com")
+    (let ((html (markup:write-html (sso-settings-page))))
+      (is (str:containsp "Configure Single-Sign-on" html))
+      (is (str:containsp "https://one.example.com" html))
+      ;; It's in the Settings layout
+      (is (str:containsp "settings-sidebar" html)))))
+
+(test non-admins-see-a-banner-on-the-settings-page
+  (with-fixture state (:role 'roles:standard-member)
+    (make-oidc-provider company :issuer "https://one.example.com")
+    (let ((html (markup:write-html (sso-settings-page))))
+      (is (str:containsp "Only admins can configure single sign-on" html))
+      (is (str:containsp "settings-sidebar" html))
+      ;; ... and not the providers
+      (is (not (str:containsp "https://one.example.com" html)))
+      (is (not (str:containsp "Create OIDC" html))))))
+
+(test admins-dont-see-the-banner
+  (with-fixture state ()
+    (let ((html (markup:write-html (sso-settings-page))))
+      (is (not (str:containsp "Only admins can configure single sign-on" html))))))
+
+(test settings-page-needs-the-gatekeeper
+  (with-fixture state (:enabled nil)
+    (signals error
+      (sso-settings-page))))
+
+(test settings-menu-item-is-for-everyone-with-the-gatekeeper
+  (with-fixture state ()
+    (is-true (should-show-settings-p *installation* 'screenshotbot/saml/settings::sso)))
+  (with-fixture state (:role 'roles:standard-member)
+    (is-true (should-show-settings-p *installation* 'screenshotbot/saml/settings::sso)))
+  (with-fixture state (:enabled nil)
+    (is-false (should-show-settings-p *installation* 'screenshotbot/saml/settings::sso))))
+
+(test there-is-only-one-sso-settings-page
+  (with-fixture state ()
+    (is (eql 1 (count "sso" (all-settings *installation*)
+                      :key (lambda (x) (settings-name (cdr x)))
+                      :test #'equal)))))
+
+(test admins-go-back-to-settings
+  (with-fixture state ()
+    (is (equal "/settings/sso" (sso-return-url company)))))
+
+(test recovery-tokens-go-back-to-the-recovery-page
+  (with-fixture anonymous ()
+    (let ((token (nth-value 1 (make-recovery-token company))))
+      (signals hex:redirected
+        (redeem-recovery-token token))
+      (is (equal (sso-page-url company) (sso-return-url company))))))
