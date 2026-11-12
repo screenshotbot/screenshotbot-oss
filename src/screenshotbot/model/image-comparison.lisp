@@ -80,6 +80,8 @@
                 #:def-store-migration)
   (:import-from #:util/events
                 #:with-tracing)
+  (:import-from #:gatekeeper/gatekeeper
+                #:defgk)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -89,6 +91,8 @@
    #:identical-p
    #:image-comparison-difference-value))
 (in-package :screenshotbot/model/image-comparison)
+
+(defgk :image-strip-diff)
 
 (with-transient-copy (transient-image-comparison abstract-image-comparison)
   (defclass image-comparison (store-object)
