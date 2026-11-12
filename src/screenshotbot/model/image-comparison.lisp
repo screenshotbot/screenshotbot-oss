@@ -86,6 +86,7 @@
    #:image-comparison
    #:image-comparison-after
    #:image-comparison-result
+   #:image-comparison-changed-rows
    #:identical-p
    #:image-comparison-difference-value))
 (in-package :screenshotbot/model/image-comparison)
@@ -107,7 +108,12 @@
                 :documentation "A result inducating that the images differ only in exif data")
    (result :initarg :result
            :accessor image-comparison-result
-           :documentation "The final image object"))
+           :documentation "The final image object")
+   (changed-rows :initarg :changed-rows
+                 :initform nil
+                 :accessor image-comparison-changed-rows
+                 :documentation "A 1-pixel wide image with the same height as RESULT, that is red
+for each row that has a change. NIL if it hasn't been computed."))
   (:documentation "An image comparison. These live in *STORED-CACHE*, and are
 persisted by the IMAGE-COMPARISON-SUBSYSTEM, not as store objects."))
 
@@ -266,7 +272,8 @@ hit too much in production."
 (defclass image-comparison-subsystem ()
   ())
 
-(defconstant +snapshot-version+ 1)
+(defconstant +snapshot-version+ 2
+  "Version 2 adds CHANGED-ROWS.")
 
 (defun gc-comparisons ()
   (fset:do-set (var *stored-cache*)
@@ -297,6 +304,14 @@ hit too much in production."
                (encode (image-comparison-result obj) output)
                (encode
                 (if (identical-p obj) 1 0)
+                output)
+               (encode
+                (let ((changed-rows (image-comparison-changed-rows obj)))
+                  ;; Don't drop the whole comparison if we only lost
+                  ;; the changed-rows image.
+                  (unless (and (typep changed-rows 'store-object)
+                               (object-destroyed-p changed-rows))
+                    changed-rows))
                 output)))
       (fset:do-set (next stored-cache)
         (write-single next)))))
@@ -308,38 +323,44 @@ hit too much in production."
     (lambda ()
       (Write-snapshot pathname stored-cache))))
 
+(defun read-snapshot (pathname)
+  "Reads a snapshot written by WRITE-SNAPSHOT (of any supported version),
+and returns the list of TRANSIENT-IMAGE-COMPARISONs."
+  (with-open-file (stream pathname
+                          :direction :input
+                          :element-type '(unsigned-byte 8))
+    (let ((version (decode stream)))
+      (unless (<= version +snapshot-version+)
+        (error "Unsupported version for image comparisons snapshot: ~a" version))
+      (let ((size (decode stream)))
+        (flet ((read-single ()
+                 (make-instance 'transient-image-comparison
+                                :before (decode stream)
+                                :after (decode stream)
+                                :result (decode stream)
+                                :identical-p (ecase (decode stream)
+                                               (1 t)
+                                               (0 nil))
+                                :changed-rows (when (>= version 2)
+                                                (decode stream)))))
+          (loop for i from 0 below size
+                for obj = (read-single)
+                ;; When we copy this snapshot to
+                ;; different server, some images may
+                ;; not be available.
+                #+lispworks #+lispworks
+                if (and
+                    (image-comparison-before obj)
+                    (image-comparison-after obj))
+                collect obj))))))
+
 (defmethod restore-subsystem ((store bknr.datastore:store) (self image-comparison-subsystem) &key until)
   (declare (ignore until) (optimize (debug 3)))
   (log:info "Restoring image-comparison subsystem")
   (let ((snapshot-file (store-subsystem-snapshot-pathname store self)))
     (when (probe-file snapshot-file)
-      (with-open-file (stream snapshot-file
-                              :direction :input
-                              :element-type '(unsigned-byte 8))
-        (let ((version (decode stream)))
-          (unless (<= version +snapshot-version+)
-            (error "Unsupported version for image comparisons snapshot: ~a" version))
-          (let ((size (decode stream)))
-            (flet ((read-single ()
-                     (make-instance 'transient-image-comparison
-                                    :before (decode stream)
-                                    :after (decode stream)
-                                    :result (decode stream)
-                                    :identical-p (ecase (decode stream)
-                                                   (1 t)
-                                                   (0 nil)))))
-              (let ((objs (loop for i from 0 below size
-                                for obj = (read-single)
-                                ;; When we copy this snapshot to
-                                ;; different server, some images may
-                                ;; not be available.
-                                #+lispworks #+lispworks
-                                if (and
-                                    (image-comparison-before obj)
-                                    (image-comparison-after obj))
-                                  collect obj)))
-                (setf *stored-cache*
-                      (fset:convert 'fset:set objs)))))))))
+      (setf *stored-cache*
+            (fset:convert 'fset:set (read-snapshot snapshot-file)))))
   (log:info "Loaded ~a image-comparison objects" (fset:size *stored-cache*)))
 
 (defmethod all-subsystem-objects ((self image-comparison-subsystem))

@@ -15,6 +15,10 @@
                 #:def-easy-macro)
   (:import-from #:screenshotbot/model/image-comparison
                 #:remove-image-comparison
+                #:image-comparison-changed-rows
+                #:read-snapshot
+                #:write-snapshot
+                #:transient-image-comparison
                 #:identical-p
                 #:image-comparison-difference-value
                 #:image-comparison-after
@@ -38,6 +42,7 @@
                 #:magick-get-image-width
                 #:with-wand)
   (:import-from #:bknr.datastore
+                #:encode
                 #:delete-object)
   (:import-from #:screenshotbot/model/company
                 #:company)
@@ -191,7 +196,8 @@ to be doing image processing during the request."
     (tmpdir:with-tmpdir (dir)
       (with-test-store (:dir dir)
         (let ((im1 (make-image-comparison :before "foo" :after "bar"
-                                          :result "car"))
+                                          :result "car"
+                                          :changed-rows "dar"))
               (im2 (make-image-comparison :before "foo1" :after "bar1"
                                           :result "car1")))
           (util:safe-snapshot)
@@ -201,8 +207,67 @@ to be doing image processing during the request."
         (is (eql 2 (fset:size *stored-cache*)))
         (is (equal "foo"
                    (image-comparison-before (fset:least *stored-cache*))))
+        (is (equal "dar"
+                   (image-comparison-changed-rows (fset:least *stored-cache*))))
+        (is (equal nil
+                   (image-comparison-changed-rows (fset:greatest *stored-cache*))))
         (is (equal "foo1"
                    (image-comparison-before (fset:greatest *stored-cache*))))))))
+
+(def-easy-macro with-v1-snapshot (&binding pathname &fn fn)
+  "Writes a snapshot in the version 1 format, from before CHANGED-ROWS
+was added."
+  (uiop:with-temporary-file (:pathname pathname :stream output
+                             :element-type '(unsigned-byte 8))
+    (encode 1 output)
+    (encode 2 output)
+    (loop for (before after result identical) in '(("foo" "bar" "car" 1)
+                                                   ("foo1" "bar1" "car1" 0))
+          do
+             (encode before output)
+             (encode after output)
+             (encode result output)
+             (encode identical output))
+    (finish-output output)
+    (fn pathname)))
+
+(test can-read-v1-snapshot
+  (with-v1-snapshot (pathname)
+    (let ((objs (sort (read-snapshot pathname) #'string<
+                      :key #'image-comparison-before)))
+      (is (equal '("foo" "foo1") (mapcar #'image-comparison-before objs)))
+      (is (equal '("bar" "bar1") (mapcar #'image-comparison-after objs)))
+      (is (equal '("car" "car1") (mapcar #'image-comparison-result objs)))
+      (is (equal '(t nil) (mapcar #'identical-p objs)))
+      (is (equal '(nil nil) (mapcar #'image-comparison-changed-rows objs))))))
+
+(test write-and-read-snapshot-with-changed-rows
+  (uiop:with-temporary-file (:pathname pathname)
+    (write-snapshot pathname
+                    (fset:set
+                     (make-instance 'transient-image-comparison
+                                    :before "foo" :after "bar" :result "car"
+                                    :identical-p t
+                                    :changed-rows "dar")))
+    (let ((obj (first (read-snapshot pathname))))
+      (is (equal "foo" (image-comparison-before obj)))
+      (is (equal "car" (image-comparison-result obj)))
+      (is-true (identical-p obj))
+      (is (equal "dar" (image-comparison-changed-rows obj))))))
+
+(test deleted-changed-rows-is-written-as-nil
+  (with-fixture state ()
+    (let ((changed-rows (make-image :pathname im1)))
+      (delete-object changed-rows)
+      (uiop:with-temporary-file (:pathname pathname)
+        (write-snapshot pathname
+                        (fset:set
+                         (make-instance 'transient-image-comparison
+                                        :before "foo" :after "bar" :result "car"
+                                        :changed-rows changed-rows)))
+        (let ((obj (first (read-snapshot pathname))))
+          (is (equal "foo" (image-comparison-before obj)))
+          (is (equal nil (image-comparison-changed-rows obj))))))))
 
 (defun check-for-bad-state ()
   #+lispworks ;; For reasons I don't yet understand, this failed on SBCL
