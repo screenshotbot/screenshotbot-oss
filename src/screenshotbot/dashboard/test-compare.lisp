@@ -15,8 +15,9 @@
                 #:random-non-alpha-px
                 #:image-comparison-job
                 #:prepare-image-comparison
-                #:random-zoom-to-on-result
-                #:image-comparison)
+                #:random-zoom-to-on-result)
+  (:import-from #:screenshotbot/model/image-comparison
+                #:transient-image-comparison)
   (:import-from #:screenshotbot/model/image
                 #:make-image
                 #:image
@@ -115,7 +116,7 @@
 
 (test random-zoom-to-on-result
   (with-fixture state ()
-    (let ((imc (make-instance 'image-comparison
+    (let ((imc (make-instance 'transient-image-comparison
                                :result (make-screenshot im1))))
       (finishes (random-zoom-to-on-result imc nil))
       (let ((res
@@ -128,7 +129,7 @@
 (test metrics-page-happy-path
   "Since this uses FLI, we need to be extra careful about testing it."
   (with-fixture state ()
-    (let ((imc (make-instance 'image-comparison
+    (let ((imc (make-instance 'transient-image-comparison
                               :before (make-image :pathname im1 :for-tests t)
                               :after (make-image :pathname im2 :for-tests t)
                               :result (make-screenshot im1))))
