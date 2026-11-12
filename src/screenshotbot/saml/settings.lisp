@@ -92,7 +92,9 @@
                 #:oidc
                 #:discover)
   (:import-from #:screenshotbot/saml/login-all
-                #:login-all-url))
+                #:login-all-url)
+  (:import-from #:core/ui/mdi
+                #:mdi))
 (in-package :screenshotbot/saml/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -329,11 +331,15 @@ recovery page for a recovery token, otherwise Settings."
                 <td><tt>,(saml-entity-id saml)</tt></td>
                 <td><test-result result= (last-saml-test-result saml) /></td>
                 <td><activation-status saml=saml /></td>
-                <td>
-                  <a href= (nibble () (start-test-login saml)) class= "btn btn-sm btn-primary" >Test</a>
-                  <activation-button saml=saml />
-                  <a href= (nibble () (edit-sso-form saml)) class= "btn btn-sm btn-secondary" >Edit</a>
-                  <delete-button saml=saml />
+                <td class= "text-nowrap" >
+                  <test-button href= (nibble () (start-test-login saml)) />
+                  <actions-menu>
+                    <activation-button saml=saml />
+                    <action-item icon= "edit" label= "Edit"
+                                 href= (nibble () (edit-sso-form saml)) />
+                    <li><hr class= "dropdown-divider" /></li>
+                    <delete-button saml=saml />
+                  </actions-menu>
                 </td>
               </tr>))
       ,@(loop for oidc in (fset:convert 'list (oidc-providers-for-company company))
@@ -344,18 +350,54 @@ recovery page for a recovery token, otherwise Settings."
                 <td><tt>,(issuer oidc)</tt></td>
                 <td><oidc-test-result result= (last-oidc-test-result oidc) /></td>
                 <td><oidc-activation-status oidc=oidc /></td>
-                <td>
-                  <a href= (nibble () (start-oidc-test-login oidc)) class= "btn btn-sm btn-primary" >Test</a>
-                  <oidc-activation-button oidc=oidc />
-                  ,(if (activep oidc)
-                       <button class= "btn btn-sm btn-secondary" disabled= "disabled"
-                               title= "This is the default connection, so it can't be changed" >Edit</button>
-                       <a href= (nibble () (edit-oidc-form oidc)) class= "btn btn-sm btn-secondary" >Edit</a>)
-                  <oidc-delete-button oidc=oidc />
+                <td class= "text-nowrap" >
+                  <test-button href= (nibble () (start-oidc-test-login oidc)) />
+                  <actions-menu>
+                    <oidc-activation-button oidc=oidc />
+                    <action-item icon= "edit" label= "Edit"
+                                 href= (unless (activep oidc)
+                                         (nibble () (edit-oidc-form oidc)))
+                                 reason= "The default connection can't be changed" />
+                    <li><hr class= "dropdown-divider" /></li>
+                    <oidc-delete-button oidc=oidc />
+                  </actions-menu>
                 </td>
               </tr>))
     </table>
   </markup:merge-tag>)
+
+(markup:deftag test-button (&key href)
+  <a href=href class= "btn btn-sm btn-primary" >
+    <mdi name= "play_arrow" class= "align-middle" /> Test
+  </a>)
+
+(markup:deftag actions-menu (children)
+  <div class= "dropdown d-inline-block" >
+    <button class= "btn btn-sm btn-outline-secondary" type= "button"
+            data-bs-toggle= "dropdown" aria-expanded= "false" aria-label= "More actions" >
+      <mdi name= "more_vert" class= "align-middle" />
+    </button>
+    <ul class= "dropdown-menu dropdown-menu-end" >
+      ,@children
+    </ul>
+  </div>)
+
+(markup:deftag action-item (&key icon label href reason danger)
+  "An item in ACTIONS-MENU. Without HREF it's disabled, and REASON says
+why: disabled elements don't get hover events, so a tooltip wouldn't
+show."
+  (let ((class (format nil "dropdown-item~@[ text-danger~]" danger)))
+    <li>
+      ,(if href
+           <a class=class href=href >
+             <mdi name=icon class= "align-middle me-2" />,(progn label)
+           </a>
+           <span class= (format nil "~a disabled" class) aria-disabled= "true" >
+             <mdi name=icon class= "align-middle me-2" />,(progn label)
+             ,(when reason
+                <div class= "small text-wrap" style= "max-width: 16rem" >,(progn reason)</div>)
+           </span>)
+    </li>))
 
 (markup:deftag test-result (&key result)
   (cond
@@ -406,42 +448,39 @@ recovery page for a recovery token, otherwise Settings."
      </markup:merge-tag>)))
 
 (markup:deftag oidc-activation-button (&key oidc)
-  (cond
-    ((activep oidc)
-     nil)
-    ((oidc-activation-blocker oidc (sso-principal (oidc-provider-company oidc)))
-     <button class= "btn btn-sm btn-success" disabled= "disabled" >Set Default</button>)
-    (t
-     <a href= (nibble () (%activate-oidc oidc)) class= "btn btn-sm btn-success" >Set Default</a>)))
+  ;; There's no Unset Default for OIDC, see the docs.
+  (unless (activep oidc)
+    (let ((blocker (oidc-activation-blocker oidc (sso-principal (oidc-provider-company oidc)))))
+      <action-item icon= "star" label= "Set Default"
+                   href= (unless blocker
+                           (nibble () (%activate-oidc oidc)))
+                   reason=blocker />)))
 
 (markup:deftag activation-button (&key saml)
   (cond
     ((defaultp saml)
-     <a href= (nibble () (confirm-deactivate saml)) class= "btn btn-sm btn-warning" >Unset Default</a>)
-    ((activation-blocker saml (sso-principal (saml-company saml)))
-     <button class= "btn btn-sm btn-success" disabled= "disabled" >Set Default</button>)
+     <action-item icon= "star_border" label= "Unset Default"
+                  href= (nibble () (confirm-deactivate saml)) />)
     (t
-     <a href= (nibble () (%activate saml)) class= "btn btn-sm btn-success" >Set Default</a>)))
+     (let ((blocker (activation-blocker saml (sso-principal (saml-company saml)))))
+       <action-item icon= "star" label= "Set Default"
+                    href= (unless blocker
+                            (nibble () (%activate saml)))
+                    reason=blocker />))))
 
 (markup:deftag delete-button (&key saml)
-  (cond
-    ((defaultp saml)
-     <button class= "btn btn-sm btn-danger" disabled= "disabled"
-             title= "Unset this connection as the default before deleting it" >Delete</button>)
-    (t
-     <a href= (let ((company (saml-company saml)))
-                (nibble () (confirm-delete saml company)))
-        class= "btn btn-sm btn-danger" >Delete</a>)))
+  <action-item icon= "delete" label= "Delete" danger=t
+               href= (unless (defaultp saml)
+                       (let ((company (saml-company saml)))
+                         (nibble () (confirm-delete saml company))))
+               reason= "Unset this connection as the default before deleting it" />)
 
 (markup:deftag oidc-delete-button (&key oidc)
-  (cond
-    ((activep oidc)
-     <button class= "btn btn-sm btn-danger" disabled= "disabled"
-             title= "Set another connection as the default before deleting this one" >Delete</button>)
-    (t
-     <a href= (let ((company (oidc-provider-company oidc)))
-                (nibble () (confirm-delete-oidc oidc company)))
-        class= "btn btn-sm btn-danger" >Delete</a>)))
+  <action-item icon= "delete" label= "Delete" danger=t
+               href= (unless (activep oidc)
+                       (let ((company (oidc-provider-company oidc)))
+                         (nibble () (confirm-delete-oidc oidc company))))
+               reason= "Set another connection as the default before deleting this one" />)
 
 (defun confirm-delete-oidc (oidc company)
   (check-principal! company)

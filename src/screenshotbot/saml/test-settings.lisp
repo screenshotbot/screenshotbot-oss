@@ -399,8 +399,8 @@ page or a redirect."
   (with-fixture state ()
     (with-fixture edit ()
       (let ((html (markup:write-html (activation-button :saml saml))))
-        (is (str:containsp ">Set Default<" html))
-        (is (not (str:containsp ">Activate<" html)))))))
+        (is (str:containsp "</i>Set Default" html))
+        (is (not (str:containsp "Activate" html)))))))
 
 (test default-saml-shows-a-default-badge
   (with-fixture state ()
@@ -592,7 +592,7 @@ page or a redirect."
     (make-oidc-provider company)
     (let ((html (markup:write-html
                  (company-sso-page :oid (oid company)))))
-      (is (str:containsp ">Test</a>" html))
+      (is (str:containsp "play_arrow</i> Test" html))
       (is (str:containsp "Never tested" html)))))
 
 (test oidc-rows-show-the-last-test-result
@@ -686,7 +686,7 @@ page or a redirect."
         (screenshotbot/default-oidc-provider::%activate-default-oidc-provider provider)
         (let ((html (markup:write-html
                      (company-sso-page :oid (oid company)))))
-          (is (str:containsp "it can&#39;t be changed" html)))
+          (is (str:containsp "The default connection can" html)))
         (let ((html (markup:write-html
                      (submit-oidc-form company :oidc provider
                                                :issuer "https://new.example.com"
@@ -747,7 +747,7 @@ page or a redirect."
     (let ((html (markup:write-html
                  (company-sso-page :oid (oid company)))))
       (is (str:containsp "Test this provider before setting it as the default" html))
-      (is (str:containsp "disabled=\"disabled\">Set Default" html)))))
+      (is (str:containsp "dropdown-item disabled" html)))))
 
 (test oidc-activate-button-after-a-passing-test
   (with-fixture state ()
@@ -756,7 +756,7 @@ page or a redirect."
       (let ((html (markup:write-html
                    (company-sso-page :oid (oid company)))))
         (is (str:containsp "Ready to set as default" html))
-        (is (not (str:containsp "disabled=\"disabled\">Set Default" html)))))))
+        (is (not (str:containsp "dropdown-item disabled" html)))))))
 
 (test activating-an-oidc-provider
   (with-fixture state ()
@@ -867,7 +867,7 @@ page or a redirect."
     (make-oidc-provider company)
     (let ((html (markup:write-html
                  (company-sso-page :oid (oid company)))))
-      (is (str:containsp "btn-danger\">Delete</a>" html)))))
+      (is (str:containsp "<a class=\"dropdown-item text-danger\"" html)))))
 
 (test active-oidc-provider-cant-be-deleted-from-the-page
   (with-fixture state ()
