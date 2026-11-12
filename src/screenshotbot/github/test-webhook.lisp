@@ -34,6 +34,9 @@
              (github-get-canonical-repo "git@github.com:foo/bar.git")))
   (is (equal "https://github.com/foo/bar"
              (github-get-canonical-repo "ssh://git@github.com:foo/bar.git")))
+  (is (equal "https://github.com/foo/bar"
+             ;; GitHub's alternate SSH host, for SSH over port 443
+             (github-get-canonical-repo "git@ssh.github.com:foo/bar.git")))
   ;; This one is a hack to deal with people using an incorrect repo URL
   (is (equal "https://github.com/foo/bar"
              (github-get-canonical-repo "ssh://git@github.com/foo/bar.git"))))
@@ -41,4 +44,8 @@
 (test github-get-canonical-repo-for-bitbucket
   (is (equal "https://bitbucket.org/tdrhq/fast-example"
              (github-get-canonical-repo
-              "git@bitbucket.org:tdrhq/fast-example.git"))))
+              "git@bitbucket.org:tdrhq/fast-example.git")))
+  (is (equal "https://bitbucket.org/tdrhq/fast-example"
+             ;; Bitbucket's alternate SSH host, for SSH over port 443
+             (github-get-canonical-repo
+              "git@ssh.bitbucket.org:tdrhq/fast-example.git"))))
