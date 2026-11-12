@@ -320,7 +320,7 @@
 (test activation-requires-a-test
   (with-fixture state ()
     (with-fixture activation ()
-      (is (equal "Test this provider before activating it"
+      (is (equal "Test this provider before setting it as the default"
                  (activation-blocker provider admin)))
       (record-test :error-message "bad audience")
       (is (equal "The last test failed"
@@ -332,7 +332,7 @@
       (let ((other-admin (make-user :email "other@example.com")))
         (setf (roles:user-role company other-admin) 'roles:admin)
         (record-test :tested-by other-admin)
-        (is (equal "Test this provider yourself before activating it"
+        (is (equal "Test this provider yourself before setting it as the default"
                    (activation-blocker provider admin))))
       (record-test :ts (- (get-universal-time) (* 2 3600)))
       (is (str:containsp "more than an hour old"
@@ -358,7 +358,7 @@
         (is (eql provider (default-saml-auth-provider)))
         (is-true (defaultp provider))
         (is-false (defaultp old))
-        (is (equal "This provider is already active"
+        (is (equal "This provider is already the default"
                    (activation-blocker provider admin)))
         (deactivate-saml-provider provider)
         (is (eql nil (default-saml-auth-provider)))))))

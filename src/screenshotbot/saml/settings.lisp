@@ -347,7 +347,7 @@ recovery page for a recovery token, otherwise Settings."
                   <oidc-activation-button oidc=oidc />
                   ,(if (activep oidc)
                        <button class= "btn btn-sm btn-secondary" disabled= "disabled"
-                               title= "This connection is active, so it can't be changed" >Edit</button>
+                               title= "This is the default connection, so it can't be changed" >Edit</button>
                        <a href= (nibble () (edit-oidc-form oidc)) class= "btn btn-sm btn-secondary" >Edit</a>)
                   <oidc-delete-button oidc=oidc />
                 </td>
@@ -376,21 +376,26 @@ recovery page for a recovery token, otherwise Settings."
 (markup:deftag activation-status (&key saml)
   (cond
     ((defaultp saml)
-     <span class= "badge bg-success">Active</span>)
+     <span class= "badge bg-success">Default</span>)
     (t
-     <span class= "text-muted">
-       ,(or (activation-blocker saml (sso-principal (saml-company saml)))
-            "Ready to activate")
-     </span>)))
+     <markup:merge-tag>
+       <div class= "text-muted">
+         ,(or (activation-blocker saml (sso-principal (saml-company saml)))
+              "Ready to set as default")
+       </div>
+       <div class= "small text-muted">
+         Not the default, but users can still sign in with it from your IdP.
+       </div>
+     </markup:merge-tag>)))
 
 (markup:deftag oidc-activation-status (&key oidc)
   (cond
     ((activep oidc)
-     <span class= "badge bg-success">Active</span>)
+     <span class= "badge bg-success">Default</span>)
     (t
      <span class= "text-muted">
        ,(or (oidc-activation-blocker oidc (sso-principal (oidc-provider-company oidc)))
-            "Ready to activate")
+            "Ready to set as default")
      </span>)))
 
 (markup:deftag oidc-activation-button (&key oidc)
@@ -398,24 +403,24 @@ recovery page for a recovery token, otherwise Settings."
     ((activep oidc)
      nil)
     ((oidc-activation-blocker oidc (sso-principal (oidc-provider-company oidc)))
-     <button class= "btn btn-sm btn-success" disabled= "disabled" >Activate</button>)
+     <button class= "btn btn-sm btn-success" disabled= "disabled" >Set Default</button>)
     (t
-     <a href= (nibble () (%activate-oidc oidc)) class= "btn btn-sm btn-success" >Activate</a>)))
+     <a href= (nibble () (%activate-oidc oidc)) class= "btn btn-sm btn-success" >Set Default</a>)))
 
 (markup:deftag activation-button (&key saml)
   (cond
     ((defaultp saml)
-     <a href= (nibble () (confirm-deactivate saml)) class= "btn btn-sm btn-warning" >Deactivate</a>)
+     <a href= (nibble () (confirm-deactivate saml)) class= "btn btn-sm btn-warning" >Unset Default</a>)
     ((activation-blocker saml (sso-principal (saml-company saml)))
-     <button class= "btn btn-sm btn-success" disabled= "disabled" >Activate</button>)
+     <button class= "btn btn-sm btn-success" disabled= "disabled" >Set Default</button>)
     (t
-     <a href= (nibble () (%activate saml)) class= "btn btn-sm btn-success" >Activate</a>)))
+     <a href= (nibble () (%activate saml)) class= "btn btn-sm btn-success" >Set Default</a>)))
 
 (markup:deftag delete-button (&key saml)
   (cond
     ((defaultp saml)
      <button class= "btn btn-sm btn-danger" disabled= "disabled"
-             title= "Deactivate this connection before deleting it" >Delete</button>)
+             title= "Unset this connection as the default before deleting it" >Delete</button>)
     (t
      <a href= (let ((company (saml-company saml)))
                 (nibble () (confirm-delete saml company)))
@@ -425,7 +430,7 @@ recovery page for a recovery token, otherwise Settings."
   (cond
     ((activep oidc)
      <button class= "btn btn-sm btn-danger" disabled= "disabled"
-             title= "Activate another connection before deleting this one" >Delete</button>)
+             title= "Set another connection as the default before deleting this one" >Delete</button>)
     (t
      <a href= (let ((company (oidc-provider-company oidc)))
                 (nibble () (confirm-delete-oidc oidc company)))
@@ -462,7 +467,7 @@ deleted (e.g. a double click)."
    :yes (nibble () (%deactivate saml))
    :no (sso-return-url (saml-company saml))
    :danger t
-   <p>Deactivate the SAML connection <b>,(saml-name saml)</b>? Users will no longer be able to sign in with it, and anyone who doesn't have another way to sign in will be locked out.</p>))
+   <p>Stop using the SAML connection <b>,(saml-name saml)</b> as the default? The sign-in page will stop sending users to it. It will still accept sign-ins that start from your IdP, so delete it to turn it off completely.</p>))
 
 (defun %delete (saml company)
   "COMPANY is captured when the page renders, since SAML might already be
@@ -590,7 +595,7 @@ functions the login flow uses, so they can't drift apart."
         <label for= "idp-metadata" class= "form-label">Identity Provider Metadata URL</label>
         ,(when url-locked-p
            <div class= "text-muted">
-             This connection is active, so its IdP can't be changed. To switch IdPs, create a new connection, test it and activate it.
+             This is the default connection, so its IdP can't be changed. To switch IdPs, create a new connection, test it and set it as the default.
            </div>)
         <input type= "text" name= "idp-metadata" id= "idp-metadata" class= "form-control"   placeholder= "https://idp.example.com/saml/metadata"
                value= (when saml (saml-idp-metadata-url saml))
@@ -600,7 +605,7 @@ functions the login flow uses, so they can't drift apart."
       <div class= "card-footer">
         <p class= "text-muted">
           ,(if saml
-               "If you change the IdP, you'll need to test the connection again before activating it"
+               "If you change the IdP, you'll need to test the connection again before setting it as the default"
                "You will have an opportunity to test the connection after you create it")
         </p>
         <input type= "submit" class= "btn btn-primary" value= (if saml "Save" "Create") />
@@ -625,7 +630,7 @@ functions the login flow uses, so they can't drift apart."
            (not (and saml
                      (defaultp saml)
                      (not (equal idp-metadata (saml-idp-metadata-url saml)))))
-           "This connection is active, so its IdP can't be changed")
+           "This is the default connection, so its IdP can't be changed")
     (check :name
            (str:non-blank-string-p name)
            "Name must not be empty")
@@ -709,8 +714,8 @@ since the providers we create don't have an RP-BASE-URL."
       <div class= "card-footer">
         <p class= "text-muted">
           ,(if oidc
-               "If you change anything, you'll need to test the connection again before activating it"
-               "The connection won't be used for signing in until it's activated")
+               "If you change anything, you'll need to test the connection again before setting it as the default"
+               "The connection won't be used for signing in until it's set as the default")
         </p>
         <input type= "submit" class= "btn btn-primary" value= (if oidc "Save" "Create") />
       </div>
@@ -741,7 +746,7 @@ since the providers we create don't have an RP-BASE-URL."
                                                  :client-secret client-secret))))
     (check :issuer
            (not (and oidc (activep oidc)))
-           "This connection is active, so it can't be changed")
+           "This is the default connection, so it can't be changed")
     (check :issuer
            (str:non-blank-string-p issuer)
            "Issuer URL must be provided")

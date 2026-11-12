@@ -43,6 +43,8 @@
                 #:%delete
                 #:confirm-delete
                 #:confirm-deactivate
+                #:activation-status
+                #:activation-button
                 #:sso-form
                 #:sp-metadata-url)
   (:import-from #:screenshotbot/login/saml
@@ -383,8 +385,42 @@ page or a redirect."
     (with-fixture edit ()
       (setf (slot-value saml 'screenshotbot/login/saml::%defaultp) t)
       (let ((html (markup:write-html (confirm-deactivate saml))))
-        (is (str:containsp "locked out" html)))
+        (is (str:containsp "still accept sign-ins that start from your IdP" html)))
       (is-true (screenshotbot/login/saml:defaultp saml)))))
+
+(test non-default-saml-says-it-still-accepts-sign-ins
+  (with-fixture state ()
+    (with-fixture edit ()
+      (let ((html (markup:write-html (activation-status :saml saml))))
+        (is (str:containsp "Not the default" html))))))
+
+(test non-default-saml-has-a-set-default-button
+  (with-fixture state ()
+    (with-fixture edit ()
+      (let ((html (markup:write-html (activation-button :saml saml))))
+        (is (str:containsp ">Set Default<" html))
+        (is (not (str:containsp ">Activate<" html)))))))
+
+(test default-saml-shows-a-default-badge
+  (with-fixture state ()
+    (with-fixture edit ()
+      (setf (slot-value saml 'screenshotbot/login/saml::%defaultp) t)
+      (let ((html (markup:write-html (activation-status :saml saml))))
+        (is (str:containsp ">Default<" html))))))
+
+(test default-saml-doesnt-say-not-the-default
+  (with-fixture state ()
+    (with-fixture edit ()
+      (setf (slot-value saml 'screenshotbot/login/saml::%defaultp) t)
+      (let ((html (markup:write-html (activation-status :saml saml))))
+        (is (not (str:containsp "Not the default" html)))))))
+
+(test non-default-oidc-doesnt-say-not-the-default
+  (with-fixture state ()
+    (make-oidc-provider company)
+    (let ((html (markup:write-html
+                 (company-sso-page :oid (oid company)))))
+      (is (not (str:containsp "Not the default" html))))))
 
 (test non-admin-cant-see-the-confirmations
   (with-fixture state (:role 'roles:standard-member)
@@ -523,7 +559,7 @@ page or a redirect."
                  (company-sso-page :oid (oid company)))))
       (is (str:containsp "https://one.example.com" html))
       (is (str:containsp "https://two.example.com" html))
-      (is (str:containsp "Test this provider before activating it" html))
+      (is (str:containsp "Test this provider before setting it as the default" html))
       (is (not (str:containsp "client-secret" html))))))
 
 (test page-shows-the-active-oidc-provider
@@ -532,7 +568,7 @@ page or a redirect."
       (screenshotbot/default-oidc-provider::%activate-default-oidc-provider provider)
       (let ((html (markup:write-html
                    (company-sso-page :oid (oid company)))))
-        (is (str:containsp "Active" html))
+        (is (str:containsp ">Default<" html))
         (is (not (str:containsp "Inactive" html)))))))
 
 (test page-doesnt-list-another-companys-oidc-providers
@@ -654,7 +690,7 @@ page or a redirect."
                                                :issuer "https://new.example.com"
                                                :client-id "client-id"
                                                :client-secret ""))))
-          (is (str:containsp "invalid-feedback\">This connection is active" html)))
+          (is (str:containsp "invalid-feedback\">This is the default connection" html)))
         (is (equal "https://old.example.com"
                    (screenshotbot/default-oidc-provider::issuer provider)))))))
 
@@ -708,8 +744,8 @@ page or a redirect."
     (make-oidc-provider company)
     (let ((html (markup:write-html
                  (company-sso-page :oid (oid company)))))
-      (is (str:containsp "Test this provider before activating it" html))
-      (is (str:containsp "disabled=\"disabled\">Activate" html)))))
+      (is (str:containsp "Test this provider before setting it as the default" html))
+      (is (str:containsp "disabled=\"disabled\">Set Default" html)))))
 
 (test oidc-activate-button-after-a-passing-test
   (with-fixture state ()
@@ -717,8 +753,8 @@ page or a redirect."
       (make-passing-oidc-test provider user)
       (let ((html (markup:write-html
                    (company-sso-page :oid (oid company)))))
-        (is (str:containsp "Ready to activate" html))
-        (is (not (str:containsp "disabled=\"disabled\">Activate" html)))))))
+        (is (str:containsp "Ready to set as default" html))
+        (is (not (str:containsp "disabled=\"disabled\">Set Default" html)))))))
 
 (test activating-an-oidc-provider
   (with-fixture state ()
@@ -837,7 +873,7 @@ page or a redirect."
       (screenshotbot/default-oidc-provider::%activate-default-oidc-provider provider)
       (let ((html (markup:write-html
                    (company-sso-page :oid (oid company)))))
-        (is (str:containsp "Activate another connection before deleting this one" html)))
+        (is (str:containsp "Set another connection as the default before deleting this one" html)))
       (signals error
         (%delete-oidc provider company))
       (is-false (bknr.indices:object-destroyed-p provider)))))
