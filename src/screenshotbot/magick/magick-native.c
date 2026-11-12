@@ -392,3 +392,44 @@ extern double screenshotbot_calculate_row_rmse_square(PixelIterator* one, PixelI
 
         return ((double)res) / MAX_QUANTUM / MAX_QUANTUM / width1 / 4 ;
 }
+
+/*
+ * Reads the next row from INPUT, and writes the next row of OUTPUT,
+ * which is expected to be 1 pixel wide: red if any pixel in the input
+ * row is not fully transparent, and transparent otherwise.
+ *
+ * Returns 1 if the row had a change, 0 if it didn't, and -1 if there
+ * are no more rows or on error.
+ */
+extern int screenshotbot_mark_changed_row(PixelIterator* input,
+                                          PixelIterator* output) {
+        size_t width = 0;
+        PixelWand** row = PixelGetNextIteratorRow(input, &width);
+
+        size_t owidth = 0;
+        PixelWand** orow = PixelGetNextIteratorRow(output, &owidth);
+
+        if (!row || !orow || owidth < 1) {
+                return -1;
+        }
+
+        int changed = 0;
+        for (size_t x = 0; x < width; x++) {
+                if (PixelGetAlphaQuantum(row[x]) != 0) {
+                        changed = 1;
+                        break;
+                }
+        }
+
+        if (changed) {
+                draw_red(orow[0]);
+        } else {
+                draw_transparent(orow[0]);
+        }
+
+        if (!PixelSyncIterator(output)) {
+                return -1;
+        }
+
+        return changed;
+}

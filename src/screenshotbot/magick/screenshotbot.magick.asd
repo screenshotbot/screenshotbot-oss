@@ -32,6 +32,7 @@
   :serial t
   :defsystem-depends-on (:screenshotbot.magick.build)
   :depends-on (:util/fiveam
+               :cl-mock
                :tmpdir
                :fiveam-matchers
                :util/digests

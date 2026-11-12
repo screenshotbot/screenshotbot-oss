@@ -685,7 +685,10 @@
                               0)
            wand))))))
 
-(defun compare-wands (before after p &key in-place-p)
+(defun compare-wands (before after p &key in-place-p changed-rows-output)
+  "Compare BEFORE and AFTER, and save the result to P. If
+CHANGED-ROWS-OUTPUT is provided, we also save the image from
+SAVE-CHANGED-ROWS to it, while the result is still in memory."
   ;; Limit the size of the before and after wands before doing the
   ;; comparison
   (limit-size-for-webp before)
@@ -697,6 +700,8 @@
                           :highlight-color "red"
                           :lowlight-color "none")
     (save-as-webp result p)
+    (when changed-rows-output
+      (save-changed-rows result changed-rows-output))
     same-p))
 
 (def-easy-macro with-pixel-wand (&binding pixel-wand &fn fn)
@@ -817,3 +822,43 @@ to be encoded timestamps."
            (dotimes (i rows)
              (incf result (screenshotbot-calculate-row-rmse-square pix1 pix2)))
            (sqrt (/ result rows))))))))
+
+(fli:define-foreign-function screenshotbot-mark-changed-row
+    ((input (:pointer pixel-iterator))
+     (output (:pointer pixel-iterator)))
+  :result-type :int)
+
+(defun foreign-function-defined-p (name)
+  "Whether the foreign function NAME has been loaded. This is useful
+when we hot-reload Lisp code without reloading magick-native."
+  #+lispworks
+  (fli:foreign-symbol-defined-p name)
+  #-lispworks
+  (cffi:foreign-symbol-pointer name))
+
+(defun save-changed-rows (result output)
+  "Given the RESULT wand of an image comparison, save a 1-pixel wide
+image to OUTPUT with the same height as RESULT, which is red for every
+row that has a change, and transparent otherwise.
+
+Returns T if OUTPUT was written. If magick-native is too old to have
+screenshotbot_mark_changed_row, we warn and return NIL without
+touching OUTPUT."
+  (unless (foreign-function-defined-p "screenshotbot_mark_changed_row")
+    (warn "screenshotbot_mark_changed_row not present in magick-native")
+    (return-from save-changed-rows nil))
+  (let ((height (magick-get-image-height result)))
+    (with-wand (strip)
+      (with-pixel-wand (pwand)
+        (pixel-set-color pwand "none")
+        (check-boolean
+         (magick-new-image strip 1 height pwand)
+         strip))
+      (set-wand-alpha-channel strip)
+      (with-pixel-iterator (input result)
+        (with-pixel-iterator (strip-iterator strip)
+          (dotimes (y height)
+            (when (< (screenshotbot-mark-changed-row input strip-iterator) 0)
+              (error "Could not mark changed row ~a" y)))))
+      (save-as-webp strip output)
+      t)))

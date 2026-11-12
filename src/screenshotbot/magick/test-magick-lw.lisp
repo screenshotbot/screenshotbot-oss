@@ -10,6 +10,8 @@
         #:fiveam-matchers
         #:screenshotbot/mask-rect-api)
   (:import-from #:screenshotbot/magick/magick-lw
+                #:save-changed-rows
+                #:foreign-function-defined-p
                 #:calculate-difference-rmse
                 #:screenshotbot-inplace-compare-v2
                 #:get-px-as-string
@@ -56,6 +58,9 @@
                 #:def-easy-macro)
   (:import-from #:fiveam-matchers/strings
                 #:matches-regex)
+  (:import-from #:cl-mock
+                #:if-called
+                #:with-mocks)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli)))
@@ -576,6 +581,51 @@
   (with-single-pixel-image (:wand wand :height 20 :width 30 :default-mark t)
     (is (equal "srgb(10,0,0)" (get-px-as-string wand 10 19)))
     (is (equal "srgba(0,0,0,0)" (get-px-as-string wand 3 3)))))
+
+(test save-changed-rows
+  (with-single-pixel-image (:wand wand :height 20 :width 30 :default-mark t)
+    (mark-pixel wand 3 4)
+    (uiop:with-temporary-file (:pathname output :type "webp")
+      (is-true (save-changed-rows wand output))
+      (with-wand (strip :file output)
+        (is (eql 1 (magick-get-image-width strip)))
+        (is (eql 20 (magick-get-image-height strip)))
+        (is (equal "srgb(255,0,0)" (get-px-as-string strip 0 19)))
+        (is (equal "srgb(255,0,0)" (get-px-as-string strip 0 4)))
+        (is (equal "srgba(0,0,0,0)" (get-px-as-string strip 0 18)))
+        (is (equal "srgba(0,0,0,0)" (get-px-as-string strip 0 0)))))))
+
+(test foreign-function-defined-p
+  (is-true (foreign-function-defined-p "screenshotbot_mark_changed_row"))
+  (is-false (foreign-function-defined-p "screenshotbot_not_a_real_function")))
+
+(test save-changed-rows-with-old-magick-native
+  (with-mocks ()
+    (if-called 'foreign-function-defined-p
+               (lambda (name)
+                 (declare (ignore name))
+                 nil))
+    (with-single-pixel-image (:wand wand :height 20 :width 30 :default-mark t)
+      (uiop:with-temporary-file (:pathname output :type "webp")
+        (signals warning
+          (save-changed-rows wand output))
+        (is-false (handler-bind ((warning #'muffle-warning))
+                    (save-changed-rows wand output)))
+        (is (eql 0 (with-open-file (s output) (file-length s))))))))
+
+(test compare-wands-saves-changed-rows
+  (with-single-pixel-image (:wand before :height 20 :width 30)
+    (with-single-pixel-image (:wand after :height 20 :width 30)
+      (mark-pixel after 3 7)
+      (uiop:with-temporary-file (:pathname output :type "webp")
+        (uiop:with-temporary-file (:pathname changed-rows :type "webp")
+          (is-false (compare-wands before after output
+                                   :in-place-p t
+                                   :changed-rows-output changed-rows))
+          (with-wand (strip :file changed-rows)
+            (is (eql 20 (magick-get-image-height strip)))
+            (is (equal "srgb(255,0,0)" (get-px-as-string strip 0 7)))
+            (is (equal "srgba(0,0,0,0)" (get-px-as-string strip 0 8)))))))))
 
 (test comparison-using-dist-preconditions
   (with-single-pixel-image (:wand wand1 :height 20 :width 30)
