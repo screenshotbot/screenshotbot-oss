@@ -70,7 +70,7 @@
 #+(or screenshotbot-oss eaase-oss)
 (progn
   (quick-patch:register "https://github.com/moderninterpreters/markup" "master")
-  (quick-patch:register "https://github.com/moderninterpreters/cl-sentry-client" "master")
+  ;; cl-sentry-client is exported to third-party/ by copybara.
   (register-tdrhq "easy-macros" "main")
   (register-tdrhq "fiveam-matchers" "master")
   (register-tdrhq "cl-unix-sockets" "master")
