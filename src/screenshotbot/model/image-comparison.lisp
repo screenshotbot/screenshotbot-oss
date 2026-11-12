@@ -5,9 +5,6 @@
                 #:store-object-id
                 #:snapshot-subsystem-async
                 #:persistent-class)
-  (:import-from #:screenshotbot/model/transient-object
-                #:make-transient-clone
-                #:with-transient-copy)
   (:import-from #:bknr.datastore
                 #:store-object)
   (:import-from #:bknr.indices
@@ -80,12 +77,13 @@
                 #:def-store-migration)
   (:import-from #:util/events
                 #:with-tracing)
+  (:import-from #:util/store
+                #:with-class-validation)
   (:import-from #:gatekeeper/gatekeeper
                 #:defgk)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
-   #:%image-comparisons-for-before
    #:image-comparison-after
    #:image-comparison-result
    #:identical-p
@@ -94,7 +92,27 @@
 
 (defgk :image-strip-diff)
 
-(with-transient-copy (transient-image-comparison abstract-image-comparison)
+(defclass transient-image-comparison ()
+  ((before :initarg :before
+           :reader image-comparison-before)
+   (after :initarg :after
+          :reader image-comparison-after)
+   (difference-value :initarg :difference-value
+                     :initform nil
+                     :accessor image-comparison-difference-value
+                     :documentation "The difference as computed as a value, currently only RMSE metric. Will be a DOUBLE or NIL for older image-comparisons where this was not computed.")
+   (identical-p :initform nil
+                :accessor identical-p
+                :initarg :identical-p
+                :documentation "A result inducating that the images differ only in exif data")
+   (result :initarg :result
+           :accessor image-comparison-result
+           :documentation "The final image object"))
+  (:documentation "An image comparison. These live in *STORED-CACHE*, and are
+persisted by the IMAGE-COMPARISON-SUBSYSTEM, not as store objects."))
+
+#+screenshotbot-oss
+(with-class-validation
   (defclass image-comparison (store-object)
     ((before :initarg :before
              :reader image-comparison-before
@@ -105,20 +123,19 @@
             :reader image-comparison-after
             :relaxed-object-reference t)
      (masks :initarg :masks
-            :initform nil
-            :documentation "DEPRECATED: do not use.")
+            :initform nil)
      (difference-value :initarg :difference-value
                        :initform nil
-                       :accessor image-comparison-difference-value
-                       :documentation "The difference as computed as a value, currently only RMSE metric. Will be a DOUBLE or NIL for older image-comparisons where this was not computed.")
+                       :accessor image-comparison-difference-value)
      (identical-p :initform nil
                   :accessor identical-p
-                  :initarg :identical-p
-                  :documentation "A result inducating that the images differ only in exif data")
+                  :initarg :identical-p)
      (result :initarg :result
-             :accessor image-comparison-result
-             :documentation "The final image object"))
-    (:metaclass persistent-class)))
+             :accessor image-comparison-result))
+    (:metaclass persistent-class)
+    (:documentation "DEPRECATED: We no longer create these. Image comparisons are
+TRANSIENT-IMAGE-COMPARISONs now. This is only here so that older
+self-hosted stores that still have these objects can be loaded.")))
 
 (defmethod fset:compare ((a transient-image-comparison)
                          (b transient-image-comparison))
