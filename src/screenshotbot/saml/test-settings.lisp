@@ -60,7 +60,9 @@
                 #:%activate-oidc
                 #:%activate
                 #:sso-settings-page
-                #:sso-return-url)
+                #:sso-return-url
+                #:confirm-delete-oidc
+                #:%delete-oidc)
   (:import-from #:screenshotbot/settings-api
                 #:all-settings
                 #:settings-name
@@ -821,3 +823,58 @@ page or a redirect."
       (signals hex:redirected
         (redeem-recovery-token token))
       (is (equal (sso-page-url company) (sso-return-url company))))))
+
+(test oidc-rows-have-a-delete-button
+  (with-fixture state ()
+    (make-oidc-provider company)
+    (let ((html (markup:write-html
+                 (company-sso-page :oid (oid company)))))
+      (is (str:containsp "btn-danger\">Delete</a>" html)))))
+
+(test active-oidc-provider-cant-be-deleted-from-the-page
+  (with-fixture state ()
+    (let ((provider (make-oidc-provider company)))
+      (screenshotbot/default-oidc-provider::%activate-default-oidc-provider provider)
+      (let ((html (markup:write-html
+                   (company-sso-page :oid (oid company)))))
+        (is (str:containsp "Activate another connection before deleting this one" html)))
+      (signals error
+        (%delete-oidc provider company))
+      (is-false (bknr.indices:object-destroyed-p provider)))))
+
+(test delete-oidc-asks-for-confirmation
+  (with-fixture state ()
+    (let ((provider (make-oidc-provider company :issuer "https://one.example.com")))
+      (let ((html (markup:write-html (confirm-delete-oidc provider company))))
+        (is (str:containsp "Delete the OIDC connection for" html))
+        (is (str:containsp "https://one.example.com" html)))
+      (is-false (bknr.indices:object-destroyed-p provider)))))
+
+(test delete-oidc-from-the-page
+  (with-fixture state ()
+    (let ((provider (make-oidc-provider company)))
+      (signals hex:redirected
+        (%delete-oidc provider company))
+      (is-true (bknr.indices:object-destroyed-p provider))
+      (is (eql nil (oidc-providers)))
+      ;; A second click is fine
+      (signals hex:redirected
+        (%delete-oidc provider company)))))
+
+(test non-admin-cant-delete-oidc
+  (with-fixture state (:role 'roles:standard-member)
+    (let ((provider (make-oidc-provider company)))
+      (signals error
+        (confirm-delete-oidc provider company))
+      (signals error
+        (%delete-oidc provider company))
+      (is-false (bknr.indices:object-destroyed-p provider)))))
+
+(test cant-delete-oidc-through-another-company
+  (with-fixture state ()
+    (let ((provider (make-oidc-provider company))
+          (other (make-instance 'company)))
+      (gk:allow :self-service-saml other)
+      (signals error
+        (%delete-oidc provider other))
+      (is-false (bknr.indices:object-destroyed-p provider)))))

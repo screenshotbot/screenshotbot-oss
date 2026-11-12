@@ -82,6 +82,7 @@
                 #:active-default-oidc-provider
                 #:activate-default-oidc-provider
                 #:deactivate-default-oidc-provider
+                #:delete-default-oidc-provider
                 #:oidc-activation-blocker
                 #:oidc-test-signin-link
                 #:last-oidc-test-result
@@ -348,6 +349,7 @@ recovery page for a recovery token, otherwise Settings."
                        <button class= "btn btn-sm btn-secondary" disabled= "disabled"
                                title= "This connection is active, so it can't be changed" >Edit</button>
                        <a href= (nibble () (edit-oidc-form oidc)) class= "btn btn-sm btn-secondary" >Edit</a>)
+                  <oidc-delete-button oidc=oidc />
                 </td>
               </tr>))
     </table>
@@ -418,6 +420,33 @@ recovery page for a recovery token, otherwise Settings."
      <a href= (let ((company (saml-company saml)))
                 (nibble () (confirm-delete saml company)))
         class= "btn btn-sm btn-danger" >Delete</a>)))
+
+(markup:deftag oidc-delete-button (&key oidc)
+  (cond
+    ((activep oidc)
+     <button class= "btn btn-sm btn-danger" disabled= "disabled"
+             title= "Activate another connection before deleting this one" >Delete</button>)
+    (t
+     <a href= (let ((company (oidc-provider-company oidc)))
+                (nibble () (confirm-delete-oidc oidc company)))
+        class= "btn btn-sm btn-danger" >Delete</a>)))
+
+(defun confirm-delete-oidc (oidc company)
+  (check-principal! company)
+  (confirmation-page
+   :yes (nibble () (%delete-oidc oidc company))
+   :no (sso-return-url company)
+   :danger t
+   <p>Delete the OIDC connection for <b>,(issuer oidc)</b>? Its test results will be deleted too.</p>))
+
+(defun %delete-oidc (oidc company)
+  "COMPANY is captured when the page renders, since OIDC might already be
+deleted (e.g. a double click)."
+  (check-principal! company)
+  (unless (bknr.indices:object-destroyed-p oidc)
+    (assert (eql company (oidc-provider-company oidc)))
+    (delete-default-oidc-provider oidc))
+  (go-back company))
 
 (defun confirm-delete (saml company)
   (check-principal! company)

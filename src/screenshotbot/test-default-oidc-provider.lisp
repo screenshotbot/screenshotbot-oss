@@ -16,6 +16,7 @@
                 #:oidc-activation-blocker
                 #:oidc-test-result
                 #:deactivate-default-oidc-provider
+                #:delete-default-oidc-provider
                 #:oidc-providers-for-company
                 #:make-oidc-provider
                 #:test-oidc-provider
@@ -430,3 +431,38 @@ can use SSO on this installation."
       (oidc-callback auth "the-code" "/done"))
     (is (str:containsp "Site admins"
                        (oidc-test-result-error (last-oidc-test-result provider))))))
+
+(test deleting-a-provider
+  (with-fixture test-login ()
+    (signals hex:redirected
+      (oidc-callback auth nil "/done" :error "access_denied"))
+    (let ((result (last-oidc-test-result provider)))
+      (delete-default-oidc-provider provider)
+      (is-true (bknr.indices:object-destroyed-p provider))
+      ;; Its test results are deleted too
+      (is-true (bknr.indices:object-destroyed-p result)))))
+
+(test cant-delete-the-active-provider
+  (with-fixture state ()
+    (let ((provider (make-provider)))
+      (%activate-default-oidc-provider provider)
+      (signals error
+        (delete-default-oidc-provider provider))
+      (is-false (bknr.indices:object-destroyed-p provider)))))
+
+(test test-login-for-a-deleted-provider-isnt-recorded
+  (with-fixture test-login ()
+    (delete-default-oidc-provider provider)
+    (signals error
+      (oidc-callback auth "the-code" "/done"))
+    (is (eql nil (bknr.datastore:class-instances 'oidc-test-result)))))
+
+(test cant-edit-a-deleted-provider
+  (with-fixture state ()
+    (let ((provider (make-provider)))
+      (delete-default-oidc-provider provider)
+      (signals error
+        (edit-default-oidc-provider provider
+                                    :issuer "https://new.example.com/"
+                                    :client-id "client-id"
+                                    :client-secret nil)))))

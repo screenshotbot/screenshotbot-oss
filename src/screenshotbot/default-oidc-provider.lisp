@@ -48,6 +48,7 @@
    #:activep
    #:activate-default-oidc-provider
    #:deactivate-default-oidc-provider
+   #:delete-default-oidc-provider
    #:oidc-activation-blocker
    #:oidc-test-signin-link
    #:last-oidc-test-result
@@ -131,6 +132,8 @@ secret. Changing the active provider isn't allowed: it would change
 everyone's login without a test. Create a new provider and activate it
 instead."
   (bt:with-lock-held (*lock*)
+    (when (bknr.indices:object-destroyed-p provider)
+      (error "This OIDC connection was deleted"))
     (let* ((client-secret (or client-secret (client-secret provider)))
            (changedp (not (and (equal issuer (issuer provider))
                                (equal client-id (client-id provider))
@@ -145,6 +148,17 @@ instead."
 
 (defun deactivate-default-oidc-provider (provider)
   (setf (%activep provider) nil))
+
+(defun delete-default-oidc-provider (provider)
+  "Delete PROVIDER and its test results. The active provider can't be
+deleted, since that would lock everyone out: activate another provider
+first."
+  (bt:with-lock-held (*lock*)
+    (when (activep provider)
+      (error "Can't delete the active OIDC provider"))
+    (fset:do-set (result (oidc-test-results-for-provider provider))
+      (bknr.datastore:delete-object result))
+    (bknr.datastore:delete-object provider)))
 
 (defclass stored-oidc-provider (oidc-provider)
   ()
@@ -223,6 +237,9 @@ make sure a provider works before it's activated."))
 an OIDC-TEST-RESULT, it doesn't log anyone in."))
 
 (defun record-test-result (auth &key email error-message)
+  (when (bknr.indices:object-destroyed-p (stored-provider auth))
+    ;; The provider was deleted after this test started.
+    (error "This OIDC connection was deleted"))
   (make-instance 'oidc-test-result
                  :provider (stored-provider auth)
                  :tested-by (tested-by auth)
