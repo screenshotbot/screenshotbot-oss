@@ -802,12 +802,6 @@ to be encoded timestamps."
 (defun calculate-difference-rmse (wand1 wand2)
   "Compute the difference between the two wands in terms of RMSE"
   (cond
-    ;; TODO: this null-pointer check is for backward compatibility in
-    ;; case we accidently ship this
-    #+lispworks
-    ((fli:null-pointer-p (fli:make-pointer :address 'screenshotbot-calculate-row-rmse-square))
-     (warn "screenshotbot_calculate_row_rmse_square not present in magick-native")
-     0.0)
     ;; If heights or widths are different then return 1.0.
     ((not (apply #'= (mapcar #'magick-get-image-width (list wand1 wand2))))
      1.0d0)
