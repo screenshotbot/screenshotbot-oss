@@ -232,6 +232,20 @@ accessing the urls or sitemap slot."
                               run-context:run-context)
   ())
 
+(defun make-replay-run-context (run request)
+  "REQUEST is the SNAPSHOT-REQUEST, if any. It is NIL for web-based
+replay jobs, in which case we default the main branch to master."
+  (make-instance 'replay-run-context
+                 :repo-url (when request (replay:repo-url request))
+                 :channel (channel run)
+                 :productionp t
+                 :main-branch (or
+                               (when request (replay:main-branch request))
+                               "master")
+                 :repo-clean-p t
+                 :commit-hash (when request (replay:commit request))
+                 :merge-base (when request (replay:merge-base request))
+                 :main-branch-hash (when request (replay:branch-hash request))))
 
 (defun process-results (run results
                         &key (engine *engine*))
@@ -268,15 +282,7 @@ accessing the urls or sitemap slot."
                            (sdk:upload-image-directory api-context results)))
                      (log:debug "Creating run")
                      ;; TODO: replace with put-run-with-run-context instead.
-                     (let ((run-context (make-instance 'replay-run-context
-                                           :repo-url (when request (replay:repo-url request))
-                                           :channel (channel run)
-                                           :productionp t
-                                           :main-branch "master"
-                                           :repo-clean-p t
-                                           :commit-hash (when request (replay:commit request))
-                                           :merge-base (when request (replay:merge-base request))
-                                           :main-branch-hash (when request (replay:branch-hash request)))))
+                     (let ((run-context (make-replay-run-context run request)))
                        (sdk:make-run
                         api-context
                         images

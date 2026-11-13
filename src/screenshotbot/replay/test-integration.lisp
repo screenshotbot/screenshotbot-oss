@@ -11,6 +11,7 @@
                 #:with-sdk-flags
                 #:all-screenshots
                 #:process-results
+                #:make-replay-run-context
                 #:replay-job-from-snapshot
                 #:schedule-replay-job
                 #:uploaded-snapshot
@@ -23,6 +24,8 @@
                 #:snapshot)
   (:import-from #:screenshotbot/replay/browser-config
                 #:browser-config)
+  (:import-from #:screenshotbot/sdk/run-context
+                #:main-branch)
   (:import-from #:screenshotbot/webdriver/impl
                 #:make-driver
                 #:call-with-webdriver)
@@ -416,3 +419,23 @@
       (is (equal "bleh" screenshotbot/sdk/flags:*metadata*))
       (setf result :pass))
     (is (eql :pass result))))
+
+(test make-replay-run-context-uses-main-branch-from-request
+  (let ((run (make-instance 'integration:run :channel "foo")))
+    (is (equal "main"
+               (main-branch
+                (make-replay-run-context
+                 run
+                 (make-instance 'snapshot-request
+                                :main-branch "main")))))))
+
+(test make-replay-run-context-defaults-main-branch-to-master
+  (let ((run (make-instance 'integration:run :channel "foo")))
+    (is (equal "master"
+               (main-branch
+                (make-replay-run-context run nil))))
+    (is (equal "master"
+               (main-branch
+                (make-replay-run-context
+                 run
+                 (make-instance 'snapshot-request)))))))
