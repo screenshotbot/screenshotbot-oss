@@ -65,7 +65,6 @@
    #:document-root
    #:*reuben-ip*
    #:*seleniump*
-   #:*domain*
    #:logged-in-p
    #:dashboard
    #:make-thread
@@ -83,7 +82,6 @@
   (:local-nicknames (#:threading #:util/threading)))
 (in-package :screenshotbot/server)
 
-(defparameter *domain* "https://screenshotbot.io")
 (defvar *root* (util:relative-system-source-directory :screenshotbot))
 
 (defvar *is-localhost* nil)

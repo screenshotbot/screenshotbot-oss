@@ -21,8 +21,6 @@
                 #:with-transaction)
   (:import-from #:screenshotbot/model/company
                 #:company-owner)
-  (:import-from #:screenshotbot/server
-                #:*domain*)
   (:import-from #:screenshotbot/installation
                 #:installation
                 #:installation-domain)
