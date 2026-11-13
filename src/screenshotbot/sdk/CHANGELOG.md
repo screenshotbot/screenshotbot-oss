@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.19.0 - 2026-11-13
+
+### Changes
+
+- `ci static-website` now sends the work branch from the CI
+  environment (e.g. CIRCLE_BRANCH), so runs on the main branch are
+  recognized as such and no longer get a failing pull request check.
+- `ci static-website` now schedules the snapshot through the JSON
+  endpoint (/api/replay/schedule-json) instead of cl-store. Requires a
+  server that has this endpoint.
+- Fix asset uploads in `ci static-website` and `--static-website` when
+  the API hostname has a trailing slash (previously failed with a
+  404).
+
 ## 2.18.17 - 2026-11-02
 
 ### Changes
