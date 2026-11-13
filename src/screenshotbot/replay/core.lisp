@@ -74,6 +74,7 @@
    #:merge-base
    #:commit
    #:work-branch
+   #:snapshot-request-sdk-flags
    #:branch-hash
    #:request-counter
    #:call-with-request-counter
@@ -137,7 +138,7 @@
               :json-key "sdkFlags"
               :json-type (or null :string)
               :initarg :sdk-flags
-              :reader snapshot-request-sdk-flags)
+              :accessor snapshot-request-sdk-flags)
    (merge-base :initarg :merge-base
                :json-key "mergeBase"
                :json-type (or null :string)
