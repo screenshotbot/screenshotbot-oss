@@ -24,6 +24,9 @@
   (:import-from #:bknr.indices
                 #:hash-index)
   (:import-from #:screenshotbot/user-api
+                #:user-email
+                #:user-full-name
+                #:current-user
                 #:%created-at
                 #:current-company)
   (:import-from #:markup
@@ -77,9 +80,19 @@
              :reader bitbucket-setting-company
              :index-type hash-index
              :index-reader %bitbucket-settings-for-company)
+    (actor :initarg :actor
+           :reader bitbucket-token-actor
+           :documentation "The user who connected BitBucket. Tokens created
+by a refresh inherit this from the previous token.")
     (created-at :initarg :created-at))
    (:metaclass persistent-class)
-   (:default-initargs :created-at (get-universal-time))))
+   (:default-initargs :created-at (get-universal-time)
+                      :actor nil)))
+
+(defmethod bitbucket-token-actor :around ((self bitbucket-token))
+  ;; Tokens created before the actor slot existed don't have it bound.
+  (when (slot-boundp self 'actor)
+    (call-next-method)))
 
 
 ;; OLD: DO NOT USE.
@@ -122,7 +135,7 @@
   (assert x)
   x)
 
-(defun update-from-refresh-token (company response)
+(defun update-from-refresh-token (company response &key actor)
   #+nil
   (log:info "Updating refresh token from: ~S" response)
   (let ((refresh-token (a:assoc-value response :refresh--token))
@@ -132,7 +145,10 @@
               (not (equal refresh-token (refresh-token last-settings))))
      (make-instance 'bitbucket-token
                      :refresh-token (! refresh-token)
-                     :company company))))
+                     :company company
+                     :actor (or actor
+                                (when last-settings
+                                  (bitbucket-token-actor last-settings)))))))
 
 (auto-restart:with-auto-restart ()
   (defun swap-for-token (code)
@@ -141,7 +157,8 @@
                                      ("code" . ,code))
                                    :company (current-company))))
       (clear-tokens)
-      (update-from-refresh-token (current-company) ret)
+      (update-from-refresh-token (current-company) ret
+                                 :actor (current-user))
 
       (hex:safe-redirect "/settings/bitbucket"))))
 
@@ -227,6 +244,9 @@
 
         <div class= "card-body">
           <p>Screenshotbot can update build statuses on your BitBucket Pull Requests</p>
+          ,(when-let* ((token (car (bitbucket-settings-for-company (current-company))))
+                       (actor (bitbucket-token-actor token)))
+             <p class= "text-muted">Connected by ,(or (user-full-name actor) (user-email actor))</p>)
         </div>
 
         <div class= "card-footer">

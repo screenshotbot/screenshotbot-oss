@@ -11,9 +11,14 @@
                 #:with-test-store)
   (:import-from #:screenshotbot/model/company
                 #:company)
+  (:import-from #:screenshotbot/model/user
+                #:make-user)
+  (:import-from #:screenshotbot/testing
+                #:with-installation)
   (:import-from #:screenshotbot/pro/bitbucket/settings
                 #:%bitbucket-oauth-callback
                 #:same-origin-p
+                #:bitbucket-token-actor
                 #:update-from-refresh-token
                 #:refresh-token
                 #:bitbucket-settings-for-company)
@@ -27,9 +32,10 @@
 
 (def-fixture state ()
   (let ((auto-restart:*global-enable-auto-retries-p* nil))
-   (with-test-store ()
-     (let ((company (make-instance 'company)))
-       (&body)))))
+   (with-installation ()
+    (with-test-store ()
+      (let ((company (make-instance 'company)))
+        (&body))))))
 
 (test preconditions
   (with-fixture state ()
@@ -57,6 +63,31 @@
     (is (equal
          "foo"
          (refresh-token (car (bitbucket-settings-for-company company)))))))
+
+(test records-actor
+  (with-fixture state ()
+    (let ((user (make-user)))
+      (update-from-refresh-token company '((:refresh--token . "foo"))
+                                 :actor user)
+      (is (eql user
+               (bitbucket-token-actor (car (bitbucket-settings-for-company company))))))))
+
+(test actor-is-nil-when-slot-is-unbound
+  (with-fixture state ()
+    (update-from-refresh-token company '((:refresh--token . "foo")))
+    (let ((token (car (bitbucket-settings-for-company company))))
+      (slot-makunbound token 'screenshotbot/bitbucket/settings::actor)
+      (is (null (bitbucket-token-actor token))))))
+
+(test refreshed-token-keeps-actor
+  (with-fixture state ()
+    (let ((user (make-user)))
+      (update-from-refresh-token company '((:refresh--token . "foo"))
+                                 :actor user)
+      (update-from-refresh-token company '((:refresh--token . "bar")))
+      (is (equal 2 (length (bitbucket-settings-for-company company))))
+      (is (eql user
+               (bitbucket-token-actor (car (bitbucket-settings-for-company company))))))))
 
 (test same-origin-p
   (is-true (same-origin-p "https://staging.screenshotbot.io"
