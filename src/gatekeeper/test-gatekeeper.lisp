@@ -88,3 +88,24 @@
   (with-fixture state ()
     (is (eql t (gk:check :gk-enabled-by-default :obj)))
     (is (eql nil (gk:check :gk-disabled-by-default :obj)))))
+
+(test stored-default-value-overrides-defgk
+  (with-test-store ()
+    (gk:create :gk-disabled-by-default)
+    (is (eql nil (gk:check :gk-disabled-by-default :obj)))
+    (gk:enable :gk-disabled-by-default)
+    (is (eql t (gk:check :gk-disabled-by-default :obj)))
+
+    (gk:create :gk-enabled-by-default :default t)
+    (is (eql t (gk:check :gk-enabled-by-default :obj)))
+    (gk:disable :gk-enabled-by-default)
+    (is (eql nil (gk:check :gk-enabled-by-default :obj)))))
+
+(test acls-still-override-the-stored-default-for-defgk
+  (with-test-store ()
+    (gk:create :gk-disabled-by-default)
+    (gk:enable :gk-disabled-by-default)
+    (let ((denied "foo"))
+      (gk:deny :gk-disabled-by-default denied)
+      (is (eql nil (gk:check :gk-disabled-by-default denied)))
+      (is (eql t (gk:check :gk-disabled-by-default "bar"))))))

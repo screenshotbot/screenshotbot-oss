@@ -160,8 +160,13 @@
   (push-acl name :deny obj :comment comment))
 
 (defmacro defgk (name &key (enabledp nil))
-  "Currently does nothing. But in the future this will be a good way of
-knowing which features are available."
+  "Declares the gatekeeper NAME. ENABLEDP is the default value until the
+gatekeeper is created in the store (e.g. with GK:CREATE); after that the
+stored default value (see GK:ENABLE) is used."
   `(progn
      (defmethod compute-default-value ((name (eql ,name)) object)
-       ,enabledp)))
+       (cond
+         ((gk-with-name name)
+          (call-next-method))
+         (t
+          ,enabledp)))))
