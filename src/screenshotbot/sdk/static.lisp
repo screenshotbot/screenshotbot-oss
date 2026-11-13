@@ -150,8 +150,13 @@ upload blobs that haven't been uploaded before."
                                                  main-branch
                                                  work-branch
                                                  pull-request
-                                                 production)
-  "Schedule a Replay build with the given snapshot"
+                                                 production
+                                                 json-endpoint-p)
+  "Schedule a Replay build with the given snapshot.
+
+If JSON-ENDPOINT-P, the request is sent as JSON to
+/api/replay/schedule-json, which ignores the SDK flags. Otherwise it's
+sent with cl-store to /api/replay/schedule, along with the SDK flags."
   (declare (ignore production)) ;; TODO
   (setf (replay:tmpdir snapshot) nil) ;; hack for json encoding
   (let* ((repo (make-instance 'git:git-repo :link repo-url))
@@ -165,18 +170,27 @@ upload blobs that haven't been uploaded before."
                                  :work-branch work-branch
                                  :repo-url repo-url
                                  :browser-configs (read-browser-configs browser-configs)
-                                 :sdk-flags (get-sdk-flags)
+                                 :sdk-flags (unless json-endpoint-p
+                                              (get-sdk-flags))
                                  :commit commit
                                  :branch-hash branch-hash
                                  :merge-base
                                  (git:merge-base repo branch-hash commit))))
-     (uiop:with-temporary-file (:pathname p)
-       (cl-store:store request p)
-       (request
-        api-context
-        "/api/replay/schedule"
-        :method :post
-        :content p)))))
+     (cond
+       (json-endpoint-p
+        (request
+         api-context
+         "/api/replay/schedule-json"
+         :method :post
+         :content request))
+       (t
+        (uiop:with-temporary-file (:pathname p)
+          (cl-store:store request p)
+          (request
+           api-context
+           "/api/replay/schedule"
+           :method :post
+           :content p)))))))
 
 (defun find-all-index.htmls (dir)
   (declare (optimize (debug 3) (speed 0)))
@@ -319,6 +333,9 @@ HTML files to render.")
                          :browser-configs (getopt cmd :browser-configs)
                          :main-branch (getopt cmd :main-branch)
                          :work-branch (e:work-branch env)
+                         ;; This command doesn't set any SDK flags, so
+                         ;; it doesn't need the cl-store endpoint.
+                         :json-endpoint-p t
                          (loop for key  in `(:assets-root :production
                                              :channel)
                                append (list key (getopt cmd key)))))))))

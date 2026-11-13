@@ -11,6 +11,7 @@
                 #:acceptor)
   (:import-from #:screenshotbot/sdk/static
                 #:make-html-provider
+                #:schedule-snapshot
                 #:static-website/command
                 #:parse-config-from-file
                 #:find-all-index.htmls
@@ -30,7 +31,13 @@
                 #:browser-config-name)
   (:import-from #:screenshotbot/sdk/api-context
                 #:api-context)
+  (:import-from #:screenshotbot/sdk/sdk
+                #:request)
+  (:import-from #:cl-mock
+                #:if-called)
   (:local-nicknames (#:a #:alexandria)
+                    (#:replay #:screenshotbot/replay/core)
+                    (#:git #:screenshotbot/sdk/git)
                     (#:flags :screenshotbot/sdk/flags)))
 (in-package :screenshotbot/sdk/test-static)
 
@@ -141,3 +148,47 @@
         "hello.html"
         "bar.html"
         "car.html")))))
+
+(def-fixture schedule-snapshot ()
+  (cl-mock:with-mocks ()
+    (if-called 'git:merge-base
+               (lambda (repo branch-hash commit)
+                 (declare (ignore repo branch-hash commit))
+                 "abcd"))
+    (let ((snapshot (make-instance 'replay:snapshot
+                                   :root-urls (list "http://localhost:1234/index.html")))
+          (api)
+          (content))
+      (if-called 'request
+                 (lambda (api-context %api &key method ((:content %content)))
+                   (declare (ignore api-context method))
+                   (setf api %api)
+                   (setf content %content)
+                   nil))
+      (&body))))
+
+(test schedule-snapshot-with-json-endpoint
+  (with-fixture schedule-snapshot ()
+    (schedule-snapshot nil snapshot
+                       :channel "foo"
+                       :work-branch "main"
+                       :json-endpoint-p t)
+    (is (equal "/api/replay/schedule-json" api))
+    (is (typep content 'replay:snapshot-request))
+    (is (equal "main" (replay:work-branch content)))
+    (is (eql nil (replay:snapshot-request-sdk-flags content)))
+    ;; Encode the way REQUEST does, and decode the way the server does.
+    (let ((decoded (screenshotbot/api/model:decode-json
+                    (util/json-mop:json-mop-to-string content)
+                    'replay:snapshot-request)))
+      (is (equal "foo" (replay:channel-name decoded)))
+      (is (equal "main" (replay:work-branch decoded)))
+      (is (equal (list "http://localhost:1234/index.html")
+                 (replay::root-urls (replay:snapshot decoded)))))))
+
+(test schedule-snapshot-with-cl-store-endpoint
+  (with-fixture schedule-snapshot ()
+    (schedule-snapshot nil snapshot
+                       :channel "foo")
+    (is (equal "/api/replay/schedule" api))
+    (is (pathnamep content))))
