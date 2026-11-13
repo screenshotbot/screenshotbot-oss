@@ -81,6 +81,19 @@
         (upload-blob api-context p)
         (is (equalp *hex* md5))))))
 
+(test blob-upload-with-trailing-slash-in-hostname
+  (with-fixture state ()
+    (let ((api-context (make-instance 'api-context
+                                      :key ""
+                                      :secret ""
+                                      :hostname (format nil "~a/" host))))
+      (uiop:with-temporary-file (:pathname p :stream out)
+        (write-string "zoidberg" out)
+        (finish-output out)
+        (let ((md5 (md5-file p)))
+          (upload-blob api-context p)
+          (is (equalp *hex* md5)))))))
+
 (test binary-blob
   (with-fixture state ()
     (uiop:with-temporary-file (:pathname p :stream out

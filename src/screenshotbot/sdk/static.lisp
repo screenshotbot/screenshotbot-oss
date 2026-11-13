@@ -38,6 +38,8 @@
                 #:with-clingon-api-context)
   (:import-from #:screenshotbot/sdk/commit-graph
                 #:commit-graph-updater)
+  (:import-from #:screenshotbot/sdk/hostname
+                #:format-api-url)
   (:local-nicknames (#:a #:alexandria)
                     (#:sdk #:screenshotbot/sdk/sdk)
                     (#:flags #:screenshotbot/sdk/flags)
@@ -62,7 +64,7 @@
                   :query `(("hash" . ,(md5-file file))
                            ("type" . ,(pathname-type file)))
                   :defaults
-                  (quri:uri (format nil "~a/api/blob/upload" (api-context:hostname api-context))))))
+                  (quri:uri (format-api-url api-context "/api/blob/upload")))))
       (sdk:put-file api-context
                     (format nil "~a" uri)
                     stream))))
