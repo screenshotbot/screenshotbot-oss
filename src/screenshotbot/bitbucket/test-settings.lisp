@@ -12,9 +12,14 @@
   (:import-from #:screenshotbot/model/company
                 #:company)
   (:import-from #:screenshotbot/pro/bitbucket/settings
+                #:%bitbucket-oauth-callback
+                #:same-origin-p
                 #:update-from-refresh-token
                 #:refresh-token
                 #:bitbucket-settings-for-company)
+  (:import-from #:screenshotbot/installation
+                #:installation
+                #:*installation*)
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/bitbucket/test-settings)
 
@@ -52,3 +57,39 @@
     (is (equal
          "foo"
          (refresh-token (car (bitbucket-settings-for-company company)))))))
+
+(test same-origin-p
+  (is-true (same-origin-p "https://staging.screenshotbot.io"
+                          "https://staging.screenshotbot.io/"))
+  (is-false (same-origin-p "https://staging.screenshotbot.io"
+                           "https://screenshotbot.io"))
+  (is-false (same-origin-p "https://localhost:8080"
+                           "https://localhost:9090"))
+  (is-false (same-origin-p "http://staging.screenshotbot.io"
+                           "https://staging.screenshotbot.io")))
+
+(test oauth-callback-on-same-domain-renders-nibble
+  (let ((*installation* (make-instance 'installation
+                                       :domain "https://staging.screenshotbot.io"))
+        (hunchentoot:*acceptor* nil))
+    (cl-mock:with-mocks ()
+      (cl-mock:if-called 'encrypt:decrypt-number
+                         (lambda (x)
+                           (is (equal "encrypted-id" x))
+                           23))
+      (cl-mock:if-called 'nibble:render-nibble
+                         (lambda (acceptor id)
+                           (declare (ignore acceptor))
+                           (format nil "rendered ~a" id)))
+      (is (equal "rendered 23"
+                 (%bitbucket-oauth-callback
+                  "code"
+                  "encrypted-id,https://staging.screenshotbot.io"))))))
+
+(test oauth-callback-on-unknown-domain-errors
+  (let ((*installation* (make-instance 'installation
+                                       :domain "https://staging.screenshotbot.io")))
+    (signals error
+      (%bitbucket-oauth-callback
+       "code"
+       "encrypted-id,https://evil.example.com"))))

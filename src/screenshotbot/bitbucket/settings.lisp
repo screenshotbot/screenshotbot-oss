@@ -162,22 +162,38 @@
        (token token)
        (t (error "could not get token: ~a" response))))))
 
-(defhandler (bitbucket-oauth-callback :uri "/bitbucket/oauth-callback") (code state)
-  "BitBucket Oauth consumers only allow one single redirect URL, so we don't want to use /account/oauth-callback here. Instead we want to create a custom callback that handles multiple redirect URLs."
+(defun same-origin-p (url-1 url-2)
+  (let ((uri-1 (quri:uri url-1))
+        (uri-2 (quri:uri url-2)))
+    (and (equal (quri:uri-scheme uri-1) (quri:uri-scheme uri-2))
+         (equal (quri:uri-host uri-1) (quri:uri-host uri-2))
+         (eql (quri:uri-port uri-1) (quri:uri-port uri-2)))))
+
+(defun %bitbucket-oauth-callback (code state)
   (cond
     ((str:containsp "," state)
      (destructuring-bind (state domain) (str:split "," state)
-       (unless (allow-oauth-redirect-p *installation* domain)
-         (error "Cannot allow redirect for ~a" domain))
-       (hunchentoot:redirect
-        (quri:render-uri
-         (quri:make-uri
-          :path "/bitbucket/oauth-callback"
-          :query `(("code" . ,code)
-                   ("state" . ,state))
-          :defaults domain)))))
+       (cond
+         ((same-origin-p domain (installation-domain *installation*))
+          ;; The callback came back to the server that started the
+          ;; OAuth flow, so there's nothing to redirect.
+          (%bitbucket-oauth-callback code state))
+         (t
+          (unless (allow-oauth-redirect-p *installation* domain)
+            (error "Cannot allow redirect for ~a" domain))
+          (hunchentoot:redirect
+           (quri:render-uri
+            (quri:make-uri
+             :path "/bitbucket/oauth-callback"
+             :query `(("code" . ,code)
+                      ("state" . ,state))
+             :defaults domain)))))))
     (t
      (nibble:render-nibble hunchentoot:*acceptor* (encrypt:decrypt-number state)))))
+
+(defhandler (bitbucket-oauth-callback :uri "/bitbucket/oauth-callback") (code state)
+  "BitBucket Oauth consumers only allow one single redirect URL, so we don't want to use /account/oauth-callback here. Instead we want to create a custom callback that handles multiple redirect URLs."
+  (%bitbucket-oauth-callback code state))
 
 (defun redirect-to-oauth ()
 
