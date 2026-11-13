@@ -31,6 +31,7 @@
                 #:do-image-comparison
                 #:find-image-comparison-on-images)
   (:import-from #:screenshotbot/model/image
+                #:with-local-image
                 #:make-image)
   (:import-from #:screenshotbot/model/screenshot
                 #:screenshot)
@@ -48,6 +49,11 @@
                 #:company)
   (:import-from #:screenshotbot/model/testing
                 #:with-test-image)
+  (:import-from #:screenshotbot/magick/magick-lw
+                #:foreign-function-defined-p)
+  (:import-from #:cl-mock
+                #:if-called
+                #:with-mocks)
   (:local-nicknames (#:a #:alexandria)
                     #-lispworks
                     (#:fli #:util/fake-fli)))
@@ -110,6 +116,57 @@
         (is-true (find-image-comparison-on-images before after))
         (is-false (identical-p result))
         (is (< 0 (image-comparison-difference-value result)))))))
+
+(test changed-rows-is-not-created-without-the-gk
+  (with-fixture state ()
+    (let ((before (make-image :pathname im1))
+          (after (make-image :pathname im3)))
+      (let ((result (find-image-comparison-on-images before after)))
+        (is-false (identical-p result))
+        (is (equal nil (image-comparison-changed-rows result)))))))
+
+(def-fixture image-strip-diff-enabled ()
+  (let ((company (make-instance 'company)))
+    (gk:create :image-strip-diff)
+    (gk:allow :image-strip-diff company)
+    (let ((before (make-image :pathname im1 :company company))
+          (after (make-image :pathname im3 :company company)))
+      (&body))))
+
+(test changed-rows-is-created-with-the-gk
+  (with-fixture state ()
+    (with-fixture image-strip-diff-enabled ()
+      (let* ((result (find-image-comparison-on-images before after))
+             (changed-rows (image-comparison-changed-rows result)))
+        (is-true changed-rows)
+        (with-local-image (result-file (image-comparison-result result))
+          (with-local-image (file changed-rows)
+            (is (equal (list 1 (second (image-dimensions-for-pathname result-file)))
+                       (image-dimensions-for-pathname file)))))))))
+
+(test changed-rows-is-skipped-if-magick-native-is-too-old
+  (with-fixture state ()
+    (with-fixture image-strip-diff-enabled ()
+      (with-mocks ()
+        (if-called 'foreign-function-defined-p
+                   (lambda (name)
+                     (declare (ignore name))
+                     nil))
+        (let ((result (handler-bind ((warning #'muffle-warning))
+                        (find-image-comparison-on-images before after))))
+          (is-true (image-comparison-result result))
+          (is-false (identical-p result))
+          (is (equal nil (image-comparison-changed-rows result))))))))
+
+(test changed-rows-is-backfilled-along-with-difference-value
+  (with-fixture state ()
+    (with-fixture image-strip-diff-enabled ()
+      (let ((result (find-image-comparison-on-images before after)))
+        (setf (image-comparison-difference-value result) nil)
+        (setf (image-comparison-changed-rows result) nil)
+        (find-image-comparison-on-images before after)
+        (is-true (image-comparison-difference-value result))
+        (is-true (image-comparison-changed-rows result))))))
 
 (test difference-value-is-populated-if-it-doesnt-exist
   "This is a migration strategy, to avoid having to recompute everything

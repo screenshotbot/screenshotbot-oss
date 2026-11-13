@@ -81,6 +81,8 @@
                 #:with-class-validation)
   (:import-from #:gatekeeper/gatekeeper
                 #:defgk)
+  (:import-from #:easy-macros
+                #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:image-comparison
@@ -186,14 +188,19 @@ self-hosted stores that still have these objects can be loaded.")))
 
 (defun do-image-comparison (before-image
                             after-image
-                            p)
+                            p
+                            &key changed-rows-output)
   "Compares before-screenshot and after-screenshot, and saves the result image to P.
 
-Returns two values. If the images are identical, we return T for the
+Returns three values. If the images are identical, we return T for the
 primary value, else we return NIL.
 
 Second second value will be the RMSE difference between the two
-images. If the first value was T, then this will always be 0.0"
+images. If the first value was T, then this will always be 0.0
+
+If CHANGED-ROWS-OUTPUT is provided, we also try to save the
+changed-rows strip there (see SAVE-CHANGED-ROWS), while the images are
+still in memory. The third value is T if it was saved."
   (with-tracing (:image-comparison)
     (with-local-image (before-file before-image)
       (with-local-image (after-file after-image)
@@ -206,9 +213,33 @@ images. If the first value was T, then this will always be 0.0"
           (with-wand (before :file before-file)
             (with-wand (after :file after-file)
               (let ((rmse (calculate-difference-rmse before after)))
-                (let ((same-p (compare-wands before after p
-                                             :in-place-p t)))
-                  (values same-p rmse))))))))))
+                (multiple-value-bind (same-p changed-rows-saved-p)
+                    (compare-wands before after p
+                                   :in-place-p t
+                                   :changed-rows-output changed-rows-output)
+                  (values same-p rmse changed-rows-saved-p))))))))))
+
+(defun changed-rows-enabled-p (image)
+  (gk:check :image-strip-diff (company image)))
+
+(def-easy-macro with-changed-rows-output (&binding changed-rows-output image &fn fn)
+  "Binds CHANGED-ROWS-OUTPUT to a temporary file to pass to
+DO-IMAGE-COMPARISON, or NIL if the changed-rows strip isn't enabled for
+IMAGE's company."
+  (cond
+    ((changed-rows-enabled-p image)
+     (with-tmp-image-file (:pathname changed-rows-output :type "webp" :prefix "changed-rows")
+       (fn changed-rows-output)))
+    (t
+     (fn nil))))
+
+(defun make-changed-rows-image (changed-rows-output saved-p image)
+  "Returns the IMAGE for the changed-rows strip, or NIL if
+DO-IMAGE-COMPARISON didn't save it, e.g. because magick-native is too
+old."
+  (when (and changed-rows-output saved-p)
+    (make-image :pathname changed-rows-output
+                :company (company image))))
 
 (defmethod find-image-comparison-on-images ((before image)
                                             (after image)
@@ -239,17 +270,23 @@ images. If the first value was T, then this will always be 0.0"
      (find)
      (unless only-cached-p
        (with-tmp-image-file (:pathname p :type "webp" :prefix "comparison")
-         (multiple-value-bind (identical-p
-                               difference-value)
-             (do-image-comparison before after p)
-           (let* ((image (make-image :pathname p
-                                     :company (company after))))
-             (make-image-comparison
-              :before before
-              :after after
-              :identical-p identical-p
-              :difference-value difference-value
-              :result image))))))))
+         (with-changed-rows-output (changed-rows-output after)
+           (multiple-value-bind (identical-p
+                                 difference-value
+                                 changed-rows-saved-p)
+               (do-image-comparison before after p
+                                    :changed-rows-output changed-rows-output)
+             (let* ((image (make-image :pathname p
+                                       :company (company after))))
+               (make-image-comparison
+                :before before
+                :after after
+                :identical-p identical-p
+                :difference-value difference-value
+                :result image
+                :changed-rows (make-changed-rows-image changed-rows-output
+                                                       changed-rows-saved-p
+                                                       after))))))))))
 
 (defun maybe-populate-difference-value (image-comparison)
   "As a migration strategy for T1547, if the difference-value is not
@@ -259,14 +296,25 @@ hit too much in production."
     ((image-comparison-difference-value image-comparison)
      (values))
     (t
-     (with-tmp-image-file (:pathname output-image :type "webp")
-       (multiple-value-bind (identical-p difference-value)
-           (do-image-comparison (image-comparison-before image-comparison)
-             (image-comparison-after image-comparison)
-             output-image)
-         (declare (ignore identical-p))
-         (setf (image-comparison-difference-value image-comparison)
-               difference-value))))))
+     (let ((after (image-comparison-after image-comparison)))
+       (with-tmp-image-file (:pathname output-image :type "webp")
+         (with-changed-rows-output (changed-rows-output after)
+           (multiple-value-bind (identical-p difference-value changed-rows-saved-p)
+               (do-image-comparison (image-comparison-before image-comparison)
+                 after
+                 output-image
+                 ;; We're already paying for opening the images, so
+                 ;; populate the changed-rows too if it's missing.
+                 :changed-rows-output (unless (image-comparison-changed-rows image-comparison)
+                                        changed-rows-output))
+             (declare (ignore identical-p))
+             (unless (image-comparison-changed-rows image-comparison)
+               (setf (image-comparison-changed-rows image-comparison)
+                     (make-changed-rows-image changed-rows-output
+                                              changed-rows-saved-p
+                                              after)))
+             (setf (image-comparison-difference-value image-comparison)
+                   difference-value))))))))
 
 
 (defclass image-comparison-subsystem ()

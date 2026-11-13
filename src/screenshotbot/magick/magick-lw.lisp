@@ -688,7 +688,10 @@
 (defun compare-wands (before after p &key in-place-p changed-rows-output)
   "Compare BEFORE and AFTER, and save the result to P. If
 CHANGED-ROWS-OUTPUT is provided, we also save the image from
-SAVE-CHANGED-ROWS to it, while the result is still in memory."
+SAVE-CHANGED-ROWS to it, while the result is still in memory.
+
+Returns two values: whether the images are the same, and whether
+CHANGED-ROWS-OUTPUT was written."
   ;; Limit the size of the before and after wands before doing the
   ;; comparison
   (limit-size-for-webp before)
@@ -700,9 +703,10 @@ SAVE-CHANGED-ROWS to it, while the result is still in memory."
                           :highlight-color "red"
                           :lowlight-color "none")
     (save-as-webp result p)
-    (when changed-rows-output
-      (save-changed-rows result changed-rows-output))
-    same-p))
+    (values
+     same-p
+     (when changed-rows-output
+       (save-changed-rows result changed-rows-output)))))
 
 (def-easy-macro with-pixel-wand (&binding pixel-wand &fn fn)
   (let ((pwand (new-pixel-wand)))
