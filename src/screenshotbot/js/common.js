@@ -372,6 +372,50 @@ function prepareReportJs () {
             //console.log("Setting up image comparison on: ", img);
             setupImageComparison.call(img);
         });
+
+    // When we render a change before its image comparison has been
+    // computed, the server schedules it and shows the arrow instead
+    // of the changed-rows strip. Check back a few times, and replace
+    // the arrow with the strip once it's ready.
+    setupLiveOnAttach(".changed-rows-pending", function () {
+        var arrow = $(this);
+        if (arrow.data("changed-rows-polling")) {
+            return;
+        }
+        arrow.data("changed-rows-polling", true);
+
+        var url = arrow.data("changed-rows-check");
+        var done = false;
+
+        function check() {
+            if (done) {
+                return;
+            }
+            $.ajax({
+                method: "GET",
+                url: url,
+                dataType: "json",
+                success: function (data) {
+                    if (done) {
+                        return;
+                    }
+                    if (data["state"] == "ready") {
+                        done = true;
+                        var strip = $(data["data"]);
+                        arrow.replaceWith(strip);
+                        callLiveOnAttach(strip);
+                    } else if (data["state"] == "none") {
+                        done = true;
+                    }
+                },
+            });
+        }
+
+        // Seconds after the page was rendered, and no more.
+        [2, 5, 10, 60].forEach(function (seconds) {
+            setTimeout(check, seconds * 1000);
+        });
+    });
 }
 
 $(document).on("click", "a.screenshot-run-image", function (e) {

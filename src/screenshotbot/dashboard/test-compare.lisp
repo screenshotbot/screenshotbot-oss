@@ -20,6 +20,7 @@
                 #:changed-rows-style
                 #:find-changed-rows
                 #:schedule-image-comparison
+                #:changed-rows-check-response
                 #:*changed-rows-pool*
                 #:*scheduled-comparisons*
                 #:change-image-row)
@@ -619,9 +620,15 @@
         ;; The first render doesn't show the strip, but schedules the
         ;; comparison (run immediately here), so the strip shows up
         ;; the next time.
-        (is (equal nil (find-changed-rows before after)))
+        (multiple-value-bind (changed-rows pending-p)
+            (find-changed-rows before after)
+          (is (equal nil changed-rows))
+          (is-true pending-p))
         (is-true (find-image-comparison-from-cache :before before :after after))
-        (is-true (find-changed-rows before after))
+        (multiple-value-bind (changed-rows pending-p)
+            (find-changed-rows before after)
+          (is-true changed-rows)
+          (is-false pending-p))
         (is (fset:empty? *scheduled-comparisons*))))))
 
 (test schedule-image-comparison-skips-already-scheduled-comparisons
@@ -642,13 +649,41 @@
         (is (eql (image-comparison-changed-rows comparison)
                  (find-changed-rows before after)))))))
 
-(defun render-change-image-row (before after &key changed-rows)
+(defun max-height (before after)
+  (max (dimension-height (image-dimensions before))
+       (dimension-height (image-dimensions after))))
+
+(test changed-rows-check-response-before-the-comparison-is-ready
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (is (equal `((:state . "pending"))
+                 (changed-rows-check-response before after (max-height before after)))))))
+
+(test changed-rows-check-response-when-the-strip-is-ready
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (find-image-comparison-on-images before after)
+      (let ((response (changed-rows-check-response before after (max-height before after))))
+        (is (equal "ready" (assoc-value response :state)))
+        (assert-that (assoc-value response :data)
+                     (contains-string "changed-rows-strip"))))))
+
+(test changed-rows-check-response-when-the-comparison-has-no-strip
+  (with-fixture state ()
+    ;; Without the gk, the comparison is computed without a strip.
+    (with-fixture changed-rows (:gk nil)
+      (find-image-comparison-on-images before after)
+      (is (equal `((:state . "none"))
+                 (changed-rows-check-response before after (max-height before after)))))))
+
+(defun render-change-image-row (before after &key changed-rows changed-rows-pending-p)
   (markup:write-html
    (change-image-row :before-image before
                      :after-image after
                      :before-dims (image-dimensions before)
                      :after-dims (image-dimensions after)
-                     :changed-rows changed-rows)))
+                     :changed-rows changed-rows
+                     :changed-rows-pending-p changed-rows-pending-p)))
 
 (test change-image-row-shows-the-arrow-without-changed-rows
   (with-fixture state ()
@@ -656,7 +691,19 @@
       (let ((html (render-change-image-row before after)))
         (assert-that html
                      (contains-string "arrow-forward"))
-        (is-false (search "changed-rows-strip" html))))))
+        (is-false (search "changed-rows-strip" html))
+        (is-false (search "changed-rows-pending" html))))))
+
+(test change-image-row-checks-for-the-strip-if-its-pending
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (auth:with-sessions ()
+        (let ((html (render-change-image-row before after
+                                             :changed-rows-pending-p t)))
+          (assert-that html
+                       (contains-string "arrow-forward changed-rows-pending")
+                       (contains-string "data-changed-rows-check="))
+          (is-false (search "changed-rows-strip" html)))))))
 
 (test change-image-row-shows-the-changed-rows-strip
   (with-fixture state ()
@@ -669,6 +716,5 @@
                      (contains-string "changed-rows-strip")
                      (contains-string (changed-rows-style
                                        (image-dimensions changed-rows)
-                                       (max (dimension-height (image-dimensions before))
-                                            (dimension-height (image-dimensions after))))))
+                                       (max-height before after))))
         (is-false (search "arrow-forward" html))))))

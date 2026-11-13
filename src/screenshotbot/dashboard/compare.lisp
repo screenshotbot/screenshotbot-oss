@@ -341,22 +341,32 @@ background, unless it's already scheduled."
        :name "changed-rows-comparison"
        :pool *changed-rows-pool*))))
 
+(defun cached-changed-rows (before-image after-image)
+  "The changed-rows strip for BEFORE-IMAGE and AFTER-IMAGE, from an
+already computed comparison. The second value is T if there is a
+computed comparison, even if it doesn't have a strip."
+  (let ((comparison (find-image-comparison-on-images before-image after-image
+                                                     :only-cached-p t)))
+    (values (?. image-comparison-changed-rows comparison)
+            (and comparison t))))
+
 (defun find-changed-rows (before-image after-image)
   "The changed-rows strip for BEFORE-IMAGE and AFTER-IMAGE, if
 :image-strip-diff is enabled and the comparison has already been
 computed with a strip. We don't compute the comparison here, since
 rendering a report shouldn't open every image in it. Instead, if
 there's no comparison yet (e.g. on a compare page, which isn't warmed
-up), we schedule it, so the strip shows up on a later render."
+up), we schedule it, and return T as the second value to say that the
+strip might be ready soon."
   (when (changed-rows-enabled-p after-image)
-    (let ((comparison (find-image-comparison-on-images before-image after-image
-                                                       :only-cached-p t)))
+    (multiple-value-bind (changed-rows cached-p)
+        (cached-changed-rows before-image after-image)
       (cond
-        (comparison
-         (image-comparison-changed-rows comparison))
+        (cached-p
+         (values changed-rows nil))
         (t
          (schedule-image-comparison before-image after-image)
-         nil)))))
+         (values nil t))))))
 
 (defun changed-rows-style (changed-rows-dims max-height)
   "Style for the changed-rows strip, so that its rows line up with the
@@ -367,12 +377,54 @@ same fraction of it."
   (format nil "--changed-rows-fraction: ~,6f;"
           (/ (dimension-height changed-rows-dims) max-height)))
 
+(defun changed-rows-strip (changed-rows max-height)
+  "The changed-rows strip to show between the images, or NIL if we can't
+get its dimensions."
+  (let ((dims (ignore-errors (image-dimensions changed-rows))))
+    (when dims
+      <div class= "changed-rows-strip" >
+        <img src= (image-public-url changed-rows)
+             alt= "rows that changed"
+             style= (changed-rows-style dims max-height) />
+      </div>)))
+
+(defun changed-rows-check-response (before-image after-image max-height)
+  "The response for CHANGED-ROWS-CHECK-NIBBLE, as an alist to encode as
+JSON. The state is \"ready\" with the strip's HTML as data, \"pending\"
+if the comparison hasn't been computed yet, or \"none\" if it has been
+computed but we can't show a strip for it, so there's no point
+checking again."
+  (multiple-value-bind (changed-rows cached-p)
+      (cached-changed-rows before-image after-image)
+    (let ((strip (when changed-rows
+                   (changed-rows-strip changed-rows max-height))))
+      (cond
+        (strip
+         `((:state . "ready")
+           (:data . ,(markup:write-html strip))))
+        (cached-p
+         `((:state . "none")))
+        (t
+         `((:state . "pending")))))))
+
+(defun changed-rows-check-nibble (before-image after-image max-height)
+  "A nibble that the JS polls (see .changed-rows-pending in
+common.js) after we've scheduled the comparison, to replace the arrow
+with the strip once it's ready."
+  (nibble (:name :changed-rows-check)
+    (setf (hunchentoot:content-type*) "application/json")
+    (json:encode-json-to-string
+     (changed-rows-check-response before-image after-image max-height))))
+
 (deftag change-image-row (&key before-image
                           after-image
                           before-dims
                           after-dims
                           changed-rows
+                          changed-rows-pending-p
                           figma-link)
+  "CHANGED-ROWS and CHANGED-ROWS-PENDING-P are the values of
+FIND-CHANGED-ROWS."
   (let* ((same-density-p (and before-dims after-dims))
          (max-height (when same-density-p
                        (max 1
@@ -382,8 +434,11 @@ same fraction of it."
                       "same-density"))
          ;; The strip only lines up with the images when they're
          ;; shown at the same density.
-         (changed-rows-dims (when (and changed-rows same-density-p)
-                              (ignore-errors (image-dimensions changed-rows)))))
+         (strip (when (and changed-rows same-density-p)
+                  (changed-rows-strip changed-rows max-height)))
+         (changed-rows-check (when (and changed-rows-pending-p same-density-p)
+                               (changed-rows-check-nibble before-image after-image
+                                                          max-height))))
     (flet ((container-style (dims)
              (when same-density-p
                (same-density-style dims max-height))))
@@ -394,10 +449,8 @@ same fraction of it."
        :after-dims after-dims
        :before-style (container-style before-dims)
        :after-style (container-style after-dims)
-       :changed-rows (when changed-rows-dims
-                       changed-rows)
-       :changed-rows-style (when changed-rows-dims
-                             (changed-rows-style changed-rows-dims max-height))
+       :changed-rows-strip strip
+       :changed-rows-check changed-rows-check
        :img-class img-class
        :figma-link figma-link))))
 
@@ -407,8 +460,8 @@ same fraction of it."
                                 after-dims
                                 before-style
                                 after-style
-                                changed-rows
-                                changed-rows-style
+                                changed-rows-strip
+                                changed-rows-check
                                 img-class
                                 figma-link)
   <div class="change-image-row">
@@ -429,11 +482,12 @@ same fraction of it."
     </image-container>
 
     ,(cond
-       (changed-rows
-        <div class= "changed-rows-strip" >
-          <img src= (image-public-url changed-rows)
-               alt= "rows that changed"
-               style=changed-rows-style />
+       (changed-rows-strip
+        changed-rows-strip)
+       (changed-rows-check
+        <div class= "arrow-forward changed-rows-pending"
+             data-changed-rows-check= (nibble-url changed-rows-check) >
+          <mdi name= "arrow_forward" />
         </div>)
        (t
         <div class= "arrow-forward" >
@@ -819,16 +873,19 @@ If the diff-report is cached, then we process the body immediately instead."
         </ul>
         
       </div>
-      <change-image-row before-image=(screenshot-image before)
-                        after-image=(screenshot-image after)
-                        before-dims= (ignore-errors (image-dimensions (screenshot-image before)))
-                        after-dims= (ignore-errors (image-dimensions (screenshot-image after)))
-                        changed-rows= (find-changed-rows (screenshot-image before)
-                                                         (screenshot-image after))
-                        figma-link= (find-existing-figma-link 
-                                     :channel (recorder-run-channel run) 
-                                     :screenshot-name (screenshot-name before))
-                        />
+      ,(multiple-value-bind (changed-rows changed-rows-pending-p)
+           (find-changed-rows (screenshot-image before)
+                              (screenshot-image after))
+        <change-image-row before-image=(screenshot-image before)
+                          after-image=(screenshot-image after)
+                          before-dims= (ignore-errors (image-dimensions (screenshot-image before)))
+                          after-dims= (ignore-errors (image-dimensions (screenshot-image after)))
+                          changed-rows= changed-rows
+                          changed-rows-pending-p= changed-rows-pending-p
+                          figma-link= (find-existing-figma-link 
+                                       :channel (recorder-run-channel run) 
+                                       :screenshot-name (screenshot-name before))
+                          />)
       <comparison-modal before=before after=after toggle-id=toggle-id />
     </div>)))
       :header  (cond
