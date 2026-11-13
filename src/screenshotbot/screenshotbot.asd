@@ -20,7 +20,7 @@
   :author "Arnold Noronha <arnold@screenshotbot.io>"
   :license "Mozilla Public License, v 2.0"
   :defsystem-depends-on (:trivial-features)
-  :version "1.5.3"
+  :version "1.5.4"
   :depends-on (:util
                :auth.login
                :markup
