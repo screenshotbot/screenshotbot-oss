@@ -1364,6 +1364,33 @@ screenshot-image-badge {
     .arrow-forward {
         align-self: center;
     }
+
+    // The changed-rows strip, shown instead of the arrow. Its
+    // container stretches to the height of the row, i.e. the tallest
+    // image. The strip is absolutely positioned so that it doesn't
+    // affect the height of the row (otherwise its percentage height
+    // can't be resolved, and it's shown at its natural height).
+    //
+    // The tallest image is offset by its margin-top and border (see
+    // .screenshot-image), 5px + 1px above and 1px below, and
+    // --changed-rows-fraction (set in change-image-row) is the
+    // strip's height as a fraction of the tallest image's, so the
+    // strip is at the same density as the images.
+    .changed-rows-strip {
+        align-self: stretch;
+        flex: 0 0 auto;
+        position: relative;
+        width: 12px;
+
+        img {
+            position: absolute;
+            top: 6px;
+            left: 0;
+            width: 100%;
+            height: calc((100% - 7px) * var(--changed-rows-fraction));
+            background-color: #e9ecef;
+        }
+    }
 }
 
 .image-container {

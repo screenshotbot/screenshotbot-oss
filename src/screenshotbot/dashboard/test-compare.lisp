@@ -16,11 +16,21 @@
                 #:image-comparison-job
                 #:prepare-image-comparison
                 #:random-zoom-to-on-result
-                #:same-density-style)
+                #:same-density-style
+                #:changed-rows-style
+                #:find-changed-rows
+                #:change-image-row)
   (:import-from #:screenshotbot/model/image-comparison
+                #:find-image-comparison-from-cache
+                #:image-comparison-changed-rows
+                #:find-image-comparison-on-images
                 #:transient-image-comparison)
+  (:import-from #:screenshotbot/model/company
+                #:company)
   (:import-from #:screenshotbot/model/image
                 #:dimension
+                #:dimension-height
+                #:image-dimensions
                 #:make-image
                 #:image
                 #:local-image)
@@ -575,3 +585,68 @@
   (is (equal "flex: 0 1 min(300px, calc(80vh * 1.000000)); min-width: 0;"
              (same-density-style (make-instance 'dimension :width 300 :height 200)
                                  300))))
+
+(test changed-rows-style
+  (is (equal "--changed-rows-fraction: 0.500000;"
+             (changed-rows-style (make-instance 'dimension :width 1 :height 150)
+                                 300))))
+
+(def-fixture changed-rows (&key (gk t))
+  (let ((company (make-instance 'company)))
+    (when gk
+      (gk:create :image-strip-diff)
+      (gk:allow :image-strip-diff company))
+    (let ((before (make-image :pathname im1 :company company))
+          (after (make-image :pathname im3 :company company)))
+      (&body))))
+
+(test find-changed-rows-without-the-gk
+  (with-fixture state ()
+    (with-fixture changed-rows (:gk nil)
+      (find-image-comparison-on-images before after)
+      (is (equal nil (find-changed-rows before after))))))
+
+(test find-changed-rows-doesnt-compute-the-comparison
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (is (equal nil (find-changed-rows before after)))
+      (is (equal nil (find-image-comparison-from-cache :before before :after after))))))
+
+(test find-changed-rows-with-a-cached-comparison
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (let ((comparison (find-image-comparison-on-images before after)))
+        (is-true (image-comparison-changed-rows comparison))
+        (is (eql (image-comparison-changed-rows comparison)
+                 (find-changed-rows before after)))))))
+
+(defun render-change-image-row (before after &key changed-rows)
+  (markup:write-html
+   (change-image-row :before-image before
+                     :after-image after
+                     :before-dims (image-dimensions before)
+                     :after-dims (image-dimensions after)
+                     :changed-rows changed-rows)))
+
+(test change-image-row-shows-the-arrow-without-changed-rows
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (let ((html (render-change-image-row before after)))
+        (assert-that html
+                     (contains-string "arrow-forward"))
+        (is-false (search "changed-rows-strip" html))))))
+
+(test change-image-row-shows-the-changed-rows-strip
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (let* ((changed-rows (image-comparison-changed-rows
+                            (find-image-comparison-on-images before after)))
+             (html (render-change-image-row before after
+                                            :changed-rows changed-rows)))
+        (assert-that html
+                     (contains-string "changed-rows-strip")
+                     (contains-string (changed-rows-style
+                                       (image-dimensions changed-rows)
+                                       (max (dimension-height (image-dimensions before))
+                                            (dimension-height (image-dimensions after))))))
+        (is-false (search "arrow-forward" html))))))

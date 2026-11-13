@@ -89,6 +89,7 @@
    #:image-comparison-after
    #:image-comparison-result
    #:image-comparison-changed-rows
+   #:changed-rows-enabled-p
    #:identical-p
    #:image-comparison-difference-value))
 (in-package :screenshotbot/model/image-comparison)

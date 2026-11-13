@@ -100,6 +100,8 @@
                 #:with-transient-copy)
   (:import-from #:screenshotbot/model/image-comparison
                 #:image-comparison-before
+                #:image-comparison-changed-rows
+                #:changed-rows-enabled-p
                 #:find-image-comparison-on-images)
   (:import-from #:screenshotbot/model/view
                 #:can-edit
@@ -305,10 +307,30 @@ in 80vh."
             width
             (/ width max-height))))
 
+(defun find-changed-rows (before-image after-image)
+  "The changed-rows strip for BEFORE-IMAGE and AFTER-IMAGE, if
+:image-strip-diff is enabled and the comparison has already been
+computed with a strip. We don't compute the comparison here, since
+rendering a report shouldn't open every image in it."
+  (when (changed-rows-enabled-p after-image)
+    (?. image-comparison-changed-rows
+        (find-image-comparison-on-images before-image after-image
+                                         :only-cached-p t))))
+
+(defun changed-rows-style (changed-rows-dims max-height)
+  "Style for the changed-rows strip, so that its rows line up with the
+rows of the images. The strip's container is as tall as the tallest
+image (see .changed-rows-strip in the CSS), which is MAX-HEIGHT
+pixels high, so we're at the same density if the strip takes up the
+same fraction of it."
+  (format nil "--changed-rows-fraction: ~,6f;"
+          (/ (dimension-height changed-rows-dims) max-height)))
+
 (deftag change-image-row (&key before-image
                           after-image
                           before-dims
                           after-dims
+                          changed-rows
                           figma-link)
   (let* ((same-density-p (and before-dims after-dims))
          (max-height (when same-density-p
@@ -316,7 +338,11 @@ in 80vh."
                             (dimension-height before-dims)
                             (dimension-height after-dims))))
          (img-class (when same-density-p
-                      "same-density")))
+                      "same-density"))
+         ;; The strip only lines up with the images when they're
+         ;; shown at the same density.
+         (changed-rows-dims (when (and changed-rows same-density-p)
+                              (ignore-errors (image-dimensions changed-rows)))))
     (flet ((container-style (dims)
              (when same-density-p
                (same-density-style dims max-height))))
@@ -327,6 +353,10 @@ in 80vh."
        :after-dims after-dims
        :before-style (container-style before-dims)
        :after-style (container-style after-dims)
+       :changed-rows (when changed-rows-dims
+                       changed-rows)
+       :changed-rows-style (when changed-rows-dims
+                             (changed-rows-style changed-rows-dims max-height))
        :img-class img-class
        :figma-link figma-link))))
 
@@ -336,6 +366,8 @@ in 80vh."
                                 after-dims
                                 before-style
                                 after-style
+                                changed-rows
+                                changed-rows-style
                                 img-class
                                 figma-link)
   <div class="change-image-row">
@@ -355,9 +387,17 @@ in 80vh."
       </image-badge>
     </image-container>
 
-    <div class= "arrow-forward" >
-      <mdi name= "arrow_forward" />
-    </div>
+    ,(cond
+       (changed-rows
+        <div class= "changed-rows-strip" >
+          <img src= (image-public-url changed-rows)
+               alt= "rows that changed"
+               style=changed-rows-style />
+        </div>)
+       (t
+        <div class= "arrow-forward" >
+          <mdi name= "arrow_forward" />
+        </div>))
 
     <image-container style=after-style >
       <picture-with-img
@@ -742,6 +782,8 @@ If the diff-report is cached, then we process the body immediately instead."
                         after-image=(screenshot-image after)
                         before-dims= (ignore-errors (image-dimensions (screenshot-image before)))
                         after-dims= (ignore-errors (image-dimensions (screenshot-image after)))
+                        changed-rows= (find-changed-rows (screenshot-image before)
+                                                         (screenshot-image after))
                         figma-link= (find-existing-figma-link 
                                      :channel (recorder-run-channel run) 
                                      :screenshot-name (screenshot-name before))
