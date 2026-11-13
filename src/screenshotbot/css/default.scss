@@ -1382,6 +1382,11 @@ screenshot-image-badge {
         position: relative;
         width: 12px;
 
+        // Clicking it opens the comparison modal.
+        &[data-bs-toggle] {
+            cursor: pointer;
+        }
+
         img {
             position: absolute;
             top: 6px;

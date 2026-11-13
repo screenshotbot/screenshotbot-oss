@@ -377,18 +377,23 @@ same fraction of it."
   (format nil "--changed-rows-fraction: ~,6f;"
           (/ (dimension-height changed-rows-dims) max-height)))
 
-(defun changed-rows-strip (changed-rows max-height)
+(defun changed-rows-strip (changed-rows max-height &key toggle-id)
   "The changed-rows strip to show between the images, or NIL if we can't
-get its dimensions."
+get its dimensions. If TOGGLE-ID is provided, clicking the strip opens
+the comparison modal with that id."
   (let ((dims (ignore-errors (image-dimensions changed-rows))))
     (when dims
-      <div class= "changed-rows-strip" >
+      <div class= "changed-rows-strip"
+           role= (when toggle-id "button")
+           title= (when toggle-id "Show comparison")
+           data-bs-toggle= (when toggle-id "modal")
+           data-bs-target= (when toggle-id (format nil "#~a" toggle-id)) >
         <img src= (image-public-url changed-rows)
              alt= "rows that changed"
              style= (changed-rows-style dims max-height) />
       </div>)))
 
-(defun changed-rows-check-response (before-image after-image max-height)
+(defun changed-rows-check-response (before-image after-image max-height &key toggle-id)
   "The response for CHANGED-ROWS-CHECK-NIBBLE, as an alist to encode as
 JSON. The state is \"ready\" with the strip's HTML as data, \"pending\"
 if the comparison hasn't been computed yet, or \"none\" if it has been
@@ -397,7 +402,8 @@ checking again."
   (multiple-value-bind (changed-rows cached-p)
       (cached-changed-rows before-image after-image)
     (let ((strip (when changed-rows
-                   (changed-rows-strip changed-rows max-height))))
+                   (changed-rows-strip changed-rows max-height
+                                       :toggle-id toggle-id))))
       (cond
         (strip
          `((:state . "ready")
@@ -407,14 +413,15 @@ checking again."
         (t
          `((:state . "pending")))))))
 
-(defun changed-rows-check-nibble (before-image after-image max-height)
+(defun changed-rows-check-nibble (before-image after-image max-height &key toggle-id)
   "A nibble that the JS polls (see .changed-rows-pending in
 common.js) after we've scheduled the comparison, to replace the arrow
 with the strip once it's ready."
   (nibble (:name :changed-rows-check)
     (setf (hunchentoot:content-type*) "application/json")
     (json:encode-json-to-string
-     (changed-rows-check-response before-image after-image max-height))))
+     (changed-rows-check-response before-image after-image max-height
+                                  :toggle-id toggle-id))))
 
 (deftag change-image-row (&key before-image
                           after-image
@@ -422,9 +429,11 @@ with the strip once it's ready."
                           after-dims
                           changed-rows
                           changed-rows-pending-p
+                          toggle-id
                           figma-link)
   "CHANGED-ROWS and CHANGED-ROWS-PENDING-P are the values of
-FIND-CHANGED-ROWS."
+FIND-CHANGED-ROWS. TOGGLE-ID is the id of the comparison modal that
+clicking the strip opens."
   (let* ((same-density-p (and before-dims after-dims))
          (max-height (when same-density-p
                        (max 1
@@ -435,10 +444,12 @@ FIND-CHANGED-ROWS."
          ;; The strip only lines up with the images when they're
          ;; shown at the same density.
          (strip (when (and changed-rows same-density-p)
-                  (changed-rows-strip changed-rows max-height)))
+                  (changed-rows-strip changed-rows max-height
+                                      :toggle-id toggle-id)))
          (changed-rows-check (when (and changed-rows-pending-p same-density-p)
                                (changed-rows-check-nibble before-image after-image
-                                                          max-height))))
+                                                          max-height
+                                                          :toggle-id toggle-id))))
     (flet ((container-style (dims)
              (when same-density-p
                (same-density-style dims max-height))))
@@ -882,6 +893,7 @@ If the diff-report is cached, then we process the body immediately instead."
                           after-dims= (ignore-errors (image-dimensions (screenshot-image after)))
                           changed-rows= changed-rows
                           changed-rows-pending-p= changed-rows-pending-p
+                          toggle-id=toggle-id
                           figma-link= (find-existing-figma-link 
                                        :channel (recorder-run-channel run) 
                                        :screenshot-name (screenshot-name before))

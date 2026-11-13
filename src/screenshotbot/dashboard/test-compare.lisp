@@ -670,6 +670,16 @@
         (assert-that (assoc-value response :data)
                      (contains-string "changed-rows-strip"))))))
 
+(test changed-rows-check-response-strip-opens-the-comparison-modal
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (find-image-comparison-on-images before after)
+      (let ((response (changed-rows-check-response before after (max-height before after)
+                                                   :toggle-id "toggle-id-3")))
+        (assert-that (assoc-value response :data)
+                     (contains-string "data-bs-toggle=\"modal\"")
+                     (contains-string "data-bs-target=\"#toggle-id-3\""))))))
+
 (test changed-rows-check-response-when-the-comparison-has-no-strip
   (with-fixture state ()
     ;; Without the gk, the comparison is computed without a strip.
@@ -678,14 +688,16 @@
       (is (equal `((:state . "none"))
                  (changed-rows-check-response before after (max-height before after)))))))
 
-(defun render-change-image-row (before after &key changed-rows changed-rows-pending-p)
+(defun render-change-image-row (before after &key changed-rows changed-rows-pending-p
+                                                  toggle-id)
   (markup:write-html
    (change-image-row :before-image before
                      :after-image after
                      :before-dims (image-dimensions before)
                      :after-dims (image-dimensions after)
                      :changed-rows changed-rows
-                     :changed-rows-pending-p changed-rows-pending-p)))
+                     :changed-rows-pending-p changed-rows-pending-p
+                     :toggle-id toggle-id)))
 
 (test change-image-row-shows-the-arrow-without-changed-rows
   (with-fixture state ()
@@ -720,3 +732,26 @@
                                        (image-dimensions changed-rows)
                                        (max-height before after))))
         (is-false (search "arrow-forward" html))))))
+
+(test change-image-row-strip-opens-the-comparison-modal
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (let* ((changed-rows (image-comparison-changed-rows
+                            (find-image-comparison-on-images before after)))
+             (html (render-change-image-row before after
+                                            :changed-rows changed-rows
+                                            :toggle-id "toggle-id-3")))
+        (assert-that html
+                     (contains-string "data-bs-toggle=\"modal\"")
+                     (contains-string "data-bs-target=\"#toggle-id-3\""))))))
+
+(test change-image-row-strip-without-a-modal
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (let* ((changed-rows (image-comparison-changed-rows
+                            (find-image-comparison-on-images before after)))
+             (html (render-change-image-row before after
+                                            :changed-rows changed-rows)))
+        (assert-that html
+                     (contains-string "changed-rows-strip"))
+        (is-false (search "data-bs-toggle" html))))))
