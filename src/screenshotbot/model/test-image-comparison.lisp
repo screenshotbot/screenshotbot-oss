@@ -119,6 +119,8 @@
 
 (test changed-rows-is-not-created-without-the-gk
   (with-fixture state ()
+    ;; The gk is enabled by default, so explicitly create it as disabled.
+    (gk:create :image-strip-diff)
     (let ((before (make-image :pathname im1))
           (after (make-image :pathname im3)))
       (let ((result (find-image-comparison-on-images before after)))

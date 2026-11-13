@@ -599,8 +599,10 @@
 
 (def-fixture changed-rows (&key (gk t))
   (let ((company (make-instance 'company)))
+    ;; The gk is enabled by default, so create it (which defaults to
+    ;; disabled) and only allow it for the company when GK is true.
+    (gk:create :image-strip-diff)
     (when gk
-      (gk:create :image-strip-diff)
       (gk:allow :image-strip-diff company))
     (let ((before (make-image :pathname im1 :company company))
           (after (make-image :pathname im3 :company company)))

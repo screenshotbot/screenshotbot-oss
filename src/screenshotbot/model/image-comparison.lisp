@@ -94,7 +94,8 @@
    #:image-comparison-difference-value))
 (in-package :screenshotbot/model/image-comparison)
 
-(defgk :image-strip-diff)
+(defgk :image-strip-diff
+  :enabledp t)
 
 (defclass transient-image-comparison ()
   ((before :initarg :before
