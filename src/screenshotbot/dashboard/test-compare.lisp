@@ -19,7 +19,12 @@
                 #:same-density-style
                 #:changed-rows-style
                 #:find-changed-rows
+                #:schedule-image-comparison
+                #:*changed-rows-pool*
+                #:*scheduled-comparisons*
                 #:change-image-row)
+  (:import-from #:util/threading
+                #:synchronous-executor)
   (:import-from #:screenshotbot/model/image-comparison
                 #:find-image-comparison-from-cache
                 #:image-comparison-changed-rows
@@ -606,11 +611,28 @@
       (find-image-comparison-on-images before after)
       (is (equal nil (find-changed-rows before after))))))
 
-(test find-changed-rows-doesnt-compute-the-comparison
+(test find-changed-rows-schedules-the-comparison
   (with-fixture state ()
     (with-fixture changed-rows ()
-      (is (equal nil (find-changed-rows before after)))
-      (is (equal nil (find-image-comparison-from-cache :before before :after after))))))
+      (let ((*changed-rows-pool* (make-instance 'synchronous-executor))
+            (*scheduled-comparisons* (fset:empty-set)))
+        ;; The first render doesn't show the strip, but schedules the
+        ;; comparison (run immediately here), so the strip shows up
+        ;; the next time.
+        (is (equal nil (find-changed-rows before after)))
+        (is-true (find-image-comparison-from-cache :before before :after after))
+        (is-true (find-changed-rows before after))
+        (is (fset:empty? *scheduled-comparisons*))))))
+
+(test schedule-image-comparison-skips-already-scheduled-comparisons
+  (with-fixture state ()
+    (with-fixture changed-rows ()
+      (let ((*changed-rows-pool* (make-instance 'synchronous-executor))
+            (*scheduled-comparisons* (fset:set (cons (store-object-id before)
+                                                     (store-object-id after)))))
+        ;; In the other order, since the comparison doesn't depend on it.
+        (schedule-image-comparison after before)
+        (is (equal nil (find-image-comparison-from-cache :before before :after after)))))))
 
 (test find-changed-rows-with-a-cached-comparison
   (with-fixture state ()

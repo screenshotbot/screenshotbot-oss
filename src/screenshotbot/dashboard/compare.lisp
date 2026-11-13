@@ -25,6 +25,8 @@
   (:import-from #:screenshotbot/server
                 #:make-thread
                 #:defhandler)
+  (:import-from #:util/threading
+                #:max-pool)
   (:import-from #:screenshotbot/report-api
                 #:render-diff-report)
   (:import-from #:screenshotbot/dashboard/run-page
@@ -307,15 +309,54 @@ in 80vh."
             width
             (/ width max-height))))
 
+(defvar *changed-rows-pool* (make-instance 'max-pool :max 2)
+  "Pool for computing image comparisons in the background for the
+changed-rows strip. It's separate from *MAGICK-POOL*, so that a large
+compare page doesn't hold up other image processing.")
+
+(defvar *scheduled-comparisons-lock* (bt:make-lock "scheduled-comparisons"))
+
+(defvar *scheduled-comparisons* (fset:empty-set)
+  "The (before-id . after-id) pairs, ordered by id, of the comparisons
+that are scheduled but haven't finished yet.")
+
+(defun schedule-image-comparison (before-image after-image)
+  "Compute the image comparison for BEFORE-IMAGE and AFTER-IMAGE in the
+background, unless it's already scheduled."
+  (let ((key (let ((before-id (store-object-id before-image))
+                   (after-id (store-object-id after-image)))
+               (cons (min before-id after-id)
+                     (max before-id after-id)))))
+    (when (bt:with-lock-held (*scheduled-comparisons-lock*)
+            (unless (fset:contains? *scheduled-comparisons* key)
+              (setf *scheduled-comparisons*
+                    (fset:with *scheduled-comparisons* key))))
+      (make-thread
+       (lambda ()
+         (unwind-protect
+              (find-image-comparison-on-images before-image after-image)
+           (bt:with-lock-held (*scheduled-comparisons-lock*)
+             (setf *scheduled-comparisons*
+                   (fset:less *scheduled-comparisons* key)))))
+       :name "changed-rows-comparison"
+       :pool *changed-rows-pool*))))
+
 (defun find-changed-rows (before-image after-image)
   "The changed-rows strip for BEFORE-IMAGE and AFTER-IMAGE, if
 :image-strip-diff is enabled and the comparison has already been
 computed with a strip. We don't compute the comparison here, since
-rendering a report shouldn't open every image in it."
+rendering a report shouldn't open every image in it. Instead, if
+there's no comparison yet (e.g. on a compare page, which isn't warmed
+up), we schedule it, so the strip shows up on a later render."
   (when (changed-rows-enabled-p after-image)
-    (?. image-comparison-changed-rows
-        (find-image-comparison-on-images before-image after-image
-                                         :only-cached-p t))))
+    (let ((comparison (find-image-comparison-on-images before-image after-image
+                                                       :only-cached-p t)))
+      (cond
+        (comparison
+         (image-comparison-changed-rows comparison))
+        (t
+         (schedule-image-comparison before-image after-image)
+         nil)))))
 
 (defun changed-rows-style (changed-rows-dims max-height)
   "Style for the changed-rows strip, so that its rows line up with the
