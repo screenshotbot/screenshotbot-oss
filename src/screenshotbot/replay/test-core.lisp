@@ -16,6 +16,7 @@
                 #:blacklisted-domain
                 #:blacklisted-domain-p
                 #:snapshot-request
+                #:work-branch
                 #:http-header-value
                 #:http-header-name
                 #:asset-response-headers
@@ -478,6 +479,22 @@ background: url(   shttps://google.com?f=1   )
                                          :channel-name "bleh")))
     (finishes (encode-json snapshot-request))))
 
+
+;; Older SDKs don't send a work branch. Their cl-store'd requests are
+;; restored without running initforms, leaving the slot unbound.
+(test work-branch-of-request-from-older-sdk
+  (let ((request (make-instance 'snapshot-request
+                                :work-branch "main")))
+    (is (equal "main" (work-branch request)))
+    (slot-makunbound request 'screenshotbot/replay/core::work-branch)
+    (is (eql nil (work-branch request)))))
+
+(test work-branch-survives-cl-store
+  (uiop:with-temporary-file (:pathname p)
+    (cl-store:store (make-instance 'snapshot-request
+                                   :work-branch "main")
+                    p)
+    (is (equal "main" (work-branch (cl-store:restore p))))))
 
 ;; TODO: these tests all hit the network!
 

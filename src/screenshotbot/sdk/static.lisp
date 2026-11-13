@@ -148,6 +148,7 @@ upload blobs that haven't been uploaded before."
                                                  repo-url
                                                  browser-configs
                                                  main-branch
+                                                 work-branch
                                                  pull-request
                                                  production)
   "Schedule a Replay build with the given snapshot"
@@ -161,6 +162,7 @@ upload blobs that haven't been uploaded before."
                                  :channel-name channel
                                  :pull-request pull-request
                                  :main-branch main-branch
+                                 :work-branch work-branch
                                  :repo-url repo-url
                                  :browser-configs (read-browser-configs browser-configs)
                                  :sdk-flags (get-sdk-flags)
@@ -316,6 +318,7 @@ HTML files to render.")
                          :html-provider (make-html-provider (getopt cmd :html-list))
                          :browser-configs (getopt cmd :browser-configs)
                          :main-branch (getopt cmd :main-branch)
+                         :work-branch (e:work-branch env)
                          (loop for key  in `(:assets-root :production
                                              :channel)
                                append (list key (getopt cmd key)))))))))

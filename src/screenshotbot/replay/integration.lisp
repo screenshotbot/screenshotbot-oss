@@ -245,7 +245,8 @@ replay jobs, in which case we default the main branch to master."
                  :repo-clean-p t
                  :commit-hash (when request (replay:commit request))
                  :merge-base (when request (replay:merge-base request))
-                 :main-branch-hash (when request (replay:branch-hash request))))
+                 :main-branch-hash (when request (replay:branch-hash request))
+                 :work-branch (when request (replay:work-branch request))))
 
 (defun process-results (run results
                         &key (engine *engine*))

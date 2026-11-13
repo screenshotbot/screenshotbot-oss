@@ -73,6 +73,7 @@
    #:repo-url
    #:merge-base
    #:commit
+   #:work-branch
    #:branch-hash
    #:request-counter
    #:call-with-request-counter
@@ -141,8 +142,18 @@
                :json-key "mergeBase"
                :json-type (or null :string)
                :initform nil
-               :reader merge-base))
+               :reader merge-base)
+   (work-branch :initarg :work-branch
+                :json-key "workBranch"
+                :json-type (or null :string)
+                :initform nil))
   (:metaclass ext-json-serializable-class))
+
+(defmethod work-branch ((self snapshot-request))
+  ;; Requests from older SDKs are restored with cl-store, which
+  ;; doesn't run the initforms, so this slot might be unbound.
+  (when (slot-boundp self 'work-branch)
+    (slot-value self 'work-branch)))
 
 (defclass context ()
   ((seen :initform (make-hash-table :test #'equal)

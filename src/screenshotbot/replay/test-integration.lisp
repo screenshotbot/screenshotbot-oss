@@ -439,3 +439,12 @@
                 (make-replay-run-context
                  run
                  (make-instance 'snapshot-request)))))))
+
+(test make-replay-run-context-uses-work-branch-from-request
+  (let ((run (make-instance 'integration:run :channel "foo")))
+    (is (equal "main"
+               (screenshotbot/sdk/run-context:work-branch
+                (make-replay-run-context
+                 run
+                 (make-instance 'snapshot-request
+                                :work-branch "main")))))))
