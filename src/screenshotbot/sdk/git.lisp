@@ -241,13 +241,39 @@ rev-parse compares against the remote branch :/"
                      (str:split ":" line))
            (cons (str:downcase key) value)))))
 
+(defun no-prompt-command (cmd)
+  "Wrap CMD so that git fails instead of prompting for a username and
+password, without changing our own process's environment."
+  (cond
+    ((uiop:os-windows-p)
+     ;; In cmd, `set GIT_ASKPASS=` would unset it rather than set it to
+     ;; empty, so we can only disable the terminal and GCM prompts here.
+     (list "cmd" "/c"
+           (format nil "set GIT_TERMINAL_PROMPT=0&& set GCM_INTERACTIVE=never&& ~a"
+                   (uiop:escape-shell-command cmd))))
+    (t
+     (list*
+      "env"
+      ;; Don't prompt on the terminal
+      "GIT_TERMINAL_PROMPT=0"
+      ;; An empty GIT_ASKPASS stops git from running core.askPass or
+      ;; SSH_ASKPASS, which might pop up a GUI prompt.
+      "GIT_ASKPASS="
+      ;; Git Credential Manager has its own prompts
+      "GCM_INTERACTIVE=never"
+      cmd))))
+
 (defmethod credential-fill (url)
   "Call git credential fill to retrieve credentials for the given URL.
-Returns a list of (username password) or NIL if no credentials found."
+Returns a list of (username password) or NIL if no credentials found.
+
+This never prompts: if no credential helper has credentials for URL,
+we return NIL. (Without this, git falls back to asking for a password
+on the terminal, even for public repos.)"
   (let* ((input (format nil "url=~a"
                         url)))
     (multiple-value-bind (output error-output exit-code)
-        (uiop:run-program (list "git" "credential" "fill")
+        (uiop:run-program (no-prompt-command (list "git" "credential" "fill"))
                           :input (make-string-input-stream input)
                           :output :string
                           :error-output :string
