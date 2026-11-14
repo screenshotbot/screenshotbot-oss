@@ -609,6 +609,7 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
       (let ((run (make-recorder-run
                   :merge-base nil
                   :channel channel
+                  :trunkp t
                   :branch-hash "bb"
                   :commit-hash "aa")))
         (is
@@ -629,6 +630,7 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
       (let ((run (make-recorder-run
                   :merge-base nil
                   :channel channel
+                  :trunkp t
                   :branch-hash "bb"
                   :override-commit-hash "cc"
                   :commit-hash "aa")))
@@ -650,6 +652,7 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
       (let ((run (make-recorder-run
                   :merge-base "provided-sha"
                   :channel channel
+                  :trunkp t
                   :branch-hash "bb"
                   :commit-hash "aa")))
         (is
@@ -667,6 +670,7 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
       (let ((run (make-recorder-run
                   :merge-base nil
                   :channel channel
+                  :trunkp t
                   :branch-hash "bb"
                   :commit-hash "aa")))
         (is
@@ -674,6 +678,29 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
                 (pr-merge-base
                  promoter
                  run)))))))
+
+(test pr-merge-base-for-non-production-run-not-in-graph
+  (with-fixture state ()
+    (let ((compute-merge-base-called nil))
+      (if-called 'compute-merge-base
+                 (lambda (&rest args)
+                   (declare (ignore args))
+                   (setf compute-merge-base-called t)
+                   "computed-sha"))
+      (let ((run (make-recorder-run
+                  :merge-base "provided-sha"
+                  :channel channel
+                  :branch-hash "bb"
+                  :commit-hash "aa")))
+        (signals simple-warning
+          (pr-merge-base promoter run))
+        (is
+         (equal "provided-sha"
+                (handler-bind ((warning #'muffle-warning))
+                  (pr-merge-base
+                   (make-instance 'test-promoter)
+                   run))))
+        (is-false compute-merge-base-called)))))
 
 (test previous-review-returns-nil-if-theres-nothing
   (with-fixture state ()

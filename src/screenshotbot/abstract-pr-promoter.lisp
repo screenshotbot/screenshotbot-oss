@@ -53,6 +53,7 @@
                 #:push-run-warning
                 #:runs-for-channel
                 #:recorder-run-branch-hash
+                #:trunkp
                 #:recorder-run-branch
                 #:recorder-run-work-branch
                 #:abstract-run
@@ -288,11 +289,20 @@ API. We're eventually going to replace it with this."
                                     (lambda (commit)
                                       (dag:get-commit dag commit))
                                     active-commits)))
-       (compute-merge-base repo
-                           (list*
-                            master-commit
-                            active-commits-in-dag)
-                           this-commit)))))
+       (cond
+         ((and (not (trunkp run))
+               (not (dag:get-commit dag this-commit)))
+          ;; The SDK only uploads the commit graph for production
+          ;; runs, so this is expected for --production=false runs.
+          (warn "Non-production run, so commit ~a wasn't uploaded to the commit graph. Falling back to the merge base provided by the client."
+                this-commit)
+          nil)
+         (t
+          (compute-merge-base repo
+                              (list*
+                               master-commit
+                               active-commits-in-dag)
+                              this-commit)))))))
 
 (defmethod pr-merge-base ((promoter abstract-pr-promoter)
                           (run recorder-run))
