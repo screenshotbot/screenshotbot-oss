@@ -11,7 +11,8 @@
   (:export
    #:init
    #:main
-   #:image-main))
+   #:image-main
+   #:affected-tests))
 (in-package :test-runner/test-runner)
 
 (defvar *test-trace-io* nil)
@@ -91,6 +92,18 @@
    "screenshotbot/tests"
    #- (or screenshotbot-oss eaase-oss)
    "screenshotbot.pro/tests"))
+
+(defun affected-tests (old-commit &key (new-commit "HEAD"))
+  "The test systems that are affected by the changes between
+  `old-commit` and `new-commit`."
+  (test-runner/affected-systems:filter-affected-systems
+   (union
+    (find-tests)
+    (screenshot-tests)
+    :test #'string-equal)
+   (test-runner/affected-systems:changed-files
+    old-commit
+    :new-commit new-commit)))
 
 (defun load-systems ()
   (let ((systems (or
@@ -232,6 +245,15 @@
     ((str:s-member system:*line-arguments-list* "-list-tests")
      (format t "~s~%" (find-tests))
      (uiop:quit 0))
+    #+lispworks
+    ((str:s-member system:*line-arguments-list* "-affected-tests")
+     (let ((old-commit (second (member "-affected-tests" system:*line-arguments-list*
+                                       :test #'equal))))
+       (unless old-commit
+         (format *error-output* "Usage: build/t -affected-tests <old-commit>~%")
+         (uiop:quit 1))
+       (format t "~{~a~%~}" (affected-tests old-commit))
+       (uiop:quit 0)))
     #+lispworks
     ((str:s-member system:*line-arguments-list* "-test-missing-deps")
      (test-missing-deps)

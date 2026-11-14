@@ -19,3 +19,9 @@
                :cl-fad)
   :components ((:file "affected-systems")
                (:file "test-runner")))
+
+(defsystem :test-runner/tests
+  :serial t
+  :depends-on (:test-runner
+               :util/fiveam)
+  :components ((:file "test-affected-systems")))
