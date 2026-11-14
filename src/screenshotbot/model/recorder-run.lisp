@@ -339,7 +339,8 @@ we can write methods that are generic to both."))
       :initform nil
       :documentation "Deprecated: the old list of screenshots, these days we generate them
 from the map. This is transient so that older snapshots can still be
-restored, delete it once all snapshots are written without it.")
+restored. Store version 43 snapshots are written without it, so it can
+be deleted once *min-store-version* is >= 43.")
      (%screenshot-map
       :initarg :screenshot-map
       :accessor run-screenshot-map)
