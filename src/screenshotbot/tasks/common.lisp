@@ -65,13 +65,20 @@
   (let ((previous-run (report-previous-run report))
         (run (report-run report)))
    (format nil
-           "Some screenshots have changed between commits ~a and ~a
+           "~a
 
 See ~a to view the changes.
 
 Don't panic! This is might not be a regression! Usually screenshot changes are intentional, but it's still good to review the changes to make sure it's not a regression."
-           (recorder-run-commit previous-run)
-           (recorder-run-commit run)
+           (cond
+             (previous-run
+              (format nil "Some screenshots have changed between commits ~a and ~a"
+                      (recorder-run-commit previous-run)
+                      (recorder-run-commit run)))
+             (t
+              ;; The first promoted run on a channel has no previous run.
+              (format nil "Screenshots have been added in commit ~a"
+                      (recorder-run-commit run))))
            (report-link report))))
 
 

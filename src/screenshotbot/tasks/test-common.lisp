@@ -23,7 +23,13 @@
   (:import-from #:screenshotbot/user-api
                 #:channel)
   (:import-from #:screenshotbot/testing
-                #:with-installation))
+                #:with-installation)
+  (:import-from #:screenshotbot/task-integration-api
+                #:get-issue-content)
+  (:import-from #:screenshotbot/tasks/common
+                #:noop-task-integration)
+  (:import-from #:screenshotbot/model/report
+                #:report))
 (in-package :screenshotbot/tasks/test-common)
 
 (util/fiveam:def-suite)
@@ -58,3 +64,38 @@
      (finishes
        (%maybe-send-tasks run)))))
 
+
+
+(test get-issue-content-with-previous-run
+  (with-fixture state ()
+    (let* ((previous-run (make-recorder-run
+                          :channel channel
+                          :commit-hash "aaaa"
+                          :company company))
+           (run (make-recorder-run
+                 :channel channel
+                 :commit-hash "bbbb"
+                 :company company))
+           (report (make-instance 'report
+                                  :run run
+                                  :previous-run previous-run
+                                  :channel channel)))
+      (is (search "between commits aaaa and bbbb"
+                  (get-issue-content (make-instance 'noop-task-integration
+                                                    :company company)
+                                     report))))))
+
+(test get-issue-content-without-previous-run
+  (with-fixture state ()
+    (let* ((run (make-recorder-run
+                 :channel channel
+                 :commit-hash "bbbb"
+                 :company company))
+           (report (make-instance 'report
+                                  :run run
+                                  :previous-run nil
+                                  :channel channel)))
+      (is (search "added in commit bbbb"
+                  (get-issue-content (make-instance 'noop-task-integration
+                                                    :company company)
+                                     report))))))
