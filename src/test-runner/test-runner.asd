@@ -1,3 +1,11 @@
+(defsystem :test-runner/affected-systems
+  :serial t
+  :depends-on (:alexandria
+               :cl-fad
+               :graphs
+               :log4cl)
+  :components ((:file "affected-systems")))
+
 (defsystem :test-runner
   :serial t
   ;; Most of these dependencies are because we need these to be loaded
@@ -16,9 +24,9 @@
                :util.misc
                :util.threading
                :tmpdir
-               :cl-fad)
-  :components ((:file "affected-systems")
-               (:file "test-runner")))
+               :cl-fad
+               :test-runner/affected-systems)
+  :components ((:file "test-runner")))
 
 (defsystem :test-runner/tests
   :serial t
