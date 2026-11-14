@@ -334,10 +334,12 @@ we can write methods that are generic to both."))
       :documentation "Jobs that are done periodically, as opposed to for
     each commit. We will attempt to promote each run. This is mostly
     for taking screenshots of public websites.")
-     (Screenshots
-      :initarg :screenshots
+     (screenshots
+      :transient t
       :initform nil
-      :documentation "The old list of screenshots, these days we generate them from the map")
+      :documentation "Deprecated: the old list of screenshots, these days we generate them
+from the map. This is transient so that older snapshots can still be
+restored, delete it once all snapshots are written without it.")
      (%screenshot-map
       :initarg :screenshot-map
       :accessor run-screenshot-map)
