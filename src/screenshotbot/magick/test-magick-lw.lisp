@@ -596,6 +596,9 @@
         (is (equal "srgba(0,0,0,0)" (get-px-as-string strip 0 0)))))))
 
 (test foreign-function-defined-p
+  ;; magick-native is only loaded when we first use ImageMagick, so
+  ;; don't rely on an earlier test having done that.
+  (load-magick-native)
   (is-true (foreign-function-defined-p "screenshotbot_mark_changed_row"))
   (is-false (foreign-function-defined-p "screenshotbot_not_a_real_function")))
 
