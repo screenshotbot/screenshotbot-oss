@@ -225,13 +225,11 @@
     (log:info "Running sdk")
     (run (list *sdk*
                "--directory" "./screenshots"
-               "--channel" "sdk-integration-tests"
-               "--production=false"))
+               "--channel" "sdk-integration-tests"))
     #+darwin
     (run (list "arch" "-x86_64"
                *sdk*
-               "--directory" "./screenshots"
-               "--production=false")))
+               "--directory" "./screenshots")))
 
   (with-repo
       (with-open-file (stream (path:catfile *default-cmd-dir* "ascii.txt")
@@ -244,8 +242,7 @@
     (log:info "final run with random code")
     (run (list *sdk*
                "--directory" "./screenshots"
-               "--channel" "integration-tests-with-random-code"
-               "--production=false")))
+               "--channel" "integration-tests-with-random-code")))
 
   #+darwin
   (with-repo
@@ -256,8 +253,7 @@
     (run-gen.sh)
     (run (list "arch" "-x86_64" *sdk*
                "--main-branch" "master" ;; For some reason, in a recent change this is not being detected.
-               "--directory" "./screenshots"
-               "--production=false"))))
+               "--directory" "./screenshots"))))
 
 (defun run-tests-with-tmpdir ()
   (log:config :sane :immediate-flush t :pattern "[%D{%H:%M:%S}] %5p: %m%n")
