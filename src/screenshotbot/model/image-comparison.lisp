@@ -90,6 +90,7 @@
    #:image-comparison-result
    #:image-comparison-changed-rows
    #:changed-rows-enabled-p
+   #:ensure-changed-rows
    #:identical-p
    #:image-comparison-difference-value))
 (in-package :screenshotbot/model/image-comparison)
@@ -290,34 +291,46 @@ old."
                                                        changed-rows-saved-p
                                                        after))))))))))
 
+(defun recompute-missing-values (image-comparison)
+  "Recompute IMAGE-COMPARISON, to fill in its difference-value, and its
+changed-rows if it's missing (and enabled)."
+  (let ((after (image-comparison-after image-comparison)))
+    (with-tmp-image-file (:pathname output-image :type "webp")
+      (with-changed-rows-output (changed-rows-output after)
+        (multiple-value-bind (identical-p difference-value changed-rows-saved-p)
+            (do-image-comparison (image-comparison-before image-comparison)
+              after
+              output-image
+              ;; We're already paying for opening the images, so
+              ;; populate the changed-rows too if it's missing.
+              :changed-rows-output (unless (image-comparison-changed-rows image-comparison)
+                                     changed-rows-output))
+          (declare (ignore identical-p))
+          (unless (image-comparison-changed-rows image-comparison)
+            (setf (image-comparison-changed-rows image-comparison)
+                  (make-changed-rows-image changed-rows-output
+                                           changed-rows-saved-p
+                                           after)))
+          (setf (image-comparison-difference-value image-comparison)
+                difference-value))))))
+
 (defun maybe-populate-difference-value (image-comparison)
   "As a migration strategy for T1547, if the difference-value is not
 already present, let's recompute it. We expect this logic to not be
 hit too much in production."
-  (cond
-    ((image-comparison-difference-value image-comparison)
-     (values))
-    (t
-     (let ((after (image-comparison-after image-comparison)))
-       (with-tmp-image-file (:pathname output-image :type "webp")
-         (with-changed-rows-output (changed-rows-output after)
-           (multiple-value-bind (identical-p difference-value changed-rows-saved-p)
-               (do-image-comparison (image-comparison-before image-comparison)
-                 after
-                 output-image
-                 ;; We're already paying for opening the images, so
-                 ;; populate the changed-rows too if it's missing.
-                 :changed-rows-output (unless (image-comparison-changed-rows image-comparison)
-                                        changed-rows-output))
-             (declare (ignore identical-p))
-             (unless (image-comparison-changed-rows image-comparison)
-               (setf (image-comparison-changed-rows image-comparison)
-                     (make-changed-rows-image changed-rows-output
-                                              changed-rows-saved-p
-                                              after)))
-             (setf (image-comparison-difference-value image-comparison)
-                   difference-value))))))))
+  (unless (image-comparison-difference-value image-comparison)
+    (recompute-missing-values image-comparison)))
 
+(defun ensure-changed-rows (image-comparison)
+  "If IMAGE-COMPARISON was computed without a changed-rows strip (e.g.
+before :image-strip-diff was enabled), recompute it to add one. This
+opens both images, so it's meant to be called from a background job.
+
+The strip might still be missing afterwards, e.g. if magick-native is
+too old to compute it."
+  (when (and (not (image-comparison-changed-rows image-comparison))
+             (changed-rows-enabled-p (image-comparison-after image-comparison)))
+    (recompute-missing-values image-comparison)))
 
 (defclass image-comparison-subsystem ()
   ())

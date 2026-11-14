@@ -15,6 +15,7 @@
                 #:def-easy-macro)
   (:import-from #:screenshotbot/model/image-comparison
                 #:remove-image-comparison
+                #:ensure-changed-rows
                 #:image-comparison-changed-rows
                 #:read-snapshot
                 #:write-snapshot
@@ -169,6 +170,25 @@
         (find-image-comparison-on-images before after)
         (is-true (image-comparison-difference-value result))
         (is-true (image-comparison-changed-rows result))))))
+
+(test ensure-changed-rows-adds-a-missing-strip
+  (with-fixture state ()
+    (with-fixture image-strip-diff-enabled ()
+      (let ((result (find-image-comparison-on-images before after)))
+        (setf (image-comparison-changed-rows result) nil)
+        (ensure-changed-rows result)
+        (is-true (image-comparison-changed-rows result))
+        (is-true (image-comparison-difference-value result))))))
+
+(test ensure-changed-rows-does-nothing-without-the-gk
+  (with-fixture state ()
+    ;; The gk is enabled by default, so explicitly create it as disabled.
+    (gk:create :image-strip-diff)
+    (let ((before (make-image :pathname im1))
+          (after (make-image :pathname im3)))
+      (let ((result (find-image-comparison-on-images before after)))
+        (ensure-changed-rows result)
+        (is (equal nil (image-comparison-changed-rows result)))))))
 
 (test difference-value-is-populated-if-it-doesnt-exist
   "This is a migration strategy, to avoid having to recompute everything

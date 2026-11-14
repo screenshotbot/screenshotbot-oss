@@ -104,6 +104,7 @@
                 #:image-comparison-before
                 #:image-comparison-changed-rows
                 #:changed-rows-enabled-p
+                #:ensure-changed-rows
                 #:find-image-comparison-on-images)
   (:import-from #:screenshotbot/model/view
                 #:can-edit
@@ -320,13 +321,22 @@ compare page doesn't hold up other image processing.")
   "The (before-id . after-id) pairs, ordered by id, of the comparisons
 that are scheduled but haven't finished yet.")
 
+(defun scheduled-comparison-key (before-image after-image)
+  (let ((before-id (store-object-id before-image))
+        (after-id (store-object-id after-image)))
+    (cons (min before-id after-id)
+          (max before-id after-id))))
+
+(defun comparison-scheduled-p (before-image after-image)
+  (bt:with-lock-held (*scheduled-comparisons-lock*)
+    (fset:contains? *scheduled-comparisons*
+                    (scheduled-comparison-key before-image after-image))))
+
 (defun schedule-image-comparison (before-image after-image)
   "Compute the image comparison for BEFORE-IMAGE and AFTER-IMAGE in the
-background, unless it's already scheduled."
-  (let ((key (let ((before-id (store-object-id before-image))
-                   (after-id (store-object-id after-image)))
-               (cons (min before-id after-id)
-                     (max before-id after-id)))))
+background, along with its changed-rows strip if it was already
+computed without one, unless it's already scheduled."
+  (let ((key (scheduled-comparison-key before-image after-image)))
     (when (bt:with-lock-held (*scheduled-comparisons-lock*)
             (unless (fset:contains? *scheduled-comparisons* key)
               (setf *scheduled-comparisons*
@@ -334,7 +344,8 @@ background, unless it's already scheduled."
       (make-thread
        (lambda ()
          (unwind-protect
-              (find-image-comparison-on-images before-image after-image)
+              (ensure-changed-rows
+               (find-image-comparison-on-images before-image after-image))
            (bt:with-lock-held (*scheduled-comparisons-lock*)
              (setf *scheduled-comparisons*
                    (fset:less *scheduled-comparisons* key)))))
@@ -353,16 +364,16 @@ computed comparison, even if it doesn't have a strip."
 (defun find-changed-rows (before-image after-image)
   "The changed-rows strip for BEFORE-IMAGE and AFTER-IMAGE, if
 :image-strip-diff is enabled and the comparison has already been
-computed with a strip. We don't compute the comparison here, since
-rendering a report shouldn't open every image in it. Instead, if
-there's no comparison yet (e.g. on a compare page, which isn't warmed
-up), we schedule it, and return T as the second value to say that the
-strip might be ready soon."
+computed with a strip. We don't compute anything here, since rendering
+a report shouldn't open every image in it. Instead, if there's no
+comparison yet (e.g. on a compare page, which isn't warmed up), or it
+was computed without a strip (e.g. before :image-strip-diff was
+enabled), we schedule it, and return T as the second value to say that
+the strip might be ready soon."
   (when (changed-rows-enabled-p after-image)
-    (multiple-value-bind (changed-rows cached-p)
-        (cached-changed-rows before-image after-image)
+    (let ((changed-rows (cached-changed-rows before-image after-image)))
       (cond
-        (cached-p
+        (changed-rows
          (values changed-rows nil))
         (t
          (schedule-image-comparison before-image after-image)
@@ -396,22 +407,25 @@ the comparison modal with that id."
 (defun changed-rows-check-response (before-image after-image max-height &key toggle-id)
   "The response for CHANGED-ROWS-CHECK-NIBBLE, as an alist to encode as
 JSON. The state is \"ready\" with the strip's HTML as data, \"pending\"
-if the comparison hasn't been computed yet, or \"none\" if it has been
-computed but we can't show a strip for it, so there's no point
-checking again."
-  (multiple-value-bind (changed-rows cached-p)
-      (cached-changed-rows before-image after-image)
-    (let ((strip (when changed-rows
-                   (changed-rows-strip changed-rows max-height
-                                       :toggle-id toggle-id))))
-      (cond
-        (strip
-         `((:state . "ready")
-           (:data . ,(markup:write-html strip))))
-        (cached-p
-         `((:state . "none")))
-        (t
-         `((:state . "pending")))))))
+if the comparison or its strip is still being computed, or \"none\"
+if it has been computed but we can't show a strip for it, so there's no
+point checking again."
+  ;; Check whether it's scheduled before looking at the comparison, so
+  ;; that if it finishes in between we still see its strip.
+  (let ((scheduled-p (comparison-scheduled-p before-image after-image)))
+    (multiple-value-bind (changed-rows cached-p)
+        (cached-changed-rows before-image after-image)
+      (let ((strip (when changed-rows
+                     (changed-rows-strip changed-rows max-height
+                                         :toggle-id toggle-id))))
+        (cond
+          (strip
+           `((:state . "ready")
+             (:data . ,(markup:write-html strip))))
+          ((and cached-p (not scheduled-p))
+           `((:state . "none")))
+          (t
+           `((:state . "pending"))))))))
 
 (defun changed-rows-check-nibble (before-image after-image max-height &key toggle-id)
   "A nibble that the JS polls (see .changed-rows-pending in

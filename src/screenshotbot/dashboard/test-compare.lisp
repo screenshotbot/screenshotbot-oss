@@ -633,6 +633,25 @@
           (is-false pending-p))
         (is (fset:empty? *scheduled-comparisons*))))))
 
+(test find-changed-rows-schedules-the-strip-for-a-comparison-without-one
+  (with-fixture state ()
+    ;; Computed without the strip, e.g. before the gk was enabled.
+    (with-fixture changed-rows (:gk nil)
+      (let ((comparison (find-image-comparison-on-images before after))
+            (*changed-rows-pool* (make-instance 'synchronous-executor))
+            (*scheduled-comparisons* (fset:empty-set)))
+        (is (equal nil (image-comparison-changed-rows comparison)))
+        (gk:allow :image-strip-diff company)
+        (multiple-value-bind (changed-rows pending-p)
+            (find-changed-rows before after)
+          (is (equal nil changed-rows))
+          (is-true pending-p))
+        (is-true (image-comparison-changed-rows comparison))
+        (multiple-value-bind (changed-rows pending-p)
+            (find-changed-rows before after)
+          (is (eql (image-comparison-changed-rows comparison) changed-rows))
+          (is-false pending-p))))))
+
 (test schedule-image-comparison-skips-already-scheduled-comparisons
   (with-fixture state ()
     (with-fixture changed-rows ()
@@ -679,6 +698,17 @@
         (assert-that (assoc-value response :data)
                      (contains-string "data-bs-toggle=\"modal\"")
                      (contains-string "data-bs-target=\"#toggle-id-3\""))))))
+
+(test changed-rows-check-response-while-the-strip-is-scheduled
+  (with-fixture state ()
+    ;; The comparison exists without a strip, but we've scheduled
+    ;; computing one, so keep checking.
+    (with-fixture changed-rows (:gk nil)
+      (find-image-comparison-on-images before after)
+      (let ((*scheduled-comparisons* (fset:set (cons (store-object-id before)
+                                                     (store-object-id after)))))
+        (is (equal `((:state . "pending"))
+                   (changed-rows-check-response before after (max-height before after))))))))
 
 (test changed-rows-check-response-when-the-comparison-has-no-strip
   (with-fixture state ()
