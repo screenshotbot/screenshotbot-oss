@@ -148,7 +148,7 @@
 (defindex +company-index+ 'fset-set-compat-index
   :slot-name 'company)
 
-(with-class-validation
+(with-class-validation ()
  (defclass remote-run (object-with-oid)
    ((remote-url :initarg :remote-url
                 :reader remote-url

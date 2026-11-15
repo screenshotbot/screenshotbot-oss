@@ -86,7 +86,7 @@
   (:local-nicknames (#:a #:alexandria)))
 (in-package :screenshotbot/bitbucket/promoter)
 
-(with-class-validation
+(with-class-validation ()
  (defclass bitbucket-acceptable (abstract-pr-acceptable)
    ((send-task-args :initarg :report
                     :accessor send-task-args)

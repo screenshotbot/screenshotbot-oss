@@ -82,7 +82,7 @@
 
 (named-readtables:in-readtable markup:syntax)
 
-(with-class-validation
+(with-class-validation ()
  (defclass pr-acceptable (abstract-pr-acceptable)
    ((send-task-args :accessor send-task-args
                     :initarg :send-task-args))

@@ -746,7 +746,7 @@ set-differences on O and the returned value from this."
            (cerror "Dangerous continue and lose data" "missing slots: ~a"
                    diff)))))))
 
-(defmacro with-class-validation (&body body)
+(defmacro with-class-validation ((&key) &body body)
   "Wrap a defclass for store objects to add extra validations"
   (assert (= 1 (length body)))
   (let* ((def (car body))

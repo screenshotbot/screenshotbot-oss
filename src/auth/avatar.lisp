@@ -32,7 +32,7 @@
   "When fetching or updating the avatars, this lock must be held. TODO:
 does it make sense to parallelize this in the future?")
 
-(with-class-validation
+(with-class-validation ()
   (defclass overriden-avatar (blob)
     ((content-type :initarg :content-type
                    :accessor content-type)

@@ -14,7 +14,7 @@
   (:export #:test-object))
 (in-package :screenshotbot/model/test-object)
 
-(with-class-validation
+(with-class-validation ()
   (defclass test-object (store-object)
     ()
     (:metaclass persistent-class)))

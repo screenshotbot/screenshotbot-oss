@@ -27,14 +27,14 @@
   'fset-unique-index
   :slot-name '%company)
 
-(with-class-validation
+(with-class-validation ()
  (defclass pr-rollout-rule (store-object)
    ((%company :initarg :company
               :index +company-index+
               :index-reader pr-rollout-rule-for-company))
    (:metaclass persistent-class)))
 
-(with-class-validation
+(with-class-validation ()
   (defclass whitelist-rule (pr-rollout-rule)
     ((emails :initarg :emails
              :initform nil

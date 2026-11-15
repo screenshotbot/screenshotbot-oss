@@ -24,7 +24,7 @@
   'fset-unique-index
   :slot-name 'domain)
 
-(with-class-validation
+(with-class-validation ()
  (defclass enterprise-install (store-object)
    ((domain :initarg :domain
             :index +domain-index+

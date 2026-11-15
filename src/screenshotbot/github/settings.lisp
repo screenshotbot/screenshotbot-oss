@@ -101,7 +101,7 @@
       (github-app-installation-callback state installation-id setup-action))))
 
 
-(with-class-validation
+(with-class-validation ()
   (defclass verified-repo (store-object)
     ((%company :initarg :company
                :reader company

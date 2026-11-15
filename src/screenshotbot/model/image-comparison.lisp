@@ -123,7 +123,7 @@ for each row that has a change. NIL if it hasn't been computed."))
 persisted by the IMAGE-COMPARISON-SUBSYSTEM, not as store objects."))
 
 #+screenshotbot-oss
-(with-class-validation
+(with-class-validation ()
   (defclass image-comparison (store-object)
     ((before :initarg :before
              :reader image-comparison-before

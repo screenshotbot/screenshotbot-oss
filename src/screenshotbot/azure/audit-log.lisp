@@ -17,7 +17,7 @@
    #:commit-update-request))
 (in-package :screenshotbot/azure/audit-log)
 
-(with-class-validation
+(with-class-validation ()
   (defclass audit-log (base-audit-log)
     ()
     (:metaclass persistent-class)))

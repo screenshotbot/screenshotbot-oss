@@ -29,7 +29,7 @@
 (defvar *lock* (bt:make-lock))
 
 
-(with-class-validation
+(with-class-validation ()
   (defclass build-info (store-object)
     ((build-url :initarg :build-url
                :reader build-url)

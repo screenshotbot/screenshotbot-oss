@@ -31,7 +31,7 @@
 ;; and so the index will be invalid. Perhaps we can make it sort by
 ;; index. ins
 
-(with-class-validation
+(with-class-validation ()
   (defclass constant-string (store-object)
     ((%str :type string
            :initarg :str

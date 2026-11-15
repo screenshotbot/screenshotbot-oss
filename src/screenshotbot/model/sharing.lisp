@@ -25,7 +25,7 @@
    #:expiry-date))
 (in-package :screenshotbot/model/sharing)
 
-(with-class-validation
+(with-class-validation ()
  (defclass share (object-with-oid)
    ((object :initarg :object
             :reader share-object

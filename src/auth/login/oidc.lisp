@@ -84,7 +84,7 @@
   'fset-set-index
   :slot-name 'user-id)
 
-(with-class-validation
+(with-class-validation ()
   (defclass oidc-user (store-object)
     ((email
       :initarg :old-email-slot

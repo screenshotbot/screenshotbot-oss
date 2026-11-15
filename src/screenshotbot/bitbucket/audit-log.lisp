@@ -50,7 +50,7 @@
    #:with-audit-log))
 (in-package :screenshotbot/bitbucket/audit-log)
 
-(with-class-validation
+(with-class-validation ()
  (defclass audit-log (base-audit-log)
    ((%company :index-type hash-index
               :index-reader %bitbucket-audit-logs-for-company)
@@ -73,7 +73,7 @@
    (%audit-log-error self)
    (call-next-method)))
 
-(with-class-validation
+(with-class-validation ()
  (defclass build-status-audit-log (audit-log)
    ((commit :initarg :commit
             :reader build-status-audit-log-commit
@@ -83,7 +83,7 @@
                :initform nil))
    (:metaclass persistent-class)))
 
-(with-class-validation
+(with-class-validation ()
  (defclass access-token-audit-log (audit-log)
    ((grant-type :initarg :grant-type
                 :reader access-token-audit-log-grant-type))

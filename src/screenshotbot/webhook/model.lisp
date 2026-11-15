@@ -39,7 +39,7 @@
 
 (defindex +company-event-index+ 'fset-set-index :slot-name '%company)
 
-(with-class-validation
+(with-class-validation ()
   (defclass webhook-event (base-audit-log)
     ((event :initarg :event
             :reader event
@@ -51,7 +51,7 @@
 (defindex +company-index+ 'fset-unique-index :slot-name '%company)
 
 
-(with-class-validation
+(with-class-validation ()
   (defclass webhook-company-config (store-object)
     ((%company :initarg :company
                :reader config-company

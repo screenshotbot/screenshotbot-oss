@@ -115,7 +115,7 @@
 (defun comment (promoter message)
   (push message (comments promoter)))
 
-(with-class-validation
+(with-class-validation ()
  (defclass gitlab-acceptable (abstract-pr-acceptable)
    ((report :initarg :report
             :accessor acceptable-report)

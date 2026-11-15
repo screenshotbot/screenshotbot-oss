@@ -164,7 +164,7 @@
 (defgk :sharing-runs-allowed
   :enabledp t)
 
-(with-class-validation
+(with-class-validation ()
  (defclass promotion-log (bknr.datastore:blob)
    ()
    (:metaclass persistent-class)))
@@ -201,7 +201,7 @@ we can write methods that are generic to both."))
   'fset-set-index
   :slot-name '%key)
 
-(with-class-validation
+(with-class-validation ()
   (defclass shard (store-object)
     ((%screenshots :initarg :screenshots
                    :reader shard-screenshots)
@@ -232,7 +232,7 @@ we can write methods that are generic to both."))
 
 (defcounter recorder-run-counter ())
 
-(with-class-validation
+(with-class-validation ()
   (defclass recorder-run (object-with-oid abstract-run
                           bknr-or-archived-run-mixin
                           unlikely-to-change-mixin)
@@ -466,7 +466,7 @@ associated report is rendered.")
    (call-next-method)
    (override-commit-hash run)))
 
-(with-class-validation
+(with-class-validation ()
   (defclass unchanged-run (abstract-run
                            unlikely-to-change-mixin)
     ((commit :initarg :commit
@@ -783,7 +783,7 @@ so the key and the user have to agree."
          :index-reader warnings-for-run))
   (:metaclass persistent-class))
 
-(with-class-validation
+(with-class-validation ()
  (defclass merge-base-failed-warning (base-run-warning)
    ((%compared-against :initarg :compared-against
                        :reader compared-against))
@@ -791,7 +791,7 @@ so the key and the user have to agree."
    (:documentation "A warning that when making a pull request comparison, we didn't
 compare against the actual merge base.")))
 
-(with-class-validation
+(with-class-validation ()
   (defclass not-fast-forward-promotion-warning (base-run-warning)
     ()
     (:metaclass persistent-class)

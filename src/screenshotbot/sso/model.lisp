@@ -21,12 +21,12 @@
   ()
   (:metaclass persistent-class))
 
-(with-class-validation
+(with-class-validation ()
   (defclass fake-sso-auth-provider (abstract-sso-auth-provider)
     ()
     (:metaclass persistent-class)))
 
-(with-class-validation
+(with-class-validation ()
   (defclass basic-sso-auth-provider (abstract-sso-auth-provider)
     ((issuer :initarg :issuer
              :accessor auth-provider-issuer)

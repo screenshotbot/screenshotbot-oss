@@ -50,7 +50,7 @@
   'fset-unique-index
   :slot-name 'gh-user-id)
 
-(with-class-validation
+(with-class-validation ()
   (defclass github-user (store-object)
     ((gh-user-id :type integer
                  :initarg :gh-user-id

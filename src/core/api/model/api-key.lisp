@@ -100,7 +100,7 @@
   'fset-unique-index
   :slot-name 'api-secret-key)
 
-(with-class-validation
+(with-class-validation ()
   (defclass api-key (store-object)
     ((user
       :initarg :user
@@ -188,7 +188,7 @@ Returns the full encoded secret string."
 (defmethod expires-at ((self api-key))
   nil)
 
-(with-class-validation
+(with-class-validation ()
   (defclass cli-api-key (api-key)
     ((expires-at
       :initarg :expires-at

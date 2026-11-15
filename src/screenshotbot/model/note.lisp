@@ -25,7 +25,7 @@
    #:find-notes-for))
 (in-package :screenshotbot/model/note)
 
-(with-class-validation
+(with-class-validation ()
   (defclass note (store-object)
     ((user :initarg :user
            :reader user)

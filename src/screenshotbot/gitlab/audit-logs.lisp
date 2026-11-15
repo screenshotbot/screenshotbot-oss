@@ -27,12 +27,12 @@
 
 (named-readtables:in-readtable markup:syntax)
 
-(with-class-validation
+(with-class-validation ()
   (defclass gitlab-audit-log (base-audit-log)
     ()
     (:metaclass persistent-class)))
 
-(with-class-validation
+(with-class-validation ()
   (defclass update-status-audit-log (gitlab-audit-log)
     ((commit :initarg :commit
              :reader %commit)
@@ -41,7 +41,7 @@
     (:metaclass persistent-class)
     (:default-initargs :state nil)))
 
-(with-class-validation
+(with-class-validation ()
   (defclass check-personal-access-token (gitlab-audit-log)
     ()
     (:metaclass persistent-class)))
@@ -56,7 +56,7 @@
     <commit-tag>,(%commit self)</commit-tag>
   </span>)
 
-(with-class-validation
+(with-class-validation ()
   (defclass config-updated-audit-log (gitlab-audit-log)
     ((%user :initarg :user
             :reader %user))

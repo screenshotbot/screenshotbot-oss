@@ -80,7 +80,7 @@
   'fset-set-index
   :slot-name 'run)
 
-(with-class-validation
+(with-class-validation ()
   (defclass report (object-with-oid)
     ((run
       :initarg :run
@@ -168,7 +168,7 @@
   ;; repo
   (publicp (recorder-run-channel (report-run report))))
 
-(with-class-validation
+(with-class-validation ()
   (defclass base-acceptable (store-object)
     ((state :initform nil
             :initarg :state
@@ -189,7 +189,7 @@
     (:metaclass persistent-class)))
 
 
-(with-class-validation
+(with-class-validation ()
   (defclass acceptable-history-item (store-object)
     ((state :initarg :state
             :reader acceptable-history-item-state)

@@ -30,7 +30,7 @@
    #:authenticate-rpc-request))
 (in-package :core/rpc/rpc)
 
-(with-class-validation
+(with-class-validation ()
   (defclass rpc-auth-id (store-object)
     ((%secret :initarg :secret
               :reader secret)

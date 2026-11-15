@@ -19,7 +19,7 @@
    #:run-failed-on-commit-p))
 (in-package :screenshotbot/model/failed-run)
 
-(with-class-validation
+(with-class-validation ()
  (defclass failed-run (store-object)
    ((channel :initarg :channel
              :reader failed-run-channel

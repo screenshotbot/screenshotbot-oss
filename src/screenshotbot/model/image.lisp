@@ -149,7 +149,7 @@
   (:documentation "The image we're looking at is invalid"))
 
 #+screenshotbot-oss
-(with-class-validation
+(with-class-validation ()
   (defclass image-blob (bknr.datastore:blob)
     ()
     (:metaclass persistent-class)))
@@ -485,7 +485,7 @@
   :slot-name 'image-1
   :test #'equalp)
 
-(with-class-validation
+(with-class-validation ()
   (defclass content-equal-result (store-object)
     ((image-1 :initarg :image-1
               :index +image-1-index+

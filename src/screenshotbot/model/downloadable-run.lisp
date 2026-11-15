@@ -38,7 +38,7 @@
 
 (defvar *lock* (bt:make-lock))
 
-(with-class-validation
+(with-class-validation ()
   (defclass downloadable-run (blob)
     ((%run :initarg :run
            :index +run-index+

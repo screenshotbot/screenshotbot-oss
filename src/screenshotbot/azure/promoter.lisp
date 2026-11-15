@@ -59,7 +59,7 @@
 (defclass azure-promoter (abstract-pr-promoter)
   ())
 
-(with-class-validation
+(with-class-validation ()
   (defclass azure-acceptable (abstract-pr-acceptable)
     ()
     (:metaclass persistent-class)))

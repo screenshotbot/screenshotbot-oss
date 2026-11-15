@@ -64,7 +64,7 @@ will not consider it as a possibility.")
 
 (defconstant +inf+ 1000000)
 
-(with-class-validation
+(with-class-validation ()
   (defclass screenshot-map (store-object)
     ((%channel :initarg :channel
                :reader screenshot-map-channel

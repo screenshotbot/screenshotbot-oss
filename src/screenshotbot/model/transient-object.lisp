@@ -46,7 +46,7 @@
          ,@(mapcar #'remove-index-args slot-defs)
          ,@ extra-transient-slots))
 
-      (with-class-validation
+      (with-class-validation ()
         (,keyword ,class-name (,@parent-classes ,parent-class)
                   ,slot-defs
                   ,@options)))))

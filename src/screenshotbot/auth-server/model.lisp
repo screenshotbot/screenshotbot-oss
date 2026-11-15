@@ -150,7 +150,7 @@ mints a new token, so an actively used CLI never hits this.")
   'fset-unique-index
   :slot-name '%client-id)
 
-(with-class-validation
+(with-class-validation ()
   (defclass oauth-client (store-object)
     ((%client-id :initarg :client-id
                  :index +client-id-index+
@@ -280,7 +280,7 @@ index lookup."
   'fset-set-index
   :slot-name '%company)
 
-(with-class-validation
+(with-class-validation ()
   (defclass oauth-grant (store-object)
     ((%client :initarg :client
               :reader grant-client)
@@ -328,7 +328,7 @@ revokes everything that was ever issued from it.")))
   'fset-set-index
   :slot-name '%expires-at)
 
-(with-class-validation
+(with-class-validation ()
   (defclass oauth-code (store-object)
     ((%code :initarg :code
             :index +code-index+
@@ -399,7 +399,7 @@ expected to revoke the grant."
   'fset-set-index
   :slot-name 'expires-at)
 
-(with-class-validation
+(with-class-validation ()
   (defclass oauth-access-token (api-key)
     ((%grant :initarg :grant
              :reader access-token-grant)
@@ -474,7 +474,7 @@ OAuth-specific lookup."
   'fset-set-index
   :slot-name '%expires-at)
 
-(with-class-validation
+(with-class-validation ()
   (defclass oauth-refresh-token (store-object)
     ((%token :initarg :token
              :index +refresh-token-index+
@@ -542,7 +542,7 @@ audience the original exchange established.")
         (format nil "~a-~a" (subseq cleaned 0 4) (subseq cleaned 4))
         (str:trim (string-upcase (or code ""))))))
 
-(with-class-validation
+(with-class-validation ()
   (defclass oauth-device-request (store-object)
     ((%device-code :initarg :device-code
                    :index +device-code-index+

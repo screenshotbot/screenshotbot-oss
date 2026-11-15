@@ -53,7 +53,7 @@
 
 (defvar *lock* (bt:make-lock))
 
-(with-class-validation
+(with-class-validation ()
  (defclass build-info (store-object)
    ((diff :initarg :diff
           :reader build-info-diff)

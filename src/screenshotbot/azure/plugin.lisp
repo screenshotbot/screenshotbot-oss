@@ -37,7 +37,7 @@
 (defclass azure-plugin (plugin)
   ())
 
-(with-class-validation
+(with-class-validation ()
   (defclass azure-settings (store-object)
     ((%server :initarg :server
               :reader azure-server)

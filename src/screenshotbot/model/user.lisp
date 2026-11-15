@@ -149,7 +149,7 @@ future.")
 (defclass abstract-user ()
   ())
 
-(with-class-validation
+(with-class-validation ()
   (defclass user (util:object-with-oid abstract-user)
     ((full-name :type (or null string)
                 :initarg :full-name
@@ -327,7 +327,7 @@ SSO. The user is still connected via roles:"))
 (defmethod users-for-company ((company company))
   (error "unimplemented"))
 
-(with-class-validation
+(with-class-validation ()
   (defclass user-notice (util:object-with-unindexed-oid)
     ((title :initarg :title
             :accessor notice-title)
@@ -356,7 +356,7 @@ SSO. The user is still connected via roles:"))
           do (return company)))
 
 
-(with-class-validation
+(with-class-validation ()
   (defclass email-confirmation-code (object-with-oid)
     ((code :initform (make-secret-code)
            :type string

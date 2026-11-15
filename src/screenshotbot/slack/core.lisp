@@ -60,7 +60,7 @@
   :slot-name 'company
   :test 'eql)
 
-(with-class-validation
+(with-class-validation ()
  (defclass slack-token (store-object)
    ((access-token
      :initarg :access-token
@@ -77,7 +77,7 @@
      :reader %created-at))
    (:metaclass persistent-class)))
 
-(with-class-validation
+(with-class-validation ()
  (defclass audit-log (base-audit-log)
    ((company :index-type hash-index
              :index-reader %slack-audit-logs-for-company

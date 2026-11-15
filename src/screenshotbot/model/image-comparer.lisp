@@ -122,7 +122,7 @@
   :slot-name '%key)
 
 
-(with-class-validation
+(with-class-validation ()
  (defclass image-equal-cache (store-object)
    ((%key :initarg :key
           :index *image-equal-cache*

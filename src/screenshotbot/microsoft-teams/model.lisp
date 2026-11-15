@@ -25,7 +25,7 @@
   'fset-set-index
   :slot-name '%channel)
 
-(with-class-validation
+(with-class-validation ()
   (defclass teams-workflow (store-object)
     ((%name :initarg :name
             :reader workflow-name)

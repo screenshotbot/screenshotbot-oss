@@ -72,7 +72,7 @@
 
 (named-readtables:in-readtable markup:syntax)
 
-(with-class-validation
+(with-class-validation ()
  (defclass bitbucket-token (store-object)
    ((refresh-token :initarg :refresh-token
                    :reader refresh-token)

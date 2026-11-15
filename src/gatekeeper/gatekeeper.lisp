@@ -42,7 +42,7 @@
   'fset-unique-index
   :slot-name 'name)
 
-(with-class-validation
+(with-class-validation ()
   (defclass gatekeeper (store-object)
     ((name :initarg :name
            :reader gk-name
@@ -69,7 +69,7 @@
     (when gk
       (gk-default-value gk))))
 
-(with-class-validation
+(with-class-validation ()
   (defclass access-control (store-object)
     ((type :initarg :type
            :documentation "Either :allow or :deny"

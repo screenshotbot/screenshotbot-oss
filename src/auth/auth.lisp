@@ -15,7 +15,7 @@
 (defindex +expiry-index+ 'fset-set-index
   :slot-name 'expiry-ts)
 
-(with-class-validation
+(with-class-validation ()
  (defclass user-session-value (store-object)
    ((session-key-and-prop-key
      :accessor session-key-and-prop-key

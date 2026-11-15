@@ -28,7 +28,7 @@
   'fset-set-index
   :slot-name '%user)
 
-(with-class-validation
+(with-class-validation ()
   (defclass email-confirmation-code (object-with-oid)
     ((code :initform (util:make-secret-code)
            :type string

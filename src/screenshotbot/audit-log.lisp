@@ -51,7 +51,7 @@
 
 (defvar *error-log* (make-queue))
 
-(with-class-validation
+(with-class-validation ()
   (defclass base-audit-log (store-object)
     ((%%company :initarg :company
                 :index +company-index+
@@ -65,13 +65,13 @@
     (:default-initargs :ts (get-universal-time))
     (:metaclass persistent-class)))
 
-(with-class-validation
+(with-class-validation ()
   (defclass activity-log (base-audit-log)
     ()
     (:metaclass persistent-class)
     (:documentation "Logs an activity performed by a user (either logged in or not)")))
 
-(with-class-validation
+(with-class-validation ()
   (defclass user-activity-log (activity-log)
     ((actor :initarg :actor
             :reader activity-log-actor

@@ -74,7 +74,7 @@
    #:abstract-screenshot))
 (in-package :screenshotbot/model/screenshot)
 
-(with-class-validation
+(with-class-validation ()
   (defclass constant-string (store-object)
     ((str))
     (:metaclass persistent-class)))
@@ -84,7 +84,7 @@
 (defclass abstract-screenshot ()
   ())
 
-(with-class-validation
+(with-class-validation ()
   (defclass screenshot (store-object abstract-screenshot)
     ((name :type string
            :initarg :name

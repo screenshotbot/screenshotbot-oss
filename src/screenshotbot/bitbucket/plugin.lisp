@@ -36,7 +36,7 @@
    #:bitbucket-repo-link))
 (in-package :screenshotbot/bitbucket/plugin)
 
-(with-class-validation
+(with-class-validation ()
  (defclass bitbucket-plugin (plugin)
    ((key :initarg :key
          :reader bitbucket-plugin-key)

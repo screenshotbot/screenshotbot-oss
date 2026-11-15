@@ -97,7 +97,7 @@
 ;; repo link
 (defvar *channel-repo-overrides* nil)
 
-(with-class-validation
+(with-class-validation ()
  (defclass channel (store-object)
    ((name :initarg :name
           :reader channel-name)

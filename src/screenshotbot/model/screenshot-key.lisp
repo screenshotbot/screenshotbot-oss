@@ -35,7 +35,7 @@ limit the throughput of creating new screenshot-keys to about
 (defclass abstract-screenshot-key ()
   ())
 
-(with-class-validation
+(with-class-validation ()
   (defclass screenshot-key (abstract-screenshot-key store-object)
     ((%name :type string
            :initarg :name

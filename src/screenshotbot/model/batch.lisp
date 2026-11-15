@@ -78,7 +78,7 @@
 
 ;; Note that for most of the fields, we create an alias for the slot
 ;; readers to use the same slots as recorder-run as a convenience.
-(with-class-validation
+(with-class-validation ()
   (defclass batch (object-with-oid)
     ((%company :initarg :company
                :reader company
@@ -125,7 +125,7 @@
   'hash-index
   :slot-name 'batch)
 
-(with-class-validation
+(with-class-validation ()
   (defclass batch-item (store-object
                         unlikely-to-change-mixin)
     ((batch :initarg :batch

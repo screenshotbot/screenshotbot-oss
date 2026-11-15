@@ -32,7 +32,7 @@
   'fset-unique-index
   :slots '(%date %user %company))
 
-(with-class-validation
+(with-class-validation ()
   (defclass active-user (store-object)
     ((%user :initarg :user
             :reader user)

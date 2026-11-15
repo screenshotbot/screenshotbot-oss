@@ -65,7 +65,7 @@
 
 (defvar +unchanged+ "unchanged")
 
-(with-class-validation
+(with-class-validation ()
  (defclass gitlab-settings (store-object)
    ((%company :initarg :company
               :reader company

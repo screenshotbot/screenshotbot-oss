@@ -25,7 +25,7 @@
   'fset-set-index
   :slot-name '%commit)
 
-(with-class-validation
+(with-class-validation ()
  (defclass finalized-commit (store-object)
    ((%company :initarg :company
               :reader finalized-commit-company)

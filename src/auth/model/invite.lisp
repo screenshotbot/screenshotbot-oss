@@ -36,7 +36,7 @@
   'fset-set-index
   :slot-name 'email)
 
-(with-class-validation
+(with-class-validation ()
   (defclass invite (store-object)
     ((code :initform (make-secret-code)
            :accessor invite-code)
@@ -60,7 +60,7 @@
   'fset-set-index
   :slot-name '%user)
 
-(with-class-validation
+(with-class-validation ()
   (defclass invite-code-proven (store-object)
     ((%user :initarg :user
             :index +proof-user-index+

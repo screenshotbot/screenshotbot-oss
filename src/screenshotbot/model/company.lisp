@@ -105,7 +105,7 @@
   'fset-unique-index
   :slot-name '%slug)
 
-(with-class-validation
+(with-class-validation ()
   (defclass company (object-with-oid)
     ((name
       :initarg :name
@@ -195,7 +195,7 @@
   'fset-set-index
   :slot-name 'parent)
 
-(with-class-validation
+(with-class-validation ()
   (defclass sub-company (company)
     ((parent :initarg :parent
              :initform nil
@@ -229,14 +229,14 @@ parent organization.")))
 (defmethod singletonp ((company company))
   (slot-boundp company 'singletonp))
 
-(with-class-validation
+(with-class-validation ()
  (defclass github-config (store-object)
    ((installation-id
      :initform nil
      :accessor installation-id))
    (:metaclass persistent-class)))
 
-(with-class-validation
+(with-class-validation ()
   (defclass phabricator-config (store-object)
     ((company :initarg :company
               :index-initargs (:test 'eql)
@@ -267,7 +267,7 @@ parent organization.")))
        github-config
        (setf github-config (make-instance 'github-config)))))))
 
-(with-class-validation
+(with-class-validation ()
   (defclass slack-config (store-object)
     ((access-token
       :initarg :access-token
@@ -283,7 +283,7 @@ parent organization.")))
       :accessor enabledp))
     (:metaclass persistent-class)))
 
-(with-class-validation
+(with-class-validation ()
   (defclass jira-config (store-object)
     ((url :initarg :url
           :initform nil

@@ -70,7 +70,7 @@ can delete this code. T1739"
   'fset-set-index
   :slot-name '%normalized-repo-url)
 
-(with-class-validation
+(with-class-validation ()
   (defclass commit-graph (bknr.datastore:blob)
     ((url :type string
           :initform nil
