@@ -385,6 +385,32 @@
     (error-with-string-matching
      "missing slots: (A)")))
 
+(test verify-old-class-with-deleted-slots
+  (finishes
+    (verify-old-class 'dummy-class-2
+                      '((a) (b))
+                      'persistent-class
+                      :deleted-slots '(c)))
+  (signals-error-matching ()
+    (verify-old-class 'dummy-class-2
+                      '((a))
+                      'persistent-class
+                      :deleted-slots '(c))
+    (error-with-string-matching
+     "missing slots: (B)"))
+  (signals-error-matching ()
+    (verify-old-class 'dummy-class-2
+                      '((a) (b))
+                      'persistent-class
+                      :deleted-slots '(cl-user::c))
+    (error-with-string-matching
+     "missing slots: (C)"))
+  (finishes
+    (verify-old-class 'dummy-class-2
+                      '((a) (b))
+                      'permissive-persistent-class
+                      :deleted-slots '(cl-user::c))))
+
 
 (test object-neighbors-for-list
   (assert-that

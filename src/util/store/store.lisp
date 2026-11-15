@@ -728,7 +728,9 @@ set-differences on O and the returned value from this."
 (defmethod slot-key-for-verification (metaclass slot)
   slot)
 
-(defun verify-old-class (class-name slots metaclass)
+(defun verify-old-class (class-name slots metaclass &key deleted-slots)
+  "Verify that every slot in the currently loaded CLASS-NAME is still in
+SLOTS, other than DELETED-SLOTS, which are being deliberately removed."
   (flet ((key (x)
            (slot-key-for-verification metaclass x)))
    (let ((old-class (find-class class-name nil)))
@@ -740,14 +742,20 @@ set-differences on O and the returned value from this."
          (a:when-let ((diff (set-difference
                              old-slots
                              (mapcar #'key
-                                     (mapcar #'car slots))
+                                     (append
+                                      (mapcar #'car slots)
+                                      deleted-slots))
                              :test #'equal)))
 
            (cerror "Dangerous continue and lose data" "missing slots: ~a"
                    diff)))))))
 
-(defmacro with-class-validation ((&key) &body body)
-  "Wrap a defclass for store objects to add extra validations"
+(defmacro with-class-validation ((&key deleted-slots) &body body)
+  "Wrap a defclass for store objects to add extra validations.
+
+DELETED-SLOTS is a list of slot names that have been removed from the
+defclass, so that we don't complain about them being missing when the
+class is reloaded into an image that still has them."
   (assert (= 1 (length body)))
   (let* ((def (car body))
          (class-name (elt def 1))
@@ -761,12 +769,14 @@ set-differences on O and the returned value from this."
     ;; verify both at compile time and load time, just how it is. The
     ;; compiler updates the classes unfortunately, which will make the
     ;; load-time verification pass.
-    (verify-old-class class-name slots metaclass)
+    (verify-old-class class-name slots metaclass
+                      :deleted-slots deleted-slots)
 
     `(progn
        (verify-old-class ',class-name
                          ',slots
-                         ',metaclass)
+                         ',metaclass
+                         :deleted-slots ',deleted-slots)
        ,def)))
 
 ;; (validate-indices)
