@@ -18,6 +18,7 @@
                 #:nibble-id
                 #:nibble)
   (:import-from #:bknr.datastore
+                #:deftransaction
                 #:store-object)
   (:import-from #:bknr.datastore
                 #:persistent-class)
@@ -65,6 +66,8 @@
                 #:installation-domain)
   (:import-from #:screenshotbot/login/common
                 #:allow-oauth-redirect-p)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   (:local-nicknames (#:a #:alexandria))
   (:export
    #:refresh-token
@@ -181,6 +184,22 @@ access token."))
                       :actor actor))
       ((not (equal refresh-token (refresh-token last-settings)))
        (setf (refresh-token last-settings) refresh-token)))))
+
+(deftransaction tx-delete-superseded-tokens (company)
+  (mapc #'bknr.datastore:delete-object
+        (cdr (bitbucket-settings-for-company company))))
+
+(defun delete-superseded-tokens ()
+  "Before tokens were updated in place, every refresh created a new
+bitbucket-token. Deletes all but the newest one for each company."
+  (let ((companies (remove-duplicates
+                    (mapcar #'bitbucket-setting-company
+                            (bknr.datastore:class-instances 'bitbucket-token)))))
+    (dolist (company companies)
+      (tx-delete-superseded-tokens company))))
+
+(def-store-migration ("Delete superseded BitBucket tokens" :version 46)
+  (delete-superseded-tokens))
 
 (auto-restart:with-auto-restart ()
   (defun swap-for-token (code)

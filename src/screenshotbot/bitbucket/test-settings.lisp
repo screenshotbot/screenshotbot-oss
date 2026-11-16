@@ -17,6 +17,8 @@
                 #:with-installation)
   (:import-from #:screenshotbot/pro/bitbucket/settings
                 #:access-token-for-args
+                #:bitbucket-token
+                #:delete-superseded-tokens
                 #:cached-access-token
                 #:%bitbucket-oauth-callback
                 #:same-origin-p
@@ -144,6 +146,21 @@
           (mapc #'bt:join-thread threads)
           (is (equal 1 calls))
           (is (every (lambda (x) (equal "access-1" x)) results)))))))
+
+(test delete-superseded-tokens
+  (with-fixture state ()
+    (let ((other-company (make-instance 'company)))
+      (flet ((make-token (company name)
+               (make-instance 'bitbucket-token
+                              :refresh-token name
+                              :company company)))
+        (make-token company "old-1")
+        (make-token company "old-2")
+        (let ((newest (make-token company "newest"))
+              (other (make-token other-company "other")))
+          (delete-superseded-tokens)
+          (is (equal (list newest) (bitbucket-settings-for-company company)))
+          (is (equal (list other) (bitbucket-settings-for-company other-company))))))))
 
 (test same-origin-p
   (is-true (same-origin-p "https://staging.screenshotbot.io"
