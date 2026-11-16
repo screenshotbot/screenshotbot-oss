@@ -256,7 +256,11 @@ we can write methods that are generic to both."))
       :accessor %recorder-run-commit)
      #+screenshotbot-oss
      (promotion-log
-      :accessor %promotion-log)
+      :transient t
+      :initform nil
+      :accessor %promotion-log
+      :documentation "Deprecated, unused. Transient so that older snapshots can still be
+restored.")
      (build-url
       :initform nil
       :initarg :build-url
@@ -267,10 +271,18 @@ we can write methods that are generic to both."))
       :accessor github-repo
       :accessor recorder-run-repo-url)
      (cleanp
-      :initarg :cleanp)
+      :transient t
+      :initform nil
+      :documentation "Deprecated, unused. Transient so that older snapshots can still be
+restored. Store version 44 snapshots are written without it, so it can
+be deleted once *min-store-version* is >= 44.")
      (activep
-      :initarg :activep
-      :initform nil)
+      :transient t
+      :initform nil
+      :documentation "Deprecated, unused: ACTIVEP is computed from the channel. Transient
+so that older snapshots can still be restored. Store version 44
+snapshots are written without it, so it can be deleted once
+*min-store-version* is >= 44.")
      (branch
       :initarg :branch
       :initform nil
