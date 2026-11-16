@@ -232,7 +232,7 @@ we can write methods that are generic to both."))
 
 (defcounter recorder-run-counter ())
 
-(with-class-validation ()
+(with-class-validation (:deleted-slots (screenshots))
   (defclass recorder-run (object-with-oid abstract-run
                           bknr-or-archived-run-mixin
                           unlikely-to-change-mixin)
@@ -334,13 +334,16 @@ we can write methods that are generic to both."))
       :documentation "Jobs that are done periodically, as opposed to for
     each commit. We will attempt to promote each run. This is mostly
     for taking screenshots of public websites.")
+     ;; OSS stores might still have snapshots older than store
+     ;; version 43 that have this slot. Delete it once
+     ;; *min-store-version* is >= 43.
+     #+screenshotbot-oss
      (screenshots
       :transient t
       :initform nil
       :documentation "Deprecated: the old list of screenshots, these days we generate them
 from the map. This is transient so that older snapshots can still be
-restored. Store version 43 snapshots are written without it, so it can
-be deleted once *min-store-version* is >= 43.")
+restored.")
      (%screenshot-map
       :initarg :screenshot-map
       :accessor run-screenshot-map)
