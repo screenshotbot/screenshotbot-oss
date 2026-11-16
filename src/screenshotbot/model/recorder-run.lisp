@@ -1026,6 +1026,14 @@ only run on a REPL."
                  :batch-size 1000)
     (%bulk-add-to-run-id-map runs)))
 
+(deftransaction %bulk-add-to-channel-runs (runs)
+  (mapc #'%update-channel-runs runs))
+
+(def-store-migration ("Add to persistent channel-runs index" :version 45)
+  (with-batches (runs (bknr.datastore:class-instances 'recorder-run)
+                 :batch-size 1000)
+    (%bulk-add-to-channel-runs runs)))
+
 (def-easy-macro do-runs-for-company (&binding run company &fn fn)
   (fset:do-map (run-id run (run-id-to-run-map company))
     (declare (ignore run-id))
