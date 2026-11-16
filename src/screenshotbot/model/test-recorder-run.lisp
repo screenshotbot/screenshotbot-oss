@@ -9,7 +9,6 @@
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
                 #:bulk-delete-runs
-                #:channel-runs
                 #:recorder-run-channel
                 #:recorder-run-directory
                 #:recorder-run-company
@@ -628,9 +627,9 @@
            (run3 (make-recorder-run
                   :channel other-channel
                   :screenshots nil)))
-      (assert-that (fset:convert 'list (channel-runs channel))
+      (assert-that (fset:convert 'list (runs-for-channel channel))
                    (contains run1 run2))
-      (assert-that (fset:convert 'list (channel-runs other-channel))
+      (assert-that (fset:convert 'list (runs-for-channel other-channel))
                    (contains run3)))))
 
 (test deletes-from-persisted-channel-runs
@@ -643,7 +642,7 @@
                   :channel channel
                   :screenshots nil)))
       (delete-object run1)
-      (assert-that (fset:convert 'list (channel-runs channel))
+      (assert-that (fset:convert 'list (runs-for-channel channel))
                    (contains run2)))))
 
 (test persisted-channel-runs-when-channel-is-changed
@@ -658,14 +657,14 @@
                   :screenshots nil)))
       (with-transaction ()
         (setf (recorder-run-channel run1) other-channel))
-      (assert-that (fset:convert 'list (channel-runs channel))
+      (assert-that (fset:convert 'list (runs-for-channel channel))
                    (contains run2))
-      (assert-that (fset:convert 'list (channel-runs other-channel))
+      (assert-that (fset:convert 'list (runs-for-channel other-channel))
                    (contains run1))
       (with-transaction ()
         (setf (recorder-run-channel run2) nil))
-      (is (fset:empty? (channel-runs channel))))))
+      (is (fset:empty? (runs-for-channel channel))))))
 
 (test persisted-channel-runs-is-empty-for-new-channel
   (with-fixture state ()
-    (is (fset:empty? (channel-runs (make-instance 'channel))))))
+    (is (fset:empty? (runs-for-channel (make-instance 'channel))))))

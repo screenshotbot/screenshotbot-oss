@@ -181,10 +181,6 @@
   'fset-many-to-many-index
   :slot-name 'tags)
 
-(defindex +run-channel-index+
-  'fset-set-index
-  :slot-name 'channel)
-
 (defclass bknr-or-archived-run-mixin ()
   ()
   (:documentation "A class that's mixed into both RECORDER-RUN and ARCHIVED-RUN, so that
@@ -242,8 +238,6 @@ we can write methods that are generic to both."))
       :initarg :channel
       :initform nil
       :relaxed-object-reference t
-      :index +run-channel-index+
-      :index-reader runs-for-channel
       :accessor recorder-run-channel)
      (company
       :initarg :company
@@ -563,8 +557,8 @@ from the map without too much code duplication"
          run))))))
 
 (defmethod %update-channel-runs ((run recorder-run) &key (removep nil))
-  "Maintains the set of runs for a channel, see T2462. This is meant to
-replace +run-channel-index+, which is slow to rebuild on snapshot load."
+  "Maintains the set of runs for a channel, see T2462. This is persisted,
+unlike a bknr index, so it doesn't need to be rebuilt on snapshot load."
   (assert (in-transaction-p))
   (when-let ((channel (recorder-run-channel run)))
     (symbol-macrolet ((place (externalized-slot-value channel 'runs (fset:empty-set))))
@@ -960,7 +954,7 @@ only run on a REPL."
          if (> (%created-at run) time)
            summing (length (recorder-run-screenshots run)))))
 
-(defun channel-runs (channel)
+(defun runs-for-channel (channel)
   "The set of runs for CHANNEL, from the persisted index. See T2462."
   (externalized-slot-value channel 'runs (fset:empty-set)))
 
