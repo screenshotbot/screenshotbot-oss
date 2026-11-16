@@ -519,7 +519,8 @@ associated report is rendered.")
 
 (defmethod initialize-instance :after ((self recorder-run) &key)
   (%update-commit-map self)
-  (%update-run-id-map self))
+  (%update-run-id-map self)
+  (%update-channel-runs self))
 
 (defmethod %update-commit-map ((self recorder-run) &key (removep nil))
   "Update the commit map for run.
@@ -560,6 +561,18 @@ from the map without too much code duplication"
          place
          run-id
          run))))))
+
+(defmethod %update-channel-runs ((run recorder-run) &key (removep nil))
+  "Maintains the set of runs for a channel, see T2462. This is meant to
+replace +run-channel-index+, which is slow to rebuild on snapshot load."
+  (assert (in-transaction-p))
+  (when-let ((channel (recorder-run-channel run)))
+    (symbol-macrolet ((place (externalized-slot-value channel 'runs (fset:empty-set))))
+      (cond
+        (removep
+         (fset:excludef place run))
+        (t
+         (fset:includef place run))))))
 
 
 (defmethod should-index-objects-for-class-p ((class (eql (find-class 'unchanged-run))))
@@ -637,11 +650,15 @@ from the map without too much code duplication"
 (defmethod bknr.datastore::destroy-object :before ((run recorder-run))
   (when-let ((channel (recorder-run-channel run)))
     (unless (bknr.datastore::object-destroyed-p channel)
-      (%update-commit-map run :removep t)))
+      (%update-commit-map run :removep t)
+      (tx-update-channel-runs run :removep t)))
   (tx-update-run-id-map run :removep t))
 
 (deftransaction tx-update-run-id-map (run &key removep)
   (%update-run-id-map run :removep removep))
+
+(deftransaction tx-update-channel-runs (run &key removep)
+  (%update-channel-runs run :removep removep))
 
 (defmethod auth:can-view ((run bknr-or-archived-run-mixin) user)
   (auth:can-view-with-normal-viewer-context
@@ -834,6 +851,12 @@ compare against the actual merge base.")))
 (defmethod (setf recorder-run-company) :before ((val null) (self recorder-run))
   (tx-update-run-id-map self :removep t))
 
+(defmethod (setf recorder-run-channel) :before (val (self recorder-run))
+  (tx-update-channel-runs self :removep t))
+
+(defmethod (setf recorder-run-channel) :after (val (self recorder-run))
+  (tx-update-channel-runs self))
+
 (defmethod recorder-run-repo-url ((self unchanged-run))
   (github-repo (unchanged-run-channel self)))
 
@@ -936,6 +959,10 @@ only run on a REPL."
    (loop for run in (fset:convert 'list (runs-for-company company))
          if (> (%created-at run) time)
            summing (length (recorder-run-screenshots run)))))
+
+(defun channel-runs (channel)
+  "The set of runs for CHANNEL, from the persisted index. See T2462."
+  (externalized-slot-value channel 'runs (fset:empty-set)))
 
 (defun find-run-by-run-id (company run-id)
   (fset:lookup (run-id-to-run-map company)
