@@ -49,8 +49,9 @@
 (test updating-refresh-token
   (with-fixture state ()
     (update-from-refresh-token company '((:refresh--token . "foo")))
-    (update-from-refresh-token company '((:refresh--token . "bar")))
-    (is (equal 2 (length (bitbucket-settings-for-company company))))
+    (let ((token (car (bitbucket-settings-for-company company))))
+      (update-from-refresh-token company '((:refresh--token . "bar")))
+      (is (equal (list token) (bitbucket-settings-for-company company))))
     (is (equal
          "bar"
          (refresh-token (car (bitbucket-settings-for-company company)))))))
@@ -85,7 +86,7 @@
       (update-from-refresh-token company '((:refresh--token . "foo"))
                                  :actor user)
       (update-from-refresh-token company '((:refresh--token . "bar")))
-      (is (equal 2 (length (bitbucket-settings-for-company company))))
+      (is (equal 1 (length (bitbucket-settings-for-company company))))
       (is (eql user
                (bitbucket-token-actor (car (bitbucket-settings-for-company company))))))))
 

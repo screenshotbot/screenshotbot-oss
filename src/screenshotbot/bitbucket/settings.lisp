@@ -75,15 +75,18 @@
 (with-class-validation ()
  (defclass bitbucket-token (store-object)
    ((refresh-token :initarg :refresh-token
-                   :reader refresh-token)
+                   :accessor refresh-token
+                   :documentation "Updated in place when Bitbucket rotates the
+refresh token, so a company keeps a single token object. Deleting and
+recreating the object instead would break concurrent readers that are
+still holding on to the old object.")
     (company :initarg :company
              :reader bitbucket-setting-company
              :index-type hash-index
              :index-reader %bitbucket-settings-for-company)
     (actor :initarg :actor
            :reader bitbucket-token-actor
-           :documentation "The user who connected BitBucket. Tokens created
-by a refresh inherit this from the previous token.")
+           :documentation "The user who connected BitBucket.")
     (created-at :initarg :created-at))
    (:metaclass persistent-class)
    (:default-initargs :created-at (get-universal-time)
@@ -141,14 +144,14 @@ by a refresh inherit this from the previous token.")
   (let ((refresh-token (a:assoc-value response :refresh--token))
         (last-settings (car (bitbucket-settings-for-company company))))
     (assert (not (str:emptyp refresh-token)))
-    (when (or (not last-settings)
-              (not (equal refresh-token (refresh-token last-settings))))
-     (make-instance 'bitbucket-token
-                     :refresh-token (! refresh-token)
-                     :company company
-                     :actor (or actor
-                                (when last-settings
-                                  (bitbucket-token-actor last-settings)))))))
+    (cond
+      ((not last-settings)
+       (make-instance 'bitbucket-token
+                      :refresh-token (! refresh-token)
+                      :company company
+                      :actor actor))
+      ((not (equal refresh-token (refresh-token last-settings)))
+       (setf (refresh-token last-settings) refresh-token)))))
 
 (auto-restart:with-auto-restart ()
   (defun swap-for-token (code)
