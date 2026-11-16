@@ -8,6 +8,7 @@
   (:use #:cl
         #:bknr.datastore
         #:hex)
+  (:shadow #:room)
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:hex
@@ -29,6 +30,7 @@
                  #:util/object-id)
   (:use-reexport #:util/make-instance-with-accessors)
   (:export #:head
+           #:room
            #:google-analytics
            #:safe-redirect
            #:olark

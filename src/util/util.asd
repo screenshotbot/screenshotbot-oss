@@ -75,6 +75,7 @@
                (:file "bind-form")
                (:file "cdn")
                (:file "package")
+               (:file "room")
                (:file "mockable")
                (:file "asdf")
                #- (or screenshotbot-oss eaase-oss)
@@ -131,6 +132,7 @@
   :depends-on (:util/posix
                :alexandria
                :str
+               :cl-ppcre
                :flexi-streams)
   :components ((:file "memory")))
 

@@ -6,6 +6,8 @@
 
 (uiop:define-package :screenshotbot/model/core
   (:use #:cl #:alexandria #:util)
+  (:shadowing-import-from #:cl
+                          #:room)
   (:import-from #:screenshotbot/user-api
                 #:%created-at)
   (:import-from #:bknr.datastore

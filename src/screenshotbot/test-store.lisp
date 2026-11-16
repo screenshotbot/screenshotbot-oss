@@ -9,6 +9,8 @@
         #:fiveam
         #:screenshotbot/model/recorder-run
         #:screenshotbot/model/core)
+  (:shadowing-import-from #:cl
+                          #:room)
   (:import-from #:screenshotbot/model/recorder-run
                 #:make-recorder-run))
 
