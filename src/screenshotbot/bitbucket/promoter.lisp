@@ -30,8 +30,7 @@
                 #:valid-repo?
                 #:plugin-installed?)
   (:import-from #:screenshotbot/pro/bitbucket/settings
-                #:get-access-token-from-refresh-token
-                #:refresh-token
+                #:cached-access-token
                 #:bitbucket-settings-for-company)
   (:import-from #:screenshotbot/model/channel
                 #:github-get-canonical-repo)
@@ -159,9 +158,7 @@
   (handler-case
       (let* ((company (recorder-run-company run))
              (bitbucket-token (not-null! (car (bitbucket-settings-for-company company))))
-             (token (get-access-token-from-refresh-token
-                     company
-                     (refresh-token bitbucket-token)))
+             (token (cached-access-token bitbucket-token))
              (args (make-build-status-args run check)))
         (assert token)
         (let* ((commit (not-empty! (a:assoc-value args :commit)))

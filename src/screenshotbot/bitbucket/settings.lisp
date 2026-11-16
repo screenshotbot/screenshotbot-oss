@@ -67,7 +67,8 @@
                 #:allow-oauth-redirect-p)
   (:local-nicknames (#:a #:alexandria))
   (:export
-   #:refresh-token))
+   #:refresh-token
+   #:cached-access-token))
 (in-package :screenshotbot/bitbucket/settings)
 
 (named-readtables:in-readtable markup:syntax)
@@ -76,10 +77,16 @@
  (defclass bitbucket-token (store-object)
    ((refresh-token :initarg :refresh-token
                    :accessor refresh-token
-                   :documentation "Updated in place when Bitbucket rotates the
-refresh token, so a company keeps a single token object. Deleting and
-recreating the object instead would break concurrent readers that are
-still holding on to the old object.")
+                   :documentation "The OAuth refresh token: the long-lived credential
+we got when the company connected BitBucket. It's persisted, and it's
+never sent to the BitBucket API itself. Its only use is to be exchanged
+at https://bitbucket.org/site/oauth2/access_token for a short-lived
+ACCESS-TOKEN (see that slot), which is what API calls use.
+
+Each exchange can return a new refresh token. It's updated in place
+when that happens, so a company keeps a single token object. Deleting
+and recreating the object instead would break concurrent readers that
+are still holding on to the old object.")
     (company :initarg :company
              :reader bitbucket-setting-company
              :index-type hash-index
@@ -87,7 +94,29 @@ still holding on to the old object.")
     (actor :initarg :actor
            :reader bitbucket-token-actor
            :documentation "The user who connected BitBucket.")
-    (created-at :initarg :created-at))
+    (created-at :initarg :created-at)
+    (lock :initform (bt:make-lock "bitbucket-token")
+          :transient t
+          :reader bitbucket-token-lock
+          :documentation "Held while refreshing the cached access token.")
+    (access-token :initform nil
+                  :transient t
+                  :accessor %access-token
+                  :documentation "The OAuth access token: the short-lived bearer token that
+API calls (like pushing build statuses) send in their Authorization
+header. Not to be confused with REFRESH-TOKEN, which is the persisted,
+long-lived credential that we exchange to get this one.
+
+This is only a cache. It's transient, so it's lost on restart and is
+per node, and it's NIL until the first exchange. Use
+CACHED-ACCESS-TOKEN rather than reading it directly.")
+    (access-token-expires-at :initform 0
+                             :transient t
+                             :accessor %access-token-expires-at
+                             :documentation "Universal time after which ACCESS-TOKEN must not be used.
+Set from the exchange's expires_in, minus
+*ACCESS-TOKEN-EXPIRY-MARGIN*. Zero means there's no usable cached
+access token."))
    (:metaclass persistent-class)
    (:default-initargs :created-at (get-universal-time)
                       :actor nil)))
@@ -179,8 +208,32 @@ still holding on to the old object.")
              response
              :access--token)))
      (cond
-       (token token)
+       (token (values token (a:assoc-value response :expires--in)))
        (t (error "could not get token: ~a" response))))))
+
+(defparameter *access-token-expiry-margin* 300
+  "Seconds before the access token's expiry at which we stop using it.")
+
+(defun cached-access-token (bitbucket-token)
+  "Returns an access token for BITBUCKET-TOKEN, reusing the previous one
+until it's about to expire.
+
+The token's lock is held while refreshing, so when several threads need
+an access token at the same time only one of them talks to BitBucket,
+and the rest use the access token it got."
+  (bt:with-lock-held ((bitbucket-token-lock bitbucket-token))
+    (when (<= (%access-token-expires-at bitbucket-token) (get-universal-time))
+      (multiple-value-bind (access-token expires-in)
+          (get-access-token-from-refresh-token
+           (bitbucket-setting-company bitbucket-token)
+           (refresh-token bitbucket-token))
+        (setf (%access-token bitbucket-token) access-token)
+        (setf (%access-token-expires-at bitbucket-token)
+              (if expires-in
+                  (- (+ (get-universal-time) expires-in)
+                     *access-token-expiry-margin*)
+                  0))))
+    (%access-token bitbucket-token)))
 
 (defun same-origin-p (url-1 url-2)
   (let ((uri-1 (quri:uri url-1))

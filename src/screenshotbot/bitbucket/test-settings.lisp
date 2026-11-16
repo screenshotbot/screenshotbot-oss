@@ -16,6 +16,8 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/pro/bitbucket/settings
+                #:access-token-for-args
+                #:cached-access-token
                 #:%bitbucket-oauth-callback
                 #:same-origin-p
                 #:bitbucket-token-actor
@@ -30,10 +32,10 @@
 
 (util/fiveam:def-suite)
 
-(def-fixture state ()
+(def-fixture state (&key globally)
   (let ((auto-restart:*global-enable-auto-retries-p* nil))
    (with-installation ()
-    (with-test-store ()
+    (with-test-store (:globally globally)
       (let ((company (make-instance 'company)))
         (&body))))))
 
@@ -89,6 +91,59 @@
       (is (equal 1 (length (bitbucket-settings-for-company company))))
       (is (eql user
                (bitbucket-token-actor (car (bitbucket-settings-for-company company))))))))
+
+;; Mocks the access-token exchange: each call returns a new access token
+;; and a rotated refresh token, and counts calls in CALLS.
+(defmacro with-fake-exchange ((calls &key (expires-in 7200) (delay 0)) &body body)
+  `(let ((,calls 0)
+         (lock (bt:make-lock)))
+     (cl-mock:with-mocks ()
+       (cl-mock:if-called 'access-token-for-args
+                          (lambda (args &key company)
+                            (declare (ignore args company))
+                            (sleep ,delay)
+                            (let ((n (bt:with-lock-held (lock)
+                                       (incf ,calls))))
+                              `((:access--token . ,(format nil "access-~a" n))
+                                (:refresh--token . ,(format nil "refresh-~a" n))
+                                (:expires--in . ,,expires-in)))))
+       ,@body)))
+
+(test cached-access-token-is-reused
+  (with-fixture state ()
+    (update-from-refresh-token company '((:refresh--token . "refresh-0")))
+    (let ((token (car (bitbucket-settings-for-company company))))
+      (with-fake-exchange (calls)
+        (is (equal "access-1" (cached-access-token token)))
+        (is (equal "access-1" (cached-access-token token)))
+        (is (equal 1 calls))
+        (is (equal "refresh-1" (refresh-token token)))))))
+
+(test cached-access-token-is-refreshed-when-about-to-expire
+  (with-fixture state ()
+    (update-from-refresh-token company '((:refresh--token . "refresh-0")))
+    (let ((token (car (bitbucket-settings-for-company company))))
+      (with-fake-exchange (calls :expires-in 60)
+        (is (equal "access-1" (cached-access-token token)))
+        (is (equal "access-2" (cached-access-token token)))
+        (is (equal 2 calls))))))
+
+(test concurrent-callers-share-one-refresh
+  (with-fixture state (:globally t)
+    (update-from-refresh-token company '((:refresh--token . "refresh-0")))
+    (let ((token (car (bitbucket-settings-for-company company))))
+      (with-fake-exchange (calls :delay 0.2)
+        (let* ((results (make-array 5 :initial-element nil))
+               (threads
+                 (loop for i below 5
+                       collect (let ((i i))
+                                 (bt:make-thread
+                                  (lambda ()
+                                    (setf (aref results i)
+                                          (cached-access-token token))))))))
+          (mapc #'bt:join-thread threads)
+          (is (equal 1 calls))
+          (is (every (lambda (x) (equal "access-1" x)) results)))))))
 
 (test same-origin-p
   (is-true (same-origin-p "https://staging.screenshotbot.io"
