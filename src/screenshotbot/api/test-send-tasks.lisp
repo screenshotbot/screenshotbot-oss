@@ -72,7 +72,6 @@
                                             collect
                                             (make-instance 'screenshot :name name))
                          :commit-hash "car"
-                         :cleanp t
                          :trunkp t))
                   (screenshot (make-instance 'screenshot
                                              :run nil
@@ -81,7 +80,6 @@
                          :channel channel
                          :commit-hash "car2"
                          :was-promoted-p t
-                         :cleanp t
                          :screenshots (list screenshot)
                          :previous-run run1
                          :trunkp t

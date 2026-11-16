@@ -117,7 +117,6 @@
                                         :channel channel
                                         :github-repo "foo"
                                         :commit-hash nil
-                                        :cleanp t
                                         :branch "master"
                                         :branch-hash "a1"
                                         :trunkp t

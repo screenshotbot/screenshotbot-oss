@@ -495,7 +495,6 @@ computed differently if we're using sharding."
                         :create-github-issue-p (dto:should-create-github-issue-p run)
                         :trunkp (dto:trunkp run)
                         :periodic-job-p (dto:periodic-job-p run)
-                        :cleanp (dto:cleanp run)
                         :pull-request (dto:pull-request-url run)
                         :release-branch-p (dto:release-branch-p run)
                         :branch (cond
