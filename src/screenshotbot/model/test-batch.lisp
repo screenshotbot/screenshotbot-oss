@@ -31,7 +31,9 @@
   (:import-from #:bknr.datastore
                 #:blob-pathname)
   (:import-from #:auth/viewer-context
-                #:normal-viewer-context))
+                #:normal-viewer-context)
+  (:import-from #:bknr.indices
+                #:should-index-objects-for-class-p))
 (in-package :screenshotbot/model/test-batch)
 
 (util/fiveam:def-suite)
@@ -134,3 +136,20 @@
       (finishes (bknr.datastore:snapshot)))
     (with-test-store (:dir dir)
       (pass))))
+
+(test batch-items-are-not-in-the-class-index
+  (is-false (should-index-objects-for-class-p (find-class 'batch-item))))
+
+(test class-instances-still-finds-batch-items
+  (with-fixture state ()
+    (let* ((batch (find-or-create-batch
+                   :company company
+                   :repo "http://foo.git"
+                   :commit "abcd"
+                   :name "foobar"))
+           (item (make-instance 'batch-item
+                                :batch batch
+                                :channel channel)))
+      (assert-that (bknr.datastore:class-instances 'batch-item)
+                   (contains item)))))
+

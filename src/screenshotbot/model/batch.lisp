@@ -222,10 +222,10 @@ code."
   (ensure-slot-boundp 'batch-item '%status)
   (ensure-slot-boundp 'batch-item '%run))
 
-(defmethod should-index-objects-for-class-p ((self batch-item))
+(defmethod should-index-objects-for-class-p ((class (eql (find-class 'batch-item))))
   nil)
 
-(defmethod class-instances ((class (eql (find-class 'batch-item))))
+(defmethod class-instances ((name (eql 'batch-item)))
   (nsort-store-objects
    (loop for obj in (bknr.datastore:all-store-objects)
          if (typep obj 'batch-item)
