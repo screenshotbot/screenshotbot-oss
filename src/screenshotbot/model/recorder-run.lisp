@@ -228,7 +228,7 @@ we can write methods that are generic to both."))
 
 (defcounter recorder-run-counter ())
 
-(with-class-validation (:deleted-slots (screenshots))
+(with-class-validation (:deleted-slots (screenshots cleanp activep))
   (defclass recorder-run (object-with-oid abstract-run
                           bknr-or-archived-run-mixin
                           unlikely-to-change-mixin)
@@ -264,19 +264,21 @@ restored.")
       :initarg :github-repo
       :accessor github-repo
       :accessor recorder-run-repo-url)
+     ;; OSS stores might still have snapshots older than store
+     ;; version 44 that have these slots. Delete them once
+     ;; *min-store-version* is >= 44.
+     #+screenshotbot-oss
      (cleanp
       :transient t
       :initform nil
       :documentation "Deprecated, unused. Transient so that older snapshots can still be
-restored. Store version 44 snapshots are written without it, so it can
-be deleted once *min-store-version* is >= 44.")
+restored.")
+     #+screenshotbot-oss
      (activep
       :transient t
       :initform nil
       :documentation "Deprecated, unused: ACTIVEP is computed from the channel. Transient
-so that older snapshots can still be restored. Store version 44
-snapshots are written without it, so it can be deleted once
-*min-store-version* is >= 44.")
+so that older snapshots can still be restored.")
      (branch
       :initarg :branch
       :initform nil
