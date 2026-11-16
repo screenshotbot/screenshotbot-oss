@@ -238,6 +238,14 @@
     (a:hash-table-keys hash-table)))
 
 (defun validate-indices (&key (full nil) (fix-by-default nil))
+  "Validate every slot index against the objects in memory.
+
+Heads up: this is slow on the first run after a class has been
+redefined with a slot deleted (and possibly added), as happened when we
+deleted the screenshots slot from recorder-run. Changing the slots
+makes all existing instances of the class obsolete, and each one gets
+recreated with the new layout the next time it's accessed. Since this
+touches every object, that's when all of the instances get recreated."
   (flet ((work ()
            (let* ((objects (all-store-objects-in-memory :full full))
                   (classes (fast-remove-duplicates
