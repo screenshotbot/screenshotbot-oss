@@ -15,6 +15,7 @@
                 #:only-instance!
                 #:with-test-user)
   (:import-from #:screenshotbot/company/members
+                #:user-added-audit-log
                 #:new-role
                 #:role-changed-audit-log
                 #:old-role
@@ -41,7 +42,9 @@
   (:import-from #:screenshotbot/user-api
                 #:unaccepted-invites)
   (:import-from #:bknr.datastore
-                #:object-destroyed-p))
+                #:object-destroyed-p)
+  (:import-from #:screenshotbot/dashboard/audit-log
+                #:render-audit-log))
 (in-package :screenshotbot/company/test-members)
 
 
@@ -127,3 +130,36 @@
       (is-true (object-destroyed-p invite))
       (is (equal (list other-invite) (unaccepted-invites user)))
       (is (equal nil (unaccepted-invites other-user))))))
+
+(defun render-to-string (log)
+  (markup:write-html (render-audit-log log)))
+
+(test render-user-added-audit-log
+  (with-fixture state ()
+    (let ((log (make-instance 'user-added-audit-log
+                              :user (make-user :email "arnold@example.com")
+                              :company company)))
+      (is (str:containsp "arnold@example.com"
+                         (render-to-string log))))))
+
+(test render-user-added-audit-log-with-unbound-user
+  "T2468: a USER-ADDED-AUDIT-LOG whose user slot is unbound shouldn't
+break the activity log."
+  (with-fixture state ()
+    (let ((log (make-instance 'user-added-audit-log
+                              :user user
+                              :company company)))
+      (slot-makunbound log 'screenshotbot/company/members::user)
+      (is (str:containsp "(deleted user)"
+                         (render-to-string log))))))
+
+(test render-role-changed-audit-log-with-nil-user
+  (with-fixture state ()
+    (let ((log (make-instance 'role-changed-audit-log
+                              :actor user
+                              :user nil
+                              :company company
+                              :old-role 'roles:standard-member
+                              :new-role 'roles:admin)))
+      (is (str:containsp "(deleted user)"
+                         (render-to-string log))))))

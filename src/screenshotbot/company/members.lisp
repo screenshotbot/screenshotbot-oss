@@ -345,9 +345,20 @@ the user isn't left with a reference to a deleted invite."
         (roles:role-friendly-name role)))
   </span>)
 
+(defun audit-log-user-email (log)
+  "The email of LOG's user, or a placeholder if the user is missing. The
+user slot can be NIL or unbound if the user was deleted (T2468), and one
+bad entry shouldn't break the whole activity log."
+  (let ((user (handler-case (user log)
+                (unbound-slot () nil))))
+    (or
+     (when user
+       (user-email user))
+     "(deleted user)")))
+
 (defmethod render-audit-log ((self role-changed-audit-log))
   <span>
-    Role changed for ,(user-email (user self)):
+    Role changed for ,(audit-log-user-email self):
     <span> from <role role=(old-role self) /></span>
     <span> to <role role=(new-role self) /></span>
   </span>)
@@ -364,5 +375,5 @@ the user isn't left with a reference to a deleted invite."
 
 (defmethod render-audit-log ((self user-added-audit-log))
   <span>
-    User ,(user-email (user self)) added
+    User ,(audit-log-user-email self) added
   </span>)
