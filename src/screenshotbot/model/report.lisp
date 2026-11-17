@@ -47,6 +47,8 @@
                 #:oid)
   (:import-from #:auth/viewer-context
                 #:logged-in-viewer-context)
+  (:import-from #:util/store/store-migrations
+                #:def-store-migration)
   (:export
    #:report
    #:report-run
@@ -243,6 +245,26 @@ this inherits that."
                 (equal pull-request-id
                        (?. pull-request-id (report-run report)))))
           collect acc))
+
+(defun report-needs-acceptable-backfill-p (report)
+  (when-let ((acceptable (report-acceptable report)))
+    (not (slot-boundp acceptable 'report))))
+
+(deftransaction tx-backfill-acceptable-report (report)
+  (when (report-needs-acceptable-backfill-p report)
+    (setf (slot-value (report-acceptable report) 'report)
+          report)))
+
+(defun backfill-acceptable-reports ()
+  "Acceptables created before the REPORT slot was added (Nov 2022) have
+it unbound. Every acceptable is created for exactly one report, so we
+can recover it from REPORT-ACCEPTABLE."
+  (dolist (report (class-instances 'report))
+    (when (report-needs-acceptable-backfill-p report)
+      (tx-backfill-acceptable-report report))))
+
+(def-store-migration ("Backfill the report slot on old acceptables" :version 47)
+  (backfill-acceptable-reports))
 
 (defmethod (setf acceptable-state) (state (acceptable base-acceptable) &key user)
   (assert (member state (list nil :accepted :rejected)))

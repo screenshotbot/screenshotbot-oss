@@ -19,7 +19,8 @@
   (:import-from #:screenshotbot/model/channel
                 #:channel)
   (:import-from #:screenshotbot/model/report
-                #:find-acceptables))
+                #:find-acceptables
+                #:backfill-acceptable-reports))
 (in-package :screenshotbot/model/test-acceptable)
 
 (util/fiveam:def-suite)
@@ -75,3 +76,15 @@
            (list acc)
            (find-acceptables channel
                              :pull-request-id 20))))))
+
+(test backfill-acceptable-reports
+  (with-fixture state ()
+    (let ((old (make-instance 'base-acceptable))
+          (new (make-instance 'base-acceptable :report report2)))
+      (bknr.datastore:with-transaction ()
+        (setf (report-acceptable report) old)
+        (setf (report-acceptable report2) new))
+      (is (not (slot-boundp old 'screenshotbot/report-api:report)))
+      (backfill-acceptable-reports)
+      (is (eql report (acceptable-report old)))
+      (is (eql report2 (acceptable-report new))))))
