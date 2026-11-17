@@ -23,6 +23,7 @@
                 #:hash-index
                 #:index-get)
   (:import-from #:util/store/object-id
+                #:creation-time-from-oid
                 #:oid-array
                 #:find-by-oid
                 #:object-with-oid)
@@ -42,6 +43,10 @@
                 #:ensure-slot-boundp)
   (:import-from #:util/store/store-migrations
                 #:def-store-migration)
+  (:import-from #:util/misc/lists
+                #:with-batches)
+  (:import-from #:util/cron
+                #:def-cron)
   (:import-from #:util/store/simple-object-snapshot
                 #:simple-object-snapshot)
   (:import-from #:util/store/store-version
@@ -230,3 +235,41 @@ code."
    (loop for obj in (bknr.datastore:all-store-objects)
          if (typep obj 'batch-item)
            collect obj)))
+
+(defun unchanged-batch-items (batch)
+  "Items that only recorded \"No screenshots changed\" (or \"Nothing to
+review\"). These never have a report, so deleting them only removes a
+row pointing to the run from the batch page."
+  (loop for item in (fset:convert 'list (batch-items batch))
+        if (eql :success (batch-item-status item))
+          collect item))
+
+(defun delete-old-unchanged-batch-items (&key (days 90)
+                                           (now (get-universal-time)))
+  "Deletes the :SUCCESS items of every batch created more than DAYS
+ago. Returns the number of deleted items.
+
+If an old commit is re-run, its check is recomputed from the remaining
+items. The status stays the same, since :SUCCESS has the lowest
+priority, but the title and summary table may show fewer channels."
+  (let ((cutoff (- now (* days 24 3600)))
+        (deleted 0))
+    (dolist (batch (class-instances 'batch))
+      (when (< (creation-time-from-oid batch) cutoff)
+        ;; Hold the lock so we don't delete an item that the promoter
+        ;; has just found and is about to update.
+        (bt:with-lock-held ((lock batch))
+          (let ((items (unchanged-batch-items batch)))
+            ;; The chunks keep us under CALL-ARGUMENTS-LIMIT.
+            (with-batches (chunk items :batch-size 1000)
+              (apply #'bknr.datastore:delete-objects chunk))
+            (incf deleted (length items))))))
+    (log:info "Deleted ~a old batch items" deleted)
+    deleted))
+
+;; Batch items are UNLIKELY-TO-CHANGE-MIXINs, so deleting one while a
+;; background snapshot is running makes that snapshot fail. Snapshots
+;; start at 6:00, and followers start theirs up to two hours later, so
+;; stay well clear of that.
+(def-cron delete-old-unchanged-batch-items (:minute 0 :hour 18)
+  (delete-old-unchanged-batch-items))

@@ -15,6 +15,8 @@
   (:import-from #:screenshotbot/model/batch
                 #:find-batches-for-commit
                 #:batch-item
+                #:delete-old-unchanged-batch-items
+                #:batch-items
                 #:find-batch-item
                 #:find-or-create-batch)
   (:import-from #:screenshotbot/user-api
@@ -33,6 +35,7 @@
   (:import-from #:auth/viewer-context
                 #:normal-viewer-context)
   (:import-from #:bknr.indices
+                #:object-destroyed-p
                 #:should-index-objects-for-class-p))
 (in-package :screenshotbot/model/test-batch)
 
@@ -153,3 +156,61 @@
       (assert-that (bknr.datastore:class-instances 'batch-item)
                    (contains item)))))
 
+
+(def-fixture deletion ()
+  (with-test-store ()
+    (let* ((company (make-instance 'company))
+           (channel (find-or-create-channel company "test-channel"))
+           (batch (find-or-create-batch
+                   :company company
+                   :repo "http://foo.git"
+                   :commit "abcd"
+                   :name "foobar"))
+           (unchanged (make-instance 'batch-item
+                                     :batch batch
+                                     :channel channel
+                                     :status :success))
+           (changed (make-instance 'batch-item
+                                   :batch batch
+                                   :channel :other
+                                   :status :action-required))
+           (in-100-days (+ (get-universal-time) (* 100 24 3600))))
+      (&body))))
+
+(test delete-old-unchanged-batch-items
+  (with-fixture deletion ()
+    (is (eql 1 (delete-old-unchanged-batch-items :now in-100-days)))
+    (is (object-destroyed-p unchanged))
+    (is-false (object-destroyed-p changed))
+    (assert-that (fset:convert 'list (batch-items batch))
+                 (contains changed))))
+
+(test recent-batch-items-are-not-deleted
+  (with-fixture deletion ()
+    (is (eql 0 (delete-old-unchanged-batch-items)))
+    (is-false (object-destroyed-p unchanged))))
+
+(test deletes-items-from-several-batches
+  (with-fixture deletion ()
+    (let ((more (loop for i below 5
+                      collect (make-instance
+                               'batch-item
+                               :batch (find-or-create-batch
+                                       :company company
+                                       :repo "http://foo.git"
+                                       :commit (format nil "commit-~a" i)
+                                       :name "foobar")
+                               :status :success))))
+      (is (eql 6 (delete-old-unchanged-batch-items :now in-100-days)))
+      (is (every #'object-destroyed-p more)))))
+
+(test deletes-batches-with-more-items-than-call-arguments-limit
+  "LispWorks' CALL-ARGUMENTS-LIMIT is 2047. (SBCL's is huge, so don't
+use the constant here.)"
+  (with-fixture deletion ()
+    (loop repeat 2100
+          do (make-instance 'batch-item
+                            :batch batch
+                            :status :success))
+    (is (eql 2101
+             (delete-old-unchanged-batch-items :now in-100-days)))))
