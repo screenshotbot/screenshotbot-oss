@@ -388,10 +388,16 @@ when doing a rolling deploy)"
       id)))
 
 (defun initialize-transient-slots (object)
+  "Called after restoring OBJECT. Restored objects are created with
+ALLOCATE-INSTANCE, so a transient slot is only bound here if the
+snapshot had a value for it, i.e. the slot was persistent when the
+snapshot was written. We keep that value so that migrations can read
+it, and only apply the initform to unbound slots."
   (dolist (slotd (class-slots (class-of object)))
     (when (and (typep slotd 'persistent-effective-slot-definition)
                (transient-slot-p slotd)
-               (slot-definition-initfunction slotd))
+               (slot-definition-initfunction slotd)
+               (not (slot-boundp object (slot-definition-name slotd))))
       (setf (slot-value object (slot-definition-name slotd))
             (funcall (slot-definition-initfunction slotd))))))
 

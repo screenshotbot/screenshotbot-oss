@@ -57,7 +57,14 @@
   (:import-from #:fiveam-matchers/lists
                 #:contains-in-any-order)
   (:import-from #:util/benchmark
-                #:def-benchmark))
+                #:def-benchmark)
+  (:import-from #:util/store/store-migrations
+                #:*migrations*
+                #:def-store-migration
+                #:run-migrations)
+  (:import-from #:util/store/store-version
+                #:*snapshot-store-version*
+                #:*store-version*))
 (in-package :util/store/test-store)
 
 
@@ -418,3 +425,36 @@
    (contains-in-any-order
     1 2 3)))
 
+
+(defun define-class-with-slot-made-transient (transient)
+  (eval
+   `(defclass class-with-slot-made-transient (store-object)
+      ((slot ,@(unless transient `(:initarg :slot))
+             :initform nil
+             :transient ,transient
+             :accessor class-with-slot-made-transient-slot))
+      (:metaclass persistent-class))))
+
+(test migration-can-read-slot-that-was-made-transient
+  "T2475: a migration needs to be able to read the value of a slot from a
+snapshot taken before the slot was made transient."
+  (define-class-with-slot-made-transient nil)
+  (unwind-protect
+       (tmpdir:with-tmpdir (dir)
+         (with-test-store (:dir dir)
+           (make-instance 'class-with-slot-made-transient :slot 42)
+           (util:safe-snapshot "before making the slot transient"))
+         (define-class-with-slot-made-transient t)
+         (with-test-store (:dir dir)
+           (let ((seen nil)
+                 (*migrations* nil)
+                 (*snapshot-store-version* 1)
+                 (*store-version* 2))
+             (def-store-migration ("read the old value" :version 2)
+               (setf seen
+                     (mapcar #'class-with-slot-made-transient-slot
+                             (bknr.datastore:store-objects-with-class
+                              'class-with-slot-made-transient))))
+             (run-migrations :snapshot nil)
+             (is (equal '(42) seen)))))
+    (define-class-with-slot-made-transient nil)))

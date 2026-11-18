@@ -334,6 +334,38 @@
     (restore)
     (test-equal 0 (class-with-transient-slot-slot (find-store-object object-id)))))
 
+;; Not DEFINE-PERSISTENT-CLASS at toplevel, since the test redefines
+;; it.
+(defun define-class-with-slot-made-transient (transient)
+  (eval
+   `(defclass class-with-slot-made-transient (store-object)
+      ((slot ,@(unless transient `(:initarg :slot))
+             :initform nil
+             :transient ,transient
+             :accessor class-with-slot-made-transient-slot))
+      (:metaclass persistent-class))))
+
+(defdstest transient-slot-keeps-value-from-older-snapshot ()
+  (define-class-with-slot-made-transient nil)
+  (unwind-protect
+       (let ((object-id (store-object-id
+                         (make-instance 'class-with-slot-made-transient :slot 42)))
+             (other-id (store-object-id
+                        (make-instance 'class-with-slot-made-transient))))
+         (snapshot)
+         (restore)
+         (is (eql 42 (class-with-slot-made-transient-slot (find-store-object object-id))))
+         (define-class-with-slot-made-transient t)
+         (restore)
+         (is (eql 42 (class-with-slot-made-transient-slot (find-store-object object-id))))
+         (is (eql nil (class-with-slot-made-transient-slot (find-store-object other-id))))
+         ;; The new snapshot doesn't have the transient slot, so the
+         ;; initform is used again.
+         (snapshot)
+         (restore)
+         (is (eql nil (class-with-slot-made-transient-slot (find-store-object object-id)))))
+    (define-class-with-slot-made-transient nil)))
+
 (define-persistent-class persistent-mixin ()
   ((mixin-slot :update
                :initform 2)))
