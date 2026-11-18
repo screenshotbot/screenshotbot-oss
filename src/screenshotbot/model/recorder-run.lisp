@@ -175,8 +175,6 @@
 
 (defvar *lock* (bt:make-lock))
 
-(defvar *warning-lock* (bt:make-lock))
-
 (defindex +tags-index-v2+
   'fset-many-to-many-index
   :slot-name 'tags)
@@ -379,10 +377,14 @@ NIL or 0, this will use exact pixel comparisons.")
       :accessor compare-tolerance)
      (%warnings
       :initform nil
-      :accessor %recorder-run-warnings
-      :documentation "A list of warning objects that will be rendered whenever the run or an
-associated report is rendered. No longer read: warnings are looked up
-through +run-warning-run-index+ instead, see recorder-run-warnings.")
+      :reader %recorder-run-warnings
+      :documentation "Deprecated: no longer written, and only read by the version 37
+migration that backfills the %run slot on warnings. Warnings are looked
+up through +run-warning-run-index+ instead, see recorder-run-warnings.
+
+This can't be made transient until *min-store-version* >= 37: transient
+slots are reset when a snapshot is restored, before migrations run, so
+the version 37 migration would see an empty list.")
      (created-at
       :initform nil
       :accessor %created-at)
@@ -924,13 +926,10 @@ typo it wasn't being run. I've updated the version."
   (ensure-slot-boundp 'recorder-run '%metadata))
 
 (defun push-run-warning (run type &rest args)
-  "Create a run warning of type TYPE with args ARGS, and push it to the
-list of warnings for RUN."
-  (let ((warning (apply #'make-instance type
-                        :run run
-                        args)))
-    (bt:with-lock-held (*warning-lock*)
-      (push warning (%recorder-run-warnings run)))))
+  "Create a run warning of type TYPE with args ARGS for RUN."
+  (apply #'make-instance type
+         :run run
+         args))
 
 (defun delete-old-unchanged-runs (&key (now (get-universal-time)))
   (let ((cutoff (- now (* 3600 24 180))))

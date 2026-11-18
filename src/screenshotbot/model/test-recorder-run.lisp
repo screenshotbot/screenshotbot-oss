@@ -38,6 +38,7 @@
                 #:recorder-run
                 #:push-run-warning
                 #:recorder-run-warnings
+                #:%recorder-run-warnings
                 #:not-fast-forward-promotion-warning
                 #:%run)
   (:import-from #:util/store
@@ -455,6 +456,13 @@ that are now transient or removed."
     (let ((warning (first (recorder-run-warnings run))))
       (is (not (null warning)))
       (is (eq run (slot-value warning '%run))))))
+
+(test push-run-warning-does-not-write-the-deprecated-list
+  (with-fixture state ()
+    (push-run-warning run 'not-fast-forward-promotion-warning)
+    (is (eql nil (%recorder-run-warnings run)))
+    (assert-that (recorder-run-warnings run)
+                 (has-length 1))))
 
 (test recorder-run-warnings-reads-from-index
   (with-fixture state ()
