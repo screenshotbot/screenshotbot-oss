@@ -116,7 +116,10 @@
 (util/fiveam:def-suite)
 
 (def-fixture state ()
-  (let ((*installation* (make-instance 'installation)))
+  (let ((*installation* (make-instance 'installation))
+        ;; Rendering a report schedules image comparisons in the
+        ;; background, which would otherwise outlive the test store.
+        (*changed-rows-pool* (make-instance 'synchronous-executor)))
    (with-test-store ()
      (tmpdir:with-tmpdir (dir)
        (with-fake-request ()
