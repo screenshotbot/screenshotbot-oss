@@ -11,6 +11,8 @@
                 #:bulk-delete-runs
                 #:recorder-run-base-branch
                 #:%base-branch
+                #:recorder-run-base-branch-hash
+                #:%base-branch-hash
                 #:recorder-run-channel
                 #:recorder-run-directory
                 #:recorder-run-company
@@ -221,6 +223,15 @@
     (let ((run (make-recorder-run :base-branch "parent-pr")))
       (slot-makunbound run '%base-branch)
       (is (eql nil (recorder-run-base-branch run))))))
+
+(test base-branch-hash-happy-path
+  (with-fixture state ()
+    (is (eql nil (recorder-run-base-branch-hash (make-recorder-run))))
+    (let ((run (make-recorder-run :base-branch-hash "abcd")))
+      (is (equal "abcd" (recorder-run-base-branch-hash run)))
+      ;; The state of existing runs after a hot reload
+      (slot-makunbound run '%base-branch-hash)
+      (is (eql nil (recorder-run-base-branch-hash run))))))
 
 (test delete-run-happy-path
   (with-fixture state ()

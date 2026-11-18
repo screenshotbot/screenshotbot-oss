@@ -27,6 +27,7 @@
                 #:assoc-value)
   (:import-from #:screenshotbot/sdk/env
                 #:buildkite-env-reader
+                #:github-actions-env-reader
                 #:env-reader
                 #:make-env-reader)
   (:import-from #:cl-mock
@@ -318,6 +319,34 @@ making sure that the doc is giving a good example."
                  (run-context:base-branch
                   (make :base-branch "explicit"
                         :overrides `(("BUILDKITE_PULL_REQUEST_BASE_BRANCH" . "parent-pr")))))))))
+
+(test base-branch-hash-is-read-from-the-env
+  (with-fixture state ()
+    (flet ((make (env)
+             (make-instance 'my-run-context :env env)))
+      (is (equal "74180a3cc6d1e623d2d9ea61c50e2c9c04533321"
+                 (run-context:base-branch-hash
+                  (make
+                   (make-instance
+                    'github-actions-env-reader
+                    :overrides `(("GITHUB_EVENT_PATH"
+                                  . ,(namestring
+                                      (asdf:system-relative-pathname
+                                       :screenshotbot.sdk
+                                       "fixture/sample-github-pr-event.json")))))))))
+      ;; CI providers that don't report it
+      (is (eql nil
+               (run-context:base-branch-hash
+                (make (make-instance 'buildkite-env-reader
+                                     :overrides nil)))))
+      ;; A missing event file shouldn't fail the run
+      (is (eql nil
+               (handler-bind ((warning #'muffle-warning))
+                 (run-context:base-branch-hash
+                  (make
+                   (make-instance
+                    'github-actions-env-reader
+                    :overrides `(("GITHUB_EVENT_PATH" . "/does/not/exist.json")))))))))))
 
 (test merge-base-handles-subprocess-error
   (with-fixture state ()

@@ -295,6 +295,7 @@ run-context that was created here."
                  :shard-spec (run-context:shard-spec run-context)
                  :work-branch (run-context:work-branch run-context)
                  :base-branch (run-context:base-branch run-context)
+                 :base-branch-hash (run-context:base-branch-hash run-context)
                  :release-branch-p (run-context:work-branch-is-release-branch-p run-context)
                  :main-branch-hash (run-context:main-branch-hash run-context)
                  :github-repo (run-context:repo-url run-context)

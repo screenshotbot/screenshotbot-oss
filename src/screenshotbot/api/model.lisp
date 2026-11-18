@@ -47,6 +47,7 @@
              #:report
              #:work-branch
              #:base-branch
+             #:base-branch-hash
              #:unchanged-run-other-commit
              #:unchanged-run-commit
              #:unchanged-run-channel
@@ -209,6 +210,13 @@
                 :documentation "The branch that the pull request is being merged into, if this run is
 associated with a pull request. For stacked pull requests this is the
 branch of the parent pull request, as opposed to the main branch.")
+   (base-branch-hash :initarg :base-branch-hash
+                     :json-key "baseBranchCommit"
+                     :json-type (or null :string)
+                     :initform nil
+                     :reader base-branch-hash
+                     :documentation "The Git hash of the base branch, as reported by the CI provider for
+the pull request. Not every CI provider reports this.")
    (release-branch-p :initarg :release-branch-p
                      :json-key "isReleaseBranch"
                      :json-type (or null :bool)

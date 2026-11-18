@@ -597,6 +597,14 @@
              (make-instance 'run-context:run-context)
              nil #| screenshots |#)))))
 
+(test sends-base-branch-hash
+  (is (equal "abcd"
+             (dto:base-branch-hash
+              (run-context-to-dto
+               (make-instance 'run-context:run-context
+                              :base-branch-hash "abcd")
+               nil #| screenshots |#)))))
+
 (defun make-updater-with-remote-refs (&rest refs)
   (let ((updater (make-instance 'commit-graph-updater :api-context nil)))
     (loop for (ref sha) on refs by #'cddr

@@ -142,6 +142,7 @@
    #:runs-for-company
    #:recorder-run-work-branch
    #:recorder-run-base-branch
+   #:recorder-run-base-branch-hash
    #:recorder-run-batch
    #:recorder-run-repo-url
    #:group-separator
@@ -301,6 +302,14 @@ so that older snapshots can still be restored.")
     :default-initargs: those are recorded in the transaction log, and
     nodes that are still on the older code during a deploy can't apply
     them.)")
+     (%base-branch-hash
+      :initarg :base-branch-hash
+      :initform nil
+      :reader recorder-run-base-branch-hash
+      :documentation "The commit hash of the base branch, as reported by the
+    CI provider for the pull request. This slot will be unbound on
+    older runs, and for the same reason as %BASE-BRANCH shouldn't be
+    in :default-initargs.")
      (release-branch-p
       :transient t
       :initform nil
@@ -469,6 +478,10 @@ the version 37 migration would see an empty list.")
 
 (defmethod recorder-run-base-branch :around ((run recorder-run))
   (when (slot-boundp run '%base-branch)
+    (call-next-method)))
+
+(defmethod recorder-run-base-branch-hash :around ((run recorder-run))
+  (when (slot-boundp run '%base-branch-hash)
     (call-next-method)))
 
 (defun assert-no-loops (recorder-run)

@@ -37,6 +37,7 @@
    #:repo-clean-p
    #:work-branch
    #:base-branch
+   #:base-branch-hash
    #:build-url
    #:compare-threshold
    #:pixel-tolerance
@@ -142,6 +143,12 @@
                  :documentation "The branch that the pull request is being merged into"
                  :json-type (or null :string)
                  :json-key "baseBranch")
+    (base-branch-hash :initarg :base-branch-hash
+                      :initform nil
+                      :reader base-branch-hash
+                      :documentation "The commit hash of the base branch, if the CI provider reports it"
+                      :json-type (or null :string)
+                      :json-key "baseBranchCommit")
     (build-url :initarg :build-url
                :initform nil
                :reader build-url
@@ -266,6 +273,19 @@
    (let ((base-branch (e:pull-request-base-branch (env self))))
      (unless (str:emptyp base-branch)
        base-branch))))
+
+(defmethod base-branch-hash :around ((self env-reader-run-context))
+  (or
+   (call-next-method)
+   (handler-case
+       (let ((sha (e:base-sha1 (env self))))
+         (unless (str:emptyp sha)
+           sha))
+     ;; This might be reading a file provided by the CI provider, and
+     ;; we don't want to fail the run because of that.
+     (error (e)
+       (warn "Could not read the base branch commit: ~a" e)
+       nil))))
 
 (defmethod run-context-metadata :around ((self env-reader-run-context))
   (append
