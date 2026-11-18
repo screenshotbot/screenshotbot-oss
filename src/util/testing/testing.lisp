@@ -182,9 +182,15 @@
                         (lambda ()
                          (restart-case
                              (handler-bind ((error (lambda (e)
-                                                     (when catch-errors? ;; in non interactive mode
-                                                       (trivial-backtrace:print-backtrace e)
-                                                       (invoke-restart 'exit-acceptor)))))
+                                                     (cond
+                                                       ;; hunchentoot:stop closes the listening
+                                                       ;; socket, which might be while we're still
+                                                       ;; waiting to accept on it.
+                                                       ((hunchentoot::acceptor-shutdown-p acceptor)
+                                                        (invoke-restart 'exit-acceptor))
+                                                       (catch-errors? ;; in non interactive mode
+                                                        (trivial-backtrace:print-backtrace e)
+                                                        (invoke-restart 'exit-acceptor))))))
                                (let ((hunchentoot:*catch-errors-p* nil))
                                  (safe-start
                                   acceptor
