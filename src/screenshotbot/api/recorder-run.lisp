@@ -496,7 +496,6 @@ computed differently if we're using sharding."
                         :trunkp (dto:trunkp run)
                         :periodic-job-p (dto:periodic-job-p run)
                         :pull-request (dto:pull-request-url run)
-                        :release-branch-p (dto:release-branch-p run)
                         :branch (cond
                                   ((dto:release-branch-p run)
                                    ;; Heads up: we're logging the

@@ -293,9 +293,13 @@ so that older snapshots can still be restored.")
     be the same as the main branch, or it might be the current pull
     request branch")
      (release-branch-p
-      :initarg :release-branch-p
-      :accessor release-branch-p
-      :documentation "Whether the work-branch is a release branch")
+      :transient t
+      :initform nil
+      :documentation "Deprecated, unused: the API uses the release-branch-p on the DTO to
+pick the branch, but nothing reads it back from the run. Transient so
+that older snapshots can still be restored. Store version 48 snapshots
+are written without it, so it can be deleted once *min-store-version*
+is >= 48.")
      (branch-hash
       :initarg :branch-hash
       :initform nil
@@ -404,7 +408,6 @@ associated report is rendered.")
     (:metaclass has-created-at)
     (:default-initargs :screenshot-map (error "need screenshot-map")
                        :compare-tolerance nil
-                       :release-branch-p nil
                        :author nil
                        :metadata nil
                        :tags nil
@@ -910,9 +913,6 @@ company as a way of deleting."
   "This migration was supposed to be for version 29, but because of a
 typo it wasn't being run. I've updated the version."
   (ensure-slot-boundp 'recorder-run '%metadata))
-
-(def-store-migration ("Add new slot for release-branch-p" :version 30)
-  (ensure-slot-boundp 'recorder-run 'release-branch-p))
 
 (defun push-run-warning (run type &rest args)
   "Create a run warning of type TYPE with args ARGS, and push it to the
