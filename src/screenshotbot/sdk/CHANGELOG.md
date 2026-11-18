@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.19.1 - 2026-11-18
+
+### Changes
+
+- Send the pull request's base branch, and on GitHub Actions the base
+  branch's commit, with each run.
+- Use the main branch commit advertised by the remote when the commit
+  graph is uploaded via git-upload-pack, instead of relying on
+  `origin/<main>` being present in the local checkout. An explicit
+  `--main-branch-commit-hash` still wins.
+- `--mark-unchanged-from` no longer computes and sends a merge base.
+- Don't prompt for a git username and password on the terminal when
+  there are no stored credentials for an https remote.
+
 ## 2.19.0 - 2026-11-13
 
 ### Changes
