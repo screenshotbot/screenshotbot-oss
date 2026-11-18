@@ -36,6 +36,7 @@
    #:merge-base
    #:repo-clean-p
    #:work-branch
+   #:base-branch
    #:build-url
    #:compare-threshold
    #:pixel-tolerance
@@ -135,6 +136,12 @@
                  :reader work-branch
                  :json-type (or null :string)
                  :json-key "workBranch")
+    (base-branch :initarg :base-branch
+                 :initform nil
+                 :reader base-branch
+                 :documentation "The branch that the pull request is being merged into"
+                 :json-type (or null :string)
+                 :json-key "baseBranch")
     (build-url :initarg :build-url
                :initform nil
                :reader build-url
@@ -250,6 +257,15 @@
   (or
    (call-next-method)
    (e:work-branch (env self))))
+
+(defmethod base-branch :around ((self env-reader-run-context))
+  (or
+   (call-next-method)
+   ;; Some CI environments set this to an empty string when it's not
+   ;; a pull request
+   (let ((base-branch (e:pull-request-base-branch (env self))))
+     (unless (str:emptyp base-branch)
+       base-branch))))
 
 (defmethod run-context-metadata :around ((self env-reader-run-context))
   (append

@@ -46,6 +46,7 @@
              #:compare-threshold
              #:report
              #:work-branch
+             #:base-branch
              #:unchanged-run-other-commit
              #:unchanged-run-commit
              #:unchanged-run-channel
@@ -200,6 +201,14 @@
                 :initform nil
                 :reader work-branch
                 :documentation "The branch on which the CI job was run")
+   (base-branch :initarg :base-branch
+                :json-key "baseBranch"
+                :json-type (or null :string)
+                :initform nil
+                :reader base-branch
+                :documentation "The branch that the pull request is being merged into, if this run is
+associated with a pull request. For stacked pull requests this is the
+branch of the parent pull request, as opposed to the main branch.")
    (release-branch-p :initarg :release-branch-p
                      :json-key "isReleaseBranch"
                      :json-type (or null :bool)

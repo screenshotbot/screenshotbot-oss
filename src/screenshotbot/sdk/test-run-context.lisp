@@ -26,6 +26,7 @@
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:screenshotbot/sdk/env
+                #:buildkite-env-reader
                 #:env-reader
                 #:make-env-reader)
   (:import-from #:cl-mock
@@ -294,6 +295,29 @@ making sure that the doc is giving a good example."
                           :env (make-env-reader)))))
     (is (typep dto 'run-context-dto))
     (is (equal "foo" (run-context:work-branch dto)))))
+
+(test base-branch-is-read-from-the-env
+  (with-fixture state ()
+    (flet ((make (&rest args &key overrides &allow-other-keys)
+             (apply #'make-instance 'my-run-context
+                    :env (make-instance 'buildkite-env-reader
+                                        :overrides overrides)
+                    (alexandria:remove-from-plist args :overrides))))
+      (is (equal "parent-pr"
+                 (run-context:base-branch
+                  (make :overrides `(("BUILDKITE_PULL_REQUEST_BASE_BRANCH" . "parent-pr"))))))
+      ;; Buildkite sets this to an empty string when it's not a pull
+      ;; request
+      (is (eql nil
+               (run-context:base-branch
+                (make :overrides `(("BUILDKITE_PULL_REQUEST_BASE_BRANCH" . ""))))))
+      (is (eql nil
+               (run-context:base-branch
+                (make :overrides nil))))
+      (is (equal "explicit"
+                 (run-context:base-branch
+                  (make :base-branch "explicit"
+                        :overrides `(("BUILDKITE_PULL_REQUEST_BASE_BRANCH" . "parent-pr")))))))))
 
 (test merge-base-handles-subprocess-error
   (with-fixture state ()

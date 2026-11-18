@@ -141,6 +141,7 @@
    #:make-recorder-run
    #:runs-for-company
    #:recorder-run-work-branch
+   #:recorder-run-base-branch
    #:recorder-run-batch
    #:recorder-run-repo-url
    #:group-separator
@@ -290,6 +291,16 @@ so that older snapshots can still be restored.")
       :documentation "The branch we're currently working on, which might
     be the same as the main branch, or it might be the current pull
     request branch")
+     (%base-branch
+      :initarg :base-branch
+      :initform nil
+      :reader recorder-run-base-branch
+      :documentation "The branch that the pull request is being merged into, if
+    any. For stacked pull requests, this is different from the main
+    branch. This slot will be unbound on older runs. (Don't add this to
+    :default-initargs: those are recorded in the transaction log, and
+    nodes that are still on the older code during a deploy can't apply
+    them.)")
      (release-branch-p
       :transient t
       :initform nil
@@ -455,6 +466,10 @@ the version 37 migration would see an empty list.")
       (call-next-method)
     (unbound-slot (e)
       nil)))
+
+(defmethod recorder-run-base-branch :around ((run recorder-run))
+  (when (slot-boundp run '%base-branch)
+    (call-next-method)))
 
 (defun assert-no-loops (recorder-run)
   (flet ((next (run)

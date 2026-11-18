@@ -9,6 +9,8 @@
         #:fiveam)
   (:import-from #:screenshotbot/model/recorder-run
                 #:bulk-delete-runs
+                #:recorder-run-base-branch
+                #:%base-branch
                 #:recorder-run-channel
                 #:recorder-run-directory
                 #:recorder-run-company
@@ -205,6 +207,20 @@
       (slot-makunbound run '%author)
       (is (eql nil (recorder-run-author run))))))
 
+
+(test base-branch-happy-path
+  (with-fixture state ()
+    (is (eql nil (recorder-run-base-branch (make-recorder-run))))
+    (is (equal "parent-pr"
+               (recorder-run-base-branch
+                (make-recorder-run :base-branch "parent-pr"))))))
+
+(test unbound-slot-for-base-branch
+  "This is the state of existing runs after a hot reload"
+  (with-fixture state ()
+    (let ((run (make-recorder-run :base-branch "parent-pr")))
+      (slot-makunbound run '%base-branch)
+      (is (eql nil (recorder-run-base-branch run))))))
 
 (test delete-run-happy-path
   (with-fixture state ()

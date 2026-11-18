@@ -584,6 +584,19 @@
                               :pixel-tolerance 2)
                nil #| screenshots |#)))))
 
+(test sends-base-branch
+  (is (equal "parent-pr"
+             (dto:base-branch
+              (run-context-to-dto
+               (make-instance 'run-context:run-context
+                              :base-branch "parent-pr")
+               nil #| screenshots |#))))
+  (is (eql nil
+           (dto:base-branch
+            (run-context-to-dto
+             (make-instance 'run-context:run-context)
+             nil #| screenshots |#)))))
+
 (defun make-updater-with-remote-refs (&rest refs)
   (let ((updater (make-instance 'commit-graph-updater :api-context nil)))
     (loop for (ref sha) on refs by #'cddr
