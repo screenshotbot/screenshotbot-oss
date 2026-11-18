@@ -34,6 +34,7 @@
   (:import-from #:screenshotbot/testing
                 #:with-installation)
   (:import-from #:screenshotbot/abstract-pr-promoter
+                #:*push-pool*
                 #:push-remote-check
                 #:make-check
                 #:promoter-pull-id
@@ -57,7 +58,9 @@
   (:import-from #:screenshotbot/report-api
                 #:report)
   (:import-from #:screenshotbot/model/report
-                #:acceptable-state))
+                #:acceptable-state)
+  (:import-from #:util/threading
+                #:synchronous-executor))
 (in-package :screenshotbot/gitlab/test-merge-request-promoter)
 
 
@@ -76,36 +79,37 @@
    *base-run*))
 
 (def-fixture state ()
-  (with-test-store ()
-    (cl-mock:with-mocks ()
-      (clrhash *last-state-update*)
-      (with-installation (:installation
-                          (make-instance 'installation
-                                         :plugins
-                                         (list
-                                          (make-instance 'gitlab-plugin))))
-        (let* ((company (make-instance 'company))
-               (channel (make-instance 'channel
-                                       :name "gitlab-test-channel"
-                                       :company company
-                                       :github-repo "https://gitlab.com/tdrhq/fast-example"))
-               (settings (make-instance 'gitlab-settings
+  (let ((*push-pool* (make-instance 'synchronous-executor)))
+   (with-test-store ()
+     (cl-mock:with-mocks ()
+       (clrhash *last-state-update*)
+       (with-installation (:installation
+                           (make-instance 'installation
+                                          :plugins
+                                          (list
+                                           (make-instance 'gitlab-plugin))))
+         (let* ((company (make-instance 'company))
+                (channel (make-instance 'channel
+                                        :name "gitlab-test-channel"
                                         :company company
-                                        :url "https://gitlab.com"
-                                        :token "foobar"))
-               (run (make-recorder-run :company company
-                                       :commit-hash "baa"
-                                       :merge-base "aaa"
-                                       :channel channel
-                                       :github-repo "https://gitlab.com/tdrhq/fast-example"
-                                       :gitlab-merge-request-iid 7))
-               (another-run (make-recorder-run))
-               (*base-run* (make-recorder-run :company company))
-               (last-build-status))
-          (cl-mock:if-called 'post-build-status
-                             (lambda (&rest args)
-                               (setf last-build-status args)))
-          (&body))))))
+                                        :github-repo "https://gitlab.com/tdrhq/fast-example"))
+                (settings (make-instance 'gitlab-settings
+                                         :company company
+                                         :url "https://gitlab.com"
+                                         :token "foobar"))
+                (run (make-recorder-run :company company
+                                        :commit-hash "baa"
+                                        :merge-base "aaa"
+                                        :channel channel
+                                        :github-repo "https://gitlab.com/tdrhq/fast-example"
+                                        :gitlab-merge-request-iid 7))
+                (another-run (make-recorder-run))
+                (*base-run* (make-recorder-run :company company))
+                (last-build-status))
+           (cl-mock:if-called 'post-build-status
+                              (lambda (&rest args)
+                                (setf last-build-status args)))
+           (&body)))))))
 
 (test valid-repo
   (with-fixture state ()
