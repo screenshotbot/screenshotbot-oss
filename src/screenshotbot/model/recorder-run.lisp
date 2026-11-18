@@ -516,7 +516,15 @@ associated report is rendered.")
                        :merge-base nil)
     (:documentation "Annotates that this commit should have identical screenshots to the other commit")))
 
-(defmethod initialize-instance :after ((self recorder-run) &key)
+(defmethod initialize-instance :after ((self recorder-run)
+                                       ;; Initargs of slots that have since been made
+                                       ;; transient or removed. Older transaction logs
+                                       ;; still pass these to TX-MAKE-INSTANCE
+                                       ;; (FIX-MAKE-INSTANCE-ARGS records the default
+                                       ;; initargs too), so accept and ignore them, or
+                                       ;; replaying those logs fails.
+                                       &key release-branch-p cleanp activep)
+  (declare (ignore release-branch-p cleanp activep))
   (%update-commit-map self)
   (%update-run-id-map self)
   (%update-channel-runs self))

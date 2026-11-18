@@ -262,6 +262,22 @@
                  (recorder-run-commit (car
                                        (class-instances 'recorder-run))))))))
 
+(test can-replay-transaction-logs-with-removed-initargs
+  "Older transaction logs create recorder-runs with initargs for slots
+that are now transient or removed."
+  (tmpdir:with-tmpdir (dir)
+    (with-test-store (:dir dir)
+      (make-recorder-run
+       :commit-hash "foo"
+       :channel (find-or-create-channel (make-instance 'company) "bleh")
+       :release-branch-p t
+       :cleanp t
+       :activep nil))
+    (with-test-store (:dir dir)
+      (is (equal "foo"
+                 (recorder-run-commit (car
+                                       (class-instances 'recorder-run))))))))
+
 (test api-viewer-context-can-only-see-runs-in-the-company
   (with-fixture state ()
     (let* ((other-company (make-instance 'company))
