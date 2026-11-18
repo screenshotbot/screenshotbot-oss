@@ -15,6 +15,9 @@
                 #:get-local-commits
                 #:update-commit-graph-new-style
                 #:all-remote-refs
+                #:remote-branch-sha
+                #:%finish-update-commit-graph
+                #:update-commit-graph-old-style
                 #:commit-graph-updater
                 #+lispworks
                 #:want-remote-ref
@@ -268,6 +271,43 @@ on the server. This test will FAIL until the bug is fixed."
                     "Commit graph should NOT be created for git remote (GitLab)"))))))
 
 #+lispworks
+(test remote-refs-are-cleared-when-new-flow-fails
+  (with-fixture state ()
+    (gk:enable :cli-shallow-clones)
+    (test-git:with-git-repo (repo :dir dir)
+      (test-git:make-commit repo "initial commit")
+      (test-git:enable-server-features repo)
+      (git::$ (git-command repo) "remote" "add" "origin" "https://github.com/example-org/my-project")
+      (is-true (new-flow-enabled-p self repo))
+      (let ((sha-before-failure nil)
+            (reverted nil))
+        (cl-mock:if-called 'fetch-remote-branch
+                           (lambda (repo branch)
+                             (declare (ignore repo branch))
+                             (values)))
+        (cl-mock:if-called 'make-remote-upload-pack
+                           (lambda (repo)
+                             (local-upload-pack repo)))
+        ;; Fail after the refs have been read from the upload-pack
+        (cl-mock:if-called '%finish-update-commit-graph
+                           (lambda (&rest args)
+                             (declare (ignore args))
+                             (setf sha-before-failure (remote-branch-sha self "master"))
+                             (error "simulated failure")))
+        (cl-mock:if-called 'update-commit-graph-old-style
+                           (lambda (self repo branch)
+                             (declare (ignore self repo branch))
+                             (values)))
+        (handler-bind ((warning (lambda (w)
+                                  (when (str:containsp "Reverting" (princ-to-string w))
+                                    (setf reverted t))
+                                  (muffle-warning w))))
+          (update-commit-graph self repo "master"))
+        (is-true reverted)
+        (is (equal (git:current-commit repo) sha-before-failure))
+        (is (eql nil (remote-branch-sha self "master")))))))
+
+#+lispworks
 (test want-remote-ref
   (is-true (want-remote-ref nil (list "master")
                             "abcd"
@@ -316,7 +356,10 @@ on the server. This test will FAIL until the bug is fixed."
         (has-typep 'dto:git-ref)))
 
       (is (equal (git:current-commit repo)
-                 (gethash "refs/heads/master" (all-remote-refs self)))))))
+                 (gethash "refs/heads/master" (all-remote-refs self))))
+      (is (equal (git:current-commit repo)
+                 (remote-branch-sha self "master")))
+      (is (eql nil (remote-branch-sha self "does-not-exist"))))))
 
 (test clone-and-update-commit-graph
   #+lispworks

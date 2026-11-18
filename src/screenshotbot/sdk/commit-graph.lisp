@@ -175,6 +175,13 @@ commits that are needed."
   (loop for  (sha . ref) in refs
         do (setf (gethash ref (all-remote-refs self)) sha)))
 
+(defmethod remote-branch-sha ((self commit-graph-updater) branch)
+  "The SHA for BRANCH as advertised by the remote during the
+git-upload-pack flow, or NIL if we didn't see it (e.g. in the old
+flow)."
+  (unless (str:emptyp branch)
+    (gethash (format nil "refs/heads/~a" branch) (all-remote-refs self))))
+
 (defmethod maybe-push-ref-to-update ((self commit-graph-updater) sha ref)
   (when (str:starts-with-p "refs/heads/" ref)
     (push (make-instance 'dto:git-ref
@@ -302,6 +309,10 @@ LOCAL-COMMITS are of the form (list (commit . parents)*)"
         t)
       (progn
         (warn "Reverting to old commit-graph flow")
+        ;; We might have seen the remote refs before the failure, but
+        ;; the server might not have the commits for them, so don't
+        ;; use them for the run.
+        (clrhash (all-remote-refs self))
         (update-commit-graph-old-style self repo branch))))
     (t
      (log:info "Using old flow for commit-graph")

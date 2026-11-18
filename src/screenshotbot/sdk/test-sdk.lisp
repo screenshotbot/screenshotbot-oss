@@ -55,6 +55,7 @@
   (:import-from #:screenshotbot/sdk/integration-fixture
                 #:with-sdk-integration)
   (:import-from #:screenshotbot/sdk/sdk
+                #:maybe-use-remote-main-branch-hash
                 #:run-context-to-dto
                 #:put-run-with-run-context
                 #:empty-run-error
@@ -97,6 +98,9 @@
                 #:%request)
   (:import-from #:screenshotbot/sdk/run-context
                 #:invalid-pull-request)
+  (:import-from #:screenshotbot/sdk/commit-graph
+                #:all-remote-refs
+                #:commit-graph-updater)
   (:import-from #:screenshotbot/sdk/env
                 #:make-env-reader)
   (:local-nicknames (#:a #:alexandria)
@@ -579,3 +583,34 @@
                (make-instance 'run-context:run-context
                               :pixel-tolerance 2)
                nil #| screenshots |#)))))
+
+(defun make-updater-with-remote-refs (&rest refs)
+  (let ((updater (make-instance 'commit-graph-updater :api-context nil)))
+    (loop for (ref sha) on refs by #'cddr
+          do (setf (gethash ref (all-remote-refs updater)) sha))
+    updater))
+
+(test maybe-use-remote-main-branch-hash-happy-path
+  (let ((run-context (make-instance 'run-context:run-context))
+        (updater (make-updater-with-remote-refs
+                  "refs/heads/main" "abcd"
+                  "refs/heads/other" "0011")))
+    (maybe-use-remote-main-branch-hash run-context updater "main")
+    (is (equal "abcd" (run-context:main-branch-hash run-context)))))
+
+(test maybe-use-remote-main-branch-hash-keeps-explicit-hash
+  (let ((run-context (make-instance 'run-context:run-context
+                                    :main-branch-hash "0011"))
+        (updater (make-updater-with-remote-refs
+                  "refs/heads/main" "abcd")))
+    (maybe-use-remote-main-branch-hash run-context updater "main")
+    (is (equal "0011" (run-context:main-branch-hash run-context)))))
+
+(test maybe-use-remote-main-branch-hash-when-ref-not-seen
+  (let ((run-context (make-instance 'run-context:run-context))
+        (updater (make-updater-with-remote-refs
+                  "refs/heads/other" "abcd")))
+    (maybe-use-remote-main-branch-hash run-context updater "main")
+    (is (eql nil (run-context:main-branch-hash-internal run-context)))
+    (maybe-use-remote-main-branch-hash run-context updater nil)
+    (is (eql nil (run-context:main-branch-hash-internal run-context)))))

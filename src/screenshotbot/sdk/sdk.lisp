@@ -69,6 +69,7 @@
                 #:request
                 #:%make-basic-auth)
   (:import-from #:screenshotbot/sdk/commit-graph
+                #:remote-branch-sha
                 #:commit-graph-updater
                 #:update-commit-graph)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
@@ -570,6 +571,16 @@ is used up, we update md5-to-response to remove that upload URL."
        (make-instance 'null-repo
                       :link flags:*repo-url*)))))
 
+(defun maybe-use-remote-main-branch-hash (run-context commit-graph-updater branch)
+  "If the main branch hash wasn't explicitly provided, use the one the
+remote advertised while updating the commit graph, instead of `git
+rev-parse origin/<branch>`. The latter needs a `git fetch` on shallow
+clones. See T2277."
+  (unless (run-context:main-branch-hash-internal run-context)
+    (when-let ((sha (remote-branch-sha commit-graph-updater branch)))
+      (log:info "Using main branch hash from the remote: ~a" sha)
+      (setf (run-context:main-branch-hash-internal run-context) sha))))
+
 (defun single-directory-run (api-context directory &key channel)
   ;; Heads up! This logic is not unit-tested. If you're modifying this
   ;; code, run `make sdk-integration-tests`.
@@ -579,17 +590,12 @@ is used up, we update md5-to-response to remove that upload URL."
     (make-directory-run api-context directory
                         :channel channel
                         :before (lambda (run-context)
-                                  (declare (ignore run-context))
-                                  ;; TODO[tidy]: this doesn't need to
-                                  ;; be in a :before anymore. But
-                                  ;; there's a chance we might need
-                                  ;; some more information from the
-                                  ;; run-context in the future (for
-                                  ;; the Pull-Request merge base)
                                   (when (and flags:*production*
                                              (> flags:*commit-limit* 0))
                                     (let ((commit-graph-updater (make-instance 'commit-graph-updater :api-context api-context)))
-                                      (update-commit-graph commit-graph-updater repo branch))))
+                                      (update-commit-graph commit-graph-updater repo branch)
+                                      (maybe-use-remote-main-branch-hash
+                                       run-context commit-graph-updater branch))))
                         :repo repo
                         :is-trunk flags:*production*
                         :branch branch)))
