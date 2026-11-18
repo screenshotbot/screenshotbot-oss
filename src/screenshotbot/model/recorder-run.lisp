@@ -379,9 +379,10 @@ NIL or 0, this will use exact pixel comparisons.")
       :accessor compare-tolerance)
      (%warnings
       :initform nil
-      :accessor recorder-run-warnings
+      :accessor %recorder-run-warnings
       :documentation "A list of warning objects that will be rendered whenever the run or an
-associated report is rendered.")
+associated report is rendered. No longer read: warnings are looked up
+through +run-warning-run-index+ instead, see recorder-run-warnings.")
      (created-at
       :initform nil
       :accessor %created-at)
@@ -929,7 +930,7 @@ list of warnings for RUN."
                         :run run
                         args)))
     (bt:with-lock-held (*warning-lock*)
-      (push warning (recorder-run-warnings run)))))
+      (push warning (%recorder-run-warnings run)))))
 
 (defun delete-old-unchanged-runs (&key (now (get-universal-time)))
   (let ((cutoff (- now (* 3600 24 180))))
@@ -946,9 +947,19 @@ list of warnings for RUN."
 (def-cron delete-old-unchanged-runs (:minute 22 :hour 4)
   (delete-old-unchanged-runs))
 
+(defgeneric recorder-run-warnings (run)
+  (:documentation "The list of warnings for RUN, newest first."))
+
+(defmethod recorder-run-warnings ((run recorder-run))
+  "The %run slot is set for every warning created by push-run-warning,
+and backfilled for older warnings by the version 37 migration below."
+  (sort (copy-list (warnings-for-run run))
+        #'>
+        :key #'store-object-id))
+
 (def-store-migration ("Backfill run slot on warnings" :version 37)
   (dolist (run (bknr.datastore:class-instances 'recorder-run))
-    (dolist (warning (recorder-run-warnings run))
+    (dolist (warning (%recorder-run-warnings run))
       (when (typep warning 'base-run-warning)
         (unless (slot-boundp warning '%run)
           (setf (slot-value warning '%run) run))))))

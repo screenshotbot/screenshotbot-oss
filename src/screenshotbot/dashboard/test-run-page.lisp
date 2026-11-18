@@ -22,7 +22,6 @@
                 #:make-recorder-run
                 #:not-fast-forward-promotion-warning
                 #:merge-base-failed-warning
-                #:recorder-run-warnings
                 #:recorder-run)
   (:import-from #:screenshotbot/model/image
                 #:make-image)
@@ -35,8 +34,6 @@
                 #:run-delete-page
                 #:run-page
                 #:render-run-page)
-  (:import-from #:bknr.datastore
-                #:with-transaction)
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:import-from #:util/store/object-id
@@ -116,10 +113,9 @@
 
 (screenshot-test run-page-with-warnings
   (with-fixture state ()
-    (with-transaction ()
-      (setf (recorder-run-warnings run)
-            (list (make-instance 'merge-base-failed-warning
-                                 :compared-against another-run))))
+    (make-instance 'merge-base-failed-warning
+                   :run run
+                   :compared-against another-run)
     (wrap-snapshot ()
      (render-run-page run))))
 
@@ -131,9 +127,8 @@
                  :company company
                  :previous-run run
                  :screenshots (list (make-screenshot im1)))))
-     (with-transaction ()
-       (setf (recorder-run-warnings run2)
-             (list (make-instance 'not-fast-forward-promotion-warning))))
+     (make-instance 'not-fast-forward-promotion-warning
+                    :run run2)
       (wrap-snapshot ()
         (render-run-page run2)))))
 

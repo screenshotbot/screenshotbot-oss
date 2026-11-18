@@ -456,6 +456,19 @@ that are now transient or removed."
       (is (not (null warning)))
       (is (eq run (slot-value warning '%run))))))
 
+(test recorder-run-warnings-reads-from-index
+  (with-fixture state ()
+    (let ((one (make-instance 'not-fast-forward-promotion-warning :run run))
+          (two (make-instance 'not-fast-forward-promotion-warning :run run)))
+      (make-instance 'not-fast-forward-promotion-warning
+                     :run (make-recorder-run))
+      (is (equal (list two one)
+                 (recorder-run-warnings run))))))
+
+(test recorder-run-warnings-is-empty-by-default
+  (with-fixture state ()
+    (is (eql nil (recorder-run-warnings run)))))
+
 (test find-run-by-run-id
   (with-fixture state ()
     (let ((run (make-recorder-run
