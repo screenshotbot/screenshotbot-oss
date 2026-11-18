@@ -64,9 +64,11 @@
 
 (test handle-cmd-happy-path
   (with-fixture state ()
+    ;; The server never reads the merge base of an unchanged-run, so
+    ;; we shouldn't be calling `git merge-base` for it.
     (cl-mock:if-called 'run-context:merge-base
                        (lambda (ctx)
-                         "0001"))
+                         (error "merge-base should not be computed")))
     (finishes
      (handle-cmd (make-fake-clingon (append
                                      (root-options)
