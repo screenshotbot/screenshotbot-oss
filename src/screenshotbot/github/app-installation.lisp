@@ -71,8 +71,19 @@
 (defmethod app-installed-p ((github-app abstract-github-app) repo-id)
   (not (null (app-installation-id github-app repo-id))))
 
+(defun %parse-id-from-data (data)
+  (let ((suspended-by (a:assoc-value data :suspended--by))
+        (suspended-at (a:assoc-value data :suspended--at)))
+    (cond
+      ((str:non-empty-string-p suspended-at)
+       (log:warn "Ignoring id from suspended installation, suspended by ~a"
+                 (a:assoc-value suspended-by :login))
+       nil)
+      (t
+       (a:assoc-value data :id)))))
+
 (defun %app-installation-id (github-app repo-id &key force)
-  (a:assoc-value
+  (%parse-id-from-data
    (labels ((%compute ()
               (block inner
                 (handler-bind ((github-api-error (lambda (e)
@@ -95,8 +106,7 @@
        (t
         (or
          (fset:@ (github-app-installation-ids github-app) repo-id)
-         (compute-and-update)))))
-   :id))
+         (compute-and-update)))))))
 
 
 (defmethod app-installation-id ((github-app abstract-github-app) repo-id &key force)

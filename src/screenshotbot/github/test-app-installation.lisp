@@ -4,6 +4,7 @@
   (:import-from #:util/store
                 #:with-test-store)
   (:import-from #:screenshotbot/github/app-installation
+                #:%parse-id-from-data
                 #:%app-installation-id
                 #:repos
                 #:github-get-access-token-for-installation)
@@ -81,3 +82,43 @@ private-key.README.md for how this was generated.")
                         :message "foo")))
     (signals github-api-error
       (%app-installation-id github-app "tdrhq/fast-example"))))
+
+(defun make-installation-data (&rest extra)
+  "A trimmed-down response from GET /repos/:repo/installation, with
+EXTRA appended."
+  `((:ID . 1234)
+    (:CLIENT--ID . "...")
+    (:ACCOUNT (:LOGIN . "...") (:ID . 9465219) (:TYPE . "Organization"))
+    (:REPOSITORY--SELECTION . "selected")
+    (:ACCESS--TOKENS--URL . "...")
+    (:REPOSITORIES--URL . "...")
+    (:HTML--URL . "...")
+    (:APP--ID . 84260)
+    (:APP--SLUG . "screenshotbot")
+    (:TARGET--ID . 9465219)
+    (:TARGET--TYPE . "Organization")
+    (:PERMISSIONS (:CHECKS . "write") (:MEMBERS . "read") (:METADATA . "read"))
+    (:EVENTS "repository")
+    (:CREATED--AT . "...")
+    (:UPDATED--AT . "2026-08-07T15:24:23.000Z")
+    (:SINGLE--FILE--NAME)
+    (:HAS--MULTIPLE--SINGLE--FILES)
+    (:SINGLE--FILE--PATHS)
+    ,@extra))
+
+(test parse-app-installation-without-suspension
+  (is (eql 1234 (%parse-id-from-data (make-installation-data)))))
+
+(test parse-app-installation-with-null-suspension
+  "GitHub sends suspended_by and suspended_at as null when the
+installation isn't suspended."
+  (is (eql 1234 (%parse-id-from-data
+                 (make-installation-data
+                  '(:SUSPENDED--BY)
+                  '(:SUSPENDED--AT))))))
+
+(test parse-app-installation-when-suspended
+  (is (eql nil (%parse-id-from-data
+                (make-installation-data
+                 '(:SUSPENDED--BY (:LOGIN . "FakeUser"))
+                 '(:SUSPENDED--AT . "2026-08-07T15:24:23Z"))))))
