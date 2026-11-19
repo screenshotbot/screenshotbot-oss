@@ -103,7 +103,6 @@
   (:import-from #:screenshotbot/model/image-comparison
                 #:image-comparison-before
                 #:image-comparison-changed-rows
-                #:changed-rows-enabled-p
                 #:ensure-changed-rows
                 #:find-image-comparison-on-images)
   (:import-from #:screenshotbot/model/view
@@ -362,22 +361,20 @@ computed comparison, even if it doesn't have a strip."
             (and comparison t))))
 
 (defun find-changed-rows (before-image after-image)
-  "The changed-rows strip for BEFORE-IMAGE and AFTER-IMAGE, if
-:image-strip-diff is enabled and the comparison has already been
-computed with a strip. We don't compute anything here, since rendering
-a report shouldn't open every image in it. Instead, if there's no
-comparison yet (e.g. on a compare page, which isn't warmed up), or it
-was computed without a strip (e.g. before :image-strip-diff was
-enabled), we schedule it, and return T as the second value to say that
-the strip might be ready soon."
-  (when (changed-rows-enabled-p after-image)
-    (let ((changed-rows (cached-changed-rows before-image after-image)))
-      (cond
-        (changed-rows
-         (values changed-rows nil))
-        (t
-         (schedule-image-comparison before-image after-image)
-         (values nil t))))))
+  "The changed-rows strip for BEFORE-IMAGE and AFTER-IMAGE, if the
+comparison has already been computed with a strip. We don't compute
+anything here, since rendering a report shouldn't open every image in
+it. Instead, if there's no comparison yet (e.g. on a compare page,
+which isn't warmed up), or it was computed without a strip (e.g.
+before we started computing them), we schedule it, and return T as the
+second value to say that the strip might be ready soon."
+  (let ((changed-rows (cached-changed-rows before-image after-image)))
+    (cond
+      (changed-rows
+       (values changed-rows nil))
+      (t
+       (schedule-image-comparison before-image after-image)
+       (values nil t)))))
 
 (defun changed-rows-style (changed-rows-dims max-height)
   "Style for the changed-rows strip, so that its rows line up with the

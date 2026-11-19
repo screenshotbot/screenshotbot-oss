@@ -79,8 +79,6 @@
                 #:with-tracing)
   (:import-from #:util/store
                 #:with-class-validation)
-  (:import-from #:gatekeeper/gatekeeper
-                #:defgk)
   (:import-from #:easy-macros
                 #:def-easy-macro)
   (:local-nicknames (#:a #:alexandria))
@@ -89,14 +87,10 @@
    #:image-comparison-after
    #:image-comparison-result
    #:image-comparison-changed-rows
-   #:changed-rows-enabled-p
    #:ensure-changed-rows
    #:identical-p
    #:image-comparison-difference-value))
 (in-package :screenshotbot/model/image-comparison)
-
-(defgk :image-strip-diff
-  :enabledp t)
 
 (defclass transient-image-comparison ()
   ((before :initarg :before
@@ -222,19 +216,11 @@ still in memory. The third value is T if it was saved."
                                    :changed-rows-output changed-rows-output)
                   (values same-p rmse changed-rows-saved-p))))))))))
 
-(defun changed-rows-enabled-p (image)
-  (gk:check :image-strip-diff (company image)))
-
-(def-easy-macro with-changed-rows-output (&binding changed-rows-output image &fn fn)
+(def-easy-macro with-changed-rows-output (&binding changed-rows-output &fn fn)
   "Binds CHANGED-ROWS-OUTPUT to a temporary file to pass to
-DO-IMAGE-COMPARISON, or NIL if the changed-rows strip isn't enabled for
-IMAGE's company."
-  (cond
-    ((changed-rows-enabled-p image)
-     (with-tmp-image-file (:pathname changed-rows-output :type "webp" :prefix "changed-rows")
-       (fn changed-rows-output)))
-    (t
-     (fn nil))))
+DO-IMAGE-COMPARISON."
+  (with-tmp-image-file (:pathname changed-rows-output :type "webp" :prefix "changed-rows")
+    (fn changed-rows-output)))
 
 (defun make-changed-rows-image (changed-rows-output saved-p image)
   "Returns the IMAGE for the changed-rows strip, or NIL if
@@ -273,7 +259,7 @@ old."
      (find)
      (unless only-cached-p
        (with-tmp-image-file (:pathname p :type "webp" :prefix "comparison")
-         (with-changed-rows-output (changed-rows-output after)
+         (with-changed-rows-output (changed-rows-output)
            (multiple-value-bind (identical-p
                                  difference-value
                                  changed-rows-saved-p)
@@ -293,10 +279,10 @@ old."
 
 (defun recompute-missing-values (image-comparison)
   "Recompute IMAGE-COMPARISON, to fill in its difference-value, and its
-changed-rows if it's missing (and enabled)."
+changed-rows if it's missing."
   (let ((after (image-comparison-after image-comparison)))
     (with-tmp-image-file (:pathname output-image :type "webp")
-      (with-changed-rows-output (changed-rows-output after)
+      (with-changed-rows-output (changed-rows-output)
         (multiple-value-bind (identical-p difference-value changed-rows-saved-p)
             (do-image-comparison (image-comparison-before image-comparison)
               after
@@ -323,13 +309,12 @@ hit too much in production."
 
 (defun ensure-changed-rows (image-comparison)
   "If IMAGE-COMPARISON was computed without a changed-rows strip (e.g.
-before :image-strip-diff was enabled), recompute it to add one. This
+before we started computing them), recompute it to add one. This
 opens both images, so it's meant to be called from a background job.
 
 The strip might still be missing afterwards, e.g. if magick-native is
 too old to compute it."
-  (when (and (not (image-comparison-changed-rows image-comparison))
-             (changed-rows-enabled-p (image-comparison-after image-comparison)))
+  (unless (image-comparison-changed-rows image-comparison)
     (recompute-missing-values image-comparison)))
 
 (defclass image-comparison-subsystem ()

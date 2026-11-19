@@ -118,27 +118,15 @@
         (is-false (identical-p result))
         (is (< 0 (image-comparison-difference-value result)))))))
 
-(test changed-rows-is-not-created-without-the-gk
-  (with-fixture state ()
-    ;; The gk is enabled by default, so explicitly create it as disabled.
-    (gk:create :image-strip-diff)
-    (let ((before (make-image :pathname im1))
-          (after (make-image :pathname im3)))
-      (let ((result (find-image-comparison-on-images before after)))
-        (is-false (identical-p result))
-        (is (equal nil (image-comparison-changed-rows result)))))))
-
-(def-fixture image-strip-diff-enabled ()
+(def-fixture changed-rows ()
   (let ((company (make-instance 'company)))
-    (gk:create :image-strip-diff)
-    (gk:allow :image-strip-diff company)
     (let ((before (make-image :pathname im1 :company company))
           (after (make-image :pathname im3 :company company)))
       (&body))))
 
-(test changed-rows-is-created-with-the-gk
+(test changed-rows-is-created
   (with-fixture state ()
-    (with-fixture image-strip-diff-enabled ()
+    (with-fixture changed-rows ()
       (let* ((result (find-image-comparison-on-images before after))
              (changed-rows (image-comparison-changed-rows result)))
         (is-true changed-rows)
@@ -149,7 +137,7 @@
 
 (test changed-rows-is-skipped-if-magick-native-is-too-old
   (with-fixture state ()
-    (with-fixture image-strip-diff-enabled ()
+    (with-fixture changed-rows ()
       (with-mocks ()
         (if-called 'foreign-function-defined-p
                    (lambda (name)
@@ -163,7 +151,7 @@
 
 (test changed-rows-is-backfilled-along-with-difference-value
   (with-fixture state ()
-    (with-fixture image-strip-diff-enabled ()
+    (with-fixture changed-rows ()
       (let ((result (find-image-comparison-on-images before after)))
         (setf (image-comparison-difference-value result) nil)
         (setf (image-comparison-changed-rows result) nil)
@@ -173,22 +161,12 @@
 
 (test ensure-changed-rows-adds-a-missing-strip
   (with-fixture state ()
-    (with-fixture image-strip-diff-enabled ()
+    (with-fixture changed-rows ()
       (let ((result (find-image-comparison-on-images before after)))
         (setf (image-comparison-changed-rows result) nil)
         (ensure-changed-rows result)
         (is-true (image-comparison-changed-rows result))
         (is-true (image-comparison-difference-value result))))))
-
-(test ensure-changed-rows-does-nothing-without-the-gk
-  (with-fixture state ()
-    ;; The gk is enabled by default, so explicitly create it as disabled.
-    (gk:create :image-strip-diff)
-    (let ((before (make-image :pathname im1))
-          (after (make-image :pathname im3)))
-      (let ((result (find-image-comparison-on-images before after)))
-        (ensure-changed-rows result)
-        (is (equal nil (image-comparison-changed-rows result)))))))
 
 (test difference-value-is-populated-if-it-doesnt-exist
   "This is a migration strategy, to avoid having to recompute everything

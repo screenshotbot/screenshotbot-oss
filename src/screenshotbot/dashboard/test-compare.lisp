@@ -600,22 +600,18 @@
              (changed-rows-style (make-instance 'dimension :width 1 :height 150)
                                  300))))
 
-(def-fixture changed-rows (&key (gk t))
+(def-fixture changed-rows ()
   (let ((company (make-instance 'company)))
-    ;; The gk is enabled by default, so create it (which defaults to
-    ;; disabled) and only allow it for the company when GK is true.
-    (gk:create :image-strip-diff)
-    (when gk
-      (gk:allow :image-strip-diff company))
     (let ((before (make-image :pathname im1 :company company))
           (after (make-image :pathname im3 :company company)))
       (&body))))
 
-(test find-changed-rows-without-the-gk
-  (with-fixture state ()
-    (with-fixture changed-rows (:gk nil)
-      (find-image-comparison-on-images before after)
-      (is (equal nil (find-changed-rows before after))))))
+(defun make-comparison-without-strip (before after)
+  "A comparison that was computed without a strip, e.g. before we
+started computing them."
+  (let ((comparison (find-image-comparison-on-images before after)))
+    (setf (image-comparison-changed-rows comparison) nil)
+    comparison))
 
 (test find-changed-rows-schedules-the-comparison
   (with-fixture state ()
@@ -638,13 +634,10 @@
 
 (test find-changed-rows-schedules-the-strip-for-a-comparison-without-one
   (with-fixture state ()
-    ;; Computed without the strip, e.g. before the gk was enabled.
-    (with-fixture changed-rows (:gk nil)
-      (let ((comparison (find-image-comparison-on-images before after))
+    (with-fixture changed-rows ()
+      (let ((comparison (make-comparison-without-strip before after))
             (*changed-rows-pool* (make-instance 'synchronous-executor))
             (*scheduled-comparisons* (fset:empty-set)))
-        (is (equal nil (image-comparison-changed-rows comparison)))
-        (gk:allow :image-strip-diff company)
         (multiple-value-bind (changed-rows pending-p)
             (find-changed-rows before after)
           (is (equal nil changed-rows))
@@ -706,8 +699,8 @@
   (with-fixture state ()
     ;; The comparison exists without a strip, but we've scheduled
     ;; computing one, so keep checking.
-    (with-fixture changed-rows (:gk nil)
-      (find-image-comparison-on-images before after)
+    (with-fixture changed-rows ()
+      (make-comparison-without-strip before after)
       (let ((*scheduled-comparisons* (fset:set (cons (store-object-id before)
                                                      (store-object-id after)))))
         (is (equal `((:state . "pending"))
@@ -715,9 +708,8 @@
 
 (test changed-rows-check-response-when-the-comparison-has-no-strip
   (with-fixture state ()
-    ;; Without the gk, the comparison is computed without a strip.
-    (with-fixture changed-rows (:gk nil)
-      (find-image-comparison-on-images before after)
+    (with-fixture changed-rows ()
+      (make-comparison-without-strip before after)
       (is (equal `((:state . "none"))
                  (changed-rows-check-response before after (max-height before after)))))))
 
