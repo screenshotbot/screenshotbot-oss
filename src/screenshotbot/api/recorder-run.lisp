@@ -53,7 +53,10 @@
                 #:unchanged-run
                 #:recorder-run-author
                 #:recorder-run-tags
+                #:+explicit-merge-base+
                 #:make-recorder-run)
+  (:import-from #:gatekeeper/gatekeeper
+                #:defgk)
   (:import-from #:util/misc
                 #:not-null!
                 #:?.)
@@ -472,6 +475,17 @@ the company is having flaky screenshots."
     (t
      0)))
 
+(defgk :base-branch-commit-as-merge-base)
+
+(defun base-branch-commit-as-merge-base-p (company run)
+  "True if we should use the base branch commit that the CI provider
+reported (baseBranchCommit, e.g. pull_request.base.sha on GitHub
+Actions) as the run's explicit merge base, instead of the merge base the
+client computed with git."
+  (and
+   (not (str:emptyp (dto:base-branch-hash run)))
+   (gk:check :base-branch-commit-as-merge-base company)))
+
 (defun %put-run-helper (run &key
                               (company (error "provide :company"))
                               (channel (error "provide :channel"))
@@ -480,6 +494,7 @@ the company is having flaky screenshots."
 somethings like SCREENSHOTS. In particular SCREENSHOTS might be
 computed differently if we're using sharding."
   (let* ((batch (batch-for-run company run))
+         (explicit-merge-base-p (base-branch-commit-as-merge-base-p company run))
          (recorder-run (make-recorder-run
                         :company company
                         :channel channel
@@ -508,7 +523,17 @@ computed differently if we're using sharding."
                         :branch-hash (dto:main-branch-hash run)
                         :override-commit-hash (dto:override-commit-hash run)
                         :build-url (dto:build-url run)
-                        :merge-base (dto:merge-base run)
+                        :base-branch-hash (dto:base-branch-hash run)
+                        :merge-base (cond
+                                      (explicit-merge-base-p
+                                       (dto:base-branch-hash run))
+                                      (t
+                                       (dto:merge-base run)))
+                        :flags (cond
+                                 (explicit-merge-base-p
+                                  +explicit-merge-base+)
+                                 (t
+                                  0))
                         :phabricator-diff-id (dto:phabricator-diff-id run)
                         :gitlab-merge-request-iid (dto:gitlab-merge-request-iid run)
                         :github-repo (dto:run-repo run)
@@ -535,6 +560,11 @@ computed differently if we're using sharding."
                 ;; screenshot-map is behaving correctly.
                 :original-main-branch (dto:work-branch run)
                 :num-screenshots (length screenshots)
+                ;; If we used the base branch commit as the merge
+                ;; base, this is the only record of the merge base the
+                ;; client computed.
+                :client-merge-base (dto:merge-base run)
+                :explicit-merge-base-p explicit-merge-base-p
                 ;; This let's us monitor that a specific company is
                 ;; using the right domain name. See T1124.
                 :api-hostname (when (boundp 'hunchentoot:*request*)

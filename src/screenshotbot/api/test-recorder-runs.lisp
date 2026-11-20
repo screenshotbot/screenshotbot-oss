@@ -34,6 +34,11 @@
                 #:%recorder-run-post)
   (:import-from #:util
                 #:oid)
+  (:import-from #:screenshotbot/model/recorder-run
+                #:recorder-run-base-branch-hash
+                #:recorder-run-merge-base
+                #:recorder-run-flags
+                #:explicit-merge-base-p)
   (:import-from #:screenshotbot/testing
                 #:with-test-user)
   (:import-from #:util/store
@@ -835,6 +840,49 @@ storing release-branch-p, we'll update this test."
       (is-true run)
       (assert-that (compare-tolerance run)
                    (is-equal-to 0)))))
+
+(defun put-run-with-base-branch-commit (company img api-key &key base-branch-hash)
+  (%put-run company
+            (make-instance 'dto:run
+                           :channel "foo"
+                           :commit-hash "deadbeef"
+                           :merge-base "client-merge-base"
+                           :base-branch-hash base-branch-hash
+                           :screenshots (list
+                                         (make-instance 'dto:screenshot
+                                                        :name "foo"
+                                                        :image-id (oid img))))
+            :api-key api-key)
+  (car (last (class-instances 'recorder-run))))
+
+(test base-branch-commit-is-stored
+  (with-fixture state ()
+    (let ((run (put-run-with-base-branch-commit company img1 api-key
+                                                :base-branch-hash "base-sha")))
+      (is (equal "base-sha" (recorder-run-base-branch-hash run)))
+      (is (equal "client-merge-base" (recorder-run-merge-base run)))
+      (is-false (explicit-merge-base-p run)))))
+
+(test base-branch-commit-is-used-as-explicit-merge-base-with-gk
+  (with-fixture state ()
+    (gk:create :base-branch-commit-as-merge-base)
+    (gk:allow :base-branch-commit-as-merge-base company)
+    (let ((run (put-run-with-base-branch-commit company img1 api-key
+                                                :base-branch-hash "base-sha")))
+      (is (equal "base-sha" (recorder-run-base-branch-hash run)))
+      (is (equal "base-sha" (recorder-run-merge-base run)))
+      (is-true (explicit-merge-base-p run)))))
+
+(test client-merge-base-is-used-without-base-branch-commit-even-with-gk
+  (with-fixture state ()
+    (gk:create :base-branch-commit-as-merge-base)
+    (gk:allow :base-branch-commit-as-merge-base company)
+    (dolist (base-branch-hash (list nil ""))
+      (let ((run (put-run-with-base-branch-commit company img1 api-key
+                                                  :base-branch-hash base-branch-hash)))
+        (is (equal "client-merge-base" (recorder-run-merge-base run)))
+        (is (eql 0 (recorder-run-flags run)))
+        (is-false (explicit-merge-base-p run))))))
 
 (test validate-pixel-tolerance-too-bid
   (with-fixture state ()
