@@ -475,7 +475,8 @@ the company is having flaky screenshots."
     (t
      0)))
 
-(defgk :base-branch-commit-as-merge-base)
+(defgk :base-branch-commit-as-merge-base
+  :enabledp t)
 
 (defun base-branch-commit-as-merge-base-p (company run)
   "True if we should use the base branch commit that the CI provider

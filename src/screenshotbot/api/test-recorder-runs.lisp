@@ -855,13 +855,23 @@ storing release-branch-p, we'll update this test."
             :api-key api-key)
   (car (last (class-instances 'recorder-run))))
 
-(test base-branch-commit-is-stored
+(test base-branch-commit-is-stored-without-gk
   (with-fixture state ()
+    ;; Creating the gk makes it disabled, unless it's allowed for the
+    ;; company.
+    (gk:create :base-branch-commit-as-merge-base)
     (let ((run (put-run-with-base-branch-commit company img1 api-key
                                                 :base-branch-hash "base-sha")))
       (is (equal "base-sha" (recorder-run-base-branch-hash run)))
       (is (equal "client-merge-base" (recorder-run-merge-base run)))
       (is-false (explicit-merge-base-p run)))))
+
+(test base-branch-commit-is-used-as-explicit-merge-base-by-default
+  (with-fixture state ()
+    (let ((run (put-run-with-base-branch-commit company img1 api-key
+                                                :base-branch-hash "base-sha")))
+      (is (equal "base-sha" (recorder-run-merge-base run)))
+      (is-true (explicit-merge-base-p run)))))
 
 (test base-branch-commit-is-used-as-explicit-merge-base-with-gk
   (with-fixture state ()
