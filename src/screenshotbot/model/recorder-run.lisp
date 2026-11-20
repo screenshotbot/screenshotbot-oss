@@ -156,6 +156,9 @@
    #:shard-screenshots
    #:shard-key
    #:recorder-run-metadata
+   #:recorder-run-flags
+   #:+explicit-merge-base+
+   #:explicit-merge-base-p
    #:recorder-run-uname
    #:find-run-by-run-id
    #:commit-map
@@ -448,6 +451,18 @@ the version 37 migration would see an empty list.")
 
 (defmethod should-index-objects-for-class-p ((class (eql (find-class 'recorder-run))))
   nil)
+
+(defconstant +explicit-merge-base+ 1
+  "Bit in RECORDER-RUN-FLAGS: the run's MERGE-BASE was given explicitly, so
+it takes priority over the merge base the server computes from the
+commit graph.")
+
+(defun explicit-merge-base-p (run)
+  "True if +EXPLICIT-MERGE-BASE+ is set on RUN. FLAGS can still be unbound
+on live objects until the version 49 migration runs, so treat that as
+no flags."
+  (and (slot-boundp run 'flags)
+       (logtest +explicit-merge-base+ (recorder-run-flags run))))
 
 (defun recorder-run-uname (run)
   (assoc-value (recorder-run-metadata run)

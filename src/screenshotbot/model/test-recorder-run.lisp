@@ -38,6 +38,8 @@
                 #:make-recorder-run
                 #:recorder-run-flags
                 #:backfill-run-flags
+                #:+explicit-merge-base+
+                #:explicit-merge-base-p
                 #:pull-request-id
                 #:transient-promotion-log
                 #:promotion-log
@@ -516,6 +518,18 @@ that are now transient or removed."
       (is (eql 5 (recorder-run-flags run)))
       (setf (recorder-run-flags run) 3)
       (is (eql 3 (recorder-run-flags run))))))
+
+(test explicit-merge-base-p
+  (with-fixture state ()
+    (is-false (explicit-merge-base-p run))
+    (is-true (explicit-merge-base-p
+              (make-recorder-run :flags +explicit-merge-base+)))
+    (is-true (explicit-merge-base-p
+              (make-recorder-run :flags (logior 2 +explicit-merge-base+))))
+    (is-false (explicit-merge-base-p
+               (make-recorder-run :flags 2)))
+    (slot-makunbound run 'screenshotbot/model/recorder-run::flags)
+    (is-false (explicit-merge-base-p run))))
 
 (test backfill-run-flags
   (with-fixture state ()

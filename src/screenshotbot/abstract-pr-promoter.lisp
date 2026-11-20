@@ -63,6 +63,7 @@
                 #:recorder-run
                 #:merge-base-failed-warning
                 #:recorder-run-merge-base
+                #:explicit-merge-base-p
                 #:recorder-run-company)
   (:import-from #:screenshotbot/events
                 #:push-event)
@@ -306,6 +307,10 @@ API. We're eventually going to replace it with this."
 
 (defmethod pr-merge-base ((promoter abstract-pr-promoter)
                           (run recorder-run))
+  (when (and (explicit-merge-base-p run)
+             (recorder-run-merge-base run))
+    (return-from pr-merge-base
+      (recorder-run-merge-base run)))
   (let ((computed
           (%compute-pr-merge-base-from-graph promoter run)))
     (push-event :computed-merge-base

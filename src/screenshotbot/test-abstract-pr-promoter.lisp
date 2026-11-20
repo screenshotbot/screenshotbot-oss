@@ -49,6 +49,7 @@
                 #:make-recorder-run
                 #:compared-against
                 #:merge-base-failed-warning
+                #:+explicit-merge-base+
                 #:recorder-run-warnings
                 #:recorder-run)
   (:import-from #:screenshotbot/testing
@@ -663,6 +664,47 @@ result in reviews, it is safe to promote on non-PR branches. See T1088."
         (is (equal (list '("bb") "aa")
                    (cdr merge-base-args)))))))
 
+
+(test explicit-merge-base-is-preferred-over-computed-merge-base
+  (with-fixture state ()
+    (let ((compute-merge-base-called nil))
+      (if-called 'compute-merge-base
+                 (lambda (&rest args)
+                   (declare (ignore args))
+                   (setf compute-merge-base-called t)
+                   "computed-sha"))
+      (let ((run (make-recorder-run
+                  :merge-base "provided-sha"
+                  :flags +explicit-merge-base+
+                  :channel channel
+                  :trunkp t
+                  :branch-hash "bb"
+                  :commit-hash "aa")))
+        (is
+         (equal "provided-sha"
+                (pr-merge-base
+                 promoter
+                 run)))
+        (is-false compute-merge-base-called)))))
+
+(test explicit-merge-base-flag-without-a-merge-base-falls-back-to-computed
+  (with-fixture state ()
+    (if-called 'compute-merge-base
+               (lambda (&rest args)
+                 (declare (ignore args))
+                 "computed-sha"))
+    (let ((run (make-recorder-run
+                :merge-base nil
+                :flags +explicit-merge-base+
+                :channel channel
+                :trunkp t
+                :branch-hash "bb"
+                :commit-hash "aa")))
+      (is
+       (equal "computed-sha"
+              (pr-merge-base
+               promoter
+               run))))))
 
 (test pr-merge-base-integration-happy-path
   (with-fixture state ()
