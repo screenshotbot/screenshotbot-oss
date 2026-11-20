@@ -228,7 +228,7 @@ we can write methods that are generic to both."))
 
 (defcounter recorder-run-counter ())
 
-(with-class-validation (:deleted-slots (screenshots cleanp activep))
+(with-class-validation (:deleted-slots (screenshots cleanp activep release-branch-p))
   (defclass recorder-run (object-with-oid abstract-run
                           bknr-or-archived-run-mixin
                           unlikely-to-change-mixin)
@@ -310,14 +310,16 @@ so that older snapshots can still be restored.")
     CI provider for the pull request. This slot will be unbound on
     older runs, and for the same reason as %BASE-BRANCH shouldn't be
     in :default-initargs.")
+     ;; OSS stores might still have snapshots older than store
+     ;; version 48 that have this slot. Delete it once
+     ;; *min-store-version* is >= 48.
+     #+screenshotbot-oss
      (release-branch-p
       :transient t
       :initform nil
       :documentation "Deprecated, unused: the API uses the release-branch-p on the DTO to
 pick the branch, but nothing reads it back from the run. Transient so
-that older snapshots can still be restored. Store version 48 snapshots
-are written without it, so it can be deleted once *min-store-version*
-is >= 48.")
+that older snapshots can still be restored.")
      (branch-hash
       :initarg :branch-hash
       :initform nil
@@ -395,6 +397,15 @@ NIL or 0, this will use exact pixel comparisons.")
      (%compare-tolerance
       :initarg :compare-tolerance
       :accessor compare-tolerance)
+     (flags
+      :initarg :flags
+      :accessor recorder-run-flags
+      :documentation "Bit flags for the run, as an integer. There's no :initform, so this
+is unbound on runs created before it was added, and on live objects
+after the hot reload that adds it. (Don't add this to
+:default-initargs: those are recorded in the transaction log, and
+nodes that are still on the older code during a deploy can't apply
+them.)")
      (%warnings
       :initform nil
       :reader %recorder-run-warnings

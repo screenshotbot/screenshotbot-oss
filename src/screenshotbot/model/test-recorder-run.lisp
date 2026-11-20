@@ -36,6 +36,7 @@
                 #:assert-no-loops
                 #:runs-for-tag
                 #:make-recorder-run
+                #:recorder-run-flags
                 #:pull-request-id
                 #:transient-promotion-log
                 #:promotion-log
@@ -503,6 +504,17 @@ that are now transient or removed."
 (test recorder-run-warnings-is-empty-by-default
   (with-fixture state ()
     (is (eql nil (recorder-run-warnings run)))))
+
+(test flags-is-unbound-by-default
+  (with-fixture state ()
+    (is (not (slot-boundp run 'screenshotbot/model/recorder-run::flags)))))
+
+(test flags-can-be-set
+  (with-fixture state ()
+    (let ((run (make-recorder-run :flags 5)))
+      (is (eql 5 (recorder-run-flags run)))
+      (setf (recorder-run-flags run) 3)
+      (is (eql 3 (recorder-run-flags run))))))
 
 (test find-run-by-run-id
   (with-fixture state ()
