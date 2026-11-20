@@ -12,6 +12,7 @@
   (:import-from #:util/store/object-id
                 #:find-by-oid)
   (:import-from #:screenshotbot/user-api
+                #:current-user
                 #:channel-name
                 #:can-view!)
   (:import-from #:screenshotbot/template
@@ -25,8 +26,24 @@
                 #:batch-item-channel
                 #:batch-items)
   (:import-from #:core/ui/taskie
+                #:taskie-page-title
                 #:taskie-row
                 #:taskie-list)
+  (:import-from #:core/ui/simple-card-page
+                #:confirmation-page)
+  (:import-from #:nibble
+                #:nibble)
+  (:import-from #:screenshotbot/model/view
+                #:can-edit)
+  (:import-from #:screenshotbot/model/report
+                #:report-channel
+                #:acceptable-state)
+  (:import-from #:screenshotbot/report-api
+                #:report-acceptable)
+  (:import-from #:screenshotbot/model/review-policy
+                #:can-review?)
+  (:import-from #:screenshotbot/model/channel
+                #:review-policy)
   (:import-from #:anaphora
                 #:it
                 #:acond)
@@ -116,10 +133,61 @@
                  (channel-name (batch-item-channel a))
                  (channel-name (batch-item-channel b))))))))
 
+(defun reports-to-accept (batch user)
+  "The reports in BATCH that Accept All would accept for USER: those not
+already accepted, and that USER is allowed to review. This is the same
+pair of checks the Review dropdown on the report page makes, so Accept
+All can't do anything that clicking through each report couldn't."
+  (when user
+    (loop for item in (fset:convert 'list (batch-items batch))
+          for report = (batch-item-report item)
+          for acceptable = (and report (report-acceptable report))
+          for channel = (and report (report-channel report))
+          if (and acceptable
+                  (not (eql :accepted (acceptable-state acceptable)))
+                  (can-edit acceptable user)
+                  (or (null channel)
+                      (can-review? (review-policy channel) report user)))
+            collect report)))
+
+(defun accept-all (batch user)
+  "Accepts every report from REPORTS-TO-ACCEPT. The list is recomputed
+here instead of being passed in from the page that rendered the link,
+since the batch may have changed in between."
+  (dolist (report (reports-to-accept batch user))
+    (setf (acceptable-state (report-acceptable report) :user user)
+          :accepted)))
+
+(defun batch-url (batch)
+  (hex:make-url 'batch-handler :oid (util:oid batch)))
+
+(defun confirm-accept-all (batch)
+  (let ((count (length (reports-to-accept batch (current-user)))))
+    (confirmation-page
+     :yes (nibble (:name :batch-accept-all)
+            (can-view! batch)
+            (accept-all batch (current-user))
+            (hex:safe-redirect (batch-url batch)))
+     :no (batch-url batch)
+     <span>
+       Blindly accept ,(progn count) ,(if (eql 1 count) "report" "reports") in this batch,
+       without reviewing the changes? This includes any reports that were previously rejected.
+     </span>)))
+
 (defmethod render-batch (batch)
   (bt:with-lock-held ((batch:lock batch))
     (let ((items (fset:convert 'list (sort-items (fset:convert 'list (batch-items batch))))))
       <app-template title= "Screenshotbot: Batch" >
+        ,(when (reports-to-accept batch (current-user))
+           <taskie-page-title title= "Batch" >
+             <a href= (nibble (:name :batch-confirm-accept-all)
+                        (can-view! batch)
+                        (confirm-accept-all batch))
+                class= "btn btn-success btn-sm accept-all" >
+               <mdi name= "done_all" />
+               Blindly Accept All
+             </a>
+           </taskie-page-title>)
         ,(taskie-list :empty-message "No runs in this batch yet"
                       :items items
                       :headers (list "Channel")

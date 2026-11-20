@@ -13,11 +13,21 @@
                 #:batch-item
                 #:batch)
   (:import-from #:screenshotbot/testing
+                #:with-test-user
                 #:with-installation
                 #:screenshot-test)
   (:import-from #:screenshotbot/dashboard/batch
+                #:accept-all
+                #:reports-to-accept
                 #:batch-item-link
                 #:render-batch)
+  (:import-from #:screenshotbot/model/report
+                #:base-acceptable
+                #:acceptable-state)
+  (:import-from #:screenshotbot/report-api
+                #:report-acceptable)
+  (:import-from #:screenshotbot/model/channel
+                #:review-policy-name)
   (:import-from #:util/testing
                 #:with-fake-request)
   (:import-from #:screenshotbot/model/company
@@ -103,3 +113,78 @@
               (batch-item-link
                (make-instance 'batch-item
                               :run report)))))))
+
+(def-fixture accept-all-state ()
+  (with-test-store ()
+    (with-test-user (:user user :company company :logged-in-p t)
+      (let ((batch (make-instance 'batch :company company)))
+        (flet ((make-item (name &key state (author "someone@example.com")
+                                  (acceptable-p t))
+                 (let* ((channel (make-instance 'channel
+                                                :company company
+                                                :name name))
+                        (run (make-recorder-run :company company
+                                                :channel channel
+                                                :author author))
+                        (report (make-instance 'report
+                                               :run run
+                                               :channel channel
+                                               :title "1 change")))
+                   (when acceptable-p
+                     (setf (report-acceptable report)
+                           (make-instance 'base-acceptable
+                                          :report report
+                                          :state state)))
+                   (make-instance 'batch-item
+                                  :report report
+                                  :status :action-required
+                                  :channel channel
+                                  :batch batch)
+                   report)))
+          (&body))))))
+
+(test accept-all-accepts-everything-not-yet-accepted
+  (with-fixture accept-all-state ()
+    (let ((pending (make-item "//pending"))
+          (rejected (make-item "//rejected" :state :rejected))
+          (accepted (make-item "//accepted" :state :accepted)))
+      ;; A report without an acceptable has nothing to accept
+      (make-item "//no-acceptable" :acceptable-p nil)
+      (is (equal 2 (length (reports-to-accept batch user))))
+      (accept-all batch user)
+      (dolist (report (list pending rejected accepted))
+        (is (eql :accepted (acceptable-state (report-acceptable report)))))
+      (is (eql user (screenshotbot/model/report:acceptable-reviewer
+                     (report-acceptable pending))))
+      ;; The one that was already accepted wasn't touched
+      (is (null (screenshotbot/model/report::acceptable-history
+                 (report-acceptable accepted))))
+      (is (null (reports-to-accept batch user))))))
+
+(test accept-all-does-nothing-when-logged-out
+  (with-fixture accept-all-state ()
+    (make-item "//pending")
+    (is (null (reports-to-accept batch nil)))))
+
+(test accept-all-skips-reports-from-other-companies
+  (with-fixture accept-all-state ()
+    (make-item "//pending")
+    (let ((outsider (screenshotbot/model/user:make-user
+                     :companies (list (make-instance 'company)))))
+      (is (null (reports-to-accept batch outsider))))))
+
+(test accept-all-respects-the-review-policy
+  (with-fixture accept-all-state ()
+    (let ((mine (make-item "//mine" :author (auth:user-email user)))
+          (theirs (make-item "//theirs")))
+      (dolist (report (list mine theirs))
+        (setf (review-policy-name (screenshotbot/model/report:report-channel report))
+              :disallow-author))
+      (accept-all batch user)
+      (is (eql nil (acceptable-state (report-acceptable mine))))
+      (is (eql :accepted (acceptable-state (report-acceptable theirs)))))))
+
+(screenshot-test batch-with-accept-all-link
+  (with-fixture accept-all-state ()
+    (make-item "//pending")
+    (render-batch batch)))
