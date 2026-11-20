@@ -400,12 +400,10 @@ NIL or 0, this will use exact pixel comparisons.")
      (flags
       :initarg :flags
       :accessor recorder-run-flags
-      :documentation "Bit flags for the run, as an integer. There's no :initform, so this
-is unbound on runs created before it was added, and on live objects
-after the hot reload that adds it. (Don't add this to
-:default-initargs: those are recorded in the transaction log, and
-nodes that are still on the older code during a deploy can't apply
-them.)")
+      :documentation "Bit flags for the run, as an integer. There's no :initform: new runs
+get 0 from :default-initargs, and the version 49 migration set it to 0
+on older runs. It can still be unbound on live objects between the hot
+reload and the next restart.")
      (%warnings
       :initform nil
       :reader %recorder-run-warnings
@@ -445,7 +443,8 @@ the version 37 migration would see an empty list.")
                        :author nil
                        :metadata nil
                        :tags nil
-                       :was-promoted-p nil)))
+                       :was-promoted-p nil
+                       :flags 0)))
 
 (defmethod should-index-objects-for-class-p ((class (eql (find-class 'recorder-run))))
   nil)
@@ -1086,6 +1085,13 @@ only run on a REPL."
   (with-batches (runs (bknr.datastore:class-instances 'recorder-run)
                  :batch-size 1000)
     (%bulk-add-to-channel-runs runs)))
+
+(defun backfill-run-flags ()
+  "Set FLAGS to 0 on every run where it's unbound."
+  (ensure-slot-boundp 'recorder-run 'flags :value 0))
+
+(def-store-migration ("Set flags to 0 on recorder-runs" :version 49)
+  (backfill-run-flags))
 
 (def-easy-macro do-runs-for-company (&binding run company &fn fn)
   (fset:do-map (run-id run (run-id-to-run-map company))

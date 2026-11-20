@@ -37,6 +37,7 @@
                 #:runs-for-tag
                 #:make-recorder-run
                 #:recorder-run-flags
+                #:backfill-run-flags
                 #:pull-request-id
                 #:transient-promotion-log
                 #:promotion-log
@@ -505,9 +506,9 @@ that are now transient or removed."
   (with-fixture state ()
     (is (eql nil (recorder-run-warnings run)))))
 
-(test flags-is-unbound-by-default
+(test flags-is-zero-by-default
   (with-fixture state ()
-    (is (not (slot-boundp run 'screenshotbot/model/recorder-run::flags)))))
+    (is (eql 0 (recorder-run-flags run)))))
 
 (test flags-can-be-set
   (with-fixture state ()
@@ -515,6 +516,14 @@ that are now transient or removed."
       (is (eql 5 (recorder-run-flags run)))
       (setf (recorder-run-flags run) 3)
       (is (eql 3 (recorder-run-flags run))))))
+
+(test backfill-run-flags
+  (with-fixture state ()
+    (let ((run-with-flags (make-recorder-run :flags 5)))
+      (slot-makunbound run 'screenshotbot/model/recorder-run::flags)
+      (backfill-run-flags)
+      (is (eql 0 (recorder-run-flags run)))
+      (is (eql 5 (recorder-run-flags run-with-flags))))))
 
 (test find-run-by-run-id
   (with-fixture state ()
