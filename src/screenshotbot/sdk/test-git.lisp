@@ -145,6 +145,29 @@
         (is (equal rev
                    (rev-parse clone "master")))))))
 
+#-(or windows mswindows)
+(test fetch-remote-branch-never-prompts
+  "If origin asked for credentials with a terminal attached, git would
+wait for a username forever. Check the environment git gives the
+transport, using an ext:: remote that records it."
+  (with-fixture git-repo ()
+    (make-commit repo "foobar")
+    (with-tmpdir (tmp)
+      (let ((script (path:catfile tmp "record-env.sh"))
+            (env-file (path:catfile tmp "env.txt")))
+        (with-open-file (s script :direction :output)
+          (format s "env > '~a'~%exit 1~%" (namestring env-file)))
+        (run-in-dir repo "git config protocol.ext.allow always")
+        (run-in-dir repo (format nil "git remote add origin 'ext::sh ~a'"
+                                 (namestring script)))
+        ;; The fetch fails, and fetch-remote-branch turns that into a
+        ;; warning.
+        (handler-bind ((warning #'muffle-warning))
+          (fetch-remote-branch repo "master"))
+        (let ((env (str:lines (uiop:read-file-string env-file))))
+          (is (member "GIT_TERMINAL_PROMPT=0" env :test #'equal))
+          (is (member "GCM_INTERACTIVE=never" env :test #'equal)))))))
+
 (test read-dag-from-repo
   (with-fixture git-repo ()
     (make-commit repo "foobar")

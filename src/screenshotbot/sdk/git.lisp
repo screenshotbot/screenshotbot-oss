@@ -168,7 +168,10 @@ rev-parse compares against the remote branch :/"
 (auto-restart:with-auto-restart (:retries 2)
   (defmethod %fetch-remote-branch ((repo git-repo) branch)
     (log:info "Running: git fetch origin ~a" branch)
-    ($ (git-command repo) "fetch" "origin" branch)))
+    ;; If origin needs credentials we don't have, fail instead of
+    ;; waiting for a username on the terminal.
+    ($ (no-prompt-command
+        (append (git-command repo) (list "fetch" "origin" branch))))))
 
 (defmethod fetch-remote-branch ((repo git-repo) branch)
   (unless (str:emptyp branch)
