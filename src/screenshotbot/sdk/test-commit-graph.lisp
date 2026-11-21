@@ -625,9 +625,6 @@ from it."
   (test-git:with-git-repo (repo1 :dir dir1)
     (test-git:make-commit repo1 "initial commit")
     (test-git:enable-server-features repo1)
-    ;; Our packfile parser drops deltified commits, and these commits
-    ;; are similar enough that git sometimes deltifies them.
-    (test-git::run-in-dir repo1 "git config pack.window 0")
     (test-git::run-in-dir repo1 "git checkout -q -b release")
     (test-git:make-commit repo1 "release 1" :file "release.txt")
     (let ((fork-point (git:current-commit repo1)))

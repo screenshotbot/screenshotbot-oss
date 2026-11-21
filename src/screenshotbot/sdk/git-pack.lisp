@@ -291,49 +291,213 @@ If READ-MAGIC-P is true, we'll read the first four bytes of PACK magic."
   ;; From here on the rest is the packfile
   )
 
+;; Pack object types, see gitformat-pack.adoc
+(defconstant +obj-commit+ 1)
+(defconstant +obj-ofs-delta+ 6)
 (defconstant +obj-ref-delta+ 7)
-(defconstant +obj-obs-delta+ 6)
 
-(defun read-packfile-entry (packfile)
-  "Returns type and the contents of the entry"
-  ;; https://github.com/git/git/blob/master/Documentation/gitprotocol-pack.adoc
+(defclass counting-input-stream (stream:fundamental-binary-input-stream)
+  ((source :initarg :source
+           :reader counting-source)
+   (pos :initform 0
+        :accessor counting-position
+        :documentation "Number of bytes read from SOURCE through this stream."))
+  (:documentation "Wraps a binary input stream and counts the bytes read
+through it, so that we know the offset of each packfile entry. OFS_DELTA
+entries refer to their base by offset."))
+
+(defmethod stream-element-type ((self counting-input-stream))
+  '(unsigned-byte 8))
+
+(defmethod stream:stream-read-byte ((self counting-input-stream))
+  (let ((byte (read-byte (counting-source self) nil :eof)))
+    (unless (eql :eof byte)
+      (incf (counting-position self)))
+    byte))
+
+(defmethod stream:stream-read-sequence ((self counting-input-stream) sequence start end)
+  (let ((new-end (read-sequence sequence (counting-source self)
+                                :start start :end end)))
+    (incf (counting-position self) (- new-end start))
+    new-end))
+
+(defun read-ofs-delta-offset (stream)
+  "Reads the negative base offset of an OFS_DELTA entry. This is not the
+same varint as the entry header: each continuation adds one before
+shifting. See get_delta_base() in packfile.c."
+  (let* ((byte (read-byte stream))
+         (offset (logand byte #x7f)))
+    (loop while (logbitp 7 byte)
+          do
+             (setf byte (read-byte stream))
+             (setf offset (logior (ash (1+ offset) 7)
+                                  (logand byte #x7f))))
+    offset))
+
+(defun read-packfile-entry (stream)
+  "Reads one entry from the packfile STREAM, which must be a
+COUNTING-INPUT-STREAM.
+
+Returns four values: the type, the decompressed body, the offset of
+the entry in the pack and the delta base. For REF_DELTA entries the
+base is the base object's SHA as a hex string, and for OFS_DELTA it is
+the offset of the base entry in the pack. The body of a delta entry is
+the delta data, not the object."
+  ;; https://github.com/git/git/blob/master/Documentation/gitformat-pack.adoc
   (log:trace "Reading packfile entry")
-  (let ((stream (%stream packfile)))
+  (let ((offset (counting-position stream)))
     (multiple-value-bind (type length) (read-entry-header stream)
       (log:trace "Got type: ~a" type)
+      (let ((base
+              (cond
+                ((eql +obj-ref-delta+ type)
+                 (let ((arr (make-array 20 :element-type '(unsigned-byte 8))))
+                   (assert-equal 20 (read-sequence arr stream))
+                   (ironclad:byte-array-to-hex-string arr)))
+                ((eql +obj-ofs-delta+ type)
+                 (- offset (read-ofs-delta-offset stream))))))
+        (let ((body (semz.decompress:decompress :zlib stream
+                                                :allow-overreads-p nil
+                                                :output-size length)))
+          (values type
+                  body
+                  offset
+                  base))))))
 
-      (when (eql +obj-ref-delta+ type)
-        (let ((arr (make-array 20 :element-type '(unsigned-byte 8))))
-          ;; Read the name of the base object
-          (read-sequence arr stream)))
+(defun read-delta-size (delta pos)
+  "Reads the little-endian size varint at the start of delta data.
+Returns the size and the position after it."
+  (let ((size 0)
+        (shift 0))
+    (loop
+      (let ((byte (aref delta pos)))
+        (incf pos)
+        (setf size (logior size (ash (logand byte #x7f) shift)))
+        (incf shift 7)
+        (unless (logbitp 7 byte)
+          (return (values size pos)))))))
 
-      (when (eql +obj-obs-delta+ type)
-        ;; I haven't encountered this in testing. It looks like this
-        ;; is going to be a variable length integer. For my purposes,
-        ;; I don't care what the actual value of this integer is. In
-        ;; theory read-packfile-header reads the exact number of
-        ;; bytes, so I'll just use that here to ignore the bytes.
-        (warn "Untested code for obj-obs-delta")
-        (read-entry-header (%stream packfile)))
+(defun apply-delta (base delta)
+  "Applies git's delta format (see patch-delta.c) to the octet vector
+BASE, and returns the resulting octet vector."
+  (multiple-value-bind (base-size pos) (read-delta-size delta 0)
+    (unless (= base-size (length base))
+      (error "Delta expects a base of ~a bytes, but the base has ~a bytes"
+             base-size (length base)))
+    (multiple-value-bind (result-size pos) (read-delta-size delta pos)
+      (let ((result (make-array result-size :element-type '(unsigned-byte 8)))
+            (out 0))
+        (flet ((next-byte ()
+                 (prog1 (aref delta pos)
+                   (incf pos))))
+          (loop while (< pos (length delta))
+                do
+                   (let ((op (next-byte)))
+                     (cond
+                       ((logbitp 7 op)
+                        ;; Copy from the base
+                        (let ((copy-offset 0)
+                              (size 0))
+                          (loop for i below 4
+                                if (logbitp i op)
+                                  do (setf copy-offset
+                                           (logior copy-offset (ash (next-byte) (* 8 i)))))
+                          (loop for i below 3
+                                if (logbitp (+ 4 i) op)
+                                  do (setf size
+                                           (logior size (ash (next-byte) (* 8 i)))))
+                          (when (zerop size)
+                            (setf size #x10000))
+                          (unless (and (<= (+ copy-offset size) base-size)
+                                       (<= (+ out size) result-size))
+                            (error "Bad delta copy instruction"))
+                          (replace result base :start1 out
+                                               :start2 copy-offset
+                                               :end2 (+ copy-offset size))
+                          (incf out size)))
+                       ((plusp op)
+                        ;; Insert the next OP bytes from the delta
+                        (unless (and (<= (+ pos op) (length delta))
+                                     (<= (+ out op) result-size))
+                          (error "Bad delta insert instruction"))
+                        (replace result delta :start1 out
+                                              :start2 pos
+                                              :end2 (+ pos op))
+                        (incf out op)
+                        (incf pos op))
+                       (t
+                        (error "Unexpected delta opcode 0"))))))
+        (unless (= out result-size)
+          (error "Delta produced ~a bytes, expected ~a" out result-size))
+        result))))
 
-      (let ((body (semz.decompress:decompress :zlib stream
-                                              :allow-overreads-p nil
-                                              :output-size length)))
+(defun read-packfile-commits (stream num)
+  "Reads NUM packfile entries from STREAM, and returns a list of (SHA
+. BODY) for every commit in the pack, in pack order, including commits
+that were sent as deltas.
 
-        (values type
-                body
-                length)))))
+Bases of deltas might arrive after the deltas, and deltas can be
+chained, so we resolve each delta as soon as its base commit is
+known. Deltas whose base never shows up are deltas of trees (or of
+objects we don't have, which shouldn't happen since we don't ask for
+thin packs), and are dropped."
+  (let ((stream (make-instance 'counting-input-stream :source stream))
+        (commits nil)
+        (bodies-by-offset (make-hash-table))
+        (bodies-by-sha (make-hash-table :test #'equal))
+        ;; Deltas waiting on their base, keyed by the base's offset or
+        ;; SHA. Each value is a list of (offset . delta-data).
+        (waiting-by-offset (make-hash-table))
+        (waiting-by-sha (make-hash-table :test #'equal)))
+    (labels ((add-commit (offset body)
+               (let ((sha (compute-sha1-from-commit body)))
+                 (push (list offset sha body) commits)
+                 (setf (gethash offset bodies-by-offset) body)
+                 (setf (gethash sha bodies-by-sha) body)
+                 (let ((waiting (append
+                                 (gethash offset waiting-by-offset)
+                                 (gethash sha waiting-by-sha))))
+                   (remhash offset waiting-by-offset)
+                   (remhash sha waiting-by-sha)
+                   (loop for (delta-offset . delta) in waiting
+                         do (add-commit delta-offset (apply-delta body delta))))))
+             (add-delta (offset base delta)
+               (let* ((table (if (stringp base) waiting-by-sha waiting-by-offset))
+                      (base-body (gethash base (if (stringp base)
+                                                   bodies-by-sha
+                                                   bodies-by-offset))))
+                 (cond
+                   (base-body
+                    (add-commit offset (apply-delta base-body delta)))
+                   (t
+                    (push (cons offset delta) (gethash base table)))))))
+      (loop for i below num
+            do
+               (multiple-value-bind (type body offset base)
+                   (read-packfile-entry stream)
+                 (cond
+                   ((eql +obj-commit+ type)
+                    (add-commit offset body))
+                   ((or (eql +obj-ref-delta+ type)
+                        (eql +obj-ofs-delta+ type))
+                    (add-delta offset base body)))))
+      (log:debug "Unresolved deltas (probably trees): ~a"
+                 (+ (hash-table-count waiting-by-offset)
+                    (hash-table-count waiting-by-sha)))
+      (loop for (nil sha body) in (sort commits #'< :key #'first)
+            collect (cons sha body)))))
+
+(defun read-packfile (stream &key (read-magic-p t))
+  "Reads a complete packfile from STREAM, and returns an alist of
+commit SHAs to commit bodies (as octets)."
+  (let ((num (read-packfile-header stream :read-magic-p read-magic-p)))
+    (log:debug "Packfile entries: ~a" num)
+    (read-packfile-commits stream num)))
 
 (defun packfile-test ()
   (simulate)
-  (setf *arr* (make-array 4 :element-type '(unsigned-byte 8)))
   (let ((num (read-packfile-header (%stream *p*))))
-    (loop for i below num
-          collect
-             (multiple-value-list
-              (read-packfile-entry *p*))))
-
-  
+    (read-packfile-commits (%stream *p*) num))
   (close-upload-pack *p*))
 
 (defun compute-sha1-from-commit (body)
@@ -604,25 +768,19 @@ a second value the headers that were initially provided (sha and refs)
         (error "We should never be here"))
     (pack-header-encountered (e)))
   
-  (log:debug "reading packfile")        
+  (log:debug "reading packfile")
   ;; Now we get the packfile
-  (let ((num (read-packfile-header (%stream p)
-                                   ;; We've already read the magic in process-ack
-                                   :read-magic-p nil)))
-    (log:debug "Packfile entries: ~a" num)
-    (serapeum:collecting
-      (loop for i below num
-            do
-               (multiple-value-bind (type body) (read-packfile-entry p)
-                 (when (eql 1 type)
-                   (collect
-                       (cons
-                        (compute-sha1-from-commit body)
-                        (cond
-                          (parse-parents
-                           (parse-parents (flex:octets-to-string body)))
-                          (t
-                           (flex:octets-to-string body)))))))))))
+  (loop for (sha . body) in (read-packfile (%stream p)
+                                           ;; We've already read the magic in process-ack
+                                           :read-magic-p nil)
+        collect
+        (cons
+         sha
+         (cond
+           (parse-parents
+            (parse-parents (flex:octets-to-string body)))
+           (t
+            (flex:octets-to-string body))))))
 
 (defun read-netrc-line (stream)
   (when-let ((line (read-line stream nil nil)))
