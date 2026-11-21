@@ -137,7 +137,10 @@ commits that are needed."
                    parents)))))
 
 #+lispworks
-(defun update-commit-graph-new-style (api-context repo branch)
+(defun update-commit-graph-new-style (api-context repo branch &key base-branch)
+  "BASE-BRANCH is the branch a pull request is going to be merged into
+(e.g. GITHUB_BASE_REF), if known. We want the commits for it too,
+since it might not be the main branch."
   (let ((remote-url (git:get-remote-url repo)))
     (with-extras (("remote-git-url" remote-url)
                   ("git-config-anonymized" (or (git:debug-git-config repo)
@@ -149,8 +152,12 @@ commits that are needed."
            upload-pack
            (or (repo-link repo)
                remote-url)
-           (list branch
-                 (git:current-branch repo))
+           (remove-duplicates
+            (remove-if #'str:emptyp
+                       (list branch
+                             (git:current-branch repo)
+                             base-branch))
+            :test #'equal)
            :local-commits local-commits))))))
 
 (defun ref-in-sync-p (known-refs sha ref)
@@ -294,7 +301,9 @@ LOCAL-COMMITS are of the form (list (commit . parents)*)"
                   (cons "refs" (dto:encode-json (or refs #())))))))
 
 
-(defmethod update-commit-graph ((self commit-graph-updater) repo branch &key)
+(defmethod update-commit-graph ((self commit-graph-updater) repo branch &key base-branch)
+  "Update the commit graph for BRANCH (the main branch), the current
+branch and BASE-BRANCH (the pull request's base branch, if any)."
   (log:info "Updating commit graph")
   (when (api-feature-enabled-p (api-context self) :always-git-fetch)
     (log:info "The always-git-fetch feature is enabled, so we'll run a git fetch now")
@@ -304,7 +313,8 @@ LOCAL-COMMITS are of the form (list (commit . parents)*)"
      (or
       (ignore-and-log-errors ()
         (trivial-timeout:with-timeout (60)
-          (update-commit-graph-new-style self repo branch))
+          (update-commit-graph-new-style self repo branch
+                                         :base-branch base-branch))
         (log:debug "New commit graph uploaded successfully")
         t)
       (progn
