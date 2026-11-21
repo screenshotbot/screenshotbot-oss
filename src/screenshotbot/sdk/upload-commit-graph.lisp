@@ -82,6 +82,5 @@
       (push-build-info-if-xcode-cloud api-context run-context)
       (update-commit-graph (make-instance 'commit-graph-updater :api-context api-context)
                            (run-context:git-repo run-context)
-                           (run-context:main-branch run-context)
-                           :base-branch (run-context:base-branch run-context)))))
+                           (run-context:main-branch run-context)))))
 

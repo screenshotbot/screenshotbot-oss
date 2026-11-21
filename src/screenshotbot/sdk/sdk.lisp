@@ -595,8 +595,7 @@ clones. See T2277."
                                   (when (and flags:*production*
                                              (> flags:*commit-limit* 0))
                                     (let ((commit-graph-updater (make-instance 'commit-graph-updater :api-context api-context)))
-                                      (update-commit-graph commit-graph-updater repo branch
-                                                           :base-branch (run-context:base-branch run-context))
+                                      (update-commit-graph commit-graph-updater repo branch)
                                       (maybe-use-remote-main-branch-hash
                                        run-context commit-graph-updater branch))))
                         :repo repo
