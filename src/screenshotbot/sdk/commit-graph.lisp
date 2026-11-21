@@ -18,6 +18,7 @@
                 #:http-upload-pack
                 #:local-upload-pack
                 #:abstract-upload-pack
+                #:upload-pack-error
                 #:remote-ref-equals
                 #:read-commits
                 #:make-remote-upload-pack
@@ -146,19 +147,30 @@ since it might not be the main branch."
                   ("git-config-anonymized" (or (git:debug-git-config repo)
                                                "failed")))
       (let ((local-commits (get-local-commits repo)))
-        (let ((upload-pack (make-remote-upload-pack repo)))
-          (update-from-pack
-           api-context
-           upload-pack
-           (or (repo-link repo)
-               remote-url)
-           (remove-duplicates
-            (remove-if #'str:emptyp
-                       (list branch
-                             (git:current-branch repo)
-                             base-branch))
-            :test #'equal)
-           :local-commits local-commits))))))
+        (flet ((update (filter)
+                 (update-from-pack
+                  api-context
+                  (make-remote-upload-pack repo)
+                  (or (repo-link repo)
+                      remote-url)
+                  (remove-duplicates
+                   (remove-if #'str:emptyp
+                              (list branch
+                                    (git:current-branch repo)
+                                    base-branch))
+                   :test #'equal)
+                  :local-commits local-commits
+                  :filter filter)))
+          (handler-case
+              (update "tree:0")
+            (upload-pack-error (e)
+              ;; Most likely the server doesn't allow tree filters
+              ;; (rare, see T2486 and write-wants-and-haves). The
+              ;; upload-pack can't be reused, so start over with a new
+              ;; one.
+              (log:warn "git-upload-pack failed with the tree:0 filter, retrying with blob:none: ~a" e)
+              (setf (refs-to-update api-context) nil)
+              (update "blob:none"))))))))
 
 (defun ref-in-sync-p (known-refs sha ref)
   "At this point, we know we're interested in this ref. What we need to know is if this is in sync with the server"
@@ -218,7 +230,8 @@ flow)."
                              (upload-pack abstract-upload-pack)
                              (repo-url string)
                              branches
-                             &key local-commits)
+                             &key local-commits
+                               (filter "tree:0"))
   (log:info "Getting known refs from Screenshotbot server")
   (let ((known-refs
           ;; Technically we could combine this with the /check-wants
@@ -229,6 +242,7 @@ flow)."
     (let* ((missing-local-commits (find-missing-commits local-commits))
            (commits (read-commits-with-retries
                      upload-pack
+                     :filter filter
                      ;; TODO: also do release branches, but that will need a regex here
                      :wants (lambda (list)
                               (save-refs self list)

@@ -589,6 +589,7 @@ commit SHAs to commit bodies (as octets)."
 (auto-restart:with-auto-restart ()
   (defmethod read-commits ((p http-upload-pack)
                            &key (filter-blobs t)
+                             (filter "tree:0")
                              (depth 1000)
                              wants
                              (haves nil)
@@ -620,7 +621,7 @@ commit SHAs to commit bodies (as octets)."
                (write-wants-and-haves
                 p
                 wants
-                haves :depth depth :filter-blobs filter-blobs :features features
+                haves :depth depth :filter-blobs filter-blobs :filter filter :features features
                       :http? t)
                (let ((bytes (flex:get-output-stream-sequence body-builder)))
                 (multiple-value-bind (stream code http-headers)
@@ -679,7 +680,18 @@ commit SHAs to commit bodies (as octets)."
         while line
         do (log:debug "Ignoring: ~a" line)))
 
-(defun write-wants-and-haves (p wants haves &key depth filter-blobs features http?)
+(defun write-wants-and-haves (p wants haves &key depth filter-blobs (filter "tree:0") features http?)
+  "FILTER is the object filter we send if FILTER-BLOBS is set and the
+server supports filters. We only need commits, so the default, tree:0,
+skips trees as well as blobs; with blob:none, trees are most of the
+pack.
+
+Rarely, a server allows filters but not tree filters (git configured
+with uploadpackfilter.tree.allow=false, or a git from before tree
+filters). It then sends an ERR, which signals UPLOAD-PACK-ERROR, and
+callers retry with blob:none. The server's capabilities only say
+\"filter\", not which filters it allows, so we can't know in
+advance. See T2486."
   (let* ((multi-ack-p (supports-multi-ack-p features))
          (capabilities (format nil "~a filter allow-tip-sha1-in-want allow-reachable-sha1-in-want shallow~a agent=screenshotbot-cli"
                                (car wants)
@@ -695,8 +707,8 @@ commit SHAs to commit bodies (as octets)."
     ((and
       filter-blobs
       (str:s-member features "filter"))
-     (log:debug "filter is enabled, sending filter")
-     (write-packet p "filter blob:none"))
+     (log:debug "filter is enabled, sending filter ~a" filter)
+     (write-packet p "filter ~a" filter))
     (t
      (warn "Filter is not supported")))
   (write-flush p)
@@ -719,6 +731,7 @@ commit SHAs to commit bodies (as octets)."
 
 (defmethod read-commits ((p upload-pack)
                          &key (filter-blobs t)
+                           (filter "tree:0")
                            (depth 1000)
                            wants
                            (haves nil)
@@ -741,7 +754,7 @@ a second value the headers that were initially provided (sha and refs)
          (write-wants-and-haves
           p
           wants
-          haves :depth depth :filter-blobs filter-blobs :features features)
+          haves :depth depth :filter-blobs filter-blobs :filter filter :features features)
 
          (log:debug "Waiting for response")
          (read-response-and-packfile

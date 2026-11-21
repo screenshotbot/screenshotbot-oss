@@ -55,7 +55,7 @@
            args)))
 
 (defun enable-server-features (repo)
-  (loop for feature in (list "filter"
+  (loop for feature in (list "allowFilter"
                              "allowTipSHA1InWant"
                              "allowReachableSHA1InWant")
         do

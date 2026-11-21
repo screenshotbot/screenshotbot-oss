@@ -44,6 +44,7 @@
                 #:git-command
                 #:fetch-remote-branch)
   (:import-from #:cl-mock
+                #:call-previous
                 #:answer
                 #:if-called)
   #+lispworks
@@ -731,3 +732,53 @@ the base branch, nothing pulls in the release branch's tip."
                      (setf seen-base-branch base-branch)))
         (update-commit-graph self repo "master" :base-branch "release")
         (is (equal "release" seen-base-branch))))))
+
+;;; --- Object filters ---
+
+#+lispworks
+(def-fixture clone-of-repo-with-branch (&key (allow-tree-filter t))
+  "REPO2 is a clone of REPO1, which has a master branch with two commits."
+  (test-git:with-git-repo (repo1 :dir dir1)
+    (test-git:make-commit repo1 "initial commit")
+    (test-git:make-commit repo1 "second commit")
+    (test-git:enable-server-features repo1)
+    (unless allow-tree-filter
+      (test-git::run-in-dir repo1 "git config uploadpackfilter.tree.allow false"))
+    (tmpdir:with-tmpdir (dir)
+      (uiop:run-program
+       (list "git" "clone" "-q" "--no-local" "--depth" "1"
+             (namestring dir1)
+             (namestring (path:catdir dir "repo2/"))))
+      (let ((repo2 (make-instance 'git-repo :dir (path:catdir dir "repo2/")
+                                            :link (namestring dir1)))
+            (filters nil))
+        (if-called 'update-from-pack
+                   (lambda (&rest args)
+                     (push (getf (nthcdr 4 args) :filter) filters)
+                     (call-previous)))
+        (&body)))))
+
+#+lispworks
+(test new-flow-uses-tree-filter
+  (with-fixture state ()
+    (with-fixture clone-of-repo-with-branch ()
+      (finishes
+        (update-commit-graph-new-style self repo2 "master"))
+      (is (equal (list "tree:0") filters))
+      (let ((dag (commit-graph-dag (find-commit-graph company (namestring dir1)))))
+        (is (eql 2 (length (dag:all-commits dag))))))))
+
+#+lispworks
+(test new-flow-falls-back-to-blob-filter
+  "If the server doesn't allow tree filters, we retry with blob:none"
+  (with-fixture state ()
+    (with-fixture clone-of-repo-with-branch (:allow-tree-filter nil)
+      (finishes
+        (update-commit-graph-new-style self repo2 "master"))
+      (is (equal (list "blob:none" "tree:0") filters))
+      (let ((dag (commit-graph-dag (find-commit-graph company (namestring dir1)))))
+        (is (eql 2 (length (dag:all-commits dag)))))
+      ;; The refs from the failed attempt aren't sent twice
+      (is (equal (list "master")
+                 (mapcar #'dto:git-ref-name
+                         (get-commit-graph-refs self (namestring dir1))))))))

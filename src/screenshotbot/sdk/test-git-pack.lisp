@@ -455,3 +455,15 @@ commits, so reading all the commits must have gone through DELTA-TYPE."
       ;; environments (CI's Mac doesn't), so skip instead of failing.
       (unless (> (reduce #'max (deltified-commits repo) :key #'cdr) 1)
         (skip "git didn't store any commit as a chain of deltas")))))
+
+(test read-commits-when-server-rejects-tree-filter
+  (test-git:with-git-repo (repo :dir dir)
+    (test-git:make-commit repo "foo")
+    (test-git:make-commit repo "bar")
+    (test-git:enable-server-features repo)
+    (test-git::run-in-dir repo "git config uploadpackfilter.tree.allow false")
+    (signals upload-pack-error
+      (read-commits (namestring dir) :wants (list "master")))
+    (assert-that (read-commits (namestring dir) :wants (list "master")
+                                                :filter "blob:none")
+                 (has-length 2))))
