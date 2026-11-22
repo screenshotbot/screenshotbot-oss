@@ -1,5 +1,22 @@
 # Changelog
 
+## 2.19.2 - 2026-11-22
+
+### Changes
+
+- The commit graph upload now also includes the pull request's base
+  branch, so pull requests into a branch other than the main branch
+  (e.g. a release branch) have their base commit on the server.
+- Handle deltified commits in packfiles from git servers. Previously
+  these were dropped, which could leave the main branch's tip or parts
+  of the first-parent history missing from the upload.
+- Ask git servers for commits only (the `tree:0` filter), falling back
+  to `blob:none` if the server doesn't support it. This makes the
+  commit graph upload much smaller on large repositories.
+- `git fetch` during the commit graph upload no longer prompts for
+  credentials on the terminal; it fails with a warning instead of
+  hanging.
+
 ## 2.19.1 - 2026-11-18
 
 ### Changes
