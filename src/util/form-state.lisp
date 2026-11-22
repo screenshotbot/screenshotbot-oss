@@ -24,6 +24,19 @@
    #:form-state-apply-edits))
 (in-package :jsearch/form-state)
 
+;;;; DEPRECATED: do not use this in new code.
+;;;;
+;;;; FORM-STATE-CLASS maps form fields directly onto the accessors of
+;;;; a model object, which ties the form to the object (and in
+;;;; practice to bknr.datastore), and it has no notion of validation
+;;;; errors. It is being replaced by a new form metaclass where all of
+;;;; the form's state, including its errors, is explicit on the form
+;;;; object, and that object is shared across the form's actions via
+;;;; nibbles.
+;;;;
+;;;; The existing callers will be migrated, and then this file will be
+;;;; deleted.
+
 (defclass form-state-direct-slot-definition (standard-direct-slot-definition)
   ((transient :initarg :transient
               :initform nil
@@ -42,7 +55,9 @@
                     :reader slot-mapped-back-via)))
 
 (defclass form-state-class (standard-class)
-  ())
+  ()
+  (:documentation "DEPRECATED: do not use in new code. See the comment at the top of
+this file."))
 
 (defmethod validate-superclass ((class form-state-class) (superclass standard-class))
   t)
