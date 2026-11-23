@@ -16,6 +16,9 @@
                 #:commit-graph-refs
                 #:normalization-override
                 #:merge-dag-into-commit-graph
+                #:commits-without-timestamps
+                #:bind-commit-timestamps
+                #:commit-graph
                 #:dag-v2
                 #:%persisted-dag
                 #:normalize-url
@@ -68,6 +71,50 @@
         (merge-dag-into-commit-graph cg dag)
         (util:safe-snapshot ".." t)))
     (with-test-store (:dir dir))))
+
+(defun add-commits (cg &rest shas)
+  (let ((dag (make-instance 'dag:dag)))
+    (dolist (sha shas)
+      (dag:add-commit dag (make-instance 'dag:commit :sha sha :ts 1000)))
+    (merge-dag-into-commit-graph cg dag)))
+
+(defun timestamp-of (cg sha)
+  (let ((commit (dag:get-commit (%persisted-dag cg) sha)))
+    (when (slot-boundp commit 'dag::ts)
+      (dag:commit-timestamp commit))))
+
+(test bind-commit-timestamps-only-binds-unbound-timestamps
+  (with-fixture state ()
+    (let ((cg (find-or-create-commit-graph company "Foo")))
+      (add-commits cg "aa" "bb")
+      (slot-makunbound (dag:get-commit (%persisted-dag cg) "aa") 'dag::ts)
+      (is (equal (list "aa") (commits-without-timestamps cg)))
+      (bind-commit-timestamps)
+      (is (eql 0 (timestamp-of cg "aa")))
+      (is (eql 1000 (timestamp-of cg "bb")))
+      (is (equal nil (commits-without-timestamps cg)))
+      (finishes
+        (bind-commit-timestamps)))))
+
+(test bind-commit-timestamps-on-a-snapshot-without-timestamps
+  "Commits saved before timestamps existed come back from a snapshot
+with the slot unbound. After the migration they're bound, including
+after replaying the transaction log."
+  (tmpdir:with-tmpdir (dir)
+    (with-fixture state (:dir dir)
+      (let ((cg (find-or-create-commit-graph company "Foo")))
+        (add-commits cg "aa" "bb")
+        (slot-makunbound (dag:get-commit (%persisted-dag cg) "aa") 'dag::ts)
+        (util:safe-snapshot ".." t)))
+    (with-test-store (:dir dir)
+      (let ((cg (first (bknr.datastore:class-instances 'commit-graph))))
+        (is (eql nil (timestamp-of cg "aa")))
+        (is (eql 1000 (timestamp-of cg "bb")))
+        (bind-commit-timestamps)))
+    (with-test-store (:dir dir)
+      (let ((cg (first (bknr.datastore:class-instances 'commit-graph))))
+        (is (eql 0 (timestamp-of cg "aa")))
+        (is (eql 1000 (timestamp-of cg "bb")))))))
 
 (test flush-dags
   (with-fixture state ()

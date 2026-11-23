@@ -284,6 +284,34 @@ to the same repo, the graph will still be the same."
   (loop for cg in (class-instances 'commit-graph)
         do (merge-dag-into-commit-graph cg (commit-graph-dag cg))))
 
+(defun commits-without-timestamps (commit-graph)
+  "The shas of the commits in COMMIT-GRAPH's DAG whose timestamp is
+unbound. Commits stored before timestamps were added (Feb 2025) are
+restored without one, since the store doesn't run initforms."
+  (loop for commit in (dag:all-commits (commit-graph-persisted-dag commit-graph))
+        unless (slot-boundp commit 'dag::ts)
+          collect (dag:sha commit)))
+
+(deftransaction tx-bind-commit-timestamps (commit-graph shas)
+  "Sets the timestamp of the commits SHAS to 0 (unknown) if it's unbound."
+  (let ((dag (commit-graph-persisted-dag commit-graph)))
+    (dolist (sha shas)
+      (let ((commit (dag:get-commit dag sha)))
+        (when (and commit
+                   (not (slot-boundp commit 'dag::ts)))
+          (setf (dag:commit-timestamp commit) 0))))))
+
+(defun bind-commit-timestamps ()
+  (loop for commit-graph in (class-instances 'commit-graph)
+        for shas = (commits-without-timestamps commit-graph)
+        do (log:info "Binding ~a commit timestamps for ~a"
+                     (length shas) (repo-url commit-graph))
+           (with-batches (shas shas :batch-size 1000)
+             (tx-bind-commit-timestamps commit-graph shas))))
+
+(def-store-migration ("Bind the timestamp on commits stored before timestamps existed" :version 50)
+  (bind-commit-timestamps))
+
 (deftransaction tx-commit-graph-set-ref (commit-graph name sha)
   (setf
    (commit-graph-refs commit-graph)
