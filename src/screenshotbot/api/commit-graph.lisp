@@ -17,8 +17,6 @@
                 #:commit-graph-refs
                 #:commit-graph-set-ref
                 #:merge-dag-into-commit-graph)
-  (:import-from #:serapeum
-                #:collecting)
   (:local-nicknames (#:dto #:screenshotbot/api/model)))
 (in-package :screenshotbot/api/commit-graph)
 
@@ -67,14 +65,49 @@
                     :client-version (hunchentoot:header-in* :x-client-version))))
      "OK")))
 
+(defvar *max-refs-in-response* 200
+  "The most refs GET /api/commit-graph/refs returns. Some repos have
+thousands of stored refs (one per branch CI ever ran on), and the
+CLI downloads them on every run.")
+
+(defun ref-timestamp (dag sha)
+  "When the server first saw SHA, or 0 if it's not in DAG or we don't
+know.
+
+Commits stored before timestamps were added (Feb 2025) are restored
+with the timestamp slot unbound, since the store doesn't run
+initforms."
+  (or
+   (unless (str:emptyp sha)
+     (let ((commit (dag:get-commit dag sha)))
+       (when (and commit
+                  (slot-boundp commit 'dag::ts))
+         (dag:commit-timestamp commit))))
+   0))
+
+(defun recent-refs (commit-graph &key (limit *max-refs-in-response*))
+  "Up to LIMIT of COMMIT-GRAPH's refs as (name . sha), the ones whose
+commits the server saw most recently first.
+
+Returning fewer refs is safe for the CLI: it only uses them to skip
+branch tips the server already has (anything else goes through
+/check-wants) and as `have` lines for git-upload-pack, where recent
+commits are the useful ones."
+  (let* ((dag (commit-graph-dag commit-graph))
+         (refs (loop for (name . sha) in (fset:convert 'list (commit-graph-refs commit-graph))
+                     collect (list (ref-timestamp dag sha) name sha)))
+         (refs (stable-sort refs #'> :key #'first)))
+    (loop for (nil name sha) in refs
+          for i below limit
+          collect (cons name sha))))
+
 (defapi (get-refs :uri "/api/commit-graph/refs" :method :get :wrap-success nil) (repo-url)
   (let ((commit-graph (find-or-create-commit-graph (current-company) repo-url)))
     (or
-     (collecting
-       (fset:do-map (key value (commit-graph-refs commit-graph))
-         (collect (make-instance 'dto:git-ref
-                                  :name key
-                                  :sha value))))
+     (loop for (name . sha) in (recent-refs commit-graph)
+           collect (make-instance 'dto:git-ref
+                                  :name name
+                                  :sha sha))
      #())))
 
 
