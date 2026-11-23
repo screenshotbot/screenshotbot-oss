@@ -14,12 +14,15 @@
   (:import-from #:screenshotbot/api/commit-graph
                 #:%check-shas
                 #:get-refs
+                #:recent-refs
+                #:*max-refs-in-response*
                 #:update-refs
                 #:update-commit-graph
                 #:%update-commit-graph-v2)
   (:import-from #:screenshotbot/git-repo
                 #:find-or-create-commit-graph)
   (:import-from #:screenshotbot/model/commit-graph
+                #:merge-dag-into-commit-graph
                 #:commit-graph-refs)
   (:import-from #:fiveam-matchers/core
                 #:has-typep
@@ -124,3 +127,44 @@
     (assert-that (get-refs :repo-url *repo*)
                  (contains
                   (has-typep 'dto:git-ref)))))
+
+(defun add-commits-with-timestamps (cg commits)
+  "COMMITS is a list of (sha . ts)"
+  (let ((dag (make-instance 'dag:dag)))
+    (loop for (sha . ts) in commits
+          do (dag:add-commit dag (make-instance 'dag:commit :sha sha :ts ts)))
+    (merge-dag-into-commit-graph cg dag)))
+
+(test recent-refs-orders-by-when-the-commit-was-first-seen
+  (with-fixture state ()
+    (let ((cg (find-or-create-commit-graph (auth:current-company) *repo*)))
+      (add-commits-with-timestamps cg '(("00aa" . 100)
+                                        ("00bb" . 300)
+                                        ("00cc" . 200)))
+      (update-refs :repo-url *repo*
+                   :refs "[{\"name\":\"old\",\"sha\":\"00aa\"},
+                           {\"name\":\"unknown\",\"sha\":\"0dd0\"},
+                           {\"name\":\"newest\",\"sha\":\"00bb\"},
+                           {\"name\":\"middle\",\"sha\":\"00cc\"}]")
+      (assert-that (recent-refs cg)
+                   (contains
+                    '("newest" . "00bb")
+                    '("middle" . "00cc")
+                    '("old" . "00aa")
+                    '("unknown" . "0dd0")))
+      (assert-that (recent-refs cg :limit 2)
+                   (contains
+                    '("newest" . "00bb")
+                    '("middle" . "00cc"))))))
+
+(test get-refs-is-capped
+  (with-fixture state ()
+    (let ((cg (find-or-create-commit-graph (auth:current-company) *repo*)))
+      (add-commits-with-timestamps cg '(("00aa" . 100)
+                                        ("00bb" . 300)))
+      (update-refs :repo-url *repo*
+                   :refs "[{\"name\":\"old\",\"sha\":\"00aa\"},
+                           {\"name\":\"newest\",\"sha\":\"00bb\"}]")
+      (let ((*max-refs-in-response* 1))
+        (assert-that (mapcar #'dto:git-ref-name (get-refs :repo-url *repo*))
+                     (contains "newest"))))))
