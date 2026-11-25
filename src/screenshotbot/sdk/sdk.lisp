@@ -72,6 +72,8 @@
                 #:remote-branch-sha
                 #:commit-graph-updater
                 #:update-commit-graph)
+  (:import-from #:screenshotbot/sdk/cached-commit-graph-updater
+                #:cached-commit-graph-updater)
   (:local-nicknames (#:flags #:screenshotbot/sdk/flags)
                     (#:dto #:screenshotbot/api/model)
                     (#:e #:screenshotbot/sdk/env)
@@ -594,7 +596,10 @@ clones. See T2277."
                         :before (lambda (run-context)
                                   (when (and flags:*production*
                                              (> flags:*commit-limit* 0))
-                                    (let ((commit-graph-updater (make-instance 'commit-graph-updater :api-context api-context)))
+                                    (let ((commit-graph-updater (make-instance 'cached-commit-graph-updater
+                                                                                       :api-context api-context
+                                                                                       :build-url (run-context:build-url run-context)
+                                                                                       :commit (run-context:commit-hash run-context))))
                                       (update-commit-graph commit-graph-updater repo branch
                                                            :base-branch (run-context:base-branch run-context))
                                       (maybe-use-remote-main-branch-hash

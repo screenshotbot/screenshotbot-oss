@@ -61,6 +61,7 @@
                (:file "run-context")
                (:file "request")
                (:file "commit-graph")
+               (:file "cached-commit-graph-updater")
                (:file "sdk")
                (:file "server-log-appender")
                (:file "active-run")
@@ -149,6 +150,7 @@
                (:file "test-git")
                (:file "test-run-context")
                (:file "test-commit-graph")
+               (:file "test-cached-commit-graph-updater")
                #+lispworks
                (:file "test-git-pack")
                (:file "test-fetch-run")
