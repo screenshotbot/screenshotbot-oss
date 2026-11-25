@@ -239,6 +239,8 @@
                :quri
                :anaphora
                :trivial-gray-streams
+               :bordeaux-threads
+               :nursery
                :easy-macros)
   :serial t
   :components ((:file "http-cache")

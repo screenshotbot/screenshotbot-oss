@@ -14,6 +14,8 @@
                 #:def-easy-macro)
   (:import-from #:alexandria
                 #:assoc-value)
+  (:import-from #:nursery
+                #:nursery-let)
   (:import-from #:util/truncated-stream
                 #:delegate
                 #:truncated-stream)
@@ -36,40 +38,58 @@
   (:documentation "A connection that has been kept-alive"))
 
 (defclass reuse-context ()
-  ((connections :initarg :connections
+  ((lock :initform (bt:make-lock "reuse-context")
+         :reader lock)
+   (connections :initarg :connections
                 :accessor connections
-                :initform (make-hash-table :test #'equal))))
+                :initform (make-hash-table :test #'equal)
+                :documentation "Maps a domain to a stack of idle connections. A connection is only
+in here while nobody is using it, so popping it checks it out for the
+exclusive use of the caller, until it's pushed back. Only access this
+with LOCK held.")
+   (closedp :initform nil
+            :accessor closedp
+            :documentation "Set once the WITH-REUSED-SSL has exited. After that a connection that
+gets returned is closed instead of being kept. Only access this with
+LOCK held."))
+  (:documentation "A pool of idle connections, which is safe to share between threads.
+We never hold the lock while doing I/O."))
+
+(defun close-connections (connections)
+  (dolist (connection connections)
+    (log:debug "Closing: ~a" (connection-stream connection))
+    (close (connection-stream connection))))
 
 (defmethod find-connection ((self reuse-context) domain)
   (trim-old-connections self)
-  (symbol-macrolet ((stack (gethash domain (connections self))))
-    (log:debug "hash-table is ~S" (connections self))
-    (prog1
-        (pop stack)
-      (log:debug "Length of connections is ~a" (length stack)))))
+  (bt:with-lock-held ((lock self))
+    (pop (gethash domain (connections self)))))
 
 (defmethod trim-old-connections ((self reuse-context))
-  (let ((now (get-universal-time)))
-   (loop for key being the hash-keys of (connections self)
-           using (hash-value connections)
-         do
-            (setf
-             (gethash key (connections self))
-             (delete-if (lambda (connection)
-                          (< (last-use-time connection) (- now *timeout*)))
-                        connections)))))
+  "Removes the connections that have been idle for longer than *TIMEOUT*,
+and closes them."
+  (let ((cutoff (- (get-universal-time) *timeout*)))
+    (flet ((oldp (connection)
+             (< (last-use-time connection) cutoff)))
+      (close-connections
+       (bt:with-lock-held ((lock self))
+         (loop for domain being the hash-keys of (connections self)
+                 using (hash-value connections)
+               append (remove-if-not #'oldp connections)
+               do (setf (gethash domain (connections self))
+                        (remove-if #'oldp connections))))))))
 
 (defmethod find-connection ((self null) domain)
   nil)
 
 (defmethod %cleanup ((self reuse-context))
-  (loop for domain being the hash-keys of (connections self)
-        using (hash-value connections) do
-    (loop for connection in connections
-          do
-             (log:debug "Cleaning up: ~a" (connection-stream connection))
-             (close (connection-stream connection))))
-  (setf (connections self) nil))
+  (close-connections
+   (bt:with-lock-held ((lock self))
+     (setf (closedp self) t)
+     (prog1
+         (loop for connections being the hash-values of (connections self)
+               append connections)
+       (clrhash (connections self))))))
 
 (defvar *reuse-contexts* nil)
 
@@ -101,13 +121,20 @@
   (:documentation "A stream that once closed, we'll reuse the underlying stream"))
 
 (def-easy-macro with-reused-ssl (engine &key &binding reuse-context &fn fn)
+  "Requests made with ENGINE in the body reuse connections to the same
+domain, and the connections are closed when this exits.
+
+The connections are shared with the tasks of any nursery that's started
+in the body, so put this around the WITH-NURSERY rather than inside each
+task. Then the WITH-NURSERY waits for the tasks before we close the
+connections."
   (let ((reuse-context (make-instance 'reuse-context)))
     (unwind-protect
-         (let ((*reuse-contexts*
-                 (acons
-                  engine reuse-context
-                  *reuse-contexts*)))
-          (fn reuse-context))
+         (nursery-let ((*reuse-contexts*
+                         (acons
+                          engine reuse-context
+                          *reuse-contexts*)))
+           (fn reuse-context))
       (%cleanup reuse-context))))
 
 (defmethod stream::stream-element-type ((self tracked-stream))
@@ -148,11 +175,18 @@
      (call-next-method))))
 
 (defun push-connection (reuse-context domain stream)
-  (push
-   (make-instance 'connection
-                  :domain domain
-                  :stream stream)
-   (gethash domain (connections reuse-context))))
+  "Returns STREAM to the pool, once nobody is using it anymore."
+  (unless (bt:with-lock-held ((lock reuse-context))
+            (unless (closedp reuse-context)
+              (push
+               (make-instance 'connection
+                              :domain domain
+                              :stream stream)
+               (gethash domain (connections reuse-context)))
+              t))
+    ;; The WITH-REUSED-SSL has already exited (e.g. a stream from
+    ;; :WANT-STREAM was closed afterwards), so nobody can reuse this.
+    (close stream)))
 
 (defmethod close ((self tracked-stream) &key abort)
   (declare (ignore abort))
@@ -191,7 +225,7 @@
                             underlying-stream
                             should-close)
           (anaphora:acond
-            ((find-connection (assoc-value *reuse-contexts* self)
+            ((find-connection reuse-context
                               (tracked-stream-key
                                (puri:uri url)))
              (let* ((connection anaphora:it))

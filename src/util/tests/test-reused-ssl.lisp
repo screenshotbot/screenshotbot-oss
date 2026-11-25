@@ -5,12 +5,18 @@
                 #:tracked-stream-key
                 #:trim-old-connections
                 #:connection
+                #:connection-stream
                 #:connections
                 #:find-connection
                 #:*reuse-contexts*
                 #:tracked-stream
                 #:with-reused-ssl
+                #:push-connection
+                #:reuse-context
                 #:reused-ssl-engine)
+  (:import-from #:nursery
+                #:with-nursery
+                #:start-soon)
   (:import-from #:alexandria
                 #:assoc-value)
   (:import-from #:fiveam-matchers/core
@@ -130,4 +136,63 @@ carbar" s)
         (is (equal "leader" response))
         (is (= 200 status-code))))))
 
+(test the-reuse-context-is-shared-with-nursery-tasks
+  (with-fixture state ()
+    (with-reused-ssl (engine :reuse-context reuse-context)
+      (let ((seen nil)
+            (lock (bt:make-lock)))
+        (with-nursery (nursery)
+          (dotimes (i 3)
+            (start-soon nursery
+                        (lambda ()
+                          (let ((context (reuse-context engine)))
+                            (bt:with-lock-held (lock)
+                              (push context seen)))))))
+        (assert-that seen (has-length 3))
+        (is (every (lambda (context) (eql context reuse-context)) seen))))))
 
+(test a-connection-is-never-checked-out-twice
+  (with-fixture state ()
+    (with-reused-ssl (engine :reuse-context reuse-context)
+      (let ((streams (loop repeat 4 collect (make-string-input-stream "")))
+            (in-use (make-hash-table))
+            (double-checkouts 0)
+            (lock (bt:make-lock)))
+        (dolist (stream streams)
+          (push-connection reuse-context "example.com" stream))
+        (with-nursery (nursery)
+          (dotimes (i 8)
+            (start-soon nursery
+                        (lambda ()
+                          (dotimes (j 2000)
+                            (let ((connection (find-connection reuse-context "example.com")))
+                              (when connection
+                                (let ((stream (connection-stream connection)))
+                                  (bt:with-lock-held (lock)
+                                    (if (gethash stream in-use)
+                                        (incf double-checkouts)
+                                        (setf (gethash stream in-use) t)))
+                                  ;; Give another thread a chance to grab it too
+                                  (bt:thread-yield)
+                                  (bt:with-lock-held (lock)
+                                    (remhash stream in-use))
+                                  (push-connection reuse-context "example.com" stream)))))))))
+        (is (eql 0 double-checkouts))
+        (is (null (set-exclusive-or
+                   streams
+                   (mapcar #'connection-stream
+                           (gethash "example.com" (connections reuse-context))))))))))
+
+(test closing-a-tracked-stream-after-the-context-is-gone
+  (with-fixture state ()
+    (let ((input (make-string-input-stream "foobar"))
+          (stream nil))
+      (with-reused-ssl (engine :reuse-context reuse-context)
+        (setf stream (make-instance 'tracked-stream
+                                    :reuse-context reuse-context
+                                    :domain "example.com"
+                                    :delegate input
+                                    :reusable-stream input)))
+      (is (open-stream-p input))
+      (finishes (close stream))
+      (is-false (open-stream-p input)))))
