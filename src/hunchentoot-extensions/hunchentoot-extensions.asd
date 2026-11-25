@@ -15,6 +15,7 @@
                :closer-mop
                :do-urlencode
                :util.threading
+               :nursery
                :log4cl)
   :components ((:file "package")
                (:file "url")
@@ -46,4 +47,5 @@
                (:file "test-better-easy-handler")
                (:file "test-url")
                (:file "test-async")
-               (:file "test-forward")))
+               (:file "test-forward")
+               (:file "test-base-taskmaster")))

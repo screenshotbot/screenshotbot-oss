@@ -322,8 +322,10 @@ when we invoke the debugger first."
   "Call FN, with no arguments, in a new thread that belongs to NURSERY.
 
 This can be called from the body of WITH-NURSERY, or from any task
-that's running in the nursery. Calling it once the WITH-NURSERY has
-exited signals NURSERY-CLOSED.
+that's running in the nursery. It also works from other threads while
+the WITH-NURSERY hasn't exited, but it is advised to not call it from
+outside the nursery. Calling it once the WITH-NURSERY has exited
+signals NURSERY-CLOSED.
 
 This returns nothing. If the task has a result, then FN has to store
 it somewhere."
