@@ -254,3 +254,32 @@ around the connection, that's only good for this one response."
         (is (eql underlying
                  (connection-stream
                   (find-connection reuse-context "example.com"))))))))
+
+(test cleanup-while-connections-are-checked-out
+  "The tasks are in a nursery that outlives the WITH-REUSED-SSL, so the
+cleanup happens while they still have connections checked out. Those
+get closed when they're returned, and nothing ends up back in the
+pool."
+  (with-fixture state ()
+    (let ((streams (loop repeat 4 collect (make-string-input-stream "")))
+          (context nil)
+          (stopp nil))
+      (with-nursery (nursery)
+        (with-reused-ssl (engine :reuse-context reuse-context)
+          (setf context reuse-context)
+          (dolist (stream streams)
+            (push-connection reuse-context "example.com" stream))
+          (dotimes (i 8)
+            (start-soon nursery
+                        (lambda ()
+                          (loop until stopp do
+                            (let ((connection (find-connection reuse-context "example.com")))
+                              (bt:thread-yield)
+                              (when connection
+                                (push-connection reuse-context "example.com"
+                                                 (connection-stream connection))))))))
+          ;; Let the tasks get going before we clean up under them
+          (sleep 0.1))
+        (setf stopp t))
+      (is (notany #'open-stream-p streams))
+      (is (null (gethash "example.com" (connections context)))))))
