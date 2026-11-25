@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.19.3 - 2026-11-25
+
+### Changes
+
+- Cache the commit graph upload across CLI runs for the same commit in
+  the same CI build (keyed on the build URL, commit and hour), so
+  sharded builds that run the CLI many times only upload it once. The
+  cache lives under `~/.cache/screenshotbot/commit-graph/`, and any
+  problem with it is treated as a cache miss.
+- The pool of reused HTTPS connections is now thread-safe, and a
+  request no longer fails when an idle connection can't be closed.
+
 ## 2.19.2 - 2026-11-22
 
 ### Changes
