@@ -33,8 +33,8 @@
                 #:confirmation-page)
   (:import-from #:nibble
                 #:nibble)
-  (:import-from #:screenshotbot/model/view
-                #:can-edit)
+  (:import-from #:auth/viewer-context
+                #:normal-viewer-context)
   (:import-from #:screenshotbot/model/report
                 #:report-channel
                 #:acceptable-state)
@@ -139,13 +139,14 @@ already accepted, and that USER is allowed to review. This is the same
 pair of checks the Review dropdown on the report page makes, so Accept
 All can't do anything that clicking through each report couldn't."
   (when user
-    (loop for item in (fset:convert 'list (batch-items batch))
+    (loop with vc = (make-instance 'normal-viewer-context :user user)
+          for item in (fset:convert 'list (batch-items batch))
           for report = (batch-item-report item)
           for acceptable = (and report (report-acceptable report))
           for channel = (and report (report-channel report))
           if (and acceptable
                   (not (eql :accepted (acceptable-state acceptable)))
-                  (can-edit acceptable user)
+                  (auth:can-viewer-edit vc acceptable)
                   (or (null channel)
                       (can-review? (review-policy channel) report user)))
             collect report)))
