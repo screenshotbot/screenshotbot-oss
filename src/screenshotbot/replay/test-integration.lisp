@@ -13,6 +13,7 @@
                 #:process-results
                 #:make-replay-run-context
                 #:replay-job-from-snapshot
+                #:run-in-parallel
                 #:schedule-replay-job
                 #:uploaded-snapshot
                 #:remove-base-url
@@ -312,6 +313,126 @@
      :urls (list "https://www.google.com")
      :tmpdir tmpdir)
     (pass)))
+
+(defclass concurrent-plan (screenshotbot/plan::plan)
+  ((concurrency :initarg :concurrency
+                :reader concurrency)))
+
+(defmethod integration:replay-concurrency (company (plan concurrent-plan))
+  (concurrency plan))
+
+(defun test-urls (n)
+  (loop for i below n
+        collect (cons (format nil "/~a" i)
+                      (format nil "https://example.com/~a" i))))
+
+(defun call-with-parallel-state (fn &key (concurrency 3) (on-batch (lambda ())))
+  "Calls FN with a run, a selenium-server and a function that returns the
+URLs that RUN-BATCH was called with so far. RUN-BATCH is mocked to
+record its URLs and then call ON-BATCH.
+
+This is a function and not a fixture, because a fixture expands into
+the test body, which fiveam compiles when the test runs, and that
+overflows the stack of the test thread."
+  (with-fixture state-2 ()
+    (let ((processed nil)
+          (lock (bt:make-lock))
+          (screenshotbot/plan::*plan* (make-instance 'concurrent-plan
+                                                     :concurrency concurrency))
+          (selenium-server (make-instance 'screenshotbot/replay/services::selenium-server
+                                          :host "fake-selenium"
+                                          :port 4444)))
+      (cl-mock:if-called 'integration::run-batch
+                         (lambda (&key urls &allow-other-keys)
+                           (bt:with-lock-held (lock)
+                             (setf processed (append urls processed)))
+                           (funcall on-batch)))
+      (funcall fn run selenium-server
+               (lambda ()
+                 (bt:with-lock-held (lock)
+                   processed))))))
+
+(test run-in-parallel-runs-every-url-once
+  (let ((threads nil)
+        (lock (bt:make-lock)))
+    (call-with-parallel-state
+     (lambda (run selenium-server processed)
+       (run-in-parallel (test-urls 50) :run run :selenium-server selenium-server)
+       (is (equal (sort (mapcar #'car (test-urls 50)) #'string<)
+                  (sort (mapcar #'car (funcall processed)) #'string<))))
+     :on-batch (lambda ()
+                 (bt:with-lock-held (lock)
+                   (pushnew (bt:current-thread) threads))))
+    (is (eql 3 (length threads)))))
+
+(test run-in-parallel-with-a-concurrency-of-1
+  (call-with-parallel-state
+   (lambda (run selenium-server processed)
+     (run-in-parallel (test-urls 25) :run run :selenium-server selenium-server)
+     (is (eql 25 (length (funcall processed)))))
+   :concurrency 1))
+
+(define-condition test-batch-error (error)
+  ())
+
+(test run-in-parallel-signals-a-failure-in-a-worker
+  (let ((main-thread (bt:current-thread)))
+    (call-with-parallel-state
+     (lambda (run selenium-server processed)
+       (handler-case
+           (progn
+             (run-in-parallel (test-urls 90) :run run :selenium-server selenium-server)
+             (fail "expected a nursery-error"))
+         (nursery:nursery-error (e)
+           (let ((failures (nursery:nursery-error-failures e)))
+             ;; A worker that starts after the other one failed stops
+             ;; at its first CHECKPOINT, so there might be only one
+             ;; failure.
+             (is (<= 1 (length failures) 2))
+             (is (every (lambda (failure)
+                          (typep (nursery:failure-condition failure) 'test-batch-error))
+                        failures)))))
+       ;; Each thread has three batches of 10. The failure cancels the
+       ;; nursery, so the main thread stops after its first batch.
+       (is (<= (length (funcall processed)) 30)))
+     :on-batch (lambda ()
+                 (if (eql main-thread (bt:current-thread))
+                     ;; Give the workers time to fail
+                     (sleep 0.2)
+                     (error 'test-batch-error))))))
+
+(test run-in-parallel-safe-interrupt-stops-the-workers
+  (let ((main-thread (bt:current-thread))
+        (interruptedp nil))
+    (call-with-parallel-state
+     (lambda (run selenium-server processed)
+       (handler-case
+           (run-in-parallel (test-urls 90) :run run :selenium-server selenium-server)
+         (util/threading:safe-interrupt ()
+           (setf interruptedp t)))
+       (is-true interruptedp)
+       ;; Each thread has three batches of 10. Without the cancel, the
+       ;; workers would run all six of theirs.
+       (is (<= (length (funcall processed)) 30)))
+     :on-batch (lambda ()
+                 (if (eql main-thread (bt:current-thread))
+                     (signal 'util/threading:safe-interrupt)
+                     (sleep 0.2))))))
+
+(test run-in-parallel-propagates-replay-logs
+  (let ((seen nil)
+        (lock (bt:make-lock))
+        (logs (make-string-output-stream)))
+    (call-with-parallel-state
+     (lambda (run selenium-server processed)
+       (declare (ignore processed))
+       (let ((screenshotbot/replay/core:*replay-logs* logs))
+         (run-in-parallel (test-urls 30) :run run :selenium-server selenium-server)))
+     :on-batch (lambda ()
+                 (bt:with-lock-held (lock)
+                   (push screenshotbot/replay/core:*replay-logs* seen))))
+    (is (eql 3 (length seen)))
+    (is (every (lambda (stream) (eql logs stream)) seen))))
 
 (def-fixture schedule-replay-job-mocks ()
   (let (used-snapshot)

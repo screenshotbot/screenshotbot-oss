@@ -68,10 +68,15 @@
                 #:record-screenshot
                 #:all-screenshots)
   (:import-from #:util/threading
-                #:make-thread
+                #:*propagated-symbols*
                 #:safe-interrupt
                 #:with-extras
                 #:safe-interrupt-checkpoint)
+  (:import-from #:nursery
+                #:cancel
+                #:checkpoint
+                #:start-soon
+                #:with-nursery)
   (:import-from #:screenshotbot/replay/proxy
                 #:ensure-proxy)
   (:import-from #:util/object-id
@@ -464,8 +469,6 @@ replay jobs, in which case we default the main branch to master."
                         &allow-other-keys)
   (let* ((company (company run))
          (plan (company-plan company (installation)))
-         (seen-failure-p nil)
-         (replay-logs *replay-logs*)
          (batch-size 10)
          (next-start 0)
          (lock (bt:make-lock))
@@ -473,45 +476,40 @@ replay jobs, in which case we default the main branch to master."
     (let ((thread-batches (make-batches urls :batch-size (ceiling (length urls) num-threads))))
       (log:info "thread batches: ~a" thread-batches)
       (flet ((run-thread-batch (urls)
-               (let ((batches (make-batches urls :batch-size batch-size)))
-                 (mapc
-                  (lambda (urls)
-                    (log:info "Processing urls on thread ~a: ~S"
-                              (bt:current-thread)
-                              urls)
-                    (unless seen-failure-p
-                      (flet ((cleanup (e)
-                               (declare (ignore e))
-                               (setf seen-failure-p t)))
-                        (handler-bind ((error #'cleanup)
-                                       (safe-interrupt #'cleanup))
-                          (safe-interrupt-checkpoint)
-                          (let ((webdriver-client::*uri*
-                                  (selenium-server-url selenium-server))
-                                (*replay-logs* replay-logs))
-                            (apply #'run-batch :urls urls
-                                               :idx (bt:with-lock-held (lock)
-                                                      (let ((next next-start))
-                                                        (incf next-start (length urls))
-                                                        next))
-                                               rest-args))))))
-                  batches))))
-       (let ((worker-threads
-               (loop for urls in (cdr thread-batches)
-                     collect
-                     (let ((urls urls))
-                       (make-thread
-                        (lambda ()
-                          (run-thread-batch urls))
-                        :name (format nil "replay-worker-thread-for-~a" (bt:current-thread)))))))
-
-         ;; Now let's use the current thread as one more batch
-         (unwind-protect
-              (run-thread-batch (car thread-batches))
-           (loop for thread in worker-threads
-                 do
-                    (write-replay-log "Waiting for worker thread: ~a" thread)
-                    (bt:join-thread thread))))))))
+               (dolist (urls (make-batches urls :batch-size batch-size))
+                 ;; Stop once anything in the nursery failed, or the
+                 ;; job was interrupted.
+                 (checkpoint)
+                 (log:info "Processing urls on thread ~a: ~S"
+                           (bt:current-thread)
+                           urls)
+                 (safe-interrupt-checkpoint)
+                 (let ((webdriver-client::*uri*
+                         (selenium-server-url selenium-server)))
+                   (apply #'run-batch :urls urls
+                                      :idx (bt:with-lock-held (lock)
+                                             (let ((next next-start))
+                                               (incf next-start (length urls))
+                                               next))
+                                      rest-args)))))
+        (with-nursery (nursery :propagate (list* '*replay-logs*
+                                                 *propagated-symbols*))
+          (handler-bind ((safe-interrupt
+                           (lambda (e)
+                             (declare (ignore e))
+                             ;; The interrupt unwinds this thread, and
+                             ;; the nursery waits for the workers, so
+                             ;; stop them at their next batch.
+                             (cancel nursery))))
+            (dolist (urls (cdr thread-batches))
+              (let ((urls urls))
+                (start-soon nursery
+                            (lambda ()
+                              (run-thread-batch urls))
+                            :name (format nil "replay-worker-thread-for-~a" (bt:current-thread)))))
+            ;; Now let's use the current thread as one more batch
+            (run-thread-batch (car thread-batches))
+            (write-replay-log "Waiting for worker threads")))))))
 
 (with-auto-restart ()
   (defun replay-job-from-snapshot (&key (snapshot (error "must provide snapshot"))
