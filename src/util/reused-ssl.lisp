@@ -55,10 +55,19 @@ LOCK held."))
   (:documentation "A pool of idle connections, which is safe to share between threads.
 We never hold the lock while doing I/O."))
 
+(defun close-quietly (stream)
+  "Closes a STREAM that we're done with. The peer might have dropped the
+connection long ago, and a failure to close a connection that nobody is
+using shouldn't fail the request that happened to notice it."
+  (log:debug "Closing: ~a" stream)
+  (handler-case
+      (close stream)
+    (error (e)
+      (log:warn "Could not close ~a: ~a" stream e))))
+
 (defun close-connections (connections)
   (dolist (connection connections)
-    (log:debug "Closing: ~a" (connection-stream connection))
-    (close (connection-stream connection))))
+    (close-quietly (connection-stream connection))))
 
 (defmethod find-connection ((self reuse-context) domain)
   (trim-old-connections self)
@@ -186,7 +195,7 @@ connections."
               t))
     ;; The WITH-REUSED-SSL has already exited (e.g. a stream from
     ;; :WANT-STREAM was closed afterwards), so nobody can reuse this.
-    (close stream)))
+    (close-quietly stream)))
 
 (defmethod close ((self tracked-stream) &key abort)
   (declare (ignore abort))

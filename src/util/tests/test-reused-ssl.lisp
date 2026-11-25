@@ -33,6 +33,15 @@
   (let ((engine (make-instance 'reused-ssl-engine)))
     (&body)))
 
+(defclass failing-stream (trivial-gray-streams:fundamental-input-stream)
+  ()
+  (:documentation "A stream that can't be closed, like a connection that the peer has
+already dropped."))
+
+(defmethod close ((self failing-stream) &key abort)
+  (declare (ignore abort))
+  (error "could not close the stream"))
+
 (test simple-invocation
   (with-fixture state ()
     (finishes
@@ -196,3 +205,35 @@ carbar" s)
       (is (open-stream-p input))
       (finishes (close stream))
       (is-false (open-stream-p input)))))
+
+(test a-connection-that-fails-to-close-does-not-fail-the-trim
+  (with-fixture state ()
+    (with-reused-ssl (engine :reuse-context reuse-context)
+      (let ((good (make-string-input-stream "")))
+        ;; The failing stream is closed first
+        (dolist (stream (list good (make-instance 'failing-stream)))
+          (push
+           (make-instance 'connection
+                          :last-use-time (- (get-universal-time) 30)
+                          :stream stream
+                          :domain "example.com")
+           (gethash "example.com" (connections reuse-context))))
+        (finishes (find-connection reuse-context "example.com"))
+        (is-false (open-stream-p good))))))
+
+(test a-connection-that-fails-to-close-does-not-fail-the-cleanup
+  (with-fixture state ()
+    (let ((good (make-string-input-stream "")))
+      (finishes
+        (with-reused-ssl (engine :reuse-context reuse-context)
+          (push-connection reuse-context "example.com" good)
+          (push-connection reuse-context "example.com" (make-instance 'failing-stream))))
+      (is-false (open-stream-p good)))))
+
+(test a-late-connection-that-fails-to-close
+  (with-fixture state ()
+    (let ((context nil))
+      (with-reused-ssl (engine :reuse-context reuse-context)
+        (setf context reuse-context))
+      (finishes
+        (push-connection context "example.com" (make-instance 'failing-stream))))))
