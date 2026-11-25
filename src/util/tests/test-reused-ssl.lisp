@@ -237,3 +237,20 @@ carbar" s)
         (setf context reuse-context))
       (finishes
         (push-connection context "example.com" (make-instance 'failing-stream))))))
+
+(test closing-a-tracked-stream-returns-the-reusable-stream
+  "When the response is decoded (e.g. gzip), the delegate is a wrapper
+around the connection, that's only good for this one response."
+  (with-fixture state ()
+    (with-reused-ssl (engine :reuse-context reuse-context)
+      (let* ((underlying (make-string-input-stream "foobar"))
+             (wrapper (make-concatenated-stream underlying))
+             (stream (make-instance 'tracked-stream
+                                    :reuse-context reuse-context
+                                    :domain "example.com"
+                                    :delegate wrapper
+                                    :reusable-stream underlying)))
+        (close stream)
+        (is (eql underlying
+                 (connection-stream
+                  (find-connection reuse-context "example.com"))))))))

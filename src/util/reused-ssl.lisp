@@ -204,10 +204,13 @@ connections."
     ((not (closedp self))
      (log:debug "Closing a tracked-stream")
      (setf (closedp self) t)
+     ;; The delegate might be a wrapper that decodes the body of this
+     ;; one response, it's the underlying stream that the next request
+     ;; needs.
      (push-connection
       (reuse-context self)
       (domain self)
-      (delegate self)))
+      (reuseable-stream self)))
     (t
      (log:debug "The tracked-stream is already closed"))))
 
