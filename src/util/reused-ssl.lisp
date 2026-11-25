@@ -259,9 +259,6 @@ connections."
            (warn "Server is making us close the stream")
            (values stream code headers))
           (t
-           (unless reuse-context
-             (error "Could not find reuse-context in ~s"
-                    *reuse-contexts*))
            (values
             (cond
               (want-stream
