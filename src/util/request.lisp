@@ -9,7 +9,11 @@
    #:http-request
    #:http-success-response?
    #:engine
-   #:proxy-engine))
+   #:proxy-engine
+   #:request-error
+   #:network-error
+   #:timeout-error
+   #:connection-error))
 (in-package :util/request)
 
 (defun http-success-response? (response-code)
@@ -21,19 +25,25 @@
      (str:replace-all "|" "%7C" url))
     (t  url)))
 
-;; NOT BEING USED
+;; Signaled by the libcurl engine (util/curl-request)
 (define-condition request-error (error)
   ())
 
-;; NOT BEING USED
+;; Signaled by the libcurl engine (util/curl-request)
 (define-condition network-error (request-error)
   ()
   (:documentation "Errors that typically correspond to network failures, as opposed to
 server failures."))
 
-;; NOT BEING USED
+;; Signaled by the libcurl engine (util/curl-request)
 (define-condition timeout-error (network-error)
   ())
+
+(define-condition connection-error (network-error)
+  ()
+  (:documentation "We couldn't establish a connection to the server (DNS, TCP or TLS
+failure). Like the LispWorks socket and SSL errors, WRAP-SSL-ERRORS
+turns this into a 502 unless ENSURE-SUCCESS is set."))
 
 
 (def-easy-macro wrap-ssl-errors (&key ensure-success want-stream &fn fn)
@@ -64,11 +74,11 @@ server failures."))
                                 collect
                                 `(,error (e)
                                          (handle-error e))))))
-         (handle-errors #+lispworks (comm:ssl-verification-failure
-                                     comm:ssl-failure
-                                     comm:socket-create-error
-                                     comm:ssl-closed)
-                        #-lispworks ()
+         (handle-errors (#+lispworks comm:ssl-verification-failure
+                         #+lispworks comm:ssl-failure
+                         #+lispworks comm:socket-create-error
+                         #+lispworks comm:ssl-closed
+                         connection-error)
                         (funcall fn)))))))
 
 (defclass force-ip-address-engine ()
