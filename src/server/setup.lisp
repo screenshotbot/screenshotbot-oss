@@ -317,9 +317,16 @@ and wait for its tasks, before the store is closed."
             ;; SIGTERM.
             (jvm:jvm-init))
 
-          (unwind-on-interrupt ()
-            (with-server-nursery ()
-              (fn)))))
+          ;; The nursery must be outside UNWIND-ON-INTERRUPT: otherwise
+          ;; the interrupt error becomes a NURSERY-ERROR, which
+          ;; UNWIND-ON-INTERRUPT doesn't catch. MAYBE-WITH-DEBUGGER
+          ;; must be inside the nursery, so that it sees any other
+          ;; error (and logs its backtrace, or opens the debugger)
+          ;; before the nursery records it and unwinds the stack.
+          (with-server-nursery ()
+            (maybe-with-debugger ()
+              (unwind-on-interrupt ()
+                (fn))))))
       ;; unwind if an interrupt happens
       (log:config :sane :immediate-flush t)
       (log:config :info)
