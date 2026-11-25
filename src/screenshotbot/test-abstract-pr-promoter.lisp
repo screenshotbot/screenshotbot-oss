@@ -32,6 +32,7 @@
                 #:abstract-pr-promoter
                 #:format-updated-summary
                 #:retrieve-run
+                #:waiting-for-base-run
                 #:run-retriever)
   (:import-from #:util/store
                 #:with-test-store)
@@ -159,8 +160,8 @@
   (with-fixture state ()
     (let ((retriever (make-instance 'run-retriever
                                     :sleep-time 0)))
-      (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd"
-                                                    +empty-logger+)))))))
+      (is (equal nil (retrieve-run retriever channel "abcd"
+                                    +empty-logger+))))))
 
 
 
@@ -172,9 +173,15 @@
     (let ((retriever (make-instance 'run-retriever
                                     :sleep-time 0))
           (logger (make-instance 'test-logger)))
-      (is (equal nil (lparallel:force
-                      (retrieve-run retriever channel "abcd"
-                                    logger))))
+      (let ((signal-count 0))
+        (handler-bind ((waiting-for-base-run
+                         (lambda (c)
+                           (declare (ignore c))
+                           (incf signal-count))))
+          (is (equal nil (retrieve-run retriever channel "abcd"
+                                       logger))))
+        ;; Only once, even though it retried several times
+        (is (eql 1 signal-count)))
       (assert-that (get-output-stream-string
                     (test-logger-stream logger))
                    (contains-string "Waiting 0s before checking again")))))
@@ -190,8 +197,8 @@
     (let ((retriever (make-instance 'run-retriever
                                     :sleep-time 0))
           (logger (make-instance 'test-logger)))
-      (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd"
-                                                    logger))))
+      (is (equal nil (retrieve-run retriever channel "abcd"
+                                   logger)))
       (assert-that (get-output-stream-string
                     (test-logger-stream logger))
                    (is-not (contains-string "Waiting 0s before checking again"))))))
@@ -207,8 +214,8 @@
     (let ((retriever (make-instance 'run-retriever
                                     :sleep-time 0))
           (logger (make-instance 'test-logger)))
-      (is (equal nil (lparallel:force (retrieve-run retriever channel "abcd"
-                                                    logger))))
+      (is (equal nil (retrieve-run retriever channel "abcd"
+                                   logger)))
       (assert-that (get-output-stream-string
                     (test-logger-stream logger))
                    (is-not (contains-string "Waiting 0s before checking again"))))))
@@ -229,8 +236,8 @@
            (retriever (make-instance 'run-retriever
                                      :sleep-time 0))
            (logger (make-instance 'test-logger)))
-      (is (equal run (lparallel:force (retrieve-run retriever channel "abcd"
-                                                    logger))))
+      (is (equal run (retrieve-run retriever channel "abcd"
+                                   logger)))
       (assert-that (get-output-stream-string
                     (test-logger-stream logger))
                    (is-not (contains-string "Waiting 0s before checking again"))))))
@@ -267,7 +274,9 @@
                          channel
                          base-commit
                          logger)
-  (%promise self))
+  (unless (lparallel:fulfilledp (%promise self))
+    (signal 'waiting-for-base-run))
+  (lparallel:force (%promise self)))
 
 (defmethod valid-repo? ((self test-promoter) repo)
   t)

@@ -41,6 +41,7 @@
                :core.config
                :util.store/raft-state
                :lparallel
+               :nursery
                :zip
                :util/lparallel
                :cl-store

@@ -32,6 +32,7 @@
                 #:check-status
                 #:check-title
                 #:retrieve-run
+                #:waiting-for-base-run
                 #:report)
   (:import-from #:screenshotbot/abstract-pr-promoter
                 #:*push-pool*
@@ -128,8 +129,9 @@
                          channel base-commit
                          logger)
   (is (equal "car" base-commit))
-  (lparallel:delay
-   *base-run*))
+  ;; Like a run that wasn't available immediately
+  (signal 'waiting-for-base-run)
+  *base-run*)
 
 
 (def-fixture state (&key (run-retriever 'my-run-retriever))

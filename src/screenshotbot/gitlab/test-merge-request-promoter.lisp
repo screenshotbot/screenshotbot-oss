@@ -39,6 +39,7 @@
                 #:make-check
                 #:promoter-pull-id
                 #:retrieve-run
+                #:waiting-for-base-run
                 #:valid-repo?
                 #:plugin-installed?
                 #:send-task-args)
@@ -75,8 +76,9 @@
                          channel base-commit
                          logger)
   (is (equal "aaa" base-commit))
-  (lparallel:delay
-   *base-run*))
+  ;; Like a run that wasn't available immediately
+  (signal 'waiting-for-base-run)
+  *base-run*)
 
 (def-fixture state ()
   (let ((*push-pool* (make-instance 'synchronous-executor)))

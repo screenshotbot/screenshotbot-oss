@@ -67,8 +67,6 @@
                 #:recorder-run-company)
   (:import-from #:screenshotbot/events
                 #:push-event)
-  (:import-from #:lparallel.promise
-                #:future)
   (:import-from #:bknr.datastore
                 #:store-object)
   (:import-from #:bknr.datastore
@@ -79,8 +77,6 @@
                 #:acceptable-report
                 #:acceptable-state
                 #:base-acceptable)
-  (:import-from #:util/lparallel
-                #:immediate-promise)
   (:import-from #:local-time
                 #:timestamp-
                 #:timestamp<)
@@ -95,8 +91,9 @@
                 #:format-log)
   (:import-from #:util/threading
                 #:max-pool
-                #:make-thread
-                #:scheduled-future)
+                #:make-thread)
+  (:import-from #:nursery
+                #:nursery-sleep)
   (:import-from #:screenshotbot/model/finalized-commit
                 #:commit-finalized-p)
   (:import-from #:util/cron
@@ -121,6 +118,7 @@
    #:check-summary
    #:pull-request-info
    #:retrieve-run
+   #:waiting-for-base-run
    #:send-task-args
    #:run-retriever
    #:valid-repo?
@@ -214,19 +212,32 @@
          parent-commit
          :depth (1- depth)))))))
 
+(define-condition waiting-for-base-run ()
+  ()
+  (:documentation "Signaled by RETRIEVE-RUN, once, just before it starts waiting for the
+base run to be available. This is not an error: if it's not handled,
+SIGNAL just returns and RETRIEVE-RUN carries on waiting."))
+
+(defgeneric retrieve-run (retriever channel base-commit logger)
+  (:documentation "Find the run on CHANNEL to compare against for BASE-COMMIT, or NIL if
+there isn't one. This blocks until the run is available, and if it has
+to wait, it first signals WAITING-FOR-BASE-RUN."))
+
 (defmethod retrieve-run ((retriever run-retriever)
                          channel
                          base-commit
                          logger)
-  (labels ((failover ()
-             (immediate-promise (find-last-green-run channel base-commit)))
-           (produce (base-commit retries)
-             (assert (not (channel-deleted-p channel)))
+  (loop for retries from 10 downto -1
+        for first-time-p = t then nil
+        do
+           (assert (not (channel-deleted-p channel)))
+           (flet ((failover ()
+                    (return (find-last-green-run channel base-commit))))
              (anaphora:acond
                ((null base-commit)
-                (immediate-promise nil))
+                (return nil))
                ((production-run-for channel :commit base-commit)
-                (immediate-promise it))
+                (return it))
                ((commit-finalized-p (channel-company channel) base-commit)
                 (format-log logger :info "Commit was finalized, calling failover")
                 (failover))
@@ -234,15 +245,17 @@
                 (format-log logger :info "Commit was marked as failed, calling failover")
                 (failover))
                ((>= retries 0)
+                (when first-time-p
+                  (signal 'waiting-for-base-run))
                 (format-log logger :info "Waiting ~as before checking again for ~a"
                             (sleep-time retriever)
                             base-commit)
-                (scheduled-future ((sleep-time retriever))
-                  (lparallel:chain (produce base-commit (1- retries)))))
+                ;; If we're in a nursery that gets cancelled, this
+                ;; exits.
+                (nursery-sleep (sleep-time retriever)))
                (t
                 (format-log logger :info "We're out of retries, calling failover")
-                (failover)))))
-    (produce base-commit 10)))
+                (failover))))))
 
 (defclass abstract-pr-acceptable (base-acceptable)
   ()
@@ -455,25 +468,27 @@ reviewable.)"
        (format-log run :info "A rollout rule is preventing us from sending notifications"))
       (t
        (format-log run :info "Base commit is: ~S" (pr-merge-base promoter run))
-       (let ((base-run-promise (retrieve-run
-                                (run-retriever promoter)
-                                (recorder-run-channel run)
-                                (pr-merge-base promoter run)
-                                ;; We're using the run as a logger!
-                                (identity run))))
-         (unless (lparallel:fulfilledp base-run-promise)
-           (format-log run :info "Base commit is not available yet, waiting for upto 5 minutes")
-           (push-remote-check
-            promoter
-            run
-            ;; TODO: this can use make-run-check? For a different diff.
-            (make-check run
-                        :status :pending
-                        :details-url (run-details-url run)
-                        :title (format nil "Waiting for screenshots on ~a to be available"
-                                       (str:substring 0 4 (pr-merge-base promoter run))))))
-         (let* ((base-run (lparallel:force base-run-promise))
-                (merge-base (pr-merge-base promoter run))
+       (let ((base-run
+               (handler-bind ((waiting-for-base-run
+                                (lambda (c)
+                                  (declare (ignore c))
+                                  (format-log run :info "Base commit is not available yet, waiting for upto 5 minutes")
+                                  (push-remote-check
+                                   promoter
+                                   run
+                                   ;; TODO: this can use make-run-check? For a different diff.
+                                   (make-check run
+                                               :status :pending
+                                               :details-url (run-details-url run)
+                                               :title (format nil "Waiting for screenshots on ~a to be available"
+                                                              (str:substring 0 4 (pr-merge-base promoter run))))))))
+                 (retrieve-run
+                  (run-retriever promoter)
+                  (recorder-run-channel run)
+                  (pr-merge-base promoter run)
+                  ;; We're using the run as a logger!
+                  (identity run)))))
+         (let* ((merge-base (pr-merge-base promoter run))
                 (check (cond
                          ((null merge-base)
                           (format-log run :info "No base-commit provided in run")
