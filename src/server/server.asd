@@ -38,6 +38,7 @@
                  "util.threading"
                  "util/phabricator"
                  "hunchentoot-extensions"
+                 "nursery"
                  "bknr.datastore"
                  "hunchentoot-multi-acceptor")
     :serial t

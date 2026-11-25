@@ -12,6 +12,7 @@
                 #:*extras*)
   (:export #:base-acceptor
            #:base-taskmaster
+           #:taskmaster-nursery
            #:better-easy-handler
            #:acceptor-funcall-handler
            #:redirected

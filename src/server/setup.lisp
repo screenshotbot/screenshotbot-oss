@@ -19,6 +19,9 @@
                 #:with-control-socket)
   (:import-from #:util/threading
                 #:funcall-with-sentry-logs)
+  (:import-from #:nursery
+                #:with-nursery
+                #:cancel)
   (:import-from #:util/store/store-migrations
                 #:run-migrations)
   #+lispworks
@@ -102,6 +105,9 @@
 
 (defvar *multi-acceptor*)
 
+(defvar *nursery* nil
+  "The nursery that lives as long as the server, see WITH-SERVER-NURSERY.")
+
 (defvar *init-hooks* nil)
 
 (defun register-acceptor (acceptor &rest hostnames)
@@ -120,7 +126,11 @@
 
 (defun init-multi-acceptor (&key (port (parse-integer *port*)))
   (log:info "Acceptor on ~a" port)
-  (setf *multi-acceptor* (make-instance 'my-acceptor :port port :name 'multi-acceptor))
+  (setf *multi-acceptor* (make-instance 'my-acceptor
+                                        :port port
+                                        :name 'multi-acceptor
+                                        :taskmaster (make-instance 'my-taskmaster
+                                                                   :nursery *nursery*)))
   (init-sub-acceptors))
 
 (defun init-sub-acceptors ()
@@ -285,6 +295,16 @@
     (t
      (fn))))
 
+(def-easy-macro with-server-nursery (&fn fn)
+  "Binds *NURSERY* to a nursery for the life of the server. Once the body
+exits (by which point the acceptor is stopped), we cancel the nursery
+and wait for its tasks, before the store is closed."
+  (with-nursery (nursery)
+    (unwind-protect
+         (let ((*nursery* nursery))
+           (fn))
+      (cancel nursery))))
+
 (def-easy-macro with-common-setup (&key enable-store jvm &fn fn)
   (maybe-with-debugger ()
     (with-lparallel-kernel ()
@@ -298,7 +318,8 @@
             (jvm:jvm-init))
 
           (unwind-on-interrupt ()
-            (fn))))
+            (with-server-nursery ()
+              (fn)))))
       ;; unwind if an interrupt happens
       (log:config :sane :immediate-flush t)
       (log:config :info)
