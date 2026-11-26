@@ -51,7 +51,8 @@
    #:group
    #:group-item
    #:diff-report-run
-   #:diff-report-previous-run))
+   #:diff-report-previous-run
+   #:all-groups))
 
 
 (in-package :screenshotbot/diff-report)
@@ -117,6 +118,11 @@
                    :accessor %deleted-groups)
    (changes-groups :initform nil
                    :accessor %changes-groups)
+   (all-groups :initform (fset:empty-set)
+               :accessor all-groups
+               :documentation "An FSet set of all the changes-groups, added-groups and
+deleted-groups, sorted by title (see FSET:COMPARE on GROUP). Always
+computed when the diff-report is created.")
    (%group-separator :initarg :group-separator
                      :initform "--"
                      :reader group-separator)))
@@ -125,7 +131,13 @@
   (setf (deleted-hashes-set self)
         (make-image-hashes deleted))
   (setf (added-hashes-set self)
-        (make-image-hashes added)))
+        (make-image-hashes added))
+  (setf (all-groups self)
+        (fset:convert 'fset:set
+                      (append
+                       (changes-groups self)
+                       (added-groups self)
+                       (deleted-groups self)))))
 
 (defclass group-item ()
   ((subtitle :reader group-item-subtitle
@@ -142,6 +154,24 @@
                 :initform nil
                 :reader group-diff-report
                 :documentation "the diff report this group belongs to.")))
+
+(defmethod fset:compare ((a group) (b group))
+  "Sort groups alphabetically by title. (FSET:COMPARE on strings sorts
+by length first, so we don't use it for the title.) A changed group
+and an added group can share a title, so the type is used as a
+tie-breaker."
+  (let ((title-a (group-title a))
+        (title-b (group-title b)))
+    (cond
+      ((string< title-a title-b)
+       :less)
+      ((string< title-b title-a)
+       :greater)
+      (t
+       (fset:compare-slots
+        a b
+        (lambda (group)
+          (symbol-name (type-of group))))))))
 
 (defmethod group-separator ((self group))
   (group-separator (group-diff-report self)))

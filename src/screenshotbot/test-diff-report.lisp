@@ -27,6 +27,7 @@
                 #:diff-report-run
                 #:*cache*
                 #:added-groups
+                #:all-groups
                 #:change
                 #:changes-groups
                 #:deleted-groups
@@ -283,3 +284,32 @@
                    (has-length 1))
       (assert-that (group-title (car (deleted-groups diff-report)))
                    (equal-to "bar")))))
+
+(test all-groups-is-empty-for-empty-diff-report
+  (with-fixture state ()
+    (is (fset:empty? (all-groups (make-instance 'diff-report))))))
+
+(test all-groups-has-every-group-sorted-by-title
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "foo--one")
+                                     (make-screenshot :image img :name "car--one")
+                                     (make-screenshot :image img :name "car--two"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img2 :name "bar--one")
+                                     (make-screenshot :image img2 :name "car--one")
+                                     (make-screenshot :image img2 :name "car--three"))))
+           (diff-report (make-diff-report run1 run2)))
+      (assert-that (mapcar #'group-title (fset:convert 'list (all-groups diff-report)))
+                   ;; car shows up three times: changed (one), added (two)
+                   ;; and deleted (three).
+                   (contains "bar" "car" "car" "car" "foo")))))
+
+(test all-groups-sorts-titles-alphabetically-not-by-length
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "zz--one")
+                                     (make-screenshot :image img :name "aaaa--one"))))
+           (diff-report (make-diff-report run1 nil)))
+      (assert-that (mapcar #'group-title (fset:convert 'list (all-groups diff-report)))
+                   (contains "aaaa" "zz")))))
