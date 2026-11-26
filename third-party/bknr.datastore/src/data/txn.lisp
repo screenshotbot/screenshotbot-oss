@@ -636,6 +636,14 @@ pathname until a non-existant directory name has been found."
                    (setf (store-transaction-run-time store) 0)
                    (setf error nil))
               (when error
+                ;; The partial snapshot is in current/, so the backup
+                ;; can't be renamed over it. Move it aside first rather
+                ;; than deleting it, so it can still be looked at.
+                (let ((failed-directory (make-backup-directory store)))
+                  #+(or cmu sbcl)
+                  (ensure-directories-exist failed-directory)
+                  (warn "Moving partial snapshot to ~A." failed-directory)
+                  (rename-file (store-current-directory store) failed-directory))
                 (warn "Restoring backup ~A to current." backup-directory)
                 (rename-file backup-directory (store-current-directory store))))))))))
 
