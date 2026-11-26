@@ -91,6 +91,9 @@
                 #:make-diff-report
                 #:actual-item
                 #:changes-groups
+                #:changed-group
+                #:added-group
+                #:deleted-group
                 #:get-tab-title)
   (:import-from #:bknr.datastore
                 #:cascading-delete-object)
@@ -1155,6 +1158,7 @@ native change in prod."
 
 (deftag render-compare-header (&key more acceptable report run
                                default-type
+                               single-page-p
                                changes-groups
                                added-groups
                                deleted-groups)
@@ -1169,21 +1173,24 @@ native change in prod."
 
         <div class= "options" >
           <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
-            <li class= "nav-item">
-              <compare-tab-a type= "changes" default-type=default-type >
-                ,(length changes-groups) changes
-              </compare-tab-a>
-            </li>
-            <li class= "nav-item">
-              <compare-tab-a type= "added" default-type=default-type >
-                ,(length added-groups) added
-              </compare-tab-a>
-            </li>
-            <li class= "nav-item">
-              <compare-tab-a type= "deleted" default-type=default-type >
-                ,(length deleted-groups) deleted
-              </compare-tab-a>
-            </li>
+            ,(unless single-page-p
+               <markup:merge-tag>
+                 <li class= "nav-item">
+                   <compare-tab-a type= "changes" default-type=default-type >
+                     ,(length changes-groups) changes
+                   </compare-tab-a>
+                 </li>
+                 <li class= "nav-item">
+                   <compare-tab-a type= "added" default-type=default-type >
+                     ,(length added-groups) added
+                   </compare-tab-a>
+                 </li>
+                 <li class= "nav-item">
+                   <compare-tab-a type= "deleted" default-type=default-type >
+                     ,(length deleted-groups) deleted
+                   </compare-tab-a>
+                 </li>
+               </markup:merge-tag>)
 
             <markup:merge-tag>
               <li class= "nav-item" >
@@ -1250,6 +1257,9 @@ additional actions in the More dropdown menu.
     (let* ((changes-groups (diff-report:changes-groups report))
            (added-groups (diff-report:added-groups report))
            (deleted-groups (diff-report:deleted-groups report))
+           (single-page-p (gk:check :single-page-comparison (recorder-run-company run)))
+           (all-groups (when single-page-p
+                         (fset:convert 'list (diff-report:all-groups report))))
            (default-type
              (or
                (hunchentoot:parameter "type")
@@ -1263,6 +1273,7 @@ additional actions in the More dropdown menu.
                                report=report
                                run=run
                                default-type=default-type
+                               single-page-p=single-page-p
                                changes-groups=changes-groups
                                added-groups=added-groups
                                deleted-groups=deleted-groups />
@@ -1275,12 +1286,16 @@ additional actions in the More dropdown menu.
                changes-groups
                added-groups
                deleted-groups
+               :single-page-p single-page-p
+               :all-groups all-groups
                :script-name script-name))
                data-args= (json:encode-json-to-string `((:type . ,default-type))) >
             ,(report-result run
                             changes-groups
                             added-groups
                             deleted-groups
+                            :single-page-p single-page-p
+                            :all-groups all-groups
                             :script-name script-name
                             :type default-type)
           </div>
@@ -1414,10 +1429,14 @@ run, and the hash associated with the previous run."
 (defun report-result (run changes-groups added-groups deleted-groups
                       &key
                         (type (hunchentoot:parameter "type"))
+                        single-page-p
+                        all-groups
                         (script-name (error "must provide :script-name")))
-
+  "If SINGLE-PAGE-P, renders ALL-GROUPS on one page and ignores TYPE."
   (let ((search (hunchentoot:parameter "search")))
     (cond
+      (single-page-p
+       (render-single-page-groups run all-groups :search search :script-name script-name))
       ((string-equal "added" type)
        (render-single-group-list added-groups :search search :script-name script-name))
       ((string-equal "deleted" type)
@@ -1437,67 +1456,27 @@ run, and the hash associated with the previous run."
              :empty-view (no-screenshots))
        </div>))))
 
+(defun screenshots-viewer-for-groups (groups filter)
+  (make-instance 'screenshots-viewer
+                 :screenshots groups
+                 :filter filter
+                 :mapper (lambda (group)
+                           (actual-item (car (diff-report:group-items group))))))
+
 (defun render-single-group-list (groups &key search (script-name (error "must provide script-name")))
   (let* ((filter (lambda (group)
                    (group-matches-p group search)))
-         (screenshots-viewer (make-instance 'screenshots-viewer
-                                            :screenshots groups
-                                            :filter filter
-                                            :mapper (lambda (group)
-                                                      (actual-item (car (diff-report:group-items group)))))))
+         (screenshots-viewer (screenshots-viewer-for-groups groups filter)))
     <div>
       ,(render-modal screenshots-viewer)
 
       ,(paginated
         (lambda (group i)
-          <div class= "col-md-6">
-            <div class= "card mb-3">
-              ,(maybe-tabulate
-                (loop for group-item in (diff-report:group-items group)
-                      for screenshot = (actual-item group-item)
-                      collect
-                      (make-instance
-                       'tab
-                       :title (get-tab-title screenshot group)
-                       :content
-                       <div>
-                         <div class= "screenshot-header" >
-                           <ul class= "screenshot-options-menu" >
-                             <li>
-                               <a href= (format nil "~a/image/~a" script-name (store-object-id (screenshot-key screenshot))) >Permalink</a>
-                              </li>
-                             <li>
-                               <a href= (image-public-url (screenshot-image screenshot) :originalp t)
-                                  >Download Original</a>
-                             </li>
-
-                             <figma-drop-down run= (diff-report-run (group-diff-report group))
-                                              screenshot=screenshot
-                                              script-name=script-name />
-                             
-                           </ul>
-                         </div>
-
-                         <a href= "#"
-                            class= "screenshot-run-image"
-                            data-image-number=i
-                            data-target= (format nil "#~a" (modal-id screenshots-viewer)) >
-
-                           <screenshot-box  screenshot=screenshot title= (diff-report:group-title group) />
-                         </a>
-                       </div>))
-                :header
-                <span>
-                  <h4 class= "screenshot-title" >
-                    ,(when (group-renamed-p group)
-                       <span class= "badge bg-warning">Renamed</span>)
-                    <span class= "index">,(1+ i)</span>
-                      ,(highlight-search-term search (diff-report:group-title group))
-                  </h4>
-
-                </span>)
-            </div>
-          </div>)
+          (render-added-or-deleted-group group i
+                                         :image-number i
+                                         :screenshots-viewer screenshots-viewer
+                                         :search search
+                                         :script-name script-name))
         :num 12
         :filter filter
         :infinite-scroll t
@@ -1505,6 +1484,111 @@ run, and the hash associated with the previous run."
         :pass-index-p t
         :empty-view (no-screenshots))
     </div>))
+
+(defun render-single-page-groups (run all-groups &key search (script-name (error "must provide script-name")))
+  "Renders the changed, added and deleted groups in ALL-GROUPS as one
+list, in the order of ALL-GROUPS."
+  (let* ((filter (lambda (group)
+                   (group-matches-p group search)))
+         (added-or-deleted (remove-if (lambda (group)
+                                        (typep group 'changed-group))
+                                      all-groups))
+         (screenshots-viewer (screenshots-viewer-for-groups added-or-deleted filter))
+         (image-numbers (make-hash-table)))
+    ;; The screenshots-viewer only has the added and deleted groups,
+    ;; so the modal needs each group's index among those.
+    (loop for group in (remove-if-not filter added-or-deleted)
+          for i from 0
+          do (setf (gethash group image-numbers) i))
+    <div>
+      ,(render-modal screenshots-viewer)
+
+      ,(paginated
+        (lambda (group index)
+          (cond
+            ((typep group 'changed-group)
+             (render-change-group group run script-name
+                                  :search search
+                                  :index index))
+            (t
+             (render-added-or-deleted-group group index
+                                            :image-number (gethash group image-numbers)
+                                            :screenshots-viewer screenshots-viewer
+                                            :search search
+                                            :script-name script-name
+                                            :single-page-p t))))
+        :num 10
+        :filter filter
+        :infinite-scroll t
+        :items all-groups
+        :pass-index-p t
+        :empty-view (no-screenshots))
+    </div>))
+
+(defun render-added-or-deleted-group (group i &key image-number
+                                                screenshots-viewer
+                                                search
+                                                script-name
+                                                single-page-p)
+  "Renders a single added or deleted GROUP. I is the index shown in the
+header, IMAGE-NUMBER is the index of GROUP in SCREENSHOTS-VIEWER.
+
+If SINGLE-PAGE-P, the card takes the full width like the changed groups
+around it, and the header says whether the group was added or deleted."
+  <div class= (if single-page-p "col-12" "col-md-6") >
+    <div class= "card mb-3">
+      ,(maybe-tabulate
+        (loop for group-item in (diff-report:group-items group)
+              for screenshot = (actual-item group-item)
+              collect
+              (make-instance
+               'tab
+               :title (get-tab-title screenshot group)
+               :content
+               <div>
+                 <div class= "screenshot-header" >
+                   <ul class= "screenshot-options-menu" >
+                     <li>
+                       <a href= (format nil "~a/image/~a" script-name (store-object-id (screenshot-key screenshot))) >Permalink</a>
+                      </li>
+                     <li>
+                       <a href= (image-public-url (screenshot-image screenshot) :originalp t)
+                          >Download Original</a>
+                     </li>
+
+                     <figma-drop-down run= (diff-report-run (group-diff-report group))
+                                      screenshot=screenshot
+                                      script-name=script-name />
+                     
+                   </ul>
+                 </div>
+
+                 <a href= "#"
+                    class= "screenshot-run-image"
+                    data-image-number=image-number
+                    data-target= (format nil "#~a" (modal-id screenshots-viewer)) >
+
+                   <screenshot-box  screenshot=screenshot title= (diff-report:group-title group) />
+                 </a>
+               </div>))
+        :header
+        <span>
+          <h4 class= "screenshot-title" >
+            ,(when single-page-p
+               (etypecase group
+                 (added-group
+                  <span class= "badge bg-success">Added</span>)
+                 (deleted-group
+                  <span class= "badge bg-danger">Deleted</span>)))
+            ,(when (group-renamed-p group)
+               <span class= "badge bg-warning">Renamed</span>)
+            <span class= "index">,(1+ i)</span>
+              ,(highlight-search-term search (diff-report:group-title group))
+          </h4>
+
+        </span>)
+    </div>
+  </div>)
 
 (Deftag screenshot-box (&key screenshot title
                         (image nil))

@@ -52,7 +52,10 @@
    #:group-item
    #:diff-report-run
    #:diff-report-previous-run
-   #:all-groups))
+   #:all-groups
+   #:changed-group
+   #:added-group
+   #:deleted-group))
 
 
 (in-package :screenshotbot/diff-report)

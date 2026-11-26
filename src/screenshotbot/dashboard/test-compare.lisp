@@ -780,3 +780,68 @@ started computing them."
         (assert-that html
                      (contains-string "changed-rows-strip"))
         (is-false (search "data-bs-toggle" html))))))
+
+(def-fixture single-page-comparison ()
+  (with-test-user (:user user
+                   :company company
+                   :logged-in-p t)
+    (let* ((channel (make-instance 'channel
+                                   :company company
+                                   :name "bleh"
+                                   :github-repo "git@github.com:a/b.gitq"))
+           (one (make-recorder-run
+                 :channel channel
+                 :company company
+                 :screenshots (list (make-screenshot im1)
+                                    (make-screenshot im3 :name "added-one"))))
+           (two (make-recorder-run
+                 :channel channel
+                 :company company
+                 :screenshots (list (make-screenshot im2)
+                                    (make-screenshot im2 :name "deleted-one")))))
+      (flet ((render ()
+               (render-diff-report
+                :diff-report (make-diff-report one two)
+                :script-name "/report/test")))
+        (&body)))))
+
+(defun render-to-string (html)
+  (markup:write-html html))
+
+(test single-page-comparison-is-off-by-default
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (let ((html (render-to-string (render))))
+        (assert-that html
+                     (contains-string "data-type=\"added\""))
+        (is (not (search "badge bg-success" html)))))))
+
+(test single-page-comparison-renders-all-groups-in-order
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (gk:create :single-page-comparison)
+      (gk:allow :single-page-comparison company)
+      (let ((html (render-to-string (render))))
+        (is (not (search "data-type=\"added\"" html)))
+        (is (not (search "data-type=\"changes\"" html)))
+        (let ((added (search "added-one" html))
+              (deleted (search "deleted-one" html))
+              (changed (search "<span class=\"index\">3</span> foobar" html)))
+          (is-true added)
+          (is-true deleted)
+          (is-true changed)
+          (is (< added deleted changed)))
+        (assert-that html
+                     (contains-string "badge bg-success")
+                     (contains-string "badge bg-danger"))
+        (is (not (search "col-md-6" html)))))))
+
+(screenshot-test single-page-comparison
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (gk:create :single-page-comparison)
+      (gk:allow :single-page-comparison company)
+      (snap-all-images)
+      (app-template
+       :body-class "dashboard"
+       (render)))))
