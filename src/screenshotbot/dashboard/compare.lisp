@@ -154,8 +154,15 @@
    #:render-acceptable
    #:render-diff-report
    #:warmup-comparison-images)
+  (:import-from #:gatekeeper/gatekeeper
+                #:defgk)
   (:local-nicknames (#:diff-report #:screenshotbot/diff-report)))
 (in-package :screenshotbot/dashboard/compare)
+
+;; When enabled for a company, the comparison page shows all the
+;; changed, added and deleted screenshots on a single page in one
+;; linear order, instead of in separate tabs.
+(defgk :single-page-comparison)
 
 ;; fake symbols for bknr migration
 (progn
