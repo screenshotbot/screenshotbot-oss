@@ -99,7 +99,8 @@ setupLiveOnAttach(".single-page-filter .dropdown-item", function () {
 
         $menu.find(".dropdown-item").removeClass("active");
         $(this).addClass("active");
-        $(this).closest(".single-page-filter").find(".dropdown-toggle").text($(this).text().trim());
+        // html, not text, so that the parts hidden on small screens stay hidden.
+        $(this).closest(".single-page-filter").find(".dropdown-toggle").html($(this).html());
 
         var $target = $($menu.data("target"));
         $target.data("args")["type"] = type;

@@ -941,7 +941,8 @@ started computing them."
       (let ((html (render-to-string (render))))
         (assert-that html
                      (contains-string "single-page-filter")
-                     (contains-string "All (1 changed, 1 added, 1 deleted)")
+                     ;; The counts next to All are hidden on small screens.
+                     (contains-string "All<span class=\"d-none d-md-inline\"> (1 changed, 1 added, 1 deleted)</span>")
                      (contains-string "data-type=\"deleted\""))
         ;; There are no renames, so there's no option for them.
         (is (not (search "data-type=\"renamed\"" html)))))))

@@ -1483,6 +1483,17 @@ label. If there are no groups at all, the only option is a plain All."
                  "All"))
        options))))
 
+(defun single-page-filter-label (option)
+  "Renders the label of a filter OPTION (type . label). The counts next
+to All are hidden on small screens, where they don't fit."
+  (destructuring-bind (type . label) option
+    (cond
+      ((and (string= "all" type)
+            (str:starts-with-p "All " label))
+       <span>All<span class= "d-none d-md-inline" >,(subseq label 3)</span></span>)
+      (t
+       label))))
+
 (deftag single-page-filter (&key all-groups selected-type)
   (let* ((options (single-page-filter-options all-groups))
          (selected (or (assoc selected-type options :test #'string-equal)
@@ -1490,7 +1501,7 @@ label. If there are no groups at all, the only option is a plain All."
     <li class= "nav-item dropdown single-page-filter" >
       <button type= "button" class= "btn btn-outline-secondary dropdown-toggle"
               data-bs-toggle= "dropdown" aria-expanded= "false" >
-        ,(cdr selected)
+        ,(single-page-filter-label selected)
       </button>
       <ul class= "dropdown-menu dropdown-menu-end" data-target= ".report-result" >
         ,@(loop for option in options
@@ -1498,7 +1509,7 @@ label. If there are no groups at all, the only option is a plain All."
                 <li>
                   <a class= (if (eql option selected) "dropdown-item active" "dropdown-item")
                      href= "#" data-type= (car option) >
-                    ,(cdr option)
+                    ,(single-page-filter-label option)
                   </a>
                 </li>)
       </ul>
