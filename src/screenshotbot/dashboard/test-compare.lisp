@@ -817,7 +817,8 @@ started computing them."
       (let ((html (render-to-string (render))))
         (assert-that html
                      (contains-string "data-type=\"added\""))
-        (is (not (search "badge bg-success" html)))))))
+        (is (not (search "badge bg-success" html)))
+        (is (not (search "border-success" html)))))))
 
 (test single-page-comparison-renders-all-groups-in-order
   (with-fixture state ()
@@ -836,7 +837,9 @@ started computing them."
           (is (< added deleted changed)))
         (assert-that html
                      (contains-string "badge bg-success")
-                     (contains-string "badge bg-danger"))
+                     (contains-string "badge bg-danger")
+                     (contains-string "card mb-3 border-success")
+                     (contains-string "card mb-3 border-danger"))
         (is (not (search "col-md-6" html)))))))
 
 (def-fixture single-page-rename ()
@@ -871,6 +874,8 @@ started computing them."
         (is (not (search "badge bg-success" html)))
         (is (not (search "badge bg-danger" html)))
         (is (not (search "<span class=\"index\">2</span>" html)))
+        (is (not (search "border-success" html)))
+        (is (not (search "border-danger" html)))
         (let ((old (search "old-name" html))
               (new (search "new-name" html)))
           (is-true old)

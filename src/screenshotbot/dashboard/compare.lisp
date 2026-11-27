@@ -1541,13 +1541,21 @@ list, in the order of ALL-GROUPS."
 header, IMAGE-NUMBER is the index of GROUP in SCREENSHOTS-VIEWER.
 
 If SINGLE-PAGE-P, the card takes the full width like the changed groups
-around it, and the header says whether the group was added or deleted.
+around it, the header says whether the group was added or deleted, and
+the border is green for added and red for deleted.
 
 GROUP can also be a RENAMED-GROUP (only on the single page, since only
 ALL-GROUPS has them). Its header shows the old title, an arrow and the
 new title."
   <div class= (if single-page-p "col-12" "col-md-6") >
-    <div class= "card mb-3">
+    <div class= (str:join " "
+                          (list* "card" "mb-3"
+                                 (when single-page-p
+                                   (typecase group
+                                     (added-group
+                                      (list "border-success"))
+                                     (deleted-group
+                                      (list "border-danger")))))) >
       ,(maybe-tabulate
         (loop for group-item in (diff-report:group-items group)
               for screenshot = (actual-item group-item)
