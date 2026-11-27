@@ -973,6 +973,57 @@ a {
     }
 }
 
+// The search box of SEARCH-BOX (channel-search-bar.lisp). It's usually
+// inside .channel-search-bar, but can be used on its own.
+.channel-search-bar-search {
+    display: flex;
+    align-items: center;
+    width: 20em;
+
+    .input-group {
+        flex-wrap: nowrap;
+    }
+
+    .search-toggle {
+        cursor: pointer;
+        // The collapsed input has no border, which would otherwise make
+        // the button 2px shorter than the buttons next to it.
+        min-height: $input-height;
+
+        // Undo the padding for an icon followed by a label, e.g. from
+        // `.nav-item .material-icons` when this is in a nav.
+        .material-icons {
+            padding-right: 0;
+        }
+    }
+
+    input.search {
+        transition: max-width 0.25s ease, padding 0.25s ease,
+                    border-width 0.25s ease, opacity 0.2s ease;
+        max-width: 20em;
+    }
+
+    &.collapsed {
+        width: auto;
+
+        // Bootstrap's input-group squares the right corners of
+        // anything that isn't the last child, with a more specific
+        // selector than we can reasonably match.
+        .search-toggle {
+            border-top-right-radius: $input-border-radius !important;
+            border-bottom-right-radius: $input-border-radius !important;
+        }
+
+        input.search {
+            max-width: 0;
+            padding-left: 0;
+            padding-right: 0;
+            border-width: 0;
+            opacity: 0;
+        }
+    }
+}
+
 .channel-search-bar {
     display: flex;
     align-items: center;
@@ -984,52 +1035,16 @@ a {
         margin-right: 1rem;
     }
 
-    .channel-search-bar-search {
-        display: flex;
-        align-items: center;
-        width: 20em;
-
-        .input-group {
-            flex-wrap: nowrap;
-        }
-
-        .search-toggle {
-            cursor: pointer;
-        }
-
-        input.search {
-            transition: max-width 0.25s ease, padding 0.25s ease,
-                        border-width 0.25s ease, opacity 0.2s ease;
-            max-width: 20em;
-        }
-
-        &.collapsed {
-            width: auto;
-
-            // Bootstrap's input-group squares the right corners of
-            // anything that isn't the last child, with a more specific
-            // selector than we can reasonably match.
-            .search-toggle {
-                border-top-right-radius: $input-border-radius !important;
-                border-bottom-right-radius: $input-border-radius !important;
-            }
-
-            input.search {
-                max-width: 0;
-                padding-left: 0;
-                padding-right: 0;
-                border-width: 0;
-                opacity: 0;
-            }
-        }
-    }
-
     @include media-breakpoint-down(md) {
         display: block;
 
         .channel-search-bar-search {
             margin-bottom: 0.5rem;
-            width: 100%;
+
+            // Only when expanded: collapsed, it's just the button.
+            &:not(.collapsed) {
+                width: 100%;
+            }
         }
     }
 }
@@ -1038,6 +1053,20 @@ a {
 
     .nav-item {
         margin-left: 0.25rem;
+    }
+
+    // Looks like the search button next to it (an input-group addon),
+    // which is softer than btn-outline-secondary.
+    .single-page-filter .dropdown-toggle {
+        color: $input-group-addon-color;
+        background-color: $input-group-addon-bg;
+        border-color: $input-group-addon-border-color;
+
+        &:hover, &:focus, &.show {
+            color: $input-group-addon-color;
+            background-color: shade-color($input-group-addon-bg, 5%);
+            border-color: shade-color($input-group-addon-border-color, 10%);
+        }
     }
 
     @include media-breakpoint-down(md) {

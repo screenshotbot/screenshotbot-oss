@@ -61,6 +61,7 @@
                 #:created-at
                 #:current-company)
   (:import-from #:screenshotbot/dashboard/channel-search-bar
+                #:search-box
                 #:channel-search-bar)
   (:import-from #:screenshotbot/dashboard/image
                 #:handle-resized-image)
@@ -1174,15 +1175,23 @@ native change in prod."
       <div class= "d-flex  flex-wrap justify-content-between compare-header" >
 
         <channel-search-bar channel= (recorder-run-channel run)
-                            target= ".report-result" >
+                            target= ".report-result"
+                            search-p= (not single-page-p) >
           <render-run-tags tags= (recorder-run-tags run) />
         </channel-search-bar>
 
         <div class= "options" >
           <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
             ,(when single-page-p
-               <single-page-filter all-groups=all-groups
-                                   selected-type=default-type />)
+               ;; The search box goes to the right of the filter,
+               ;; instead of next to the channel name.
+               <markup:merge-tag>
+                 <single-page-filter all-groups=all-groups
+                                     selected-type=default-type />
+                 <li class= "nav-item" >
+                   <search-box target= ".report-result" />
+                 </li>
+               </markup:merge-tag>)
             ,(unless single-page-p
                <markup:merge-tag>
                  <li class= "nav-item">
@@ -1501,7 +1510,7 @@ to All are hidden on small screens, where they don't fit."
          (selected (or (assoc selected-type options :test #'string-equal)
                        (car options))))
     <li class= "nav-item dropdown single-page-filter" >
-      <button type= "button" class= "btn btn-outline-secondary dropdown-toggle"
+      <button type= "button" class= "btn dropdown-toggle"
               data-bs-toggle= "dropdown" aria-expanded= "false" >
         ,(single-page-filter-label selected)
       </button>

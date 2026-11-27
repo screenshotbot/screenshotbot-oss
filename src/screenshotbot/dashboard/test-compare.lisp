@@ -987,6 +987,27 @@ started computing them."
   (is (equal '(("all" . "All"))
              (single-page-filter-options nil))))
 
+(test single-page-comparison-puts-search-after-the-filter
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (let* ((html (render-to-string (render)))
+             (search (search "search-toggle" html)))
+        (is-true search)
+        ;; Only one search box: none next to the channel name.
+        (is (= search (search "search-toggle" html :from-end t)))
+        (is (< (search "single-page-filter" html) search))
+        (is (< search (search "btn btn-secondary dropdown-toggle" html)))))))
+
+(test tabbed-comparison-keeps-search-next-to-the-channel-name
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (gk:create :single-page-comparison :default nil)
+      (let* ((html (render-to-string (render)))
+             (search (search "search-toggle" html)))
+        (is-true search)
+        (is (< (search "channel-search-bar-name" html) search))
+        (is (< search (search "data-type=\"changes\"" html)))))))
+
 (screenshot-test single-page-comparison
   (with-fixture state ()
     (with-fixture single-page-comparison ()

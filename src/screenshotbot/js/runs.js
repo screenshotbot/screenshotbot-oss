@@ -45,7 +45,7 @@ setupLiveOnAttach(".search", function () {
 });
 
 
-setupLiveOnAttach(".channel-search-bar .search-toggle", function () {
+setupLiveOnAttach(".channel-search-bar-search .search-toggle", function () {
     $(this).on("mousedown", function (e) {
         // Keep focus in the input, otherwise the blur collapses it
         // just before the click expands it again.
@@ -56,7 +56,7 @@ setupLiveOnAttach(".channel-search-bar .search-toggle", function () {
     });
 });
 
-setupLiveOnAttach(".channel-search-bar input.search", function () {
+setupLiveOnAttach(".channel-search-bar-search input.search", function () {
     $(this).on("focus", function () {
         $(this).closest(".channel-search-bar-search").removeClass("collapsed");
     });
