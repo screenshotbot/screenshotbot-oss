@@ -37,6 +37,9 @@
                 #:diff-report-deleted
                 #:diff-report-title
                 #:group-renamed-p
+                #:renamed-group
+                #:renamed-group-added
+                #:renamed-group-deleted
                 #:group-title
                 #:make-diff-report
                 #:make-image-hashes)
@@ -313,3 +316,83 @@
            (diff-report (make-diff-report run1 nil)))
       (assert-that (mapcar #'group-title (fset:convert 'list (all-groups diff-report)))
                    (contains "aaaa" "zz")))))
+
+(defun describe-groups (diff-report)
+  "Each group in ALL-GROUPS as (type title), with renamed groups as
+(renamed-group old-title new-title)."
+  (loop for group in (fset:convert 'list (all-groups diff-report))
+        collect (typecase group
+                  (renamed-group
+                   (list 'renamed-group
+                         (group-title (renamed-group-deleted group))
+                         (group-title (renamed-group-added group))))
+                  (t
+                   (list (type-of group) (group-title group))))))
+
+(test all-groups-replaces-a-rename-with-one-renamed-group
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "new--one")
+                                     (make-screenshot :image img :name "changed--one"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "old--one")
+                                     (make-screenshot :image img2 :name "changed--one"))))
+           (diff-report (make-diff-report run1 run2)))
+      (assert-that (describe-groups diff-report)
+                   (contains
+                    '(diff-report:changed-group "changed")
+                    '(renamed-group "old" "new")))
+      (let ((renamed (fset:greatest (all-groups diff-report))))
+        (is (equal "new" (group-title renamed)))
+        (is (group-renamed-p renamed))
+        (is (eql (car (added-groups diff-report))
+                 (renamed-group-added renamed)))
+        (is (eql (car (deleted-groups diff-report))
+                 (renamed-group-deleted renamed))))
+      (assert-that (added-groups diff-report)
+                   (has-length 1))
+      (assert-that (deleted-groups diff-report)
+                   (has-length 1)))))
+
+(test all-groups-pairs-renames-by-their-images
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img2 :name "aaa--one")
+                                     (make-screenshot :image img :name "bbb--one"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "ccc--one")
+                                     (make-screenshot :image img2 :name "ddd--one"))))
+           (diff-report (make-diff-report run1 run2)))
+      (assert-that (describe-groups diff-report)
+                   (contains
+                    '(renamed-group "ddd" "aaa")
+                    '(renamed-group "ccc" "bbb"))))))
+
+(test all-groups-renamed-within-the-same-group
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "foo--two"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "foo--one"))))
+           (diff-report (make-diff-report run1 run2)))
+      (assert-that (describe-groups diff-report)
+                   (contains
+                    '(renamed-group "foo" "foo"))))))
+
+(test all-groups-keeps-renames-that-dont-pair-up
+  "The deleted group's screenshots were split across two added groups,
+so there's no single added group to pair it with."
+  (with-fixture state ()
+    (let* ((run1 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "new--one")
+                                     (make-screenshot :image img2 :name "other--two"))))
+           (run2 (make-recorder-run
+                  :screenshots (list (make-screenshot :image img :name "old--one")
+                                     (make-screenshot :image img2 :name "old--two"))))
+           (diff-report (make-diff-report run1 run2)))
+      (is (group-renamed-p (car (deleted-groups diff-report))))
+      (assert-that (describe-groups diff-report)
+                   (contains
+                    '(diff-report:added-group "new")
+                    '(diff-report:deleted-group "old")
+                    '(diff-report:added-group "other"))))))

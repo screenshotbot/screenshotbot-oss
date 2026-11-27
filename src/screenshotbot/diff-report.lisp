@@ -55,7 +55,10 @@
    #:all-groups
    #:changed-group
    #:added-group
-   #:deleted-group))
+   #:deleted-group
+   #:renamed-group
+   #:renamed-group-deleted
+   #:renamed-group-added))
 
 
 (in-package :screenshotbot/diff-report)
@@ -124,8 +127,10 @@
    (all-groups :initform (fset:empty-set)
                :accessor all-groups
                :documentation "An FSet set of all the changes-groups, added-groups and
-deleted-groups, sorted by title (see FSET:COMPARE on GROUP). Always
-computed when the diff-report is created.")
+deleted-groups, sorted by title (see FSET:COMPARE on GROUP). A
+deleted group and an added group that are the same screenshots under a
+new name show up here as one RENAMED-GROUP instead. Always computed
+when the diff-report is created.")
    (%group-separator :initarg :group-separator
                      :initform "--"
                      :reader group-separator)))
@@ -139,8 +144,9 @@ computed when the diff-report is created.")
         (fset:convert 'fset:set
                       (append
                        (changes-groups self)
-                       (added-groups self)
-                       (deleted-groups self)))))
+                       (pair-renamed-groups
+                        (added-groups self)
+                        (deleted-groups self))))))
 
 (defclass group-item ()
   ((subtitle :reader group-item-subtitle
@@ -187,6 +193,65 @@ tie-breaker."
 
 (defclass deleted-group (group)
   ())
+
+(defclass renamed-group (group)
+  ((deleted :initarg :deleted
+            :reader renamed-group-deleted
+            :documentation "The DELETED-GROUP, with the old name.")
+   (added :initarg :added
+          :reader renamed-group-added
+          :documentation "The ADDED-GROUP, with the new name."))
+  (:documentation "A DELETED-GROUP and an ADDED-GROUP that have exactly the same
+images, i.e. the screenshots were just renamed. The title and items are
+the added group's.
+
+This is only used in ALL-GROUPS: ADDED-GROUPS and DELETED-GROUPS still
+return both halves."))
+
+(defmethod group-renamed-p ((group renamed-group))
+  t)
+
+(defun group-hashes-key (group)
+  "The sorted, de-duplicated image hashes of GROUP, as a list that can be
+used as a key in an EQUALP hash table."
+  (fset:convert 'list
+                (fset:convert 'fset:set
+                              (mapcar (lambda (group-item)
+                                        (screenshot-hash (actual-item group-item)))
+                                      (group-items group)))))
+
+(defun pair-renamed-groups (added-groups deleted-groups)
+  "Returns ADDED-GROUPS and DELETED-GROUPS as one list, with each deleted
+group and added group that are renames of each other replaced by one
+RENAMED-GROUP.
+
+A deleted group and an added group are paired if both are
+GROUP-RENAMED-P and they have the same set of image hashes. If several
+groups have the same hashes, they're paired in title order. Renamed
+groups that can't be paired are kept as they are."
+  (let ((added-by-hashes (make-hash-table :test #'equalp))
+        (paired (make-hash-table)))
+    (dolist (added (reverse added-groups))
+      (when (group-renamed-p added)
+        (push added (gethash (group-hashes-key added) added-by-hashes))))
+    (let ((renamed-groups
+            (loop for deleted in deleted-groups
+                  for added = (when (group-renamed-p deleted)
+                                (pop (gethash (group-hashes-key deleted) added-by-hashes)))
+                  if added
+                    collect (progn
+                              (setf (gethash added paired) t)
+                              (setf (gethash deleted paired) t)
+                              (make-instance 'renamed-group
+                                             :title (group-title added)
+                                             :items (group-items added)
+                                             :diff-report (group-diff-report added)
+                                             :deleted deleted
+                                             :added added)))))
+      (append
+       renamed-groups
+       (remove-if (lambda (group) (gethash group paired))
+                  (append added-groups deleted-groups))))))
 
 (defmethod group-renamed-p ((group group))
   "Check if the given group is just a renamed"
@@ -325,7 +390,7 @@ are typically cached in-memory.
 If ONLY-CACHED-P is true, then we'll only return the cached value and
 not try to create the diff report, which might be an expensive operation."
   (util:or-setf
-   (gethash (list run to :v5) *cache*)
+   (gethash (list run to :v6) *cache*)
    (unless only-cached-p
      (%make-diff-report run to))))
 

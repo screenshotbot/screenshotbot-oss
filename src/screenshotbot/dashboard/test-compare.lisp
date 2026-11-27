@@ -2,6 +2,7 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:group-matches-p
                 #:info-modal
                 #:sort-pixels
                 #:pixel-str-to-components
@@ -87,6 +88,8 @@
   (:import-from #:fiveam-matchers/strings
                 #:contains-string)
   (:import-from #:screenshotbot/diff-report
+                #:all-groups
+                #:renamed-group
                 #:make-diff-report)
   (:import-from #:screenshotbot/model/screenshot-key
                 #:screenshot-key)
@@ -835,6 +838,57 @@ started computing them."
                      (contains-string "badge bg-success")
                      (contains-string "badge bg-danger"))
         (is (not (search "col-md-6" html)))))))
+
+(def-fixture single-page-rename ()
+  (with-test-user (:company company
+                   :logged-in-p t)
+    (gk:create :single-page-comparison)
+    (gk:allow :single-page-comparison company)
+    (let* ((channel (make-instance 'channel
+                                   :company company
+                                   :name "bleh"))
+           (one (make-recorder-run
+                 :channel channel
+                 :company company
+                 :screenshots (list (make-screenshot im3 :name "new-name"))))
+           (two (make-recorder-run
+                 :channel channel
+                 :company company
+                 :screenshots (list (make-screenshot im3 :name "old-name"))))
+           (diff-report (make-diff-report one two)))
+      (flet ((render ()
+               (render-diff-report
+                :diff-report diff-report
+                :script-name "/report/test")))
+        (&body)))))
+
+(test single-page-comparison-renders-a-rename-as-one-card
+  (with-fixture state ()
+    (with-fixture single-page-rename ()
+      (let ((html (render-to-string (render))))
+        (assert-that html
+                     (contains-string "badge bg-warning"))
+        (is (not (search "badge bg-success" html)))
+        (is (not (search "badge bg-danger" html)))
+        (is (not (search "<span class=\"index\">2</span>" html)))
+        (let ((old (search "old-name" html))
+              (new (search "new-name" html)))
+          (is-true old)
+          (is-true new)
+          (is (< old new)))
+        (let ((renamed (fset:arb (all-groups diff-report))))
+          (is (typep renamed 'renamed-group))
+          (is-true (group-matches-p renamed "old"))
+          (is-true (group-matches-p renamed "new"))
+          (is-false (group-matches-p renamed "unrelated")))))))
+
+(screenshot-test single-page-comparison-with-a-rename
+  (with-fixture state ()
+    (with-fixture single-page-rename ()
+      (snap-all-images)
+      (app-template
+       :body-class "dashboard"
+       (render)))))
 
 (screenshot-test single-page-comparison
   (with-fixture state ()

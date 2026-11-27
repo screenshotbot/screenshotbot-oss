@@ -94,6 +94,8 @@
                 #:changed-group
                 #:added-group
                 #:deleted-group
+                #:renamed-group
+                #:renamed-group-deleted
                 #:get-tab-title)
   (:import-from #:bknr.datastore
                 #:cascading-delete-object)
@@ -931,7 +933,9 @@ If the diff-report is cached, then we process the body immediately instead."
 
 (defun highlight-search-term (search title)
   (cond
-    ((str:emptyp search)
+    ((or (str:emptyp search)
+         ;; A RENAMED-GROUP can match on just one of its two titles.
+         (not (search (str:downcase search) (str:downcase title))))
      title)
     (t
 
@@ -1422,9 +1426,12 @@ run, and the hash associated with the previous run."
     </div>))
 
 (defun group-matches-p (group search)
+  "A RENAMED-GROUP matches on either its old or its new title."
   (or
    (str:emptyp search)
-   (str:contains? search (diff-report:group-title group) :ignore-case t)))
+   (str:contains? search (diff-report:group-title group) :ignore-case t)
+   (and (typep group 'renamed-group)
+        (group-matches-p (renamed-group-deleted group) search))))
 
 (defun report-result (run changes-groups added-groups deleted-groups
                       &key
@@ -1486,7 +1493,7 @@ run, and the hash associated with the previous run."
     </div>))
 
 (defun render-single-page-groups (run all-groups &key search (script-name (error "must provide script-name")))
-  "Renders the changed, added and deleted groups in ALL-GROUPS as one
+  "Renders the changed, added, deleted and renamed groups in ALL-GROUPS as one
 list, in the order of ALL-GROUPS."
   (let* ((filter (lambda (group)
                    (group-matches-p group search)))
@@ -1534,7 +1541,11 @@ list, in the order of ALL-GROUPS."
 header, IMAGE-NUMBER is the index of GROUP in SCREENSHOTS-VIEWER.
 
 If SINGLE-PAGE-P, the card takes the full width like the changed groups
-around it, and the header says whether the group was added or deleted."
+around it, and the header says whether the group was added or deleted.
+
+GROUP can also be a RENAMED-GROUP (only on the single page, since only
+ALL-GROUPS has them). Its header shows the old title, an arrow and the
+new title."
   <div class= (if single-page-p "col-12" "col-md-6") >
     <div class= "card mb-3">
       ,(maybe-tabulate
@@ -1579,10 +1590,17 @@ around it, and the header says whether the group was added or deleted."
                  (added-group
                   <span class= "badge bg-success">Added</span>)
                  (deleted-group
-                  <span class= "badge bg-danger">Deleted</span>)))
+                  <span class= "badge bg-danger">Deleted</span>)
+                 (renamed-group
+                  nil)))
             ,(when (group-renamed-p group)
                <span class= "badge bg-warning">Renamed</span>)
             <span class= "index">,(1+ i)</span>
+            ,(when (typep group 'renamed-group)
+               <markup:merge-tag>
+                 ,(highlight-search-term search (diff-report:group-title (renamed-group-deleted group)))
+                 <span class= "text-muted">&rarr;</span>
+               </markup:merge-tag>)
               ,(highlight-search-term search (diff-report:group-title group))
           </h4>
 
