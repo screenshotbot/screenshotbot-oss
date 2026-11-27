@@ -22,6 +22,7 @@
         #:screenshotbot/model/channel
         #:screenshotbot/model/company)
   (:import-from #:screenshotbot/dashboard/channel-search-bar
+                #:search-box
                 #:channel-search-bar)
   (:import-from #:screenshotbot/server
                 #:with-login
@@ -608,22 +609,28 @@
 
         <div class= "d-flex justify-content-between mt-3 mb-3">
           <channel-search-bar channel=channel
-                              target= "#run-page-results" >
+                              target= "#run-page-results"
+                              search-p=nil >
             <render-run-tags tags= (recorder-run-tags run) />
           </channel-search-bar>
 
-
-        ,(when (and
-                (auth:can-viewer-edit
-                 (auth:viewer-context hunchentoot:*request*)
-                 run)
-                ;; even if we're logged in, hide this menu so that it
-                ;; doesn't confuse the person who shared it.
-                (not skip-access-checks))
-           <div class= "">
-             <comparison-menu run=run />
-             <run-advanced-menu run=run />
-           </div>)
+          <div class= "d-flex align-items-start gap-1 run-page-actions" >
+            ,(progn
+               ;; The search box is on the right, before the menus,
+               ;; like on the comparison page.
+               <search-box target= "#run-page-results" small-p=t />)
+            ,(when (and
+                    (auth:can-viewer-edit
+                     (auth:viewer-context hunchentoot:*request*)
+                     run)
+                    ;; even if we're logged in, hide this menu so that it
+                    ;; doesn't confuse the person who shared it.
+                    (not skip-access-checks))
+               <markup:merge-tag>
+                 <comparison-menu run=run />
+                 <run-advanced-menu run=run />
+               </markup:merge-tag>)
+          </div>
         </div>
 
       </div>

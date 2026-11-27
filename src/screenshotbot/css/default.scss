@@ -997,6 +997,10 @@ a {
         }
     }
 
+    .input-group-sm .search-toggle {
+        min-height: $input-height-sm;
+    }
+
     input.search {
         transition: max-width 0.25s ease, padding 0.25s ease,
                     border-width 0.25s ease, opacity 0.2s ease;

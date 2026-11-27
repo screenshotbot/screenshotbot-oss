@@ -157,6 +157,18 @@
      (markup:write-html (render-run-page run))
      (contains-string "<h4 class=\"channel-search-bar-name text-truncate\" title=\"bleh\">"))))
 
+(test run-page-puts-search-on-the-right
+  (with-fixture state ()
+    (let* ((html (markup:write-html (render-run-page run)))
+           (search (search "search-toggle" html)))
+      (is-true search)
+      ;; Only one search box, and it's in the actions on the right,
+      ;; not next to the channel name.
+      (is (= search (search "search-toggle" html :from-end t)))
+      (is (< (search "run-page-actions" html) search))
+      (is (< (search "channel-search-bar-name" html) search))
+      (is-true (search "input-group input-group-sm" html)))))
+
 (test run-delete-page
   (with-fixture state ()
     (let ((run (make-recorder-run :company company
