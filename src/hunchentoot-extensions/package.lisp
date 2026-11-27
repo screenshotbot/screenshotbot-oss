@@ -36,9 +36,6 @@
            #:make-url
            #:supports-webp?
            #:fix-for-webp
-           #:prepare-async-response
-           #:handle-async-static-file
-           #:handle-async-error
            #:register-plugin
            #:process-plugin-request
            #:dispatch-plugin-request
