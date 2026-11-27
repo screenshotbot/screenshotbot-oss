@@ -2,6 +2,9 @@
   (:use #:cl
         #:fiveam)
   (:import-from #:screenshotbot/dashboard/compare
+                #:report-result
+                #:single-page-filter-options
+                #:filter-groups-by-type
                 #:group-matches-p
                 #:info-modal
                 #:sort-pixels
@@ -826,8 +829,8 @@ started computing them."
       (gk:create :single-page-comparison)
       (gk:allow :single-page-comparison company)
       (let ((html (render-to-string (render))))
-        (is (not (search "data-type=\"added\"" html)))
-        (is (not (search "data-type=\"changes\"" html)))
+        ;; The tabs are gone (the filter dropdown has data-types too).
+        (is (not (search "<a class=\"nav-link" html)))
         (let ((added (search "added-one" html))
               (deleted (search "deleted-one" html))
               (changed (search "<span class=\"index\">3</span> foobar" html)))
@@ -894,6 +897,68 @@ started computing them."
       (app-template
        :body-class "dashboard"
        (render)))))
+
+(test single-page-filter-counts-each-type
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (is (equal
+           '(("all" . "All (1 changed, 1 added, 1 deleted, 0 renamed)")
+             ("changes" . "1 changed")
+             ("added" . "1 added")
+             ("deleted" . "1 deleted")
+             ("renamed" . "0 renamed"))
+           (single-page-filter-options
+            (fset:convert 'list (all-groups (make-diff-report one two)))))))))
+
+(test single-page-filter-counts-renames-separately
+  (with-fixture state ()
+    (with-fixture single-page-rename ()
+      (is (equal "All (0 changed, 0 added, 0 deleted, 1 renamed)"
+                 (cdr (assoc "all"
+                             (single-page-filter-options
+                              (fset:convert 'list (all-groups diff-report)))
+                             :test #'string=)))))))
+
+(test filter-groups-by-type
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (let ((groups (fset:convert 'list (all-groups (make-diff-report one two)))))
+        (flet ((titles (type)
+                 (mapcar #'screenshotbot/diff-report:group-title
+                         (filter-groups-by-type groups type))))
+          (is (equal '("added-one") (titles "added")))
+          (is (equal '("deleted-one") (titles "deleted")))
+          (is (equal '("foobar") (titles "changes")))
+          (is (equal nil (titles "renamed")))
+          (is (equal (titles "all") (titles nil)))
+          (assert-that (titles "all")
+                       (has-length 3)))))))
+
+(test single-page-comparison-renders-the-filter-dropdown
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (gk:create :single-page-comparison)
+      (gk:allow :single-page-comparison company)
+      (let ((html (render-to-string (render))))
+        (assert-that html
+                     (contains-string "single-page-filter")
+                     (contains-string "All (1 changed, 1 added, 1 deleted, 0 renamed)")
+                     (contains-string "data-type=\"renamed\""))))))
+
+(test single-page-report-result-filters-by-type
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (let* ((diff-report (make-diff-report one two))
+             (html (render-to-string
+                    (report-result one nil nil nil
+                                   :type "added"
+                                   :single-page-p t
+                                   :all-groups (fset:convert 'list (all-groups diff-report))
+                                   :script-name "/report/test"))))
+        (assert-that html
+                     (contains-string "added-one"))
+        (is (not (search "deleted-one" html)))
+        (is (not (search "foobar" html)))))))
 
 (screenshot-test single-page-comparison
   (with-fixture state ()

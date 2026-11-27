@@ -1163,6 +1163,7 @@ native change in prod."
 (deftag render-compare-header (&key more acceptable report run
                                default-type
                                single-page-p
+                               all-groups
                                changes-groups
                                added-groups
                                deleted-groups)
@@ -1177,6 +1178,9 @@ native change in prod."
 
         <div class= "options" >
           <ul class= "nav nav-pills report-selector" data-target= ".report-result" >
+            ,(when single-page-p
+               <single-page-filter all-groups=all-groups
+                                   selected-type=default-type />)
             ,(unless single-page-p
                <markup:merge-tag>
                  <li class= "nav-item">
@@ -1268,6 +1272,7 @@ additional actions in the More dropdown menu.
              (or
                (hunchentoot:parameter "type")
                (cond
+                  (single-page-p "all")
                   (changes-groups "changes")
                   (added-groups "added")
                   (deleted-groups "deleted")
@@ -1278,6 +1283,7 @@ additional actions in the More dropdown menu.
                                run=run
                                default-type=default-type
                                single-page-p=single-page-p
+                               all-groups=all-groups
                                changes-groups=changes-groups
                                added-groups=added-groups
                                deleted-groups=deleted-groups />
@@ -1433,17 +1439,77 @@ run, and the hash associated with the previous run."
    (and (typep group 'renamed-group)
         (group-matches-p (renamed-group-deleted group) search))))
 
+(defun group-type (group)
+  "The filter type of GROUP on the single page: \"changes\", \"added\",
+\"deleted\" or \"renamed\". The first three match the tab types."
+  (etypecase group
+    (changed-group "changes")
+    (added-group "added")
+    (deleted-group "deleted")
+    (renamed-group "renamed")))
+
+(defun filter-groups-by-type (groups type)
+  "Keeps the GROUPS whose GROUP-TYPE is TYPE. If TYPE is \"all\", NIL, or
+not a known type, keeps all of them."
+  (cond
+    ((member type '("changes" "added" "deleted" "renamed") :test #'string-equal)
+     (remove-if-not (lambda (group)
+                      (string-equal type (group-type group)))
+                    groups))
+    (t
+     groups)))
+
+(defun single-page-filter-options (all-groups)
+  "The options of the filter dropdown on the single page, as a list of
+(type . label). Unlike DIFF-REPORT-TITLE, this counts renames
+separately from added and deleted groups."
+  (flet ((count-of (type)
+           (count type all-groups :key #'group-type :test #'string=)))
+    (let ((options
+            (loop for (type . name) in '(("changes" . "changed")
+                                         ("added" . "added")
+                                         ("deleted" . "deleted")
+                                         ("renamed" . "renamed"))
+                  collect (cons type (format nil "~d ~a" (count-of type) name)))))
+      (list*
+       (cons "all"
+             (format nil "All (~{~a~^, ~})" (mapcar #'cdr options)))
+       options))))
+
+(deftag single-page-filter (&key all-groups selected-type)
+  (let* ((options (single-page-filter-options all-groups))
+         (selected (or (assoc selected-type options :test #'string-equal)
+                       (car options))))
+    <li class= "nav-item dropdown single-page-filter" >
+      <button type= "button" class= "btn btn-outline-secondary dropdown-toggle"
+              data-bs-toggle= "dropdown" aria-expanded= "false" >
+        ,(cdr selected)
+      </button>
+      <ul class= "dropdown-menu dropdown-menu-end" data-target= ".report-result" >
+        ,@(loop for option in options
+                collect
+                <li>
+                  <a class= (if (eql option selected) "dropdown-item active" "dropdown-item")
+                     href= "#" data-type= (car option) >
+                    ,(cdr option)
+                  </a>
+                </li>)
+      </ul>
+    </li>))
+
 (defun report-result (run changes-groups added-groups deleted-groups
                       &key
                         (type (hunchentoot:parameter "type"))
                         single-page-p
                         all-groups
                         (script-name (error "must provide :script-name")))
-  "If SINGLE-PAGE-P, renders ALL-GROUPS on one page and ignores TYPE."
+  "If SINGLE-PAGE-P, renders ALL-GROUPS on one page, keeping only the
+groups of TYPE (see FILTER-GROUPS-BY-TYPE)."
   (let ((search (hunchentoot:parameter "search")))
     (cond
       (single-page-p
-       (render-single-page-groups run all-groups :search search :script-name script-name))
+       (render-single-page-groups run (filter-groups-by-type all-groups type)
+                                  :search search :script-name script-name))
       ((string-equal "added" type)
        (render-single-group-list added-groups :search search :script-name script-name))
       ((string-equal "deleted" type)

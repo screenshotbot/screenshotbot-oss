@@ -91,3 +91,21 @@ setupLiveOnAttach("ul.report-selector > li > a", function () {
     });
 
 });
+
+setupLiveOnAttach(".single-page-filter .dropdown-item", function () {
+    $(this).click(function (e) {
+        var $menu = $(this).closest(".dropdown-menu");
+        var type = $(this).data("type");
+
+        $menu.find(".dropdown-item").removeClass("active");
+        $(this).addClass("active");
+        $(this).closest(".single-page-filter").find(".dropdown-toggle").text($(this).text().trim());
+
+        var $target = $($menu.data("target"));
+        $target.data("args")["type"] = type;
+        setUrlParameter("type", type);
+
+        updateAjaxResults($target);
+        e.preventDefault();
+    });
+});
