@@ -902,18 +902,17 @@ started computing them."
   (with-fixture state ()
     (with-fixture single-page-comparison ()
       (is (equal
-           '(("all" . "All (1 changed, 1 added, 1 deleted, 0 renamed)")
+           '(("all" . "All (1 changed, 1 added, 1 deleted)")
              ("changes" . "1 changed")
              ("added" . "1 added")
-             ("deleted" . "1 deleted")
-             ("renamed" . "0 renamed"))
+             ("deleted" . "1 deleted"))
            (single-page-filter-options
             (fset:convert 'list (all-groups (make-diff-report one two)))))))))
 
 (test single-page-filter-counts-renames-separately
   (with-fixture state ()
     (with-fixture single-page-rename ()
-      (is (equal "All (0 changed, 0 added, 0 deleted, 1 renamed)"
+      (is (equal "All (1 renamed)"
                  (cdr (assoc "all"
                              (single-page-filter-options
                               (fset:convert 'list (all-groups diff-report)))
@@ -942,8 +941,10 @@ started computing them."
       (let ((html (render-to-string (render))))
         (assert-that html
                      (contains-string "single-page-filter")
-                     (contains-string "All (1 changed, 1 added, 1 deleted, 0 renamed)")
-                     (contains-string "data-type=\"renamed\""))))))
+                     (contains-string "All (1 changed, 1 added, 1 deleted)")
+                     (contains-string "data-type=\"deleted\""))
+        ;; There are no renames, so there's no option for them.
+        (is (not (search "data-type=\"renamed\"" html)))))))
 
 (test single-page-report-result-filters-by-type
   (with-fixture state ()
@@ -959,6 +960,10 @@ started computing them."
                      (contains-string "added-one"))
         (is (not (search "deleted-one" html)))
         (is (not (search "foobar" html)))))))
+
+(test single-page-filter-with-no-groups-is-just-all
+  (is (equal '(("all" . "All"))
+             (single-page-filter-options nil))))
 
 (screenshot-test single-page-comparison
   (with-fixture state ()

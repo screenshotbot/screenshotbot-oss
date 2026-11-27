@@ -1462,7 +1462,10 @@ not a known type, keeps all of them."
 (defun single-page-filter-options (all-groups)
   "The options of the filter dropdown on the single page, as a list of
 (type . label). Unlike DIFF-REPORT-TITLE, this counts renames
-separately from added and deleted groups."
+separately from added and deleted groups.
+
+Types with no groups are left out, both as options and from the All
+label. If there are no groups at all, the only option is a plain All."
   (flet ((count-of (type)
            (count type all-groups :key #'group-type :test #'string=)))
     (let ((options
@@ -1470,10 +1473,14 @@ separately from added and deleted groups."
                                          ("added" . "added")
                                          ("deleted" . "deleted")
                                          ("renamed" . "renamed"))
-                  collect (cons type (format nil "~d ~a" (count-of type) name)))))
+                  for count = (count-of type)
+                  if (plusp count)
+                    collect (cons type (format nil "~d ~a" count name)))))
       (list*
        (cons "all"
-             (format nil "All (~{~a~^, ~})" (mapcar #'cdr options)))
+             (if options
+                 (format nil "All (~{~a~^, ~})" (mapcar #'cdr options))
+                 "All"))
        options))))
 
 (deftag single-page-filter (&key all-groups selected-type)
