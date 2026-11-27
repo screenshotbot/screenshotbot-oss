@@ -171,7 +171,7 @@
     (mquery:add-class (mquery:$ "a" children) "dropdown-item")
 
     <div class="dropdown">
-      <button class= (format nil "btn btn-sm ~a dropdown-toggle" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <button class= (format nil "btn ~a dropdown-toggle" btn-class) type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
         ,(progn title)
       </button>
       <div class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton" style= "z-index: 99999999" >
@@ -618,7 +618,7 @@
             ,(progn
                ;; The search box is on the right, before the menus,
                ;; like on the comparison page.
-               <search-box target= "#run-page-results" small-p=t />)
+               <search-box target= "#run-page-results" />)
             ,(when (and
                     (auth:can-viewer-edit
                      (auth:viewer-context hunchentoot:*request*)

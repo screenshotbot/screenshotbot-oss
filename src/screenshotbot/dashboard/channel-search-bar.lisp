@@ -22,17 +22,15 @@
 
 (named-readtables:in-readtable markup:syntax)
 
-(deftag search-box (children &key target small-p)
+(deftag search-box (children &key target)
   "A search button that expands into a search box when clicked, and
 filters TARGET (a selector for the results container, see the .search
 handler in runs.js). It collapses again when it's empty and loses
 focus.
 
-If SMALL-P, it's sized to sit next to .btn-sm buttons.
-
 CHILDREN are rendered after the search box."
   <div class= "channel-search-bar-search collapsed" >
-    <div class= (if small-p "input-group input-group-sm" "input-group") >
+    <div class= "input-group">
       <button type= "button" class= "input-group-text search-toggle"
               title= "Search" aria-label= "Search" >
         <mdi name= "search" />

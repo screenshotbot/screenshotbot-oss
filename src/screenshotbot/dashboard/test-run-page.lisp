@@ -167,7 +167,8 @@
       (is (= search (search "search-toggle" html :from-end t)))
       (is (< (search "run-page-actions" html) search))
       (is (< (search "channel-search-bar-name" html) search))
-      (is-true (search "input-group input-group-sm" html)))))
+      ;; Full-size buttons, like on the comparison page.
+      (is-false (search "btn-sm" html)))))
 
 (test run-delete-page
   (with-fixture state ()
