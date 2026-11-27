@@ -814,9 +814,30 @@ started computing them."
 (defun render-to-string (html)
   (markup:write-html html))
 
-(test single-page-comparison-is-off-by-default
+(test single-page-comparison-is-on-by-default
   (with-fixture state ()
     (with-fixture single-page-comparison ()
+      (let ((html (render-to-string (render))))
+        (assert-that html
+                     (contains-string "single-page-filter"))
+        (is (not (search "<a class=\"nav-link" html)))))))
+
+(test single-page-comparison-with-no-changes
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (let ((html (render-to-string
+                   (render-diff-report
+                    :diff-report (make-diff-report one one)
+                    :script-name "/report/test"))))
+        (assert-that html
+                     (contains-string "No changes match filters"))
+        ;; With no groups, the filter is just a plain All.
+        (is (not (search "data-type=\"changes\"" html)))))))
+
+(test single-page-comparison-can-be-turned-off
+  (with-fixture state ()
+    (with-fixture single-page-comparison ()
+      (gk:create :single-page-comparison :default nil)
       (let ((html (render-to-string (render))))
         (assert-that html
                      (contains-string "data-type=\"added\""))

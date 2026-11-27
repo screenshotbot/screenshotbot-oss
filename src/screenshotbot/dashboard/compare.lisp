@@ -166,8 +166,10 @@
 
 ;; When enabled for a company, the comparison page shows all the
 ;; changed, added and deleted screenshots on a single page in one
-;; linear order, instead of in separate tabs.
-(defgk :single-page-comparison)
+;; linear order, instead of in separate tabs. On by default; a company
+;; can be switched back to the tabs with GK:CREATE (default NIL) and
+;; per-company ACLs.
+(defgk :single-page-comparison :enabledp t)
 
 ;; fake symbols for bknr migration
 (progn
